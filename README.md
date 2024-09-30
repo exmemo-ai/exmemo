@@ -1,4 +1,4 @@
- English | [中文简体](./README_cn.md)
+English | [中文简体](./README_cn.md)
 
 ## 1 Introduction
 
