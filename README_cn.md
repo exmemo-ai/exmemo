@@ -20,7 +20,7 @@ $ cd /exports/exmemo
 $ mkdir code
 $ mkdir data
 $ cd code
-$ git clone https://github.com/ExMemo/ExMemo.git
+$ git clone https://github.com/ExMemo/exmemo.git
 $ git clone https://github.com/zhayujie/chatgpt-on-wechat # if use wechat, download it
 $ cd exmemo
 ```
