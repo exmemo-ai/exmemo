@@ -1,33 +1,41 @@
 # Obsidian Plugin
-`ExMemo` 是一个用于同步、检索的 Obsidian 插件。
 
-## 编译
-生成 ob 插件文件，依赖 `node:16-alpine` 镜像。
-`yourfiles`路径需设为 exmemo 项目的上一级路径
+`obsidian-exmemo-plugin` is an Obsidian plugin used for synchronization and retrieval.
+
+## Compilation
+
+To generate the ob plugin files, it relies on the `node:16-alpine` image.
 
 ```bash
-docker run --name obdev --rm -v /yourfiles:/exports -it node:16-alpine sh
+docker run --name obdev --rm -v /exports:/exports -it node:16-alpine sh
 cd /exports/exmemo/ui/obsidian_plugin
-echo "registry = http://registry.npm.taobao.org/" >> $HOME/.npmrc # 设置快速下载
+echo "registry = http://registry.npm.taobao.org/" >> $HOME/.npmrc
 npm install
-npm run build # build main.js，会生成main.js文件
+npm run build # build to main.js
 ```
 
-## 安装与设置
+## Installation and Setup
 
-### 安装
-将编译后的 `main.js`、`manifest.json` 和 `styles.css` 复制到 Obsidian 的 obsidian/plugins/obsidian_plugin 目录下。
+### Installation
 
-在 ob 中进行以下设置：
+Copy the compiled main.js, manifest.json, and styles.css to the .obsidian/plugins/obsidian-exmemo-plugin directory in your Obsidian vault.
 
-### 启用
-1. 打开「设置」->「第三方插件」
-2. 找到「ExMemo」并点击启动按钮
+Make the following settings in Obsidian:
 
-### 设置
-- 服务器地址格式：http://IP:PORT
-- 用户名和密码需与前端信息一致
-- 按提示修改包含目录和排除目录或文件
+### Enable
 
-## 使用
-按 Ctrl+P 调出插件，在检索框中输入 ExMemo，然后点击所需的ob插件功能。
+Open "Settings" -> "Third-party Plugins."
+Find "ExMemo" and click the enable button, then configure the settings.
+
+### Settings
+
+Server address format: http://IP:PORT
+Username and password must match the frontend information.
+Modify the included and excluded directories or files according to the prompts.
+
+### Usage
+
+Press Ctrl+P to bring up the plugin, type "ExMemo" in the search box, and then click on the desired Obsidian plugin feature.
+
+### Note
+Please back up your Obsidian data before syncing all files for the first time to avoid any unexpected issues.
