@@ -1,0 +1,1020 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-09-23 16:13+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: app_diet/diet.py:17
+msgid "you_are_a_clinical_nutritionist"
+msgstr "You are a clinical nutritionist"
+
+#: app_diet/diet.py:42
+msgid "no_diet_record_found_for_{time_of_day}_on_{date}"
+msgstr "No diet record found for {time_of_day} on {date}"
+
+#: app_diet/diet.py:58
+msgid "no_dietary_records_found_for_keywords_related_to_{time_of_day}_on_{date}"
+msgstr "No dietary records found for keywords related to {time_of_day} on {date}"
+
+#: app_diet/diet.py:62
+msgid "successfully_deleted_the_diet_record_for_{time_of_day}_on_{date}_with_keywords_{keywords}"
+msgstr "Successfully deleted the diet record for {time_of_day} on {date} with keywords {keywords}"
+
+#: app_diet/diet.py:139
+msgid "total_calories_colon__{kc}kc"
+msgstr "Total calories: {kc}kc"
+
+#: app_diet/diet.py:144
+msgid "no_valid_records_founds_dot_"
+msgstr "No valid records founds."
+
+#: tests/test_common_llm.py:42
+msgid "name"
+msgstr "Name"
+
+#: app_diet/diet.py:245
+msgid "heat"
+msgstr "Heat"
+
+#: app_diet/diet.py:246
+msgid "carbohydrate"
+msgstr "Carbohydrate"
+
+#: app_diet/diet.py:247
+msgid "fat"
+msgstr "Fat"
+
+#: app_diet/diet.py:248
+msgid "protein"
+msgstr "Protein"
+
+#: app_diet/diet.py:262
+msgid "already_exists_{name}"
+msgstr "Already exists {name}"
+
+#: app_diet/diet.py:273
+msgid "add_successful_{name}_{calorie}"
+msgstr "Add successful {name} {calorie}"
+
+#: app_diet/diet.py:330
+msgid "fuzzy_query_failed"
+msgstr "Fuzzy query failed"
+
+#: app_diet/diet.py:344
+msgid "no_food_found_with_the_name_{name}"
+msgstr "No food found with the name {name}"
+
+#: app_diet/diet.py:385
+msgid "today"
+msgstr "Today"
+
+#: app_diet/diet.py:386
+msgid "yesterday"
+msgstr "Yesterday"
+
+#: app_diet/diet.py:387
+msgid "the_day_before_yesterday"
+msgstr "The day before yesterday"
+
+#: app_diet/diet.py:388
+msgid "big_day_before_yesterday"
+msgstr "Big day before yesterday"
+
+#: app_diet/diet.py:399
+msgid "{month}_month_{day}_day"
+msgstr "{month} month {day} day"
+
+#: app_diet/diet.py:410
+msgid "spam"
+msgstr "Spam"
+
+#: app_diet/diet.py:416
+msgid "extra_meal_in_the_morning"
+msgstr "Extra meal in the morning"
+
+#: app_diet/diet.py:416
+msgid "early_morning"
+msgstr "Early morning"
+
+#: app_diet/diet.py:417
+msgid "breakfast"
+msgstr "Breakfast"
+
+#: app_diet/diet.py:417
+msgid "morning"
+msgstr "Morning"
+
+#: app_diet/diet.py:418
+msgid "morning_extra_meal"
+msgstr "Morning Extra Meal"
+
+#: tests/test_common_data.py:175
+msgid "am"
+msgstr "AM"
+
+#: app_diet/diet.py:419
+msgid "lunch"
+msgstr "Lunch"
+
+#: app_diet/diet.py:419
+msgid "noon"
+msgstr "Noon"
+
+#: app_diet/diet.py:420
+msgid "extra_meal_in_the_afternoon"
+msgstr "Extra meal in the afternoon"
+
+#: app_diet/diet.py:420
+msgid "pm"
+msgstr "PM"
+
+#: app_diet/diet.py:421
+msgid "dinner"
+msgstr "Dinner"
+
+#: app_diet/diet.py:421
+msgid "dinner2"
+msgstr "Dinner2"
+
+#: app_diet/diet.py:421
+msgid "night"
+msgstr "Night"
+
+#: app_diet/diet.py:422
+msgid "evening_extra_meals"
+msgstr "Evening Extra Meals"
+
+#: app_diet/diet.py:422
+msgid "midnight"
+msgstr "Midnight"
+
+#: app_diet/diet.py:422
+msgid "midnight_snack"
+msgstr "Midnight Snack"
+
+#: tests/test_app_diet.py:11
+msgid "diet_log_colon__apple_100g_comma__milk_100g"
+msgstr "Diet Log: Apple 100g, Milk 100g"
+
+#: tests/test_app_diet.py:19
+msgid "delete_diet_apple"
+msgstr "Delete diet Apple"
+
+#: tests/test_app_diet.py:21
+msgid "success"
+msgstr "Success"
+
+#: tests/test_app_diet.py:27
+msgid "diet_statistics"
+msgstr "Diet Statistics"
+
+#: tests/test_app_diet.py:13
+msgid "total_calories"
+msgstr "Total calories"
+
+#: app_translate/translate.py:19
+msgid "you_are_a_middle_school_english_teacher"
+msgstr "You are a middle school English teacher"
+
+#: app_translate/translate.py:69
+msgid "{}__enter_word_frequency_{}__enter_meaning_{}"
+msgstr "{} \nWord Frequency {} \nMeaning {}"
+
+#: app_translate/translate.py:132
+msgid "word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}_enter_count_colon__{times}"
+msgstr "Word: {src}\nTranslation: {dst}\nFreq: {freq}\nCount: {times}"
+
+#: app_translate/views.py:72
+msgid "please_enter_questions_or_content_to_be_translated"
+msgstr "Please enter questions or content to be translated"
+
+#: app_translate/views.py:75
+msgid "internal_processing_error"
+msgstr "Internal Processing Error"
+
+#: app_translate/dict.py:67
+msgid "explanation_colon_"
+msgstr "Explanation:"
+
+#: app_translate/word_root.py:19
+msgid "root_not_found"
+msgstr "Root not found"
+
+#: app_translate/word_root.py:76
+msgid "simple_answer"
+msgstr "Simple Answer"
+
+#: app_translate/word_root.py:19
+msgid "root"
+msgstr "Root"
+
+#: app_translate/word_root.py:78
+msgid "the_root_of_the_word_is"
+msgstr "The root of the word is"
+
+#: app_translate/word_root.py:81
+msgid "affix"
+msgstr "Affix"
+
+#: app_translate/word_root.py:84
+msgid "prefix"
+msgstr "Prefix"
+
+#: app_translate/translate.py:60
+msgid "suffix"
+msgstr "Suffix"
+
+#: app_sync/views.py:286
+msgid "comparison_complete"
+msgstr "Comparison complete"
+
+#: app_dataforge/misc_tools.py:50
+msgid "unsupported_document_type"
+msgstr "Unsupported Document Type"
+
+#: app_dataforge/feature.py:165
+msgid "to_be_organized"
+msgstr "To be organized"
+
+#: app_dataforge/feature.py:165
+msgid "to-do_list"
+msgstr "To-do List"
+
+#: app_dataforge/feature.py:263
+msgid "themes"
+msgstr "Themes"
+
+#: app_dataforge/views.py:112
+msgid "no_update_needed"
+msgstr "No update needed"
+
+#: app_dataforge/views.py:118
+msgid "uploading_failed"
+msgstr "Uploading failed"
+
+#: app_dataforge/views.py:216
+msgid "upgrade_successfully"
+msgstr "Upgrade successfully"
+
+#: app_dataforge/views.py:218
+msgid "update_failed"
+msgstr "Update failed"
+
+#: app_dataforge/views.py:292
+msgid "unknown_action"
+msgstr "Unknown action"
+
+#: app_dataforge/entry.py:42
+msgid "unknown_type_colon_"
+msgstr "Unknown type: "
+
+#: app_dataforge/entry.py:90
+msgid "save_file_failed_excl_"
+msgstr "Save file failed!"
+
+#: app_dataforge/entry.py:135
+msgid "add_success"
+msgstr "add success"
+
+#: app_dataforge/entry.py:140
+msgid "add_failed"
+msgstr "add failed"
+
+#: app_dataforge/entry.py:159
+msgid "record_successful_comma__type_colon_"
+msgstr "Record successful, Type:"
+
+#: app_dataforge/entry.py:168
+msgid "set_to_pending_comma__type_colon__{ctype}"
+msgstr "Set to Pending, Type: {ctype}"
+
+#: app_dataforge/entry.py:170
+msgid "collection_successful_comma__type_colon__{ctype}"
+msgstr "Collection successful, type: {ctype}"
+
+#: app_dataforge/entry.py:174
+msgid "storage_successful_comma__found_url_exception_error_colon__{error}"
+msgstr "Storage successful, found url exception error: {error}"
+
+#: app_dataforge/entry.py:244
+msgid "run_failed"
+msgstr "Run failed"
+
+#: app_record/record.py:16
+msgid "title_colon__enter_{title}_enter__enter_content_enter_{content}"
+msgstr "Title:\n{title}\n\nContent\n{content}"
+
+#: app_record/record.py:38
+msgid "your_account_currently_does_not_have_export_permissions_dot__please_contact_the_administrator_to_upgrade_your_account_dot_"
+msgstr "Your account currently does not have export permissions. Please contact the administrator to upgrade your account."
+
+#: app_record/record.py:47
+msgid "website"
+msgstr "Website"
+
+#: tests/test_common_data.py:95
+msgid "title"
+msgstr "Title"
+
+#: tests/support.py:47
+msgid "content"
+msgstr "Content"
+
+#: app_record/record.py:50
+msgid "viewpoint"
+msgstr "Viewpoint"
+
+#: app_record/record.py:51
+msgid "content_category_colon_"
+msgstr "Content Category:"
+
+#: app_record/record.py:52
+msgid "data_type"
+msgstr "data type"
+
+#: app_dataforge/feature.py:157
+msgid "status"
+msgstr "Status"
+
+#: app_record/record.py:54
+msgid "creation_date"
+msgstr "Creation Date"
+
+#: app_record/record.py:62
+msgid "no_record_found"
+msgstr "No record found"
+
+#: app_paper/paper_info.py:24
+msgid "table_of_contents"
+msgstr "Table of Contents"
+
+#: app_paper/paper_info.py:31
+msgid "abstract"
+msgstr "Abstract"
+
+#: app_paper/views.py:43
+msgid "method_not_supported_colon_"
+msgstr "Method not supported:"
+
+#: app_paper/ptools.py:59
+msgid "natural_language_processing"
+msgstr "Natural Language Processing"
+
+#: app_paper/ptools.py:60
+msgid "medicine"
+msgstr "Medicine"
+
+#: app_paper/ptools.py:61
+msgid "computer_vision"
+msgstr "Computer vision"
+
+#: tests/test_common_audio.py:6
+msgid "audio"
+msgstr "Audio"
+
+#: app_paper/ptools.py:63
+msgid "video"
+msgstr "Video"
+
+#: app_paper/ptools.py:64
+msgid "reinforcement_learning_(rl)"
+msgstr "reinforcement learning (RL)"
+
+#: app_paper/ptools.py:65
+msgid "knowledge_map"
+msgstr "Knowledge Map"
+
+#: app_paper/ptools.py:66
+msgid "machine_learning"
+msgstr "Machine learning"
+
+#: app_paper/ptools.py:109
+msgid "have_read"
+msgstr "Have read"
+
+#: app_paper/ptools.py:110
+msgid "unread"
+msgstr "Unread"
+
+#: app_paper/ptools.py:110
+msgid "to_read"
+msgstr "To read"
+
+#: app_paper/ptools.py:110
+msgid "unseen"
+msgstr "Unseen"
+
+#: app_paper/ptools.py:111
+msgid "reading_section"
+msgstr "Reading section"
+
+#: app_paper/ptools.py:113
+msgid "watching"
+msgstr "Watching"
+
+#: app_paper/ptools.py:114
+msgid "watch_a_little"
+msgstr "Watch a little"
+
+#: app_dataforge/views.py:292
+msgid "unknown"
+msgstr "Unknown"
+
+#: app_translate/translate.py:80
+msgid "chinese"
+msgstr "Chinese"
+
+#: app_paper/ptools.py:384
+msgid "paper_reading"
+msgstr "Paper Reading"
+
+#: app_paper/ptools.py:394
+msgid "english_title_colon__{title}"
+msgstr "English Title: {title}"
+
+#: app_paper/ptools.py:396
+msgid "english_name_colon_"
+msgstr "English Name:"
+
+#: app_paper/ptools.py:398
+msgid "chinese_name_colon__{title_zh}"
+msgstr "Chinese Name: {title_zh}"
+
+#: app_paper/ptools.py:398
+msgid "chinese_name_colon_"
+msgstr "Chinese Name:"
+
+#: app_paper/ptools.py:402
+msgid "link_colon__{url}"
+msgstr "Link: {url}"
+
+#: app_paper/ptools.py:402
+msgid "link_colon_"
+msgstr "Link:"
+
+#: app_paper/ptools.py:405
+msgid "code_colon_"
+msgstr "Code:"
+
+#: app_paper/ptools.py:407
+msgid "author_colon__{author}"
+msgstr "Author: {author}"
+
+#: app_paper/ptools.py:407
+msgid "author_colon_"
+msgstr "Author:"
+
+#: app_paper/ptools.py:412
+msgid "institution_colon__{institution}"
+msgstr "Institution: {institution}"
+
+#: app_paper/ptools.py:412
+msgid "institution_colon_"
+msgstr "Institution:"
+
+#: app_paper/ptools.py:418
+msgid "date_colon__{published_date}"
+msgstr "Date: {published_date}"
+
+#: app_paper/ptools.py:418
+msgid "date_colon_"
+msgstr "Date:"
+
+#: app_paper/ptools.py:423
+msgid "citations_colon__{citations}"
+msgstr "Citations: {citations}"
+
+#: app_paper/ptools.py:425
+msgid "number_of_citations_colon_"
+msgstr "Number of citations:"
+
+#: app_paper/ptools.py:429
+msgid "objective_colon__{purpose}"
+msgstr "Objective: {purpose}"
+
+#: app_paper/ptools.py:431
+msgid "target_colon_"
+msgstr "Target:"
+
+#: app_paper/ptools.py:433
+msgid "method_colon__{method}"
+msgstr "Method: {method}"
+
+#: app_paper/ptools.py:433
+msgid "method_colon_"
+msgstr "Method:"
+
+#: app_paper/ptools.py:437
+msgid "conclusion_colon__{result}"
+msgstr "Conclusion: {result}"
+
+#: app_paper/ptools.py:437
+msgid "conclusion_colon_"
+msgstr "Conclusion: "
+
+#: app_paper/ptools.py:574
+msgid "empty_contents"
+msgstr "Empty contents"
+
+#: app_paper/ptools.py:602
+msgid "original_text"
+msgstr "Original text"
+
+#: app_paper/ptools.py:602
+msgid "polished_text"
+msgstr "Polished text"
+
+#: backend/common/user/resource.py:70
+msgid "speech_synthesis"
+msgstr "speech synthesis"
+
+#: backend/common/user/resource.py:70
+msgid "language_model"
+msgstr "Language model"
+
+#: backend/common/user/resource.py:72
+msgid "current_day"
+msgstr "Current Day"
+
+#: backend/common/user/resource.py:73
+msgid "current_week"
+msgstr "Current Week"
+
+#: backend/common/user/resource.py:74
+msgid "this_month"
+msgstr "This month"
+
+#: tests/test_app_diet.py:13
+msgid "total"
+msgstr "Total"
+
+#: backend/common/user/resource.py:79
+msgid "{}_usage"
+msgstr "{} usage"
+
+#: tests/test_app_user_manager.py:30
+msgid "username_already_exists"
+msgstr "Username already exists"
+
+#: backend/common/user/views.py:55
+msgid "account_created__excl_"
+msgstr "Account created !"
+
+#: backend/common/user/views.py:57
+msgid "registration_failed"
+msgstr "Registration failed"
+
+#: backend/common/user/views.py:59
+msgid "user_or_password_are_empty_dot_"
+msgstr "User or password are empty."
+
+#: tests/test_app_user_manager.py:42
+msgid "user_does_not_exist"
+msgstr "User does not exist"
+
+#: tests/test_app_user_manager.py:64
+msgid "original_password_error"
+msgstr "original password error"
+
+#: tests/test_app_user_manager.py:57
+msgid "successfully_set"
+msgstr "successfully set"
+
+#: backend/common/user/views.py:78
+msgid "setup_failed"
+msgstr "Setup failed"
+
+#: backend/common/user/views.py:80
+msgid "the_new_password_is_blank"
+msgstr "The new password is blank"
+
+#: backend/common/user/views.py:116
+msgid "user_level_colon__{level_desc}"
+msgstr "User Level: {level_desc}"
+
+#: backend/common/user/views.py:157
+msgid "settings_were_applied_successfully"
+msgstr "Settings were applied successfully"
+
+#: backend/common/user/user.py:147
+msgid "supports_ocr_colon_"
+msgstr "Supports OCR:"
+
+#: app_diet/diet.py:386
+msgid "yes"
+msgstr "Yes"
+
+#: backend/common/user/user.py:147
+msgid "denied"
+msgstr "Denied"
+
+#: backend/common/user/user.py:148
+msgid "save_data_colon_"
+msgstr "Save Data:"
+
+#: backend/common/user/user.py:150
+msgid "parsing_the_paper_colon_"
+msgstr "Parsing the paper:"
+
+#: backend/common/user/user.py:153
+msgid "translation_book_colon_"
+msgstr "Translation Book:"
+
+#: backend/common/user/user.py:157
+msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
+msgstr "Model rate limit: {limit_llm_day_formatted} tokens/day"
+
+#: backend/common/user/user.py:162
+msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
+msgstr "Speech synthesis rate limit: {limit_tts_day} tokens/day"
+
+#: backend/common/user/user.py:167
+msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
+msgstr "Speech synthesis rate limit: {tokens} tokens/attempt"
+
+#: backend/common/user/user.py:172
+msgid "recording_export_range_colon__{limit_export_record_day}_days"
+msgstr "Recording export range: {limit_export_record_day} days"
+
+#: backend/common/user/user.py:191
+msgid "te_ac_settings"
+msgstr "Te_ac_Settings"
+
+#: app_dataforge/feature.py:152
+msgid "normal"
+msgstr "Normal"
+
+#: backend/common/user/user.py:195
+msgid "vip_user"
+msgstr "VIP User"
+
+#: backend/common/user/user.py:197
+msgid "administrator"
+msgstr "Administrator"
+
+#: backend/common/user/user.py:198
+msgid "unknown_level"
+msgstr "Unknown level"
+
+#: backend/common/utils/regular_tools.py:26
+msgid "content_not_found"
+msgstr "Content not found"
+
+#: backend/common/utils/web_tools.py:17
+msgid "unknown_title"
+msgstr "Unknown Title"
+
+#: backend/common/utils/web_tools.py:34
+msgid "empty_file_content"
+msgstr "Empty file content"
+
+#: backend/common/utils/web_tools.py:112
+msgid "parsing_content_is_not_supported_at_this_time"
+msgstr "Parsing content is not supported at this time"
+
+#: backend/common/utils/web_tools.py:139
+msgid "failure_reading_file"
+msgstr "Failure reading file"
+
+#: backend/common/utils/web_tools.py:247
+msgid "body"
+msgstr "Body"
+
+#: backend/common/speech/tts_xunfei.py:62
+msgid "synthesis_complete"
+msgstr "Synthesis complete"
+
+#: backend/common/speech/asr_tools.py:52
+msgid "recognition_failure"
+msgstr "Recognition failure"
+
+#: backend/common/speech/asr_tools.py:75
+msgid "asr_successful"
+msgstr "ASR successful"
+
+#: backend/common/speech/tts_tools.py:282
+msgid "assembled"
+msgstr "Assembled"
+
+#: backend/common/speech/tts_tools.py:285
+msgid "custom_synthesis_failed"
+msgstr "Custom synthesis failed"
+
+#: backend/common/speech/tts_tools.py:287
+msgid "synthesis_failed"
+msgstr "Synthesis failed"
+
+#: backend/common/speech/tts_tools.py:359
+msgid "the_current_user_already_has_a_task_in_progress"
+msgstr "The current user already has a task in progress"
+
+#: backend/common/speech/tts_tools.py:361
+msgid "the_current_task_list_is_full_comma__please_try_again_later"
+msgstr "The current task list is full, please try again later"
+
+#: backend/common/speech/tts_tools.py:368
+msgid "the_task_has_been_added__excl_"
+msgstr "The task has been added !"
+
+#: backend/common/speech/tts_tools.py:376
+msgid "task_removed"
+msgstr "Task removed"
+
+#: backend/common/speech/tts_tools.py:377
+msgid "quest_does_not_exist"
+msgstr "Quest does not exist"
+
+#: backend/common/speech/tts_tools.py:460
+msgid "in_the_queue_comma__there_are_still_{prev_task_n}_tasks_ahead"
+msgstr "In the queue, there are still {prev_task_n} tasks ahead"
+
+#: backend/common/speech/tts_tools.py:472
+msgid "currently_synthesizing_comma__{_colon__dot_1%}_completed"
+msgstr "Currently synthesizing, {:.1%} completed"
+
+#: backend/common/speech/tts_tools.py:479
+msgid "no_synthesized_audio_found"
+msgstr "No synthesized audio found"
+
+#: backend/common/speech/tts.py:68
+msgid "the_daily_limit_of_synthesized_characters_has_been_reached_{limit_tts_day}"
+msgstr "The daily limit of synthesized characters has been reached {limit_tts_day}"
+
+#: backend/common/speech/tts.py:95
+msgid "the_content_is_relatively_long_{length}_characters_comma__and_it_will_take_about_{time}_minutes_to_synthesize_dot__if_you_do_not_wish_to_continue_converting_comma__please_reply_colon__stop"
+msgstr "The content is relatively long {length} characters, and it will take about {time} minutes to synthesize. If you do not wish to continue converting, please reply: stop"
+
+#: backend/common/speech/tts.py:112
+msgid "no_content_found"
+msgstr "No content found"
+
+#: backend/common/speech/tts.py:135
+msgid "set_the_engine_to_colon__{base_engine_setting}"
+msgstr "Set the engine to: {base_engine_setting}"
+
+#: backend/common/speech/tts.py:143
+msgid "set_engine_to_custom_colon__{base_engine_setting}"
+msgstr "Set engine to Custom: {base_engine_setting}"
+
+#: backend/common/speech/tts.py:146
+msgid "engine_not_found_colon__{base_engine_setting}"
+msgstr "Engine not found: {base_engine_setting}"
+
+#: backend/common/speech/tts.py:160
+msgid "microsoft"
+msgstr "Microsoft"
+
+#: data/grpc_asyncio.py:2
+msgid "google"
+msgstr "Google"
+
+#: backend/common/speech/tts_xunfei.py:28
+msgid "xunfei"
+msgstr "Xunfei"
+
+#: backend/common/speech/tts.py:164
+msgid "customization"
+msgstr "Customization"
+
+#: app_translate/urls.py:3
+msgid "default"
+msgstr "Default"
+
+#: backend/common/speech/tts.py:166
+msgid "storytelling_fairy"
+msgstr "Storytelling fairy"
+
+#: backend/common/speech/tts.py:168
+msgid "book_review_master"
+msgstr "Book review master"
+
+#: backend/common/speech/tts.py:169
+msgid "ghost_story_expert"
+msgstr "Ghost Story Expert"
+
+#: backend/common/speech/tts.py:170
+msgid "romance_novel"
+msgstr "Romance novel"
+
+#: backend/common/speech/tts.py:171
+msgid "documentary_commentary"
+msgstr "Documentary commentary"
+
+#: backend/common/speech/tts.py:172
+msgid "clear_female_voice"
+msgstr "Clear Female Voice"
+
+#: backend/common/speech/tts.py:173
+msgid "deep_male_voice"
+msgstr "Deep male voice"
+
+#: backend/common/speech/tts.py:176
+msgid "gentle_male_voice"
+msgstr "Gentle male voice"
+
+#: backend/common/files/utils_file.py:193
+msgid "total_{len_files}_files"
+msgstr "Total {len_files} files"
+
+#: backend/common/files/utils_file.py:194
+msgid "total_{total}_tokens"
+msgstr "Total {total} tokens"
+
+#: backend/common/files/utils_file.py:196
+msgid "embedding_costs_about_{cost}_yuan"
+msgstr "Embedding costs about {cost} yuan"
+
+#: backend/common/parser/doc_parser.py:13
+msgid "successfully_converted_{path_in}_to_{path_out}"
+msgstr "Successfully converted {path_in} to {path_out}"
+
+#: backend/common/parser/block.py:176
+msgid "appendices"
+msgstr "Appendices"
+
+#: backend/common/parser/block.py:177
+msgid "attachment"
+msgstr "Attachment"
+
+#: backend/common/parser/block.py:178
+msgid "foreword"
+msgstr "Foreword"
+
+#: backend/common/parser/block.py:179
+msgid "given_that_colon_"
+msgstr "Given that:"
+
+#: backend/common/parser/block.py:180
+msgid "in_view_of_the_terms_colon_"
+msgstr "In view of the terms:"
+
+#: backend/common/parser/block.py:186
+msgid "(no_text)"
+msgstr "(No text)"
+
+#: backend/common/parser/block.py:186
+msgid "signing_page"
+msgstr "Signing Page"
+
+#: backend/common/parser/block.py:186
+msgid "page_for_signing"
+msgstr "Page for signing"
+
+#: backend/common/llm/llm_hub.py:41
+msgid "the_maximum_number_of_words_called_today_has_been_reached"
+msgstr "The maximum number of words called today has been reached"
+
+#: backend/common/llm/llm_hub.py:85
+msgid "call_failed"
+msgstr "Call failed"
+
+#: backend/common/llm/llm_hub.py:127
+msgid "usage_limit_colon__{limit_llm_day}_comma__used_colon__{used_llm_count}"
+msgstr "Usage limit: {limit_llm_day}, Used: {used_llm_count}"
+
+#: backend/common/llm/llm_tools.py:145
+msgid "gemini_is_temporarily_unavailable"
+msgstr "gemini is temporarily unavailable"
+
+#: app_bm_syncex/views.py:49
+msgid "data_already_exists"
+msgstr "Data Already Exists"
+
+#: app_message/function.py:31
+msgid "chat_call_failed"
+msgstr "chat call failed"
+
+#: app_message/views.py:57
+msgid "backend_processing_failed"
+msgstr "Backend processing failed"
+
+#: app_message/views.py:68
+msgid "please_sign_up_or_log_in_first"
+msgstr "Please sign up or log in first"
+
+#: app_message/user_manager.py:11
+msgid "please_register_or_log_in_first_comma___enter_formatted_as_colon__register_username_xxx_comma__password_xxx__enter_or_log_in_username_xxx_comma__password_xxx"
+msgstr "Please register or log in first, \nformatted as: Register Username xxx, Password xxx \nor Log in Username xxx, Password xxx"
+
+#: app_message/user_manager.py:38
+msgid "empty_username"
+msgstr "Empty username"
+
+#: tests/test_app_user_manager.py:64
+msgid "old_password_is_empty"
+msgstr "Old password is empty"
+
+#: app_message/user_manager.py:44
+msgid "old_and_new_passwords_are_identical_dot_"
+msgstr "Old and new passwords are identical."
+
+#: app_message/command.py:100
+msgid "command_not_found"
+msgstr "Command not found"
+
+#: tests/test_app_user_manager.py:13
+msgid "login_colon__xieyan_comma__1234567"
+msgstr "Login: xieyan, 1234567"
+
+#: tests/test_app_user_manager.py:21
+msgid "registration_colon__xieyan_comma__1234567"
+msgstr "Registration: xieyan, 1234567"
+
+#: tests/test_app_user_manager.py:36
+msgid "change_password_colon__xieyan_comma__old_password_1234567_new_password_123456"
+msgstr "Change password: xieyan, old password 1234567 new password 123456"
+
+#: tests/test_app_user_manager.py:60
+msgid "change_password_colon__xieyan_comma__2314"
+msgstr "Change password: xieyan, 2314"
+
+#: tests/test_app_user_manager.py:72
+msgid "when_to_use_a_beaker_and_when_to_use_a_test_tube_in_chemistry"
+msgstr "When to use a beaker and when to use a test tube in chemistry"
+
+#: tests/test_app_record.py:12
+msgid "record_exercise_running_5_kilometers"
+msgstr "Record exercise running 5 kilometers"
+
+#: app_message/message.py:63
+msgid "please_choose_colon_\n"
+msgstr "Please choose:\n"
+
+#: app_message/message.py:78
+msgid "no_urls_dot_"
+msgstr "No URLs."
+
+#: app_message/message.py:112
+msgid "failed_to_fetch_webpages"
+msgstr "Failed to fetch webpages"
+
+#: app_message/message.py:141
+msgid "page_not_found"
+msgstr "Page not found"
+
+#: app_message/message.py:869
+msgid "failed_to_process_information"
+msgstr "Failed to process information"
+
+#: app_message/message.py:907
+msgid "the_file_type_is_not_valid_or_not_supported"
+msgstr "The file type is not valid or not supported"
+
+#: app_message/message.py:935
+msgid "no_content_found_1727252424"
+msgstr "No content found_1727252424"
+
+#: app_message/message.py:235
+msgid "please_upload_or_share_a_file_first"
+msgstr "Please upload or share a file first"
+
+#: app_message/message.py:260
+msgid "file_collection_failed_colon__file_not_found"
+msgstr "File collection failed: File not found"
+
+#: app_message/message.py:327
+msgid "failed_to_fetch_files"
+msgstr "Failed to fetch files"
+
+#: app_message/message.py:177
+msgid "please_enter_the_url_or_share_the_page_with_me"
+msgstr "Please enter the URL or share the page with me"
+
+#: app_message/message.py:369
+msgid "files_larger_than_50mb_are_currently_not_supported_for_recognition"
+msgstr "Files larger than 50MB are currently not supported for recognition"
+
+#: app_message/message.py:342
+msgid "please_enter_what_you're_looking_for"
+msgstr "Please enter what you're looking for"
+
+#: app_message/message.py:841
+msgid "nothing_entered"
+msgstr "Nothing Entered"
+
+#: app_message/message.py:843
+msgid "unrecognized_command"
+msgstr "Unrecognized command"
+
+#: app_message/message.py:883
+msgid "no_optional_commands"
+msgstr "No optional commands"
+
+#: app_message/message.py:886
+msgid "not_a_number"
+msgstr "not a number"
+

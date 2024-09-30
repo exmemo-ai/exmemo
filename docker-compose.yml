@@ -1,0 +1,111 @@
+# 数据库，前端，后端，微信端
+version: '3'
+services:
+  edb:
+    image: ankane/pgvector
+    restart: always
+    container_name: pgvector
+    ports:
+      - "${PGSQL_PORT}:5432"
+    environment:
+      - POSTGRES_PASSWORD=${PGSQL_PASSWORD}
+    volumes:
+      - ${HOST_DATA_DIR}/pgsqldata:/var/lib/postgresql/data
+      - ${HOST_EXPORTS_DIR}:/exports/
+    #profiles: if you don't want to start this service, you can open these
+    #  - edb
+  efrontend:
+    image: node_efrontend:latest
+    restart: always
+    container_name: efrontend
+    ports:
+      - "${FRONTEND_PORT_INNER}:8080"
+    environment:
+      - VUE_APP_K_BACKEND_ADDR=http://${BACKEND_ADDR_OUTER}:${BACKEND_PORT_OUTER}
+      - VUE_APP_K_LANGUAGE_CODE=${LANGUAGE_CODE}
+    profiles:
+      - production
+  efrontend_dev:
+    image: node_efrontend:latest
+    container_name: efrontend_dev
+    ports:
+      - "${FRONTEND_PORT_INNER}:8080"
+    environment:
+      - VUE_APP_K_BACKEND_ADDR=http://${BACKEND_ADDR_OUTER}:${BACKEND_PORT_OUTER}
+      - VUE_APP_K_LANGUAGE_CODE=${LANGUAGE_CODE}
+    profiles:
+      - development
+    volumes:
+      - ${HOST_SRC_DIR}:/opt/
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        cd /opt/exmemo/ui/web_frontend/
+        mkdir node_modules/.cache/ -p
+        chmod 777 node_modules/.cache/ -R
+        npm install
+        npm run serve
+  ebackend:
+    image: exmemo:latest
+    restart: always
+    build: .
+    container_name: ebackend
+    env_file:
+      - backend/.env
+    ports:
+      - "${BACKEND_PORT_INNER}:8005"
+    volumes:
+      - ${HOST_DATA_DIR}:/data
+    profiles:
+      - production      
+  ebackend_dev:
+    image: exmemo:latest
+    build: .
+    container_name: ebackend_dev
+    env_file:
+      - backend/.env
+    ports:
+      - "${BACKEND_PORT_INNER}:8005"
+    volumes:
+      - ${HOST_DATA_DIR}:/data
+      - ${HOST_EXPORTS_DIR}:/exports/
+      - ${HOST_SRC_DIR}:/opt
+    profiles:
+      - development
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        python /opt/exmemo/backend/main.py
+  ewechat:
+    image: zhayujie/chatgpt-on-wechat
+    container_name: ewechat
+    volumes:
+      - ${HOST_SRC_DIR}:/opt
+    environment:
+      - K_BACKEND_ADDR=http://${BACKEND_ADDR_OUTER}:${BACKEND_PORT_OUTER}
+      - SINGLE_CHAT_PREFIX=[""]
+      - GROUP_NAME_WHITE_LIST=["ALL_GROUP"]
+    entrypoint: ["/bin/bash", "-c"]
+    user: root
+    command:
+      - |
+        cd /opt/chatgpt-on-wechat/
+        python app.py
+    #profiles: if you don't want to start this service, you can open these
+    #  - ewechat   
+  eminio:
+    image: bitnami/minio:2024.3.3
+    container_name: eminio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    user: root
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ACCESS_KEY}"
+      MINIO_ROOT_PASSWORD: "${MINIO_SECRET_KEY}"
+    volumes:
+      - ${HOST_DATA_DIR}/minio:/bitnami/minio/data # host dir need write permissions for the minio user.
+    profiles:
+      - eminio
+

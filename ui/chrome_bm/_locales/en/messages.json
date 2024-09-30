@@ -1,0 +1,32 @@
+{
+    "appName": {
+        "message": "ExMemo Bookmark Sync"
+    },
+    "syncButton": {
+        "message": "Sync"
+    },
+    "syncMessage": {
+        "message": "Syncing bookmarks, this may take a while..."
+    },
+    "syncCompleteMessage": {
+        "message": "Sync complete"
+    },
+    "saveSettings": {
+        "message": "Save Settings"
+    },
+    "ipAddress": {
+        "message": "IP Address and Port:"
+    },
+    "username_text": {
+        "message": "Username:"
+    },
+    "password_text": {
+        "message": "Password:"
+    },
+    "settingsSaved": {
+        "message": "Settings Saved"
+    },
+    "closeButton": {
+        "message": "关闭"
+    }
+}

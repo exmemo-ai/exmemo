@@ -1,0 +1,39 @@
+from django.db import models
+import uuid
+
+
+class StoreTranslate(models.Model):
+    idx = models.UUIDField(
+        unique=True, primary_key=True, default=uuid.uuid4, editable=False
+    )
+    user_id = models.CharField(max_length=128, null=True, blank=True)
+    word = models.CharField(max_length=128)
+    info = models.JSONField(default=dict)
+    freq = models.IntegerField(default=-1)
+    times = models.IntegerField(default=1)
+    created_time = models.DateTimeField("date created")
+
+    def __str__(self):
+        return self.word
+
+    class Meta:
+        db_table = "store_translate"
+        ordering = ["created_time"]
+
+
+class StoreEnglishArticle(models.Model):
+    idx = models.UUIDField(
+        unique=True, primary_key=True, default=uuid.uuid4, editable=False
+    )
+    user_id = models.CharField(max_length=128, null=True, blank=True)
+    title = models.CharField(max_length=128)
+    content = models.TextField()
+    info = models.JSONField(default=dict)
+    created_time = models.DateTimeField("date created")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = "store_english_article"
+        ordering = ["-created_time"]

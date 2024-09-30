@@ -1,0 +1,90 @@
+# This is an example environment variables file.
+# Please adjust the settings according to your situation and write them into the .env file.
+
+LANGUAGE_CODE='zh' # zh, en
+
+# URL and PORT
+HOST_EXPORTS_DIR="/exports"
+HOST_SRC_DIR="/exports/exmemo/code/"
+HOST_DATA_DIR="/exports/exmemo/data/"
+PGSQL_HOST="192.168.10.168"
+PGSQL_PASSWORD="123456"
+PGSQL_PORT='5432'
+BACKEND_PORT_INNER='8005'
+BACKEND_PORT_OUTER='8005'
+BACKEND_ADDR_OUTER='192.168.10.168'
+FRONTEND_PORT_INNER='8084'
+FRONTEND_PORT_OUTER='8084'
+FRONTEND_ADDR_OUTER='192.168.10.168'
+
+# PROXY
+HTTP_PROXY=""
+HTTPS_PROXY=""
+NO_PROXY=""
+
+# FILE_STORE
+FILE_STORE='local' # local or minio
+LOCAL_FILE_STORE_DIR='/data/dataforge'
+MINIO_HOST='ip:port'
+MINIO_ACCESS_KEY='root'
+MINIO_SECRET_KEY='password'
+
+# TTS SERVER
+MY_TTS_SERV_ADDR=""
+
+# LLM
+DEFAULT_CHAT_LLM='gpt3.5-turbo' # or deepseek
+DEFAULT_TOOL_LLM='gpt3.5-turbo' # as AGENT_LLM
+
+# OPENAI
+OPENAI_API_KEY="sk-xxx"
+
+# GEMINI
+GEMINI_API_KEY='xxx'
+GEMINI_MODEL='gemini-pro'
+
+# KIMI
+KIMI_URL='https://api.moonshot.cn/v1'
+KIMI_API_KEY='xxx'
+KIMI_MODEL='moonshot-v1-8k'
+
+# XUNFEI
+XUNFEI_LLM_URL='https://spark-api-open.xf-yun.com/v1'
+XUNFEI_LLM_API_KEY='xxx'
+XUNFEI_LLM_MODEL='general'
+
+# DEEPSEEK
+DEEPSEEK_URL='https://api.deepseek.com'
+DEEPSEEK_API_KEY='xxx'
+DEEPSEEK_MODEL='deepseek-chat'
+
+# QWEN
+QWEN_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
+QWEN_API_KEY="xxx"
+QWEN_MODEL="qwen-turbo-0624"
+
+# OLLAMA
+OLLAMA_LLM_URL='xxx'
+OLLAMA_LLM_API_KEY='xxx'
+OLLAMA_LLM_MODEL='llama3'
+
+# USER_DEFINE
+USER_DEFINE_URL='xxx'
+USER_DEFINE_API_KEY='xxx'
+USER_DEFINE_MODEL='xxx'
+
+# EMBEDDING
+USE_EMBEDDING='False'
+EMBEDDING_TYPE='none' # openai/ollama/none
+EMBEDDING_OLLAMA_URL='http://xxx:11434'
+EMBEDDING_OLLAMA_MODEL='znbang/bge:small-zh-v1.5-f16'
+
+# Parse PDF with OCR
+BAIDU_OCR_APPID=''
+BAIDU_OCR_API_KEY=''
+BAIDU_OCR_SECRET_KEY=''
+
+# IFLYTEK TTS
+IFLYTEK_TTS_APPID=''
+IFLYTEK_TTS_APISECRET=''
+IFLYTEK_TTS_APIKEY=''

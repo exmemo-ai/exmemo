@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title><span id="appName"></span></title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; }
+        label { display: block; margin-top: 10px; }
+        input { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 20px; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span id="appName"></span></h1>
+        <label for="addr"><span id="ipAddress"></span></label>
+        <input type="text" id="addr" name="addr">
+        
+        <label for="username"><span id="username_text"></label>
+        <input type="text" id="username" name="username">
+        
+        <label for="password"><span id="password_text"></label>
+        <input type="password" id="password" name="password">
+        
+        <button id="save"><span id="saveSettings"></span></button>
+    </div>
+    <script src="options.js"></script>
+</body>
+</html>

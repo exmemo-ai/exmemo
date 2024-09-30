@@ -1,0 +1,7 @@
+deb https://mirrors.aliyun.com/debian/ bullseye main contrib non-free
+deb-src https://mirrors.aliyun.com/debian/ bullseye main contrib non-free
+deb https://mirrors.aliyun.com/debian-security/ bullseye-security main contrib non-free
+deb-src https://mirrors.aliyun.com/debian-security/ bullseye-security main contrib non-free
+deb https://mirrors.aliyun.com/debian/ bullseye-updates main contrib non-free
+deb-src https://mirrors.aliyun.com/debian/ bullseye-updates main contrib non-free
+

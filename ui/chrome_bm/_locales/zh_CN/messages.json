@@ -1,0 +1,32 @@
+{
+    "appName": {
+        "message": "ExMemo书签同步"
+    },
+    "syncButton": {
+        "message": "同步"
+    },
+    "syncMessage": {
+        "message": "正在同步书签,可能需要一些时间..."
+    },
+    "syncCompleteMessage": {
+        "message": "同步完成"
+    },    
+    "saveSettings": {
+        "message": "保存设置"
+    },
+    "ipAddress": {
+        "message": "IP 地址及端口:"
+    },
+    "username_text": {
+        "message": "用户名:"
+    },
+    "password_text": {
+        "message": "密码:"
+    },
+    "settingsSaved": {
+        "message": "设置已保存"
+    },
+    "closeButton": {
+        "message": "关闭"
+    }
+}
