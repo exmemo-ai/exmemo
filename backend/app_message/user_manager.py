@@ -162,7 +162,7 @@ class UserManagerBot:
                 for i in range(len(ret.chat_history) - 1, -1, -1):
                     logger.debug(f"check result: {ret.chat_history[i]}")
                     if ret.chat_history[i]["content"] != "TERMINATE":
-                        output = ret.chat_history[i]["content"]
+                        output = ret.chat_history[-1]["content"]
                         try:
                             info, dic = get_json_content(output)
                             if dic is not None:

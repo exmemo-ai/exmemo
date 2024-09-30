@@ -2,7 +2,7 @@ import os
 from gtts import gTTS
 from .tts_base import *
 from loguru import logger
-
+from django.utils.translation import gettext as _
 
 class TtsGoogle(TtsEngine):
     def __init__(self):
