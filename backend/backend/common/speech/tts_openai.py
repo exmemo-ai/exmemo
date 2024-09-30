@@ -2,7 +2,7 @@ from .tts_base import TtsEngine
 from openai import OpenAI
 from pathlib import Path
 from loguru import logger
-
+from django.utils.translation import gettext as _
 
 class TtsOpenai(TtsEngine):
     def __init__(self):

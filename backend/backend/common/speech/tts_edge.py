@@ -2,7 +2,7 @@ import os
 import edge_tts
 from loguru import logger
 from .tts_base import *
-
+from django.utils.translation import gettext as _
 
 class TtsEdge(TtsEngine):
     def __init__(self):
