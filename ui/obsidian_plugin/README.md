@@ -8,8 +8,7 @@ To generate the ob plugin files, it relies on the `node:16-alpine` image.
 
 ```bash
 docker run --name obdev --rm -v /exports:/exports -it node:16-alpine sh
-cd /exports/exmemo/ui/obsidian_plugin
-echo "registry = http://registry.npm.taobao.org/" >> $HOME/.npmrc
+cd /exports/exmemo/code/exmemo/ui/obsidian_plugin
 npm install
 npm run build # build to main.js
 ```
