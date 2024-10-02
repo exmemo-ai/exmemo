@@ -117,14 +117,10 @@ class TranslateAPIView(APIView):
         return do_result(False, info)
 
     def translate_word(self, args, word, sentence):
-        ret, regular_word, detail = translate.translate_word(word, args["user_id"])
-        if ret:
-            ret2, detail2 = translate.add_to_db(
-                regular_word, detail, args["user_id"], sentence
-            )
-            if ret2:
-                return do_result(True, f"{regular_word}\n{detail2}")
-        return do_result(True, f"{regular_word}\n{detail}")
+        ret, regular_word, detail = translate.translate_word(
+            word, args["user_id"], with_gpt=True, sentence=sentence
+        )
+        return do_result(True, detail)
 
     def translate_sentence(self, args, sentence):
         try:

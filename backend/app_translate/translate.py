@@ -2,8 +2,10 @@
 main interface to call other file and functions
 """
 
+import re
 import datetime
 import traceback
+from translate import Translator
 from loguru import logger
 from django.utils.translation import gettext as _
 from backend.common.user.user import *
@@ -98,39 +100,56 @@ def add_translate(content, user_id, save=True):
     ret, regular_en, zh = get_zh(content, TRANS_DEFAULT, etc=False)
     if ret:
         if save:
-            return add_to_db(regular_en, zh, user_id)
+            ret, obj = add_to_db(content, regular_en, zh, user_id)
+            if ret:
+                return ret, _(
+                    "word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}_enter_count_colon__{times}"
+                ).format(
+                    src=obj.info["word"],
+                    dst=obj.info["translate"],
+                    freq=obj["freq"],
+                    times=obj["times"],
+                )
         else:
             return True, ret
     else:
         return False, ""
 
 
-def add_to_db(src, dst, user_id, sentence=None):
+def find_word_from_db(word):
+    if StoreTranslate.objects.filter(word=word).exists():
+        obj = StoreTranslate.objects.get(word=word)
+        if "regular_word" in obj.info:
+            return True, obj.info["regular_word"], obj.info["translate"]
+        else:
+            return True, obj.info["word"], obj.info["translate"]
+    return False, None, None
+
+
+def add_to_db(word, regular_word, dst, user_id, sentence=None):
     logger.info("now add_to_db inner", sentence)
     times = 1
     now = datetime.datetime.now()
     timestr = now.strftime("%Y-%m-%d %H:%M:%S")
-    freq = get_freq(src)
-    info = {"word": src, "translate": dst, "freq": freq}
+    freq = get_freq(regular_word)
+    info = {"word": word, "regular_word": regular_word, "translate": dst, "freq": freq}
     if sentence is not None:
         arr = sentence.split(" ")
         if len(arr) > 3:
             info["sentence"] = sentence
     logger.debug(f"info {info}")
 
-    if StoreTranslate.objects.filter(word=src, user_id=user_id).exists():
-        obj = StoreTranslate.objects.get(word=src, user_id=user_id)
+    if StoreTranslate.objects.filter(word=word, user_id=user_id).exists():
+        obj = StoreTranslate.objects.get(word=word, user_id=user_id)
         obj.times = obj.times + 1
         obj.info = info
         obj.save()
-        times = obj.times
     else:
-        StoreTranslate.objects.create(
-            word=src, info=info, freq=freq, user_id=user_id, created_time=timestr
+        obj = StoreTranslate.objects.create(
+            word=word, info=info, freq=freq, user_id=user_id, times=1,
+            created_time=timestr
         )
-    return True, _(
-        "word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}_enter_count_colon__{times}"
-    ).format(src=src, dst=dst, freq=freq, times=times)
+    return True, obj
 
 
 def translate_sentence(user_id, sentence):
@@ -157,7 +176,95 @@ def translate_common(user_id, content):
     return ret, answer
 
 
-def translate_word(word, uid, with_gpt=False):
+def extract_word(string):
+    word = re.search(r"\b\w+\b", string).group()
+    return word
+
+
+def get_json_obj(string):
+    ret = re.search(r"{.*}", string, re.DOTALL)
+    if ret is None:
+        return None
+    json_str = ret.group()
+    try:
+        return json.loads(json_str)
+    except json.decoder.JSONDecodeError:
+        return None
+
+
+class TranslateWord:
+    _instance = None
+
+    @staticmethod
+    def get_instance():
+        if TranslateWord._instance is None:
+            TranslateWord._instance = TranslateWord()
+        return TranslateWord._instance
+
+    def __init__(self):
+        self.translator = Translator(to_lang="zh", from_lang="en")
+
+    def translate_word_gpt(self, word, user_id, debug=False):
+        demo = "{'en_regular':'xxx', 'zh':'yyy'}"
+        req = f"请将 {word} 获取它的基本形式，并翻译成中文，以json格式返回: {demo}"
+        sysinfo = "You are an English teacher"
+        ret, desc, _ = llm_query(
+            user_id,
+            sysinfo,
+            req,
+            "translate",
+            # engine_type='deepseek',
+            debug=False,
+        )
+        if ret:
+            dic = get_json_obj(desc)
+            if dic is not None and "en_regular" in dic and "zh" in dic:
+                return ret, dic["en_regular"], dic["zh"]
+        return False, None, None
+
+    def translate_word(self, word, user_id, with_gpt=False, sentence = None, debug=False):
+        word = extract_word(word)
+        if word is None:
+            return False, None, None
+        if debug:
+            logger.debug(f"translate {word}, with_gpt {with_gpt}")
+        ret, en_regular, translation = find_word_from_db(word)
+        if ret:
+            logger.debug("found in db")
+        else:
+            if with_gpt:
+                ret, en_regular, translation = self.translate_word_gpt(
+                    word, user_id, debug=debug
+                )
+            else:
+                translation = self.translator.translate(word)
+                if translation != "":
+                    ret, en_regular, translation = True, word, translation
+                else:
+                    ret, en_regular, translation = False, None, None
+        if ret:
+            r, obj = add_to_db(word, en_regular, translation, user_id, sentence=sentence)
+            if r:
+                if 'regular_word' in obj.info:
+                    src = obj.info["regular_word"]
+                else:
+                    src = obj.info["word"]
+                translation = _(
+                    "word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}_enter_count_colon__{times}"
+                ).format(
+                    src=src,
+                    dst=obj.info["translate"],
+                    freq=obj.info["freq"],
+                    times=obj.times,
+                )
+        return ret, en_regular, translation
+
+
+def translate_word(word, uid, with_gpt=False, sentence=None):
+    return TranslateWord.get_instance().translate_word(
+        word, uid, with_gpt, sentence=sentence
+    )
+    """ # need install nltk and dicts, later move to another file
     ret = True
     zh = None
     regular_word = word
@@ -186,3 +293,4 @@ def translate_word(word, uid, with_gpt=False):
         ret = False
     logger.debug(f"result {ret} {zh}")
     return ret, regular_word, zh
+    """
