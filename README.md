@@ -136,4 +136,6 @@ This project is licensed under the terms of the GNU Lesser General Public Licens
 
 ## Contributors
 
-[![Contributors](https://img.shields.io/github/contributors/ExMemo/exmemo.svg)](https://github.com/ExMemo/exmemo/graphs/contributors)
+<a href="https://github.com/Exmemo/exmemo/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=Exmemo/exmemo" />
+</a>
