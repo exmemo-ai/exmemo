@@ -6,7 +6,7 @@
 
 ```bash
 docker run --name obdev --rm -v /exports:/exports -it node:16-alpine sh
-cd /exports/exmemo/ui/obsidian_plugin
+cd /exports/exmemo/code/exmemo/ui/obsidian_plugin
 echo "registry = http://registry.npm.taobao.org/" >> $HOME/.npmrc
 npm install
 npm run build # build to main.js

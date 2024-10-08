@@ -62,4 +62,5 @@ djangorestframework==3.14.0
 
 edge_tts
 pgvector
+translate==3.6.1
 

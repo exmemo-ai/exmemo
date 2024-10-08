@@ -78,7 +78,7 @@ export default {
         axios.defaults.headers.common['Authorization'] = 'Token ' + localStorage.getItem('token');
         this.$router.push("/");
       } catch (error) {
-        if (error.response.status == 400) {
+        if (error.response != undefined && error.response.status == 400) {
           ElMessage({
             type: 'error',
             message: this.$t('loginFailed400'),

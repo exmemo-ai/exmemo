@@ -260,7 +260,6 @@ export class Sync {
                 if (data.remove_list && data.remove_list.length > 0) {
                     await this.removeFiles(data.remove_list)
                 }
-                this.plugin.saveSettings();
                 // wait 1 second to show
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 this.plugin.showNotice('sync', t('syncFinished'), { timeout: 3000 });
@@ -270,8 +269,9 @@ export class Sync {
                 // if download not success, maybe accidentally remove cloud file
                 if (download_success) {
                     this.settings.lastSyncTime = new Date().getTime() + 5000; // 5 sec delay
+                    this.plugin.saveSettings();
                 }
-                console.log('syncAll finished')
+                console.log('syncAll finished, download_success:', download_success)
             })
             .catch(err => {
                 this.plugin.parseError(err, auto_login == false);
