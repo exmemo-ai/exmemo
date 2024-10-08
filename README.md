@@ -133,3 +133,7 @@ The database password set in Docker Compose takes effect only when the database 
 ## License
 
 This project is licensed under the terms of the GNU Lesser General Public License v3.0. See the [LICENSE](./LICENSE) file for details.
+
+## Contributors
+
+[![Contributors](https://img.shields.io/github/contributors/ExMemo/exmemo.svg)](https://github.com/ExMemo/exmemo/graphs/contributors)
