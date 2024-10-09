@@ -1,3 +1,5 @@
+let isFirstInstall = false;
+
 chrome.runtime.onInstalled.addListener((details) => {
     console.log('Extension installed');
     chrome.contextMenus.create({
@@ -7,6 +9,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     });
     if (details.reason === "install") {
         chrome.runtime.openOptionsPage();
+        isFirstInstall = true;
         }
 });
 
@@ -17,6 +20,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 function syncBookmarks() {
+    if (isFirstInstall) {
+        console.log('Skipping sync on first install');
+        return;
+    }
     const title = chrome.i18n.getMessage('appName'); // 通知标题
     const message = chrome.i18n.getMessage('syncMessage');
     showNotification(title, message, true);
@@ -171,7 +178,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// 手动调用同步书签的功能
+// 监听书签事件 增删改移
 chrome.bookmarks.onCreated.addListener(syncBookmarks);
 chrome.bookmarks.onRemoved.addListener(syncBookmarks);
 chrome.bookmarks.onChanged.addListener(syncBookmarks);
