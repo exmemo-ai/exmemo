@@ -1,9 +1,26 @@
-# ExMemo Google Chrome Extension
+English | [中文简体](./README_cn.md)
+
+# ExMemo Chrome Extension
 An extension for synchronizing Google Chrome bookmarks.
 
 ## Features
+
+Synchronization triggers: User manually clicks the extension's "Sync" button, or automatically syncs when bookmarks are created, deleted, modified, or moved.
+
 - Synchronize bookmark list to the database, only adding the latest bookmarks during each sync
-- Detect broken links
+- Mark broken links
+
+## Integration with the ExMemo Project (Important)
+
+ExMemo is a personal knowledge management project aimed at unifying data storage, integrating information, and expanding cognitive capabilities. ExMemo chrome extension is a branch of the [ExMemo project](https://github.com/ExMemo/exmemo.git) and requires communication with the backend of the ExMemo project to store bookmark information. It also uses the project's frontend to support data retrieval and search across multiple platforms.
+
+**Deploying the ExMemo Service**
+
+Please refer to the project's [README.md](https://github.com/ExMemo/exmemo/blob/master/README.md) for setup and running instructions. The detailed steps are as follows:
+- 2.1 Environment
+- 2.2.1 Build Backend Image
+- 2.2.2 Build Frontend Image
+- 2.3.1 Start in Production Mode
 
 ## Installation and Setup
 
