@@ -1,29 +1,29 @@
-import { TFile, PluginSettingTab, Setting, App, Events } from 'obsidian';
+import { PluginSettingTab, Setting, App } from 'obsidian';
 import { t } from "./lang/helpers"
 
-export interface MindAnchorSettings {
+export interface ExMemoSettings {
 	myUsername: string;
 	myPassword: string;
 	myToken: string;
-	lastSync: Map<TFile, number>;
 	lastSyncTime: number;
+	syncInterval: number;
 	url: string;
 	include: string;
-	exclude: string;
+	exclude: string;	
 }
 
-export const DEFAULT_SETTINGS: MindAnchorSettings = {
+export const DEFAULT_SETTINGS: ExMemoSettings = {
 	myUsername: 'guest',
 	myPassword: '123456',
 	myToken: '',
-	lastSync: new Map(),
 	lastSyncTime: 0,
+	syncInterval: 0,
 	url: 'http://localhost:8005',
 	include: '',
 	exclude: '',
 }
 
-export class MindAnchorSettingTab extends PluginSettingTab {
+export class ExMemoSettingTab extends PluginSettingTab {
 	plugin;
 
 	constructor(app: App, plugin: any) {
@@ -34,9 +34,17 @@ export class MindAnchorSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl('h1', { text: t('general') });
+		// 
+        const fragment = document.createDocumentFragment();
+        const link = document.createElement('a');
+        link.href = 'https://github.com/ExMemo/exmemo/';
+        link.text = 'GitHub project: exmemo';
+        fragment.append(t('service_desc1'));
+        fragment.append(link);
+        fragment.append(t('service_desc2'));
 		new Setting(containerEl)
 			.setName(t('serverAddress'))
+			.setDesc(fragment)
 			.addText(text => text
 				.setPlaceholder('http://localhost:8005')
 				.setValue(this.plugin.settings.url)
@@ -46,6 +54,7 @@ export class MindAnchorSettingTab extends PluginSettingTab {
 				}));
 		new Setting(containerEl)
 			.setName(t('username'))
+			.setDesc(t('username_desc'))
 			.addText(text => text
 				.setPlaceholder(t('username'))
 				.setValue(this.plugin.settings.myUsername)
@@ -61,9 +70,11 @@ export class MindAnchorSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.myPassword = value;
 					await this.plugin.saveSettings();
-				}));
+				}).inputEl.type = 'password');
+		new Setting(containerEl).setName(t('inexclude')).setHeading();
 		new Setting(containerEl)
-			.setName(t('include'))
+			.setName(t('include_name'))
+			.setDesc(t('include_desc'))
 			.addText(text => text
 				.setPlaceholder('dir1, dir2, ... default is all')
 				.setValue(this.plugin.settings.include)
@@ -72,7 +83,8 @@ export class MindAnchorSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)
-			.setName(t('exclude'))
+			.setName(t('exclude_name'))
+			.setDesc(t('exclude_desc'))
 			.addText(text => text
 				.setPlaceholder('dir1, *_xxx.md default is null')
 				.setValue(this.plugin.settings.exclude)
@@ -80,6 +92,21 @@ export class MindAnchorSettingTab extends PluginSettingTab {
 					this.plugin.settings.exclude = value;
 					await this.plugin.saveSettings();
 				}));
-
+		//		
+		new Setting(containerEl).setName(t('auto_sync')).setHeading();
+		new Setting(containerEl)
+			.setName(t('auto_sync_interval'))
+			.setDesc(t('auto_sync_interval_desc'))
+			.addText(text => text
+				.setPlaceholder('0')
+				.setValue(this.plugin.settings.syncInterval.toString())
+				.onChange(async (value) => {
+					if (isNaN(parseInt(value))) {
+						value = '0';
+					}
+					this.plugin.settings.syncInterval = parseInt(value);
+					await this.plugin.saveSettings();
+					this.plugin.resetSyncInterval();
+				}));
 	}
 }

@@ -36,7 +36,6 @@ export class Sync {
         let ret = true;
 
         console.log('groupCount:', groupCount, 'groupSize:', groupSize, 'uploadList:', uploadList.length)
-        //console.log(uploadList)
 
         this.plugin.showNotice('sync',
             t('upload') + ': ' + uploadedList.length + '/' + uploadList.length,
@@ -113,7 +112,7 @@ export class Sync {
         const include_list = this.settings.include.split(',');
         const exclude_list = this.settings.exclude.split(',');
         //const files = this.app.vault.getMarkdownFiles();
-        const file_dict = await this.localInfo.getFileInfoList()
+        const file_dict = await this.localInfo.fileInfoList;
 
         console.log('vault total: ', Object.keys(file_dict).length)
         const fileList = [];
@@ -147,7 +146,6 @@ export class Sync {
                     }
                 }
                 if (!include) {
-                    //console.log('exclude2: ', file.path)
                     continue;
                 }
                 fileList.push({ 'path': file.path, 'mtime': file.mtime, 'md5': file.md5 });
@@ -161,20 +159,16 @@ export class Sync {
         // check md5, it has already moved to cloud, later move this function
         let filteredList: [] = [];
         for (const dic of fileList) {
-            console.log('test', dic)
             if ('md5' in dic) {
                 const file = this.app.vault.getAbstractFileByPath(dic['addr'])
                 if (file == null) {
-                    console.log('file not exist: ', dic['addr'])
+                    console.log('warning: file not exist: ', dic['addr'])
                     filteredList.push(dic);
                 } else {
                     await this.app.vault.read(file).then((content: any) => {
                         const md5 = MD5(content).toString();
                         if (md5 != dic['md5']) {
-                            console.log('md5 not same: ', dic['addr'], 'loca', md5, 'remove', dic['md5'])
                             filteredList.push(dic);
-                        } else {
-                            console.log('md5 same: ', dic['addr'])
                         }
                     });
                 }
@@ -182,11 +176,16 @@ export class Sync {
                 filteredList.push(dic);
             }
         }
-        console.log('filteredList: ', fileList.length, filteredList.length)
+        // console.log('filteredList: ', fileList.length, filteredList.length)
         return filteredList;
     }
 
     async syncAll(auto_login: boolean = true) {
+        const isUpdated = await this.localInfo.update();
+        if (!isUpdated) {
+            this.plugin.showNotice('temp', t('sync') + ": " + t('sync_no_file_change'), { timeout: 3000 });
+            return;
+        }
         if (this.settings.myToken == '') {
             await this.plugin.getMyToken();
         }
@@ -209,15 +208,12 @@ export class Sync {
         requestOptions.body.append('files', JSON.stringify(fileList));
         await fetch(url.toString(), requestOptions)
             .then(response => {
-                //console.log('XXX')
                 if (!response.ok) {
                     throw response;
                 }
                 return response.json();
             })
             .then(async (data): Promise<void> => {
-                //console.log('BBB')
-                //console.log(data);
                 this.interrupt = false;
                 let showinfo = ""
                 let upload_list = data.upload_list;
@@ -398,29 +394,21 @@ export class LocalInfo {
         this.load();
     }
 
-    async getFileInfoList() {
-        console.log('getFileInfoList() 1: ' + Object.keys(this.fileInfoList).length);
-        await this.update();
-        console.log('getFileInfoList() 2: ' + Object.keys(this.fileInfoList).length);
-        return this.fileInfoList;
-    }
 
     async update() {
         const vault = this.app.vault;
         const files = vault.getFiles();
         if (files.length == 0) {
-            console.log('no vault files, wait for next update()')
+            console.log('no vault files, wait for next update')
             return;
         }
         this.plugin.showNotice('temp', 'ExMemo' + t('updateIndex'));
-        //console.log('@@@ before local file update ' + Object.keys(this.fileInfoList).length);
         let count = 0;
-        console.log('update() vault files: ' + files.length)
+        console.log('update, vault files: ' + files.length)
         for (const file of files) {
             const mtime = file.stat.mtime;
             if (file.path in this.fileInfoList) {
                 if (this.fileInfoList[file.path].mtime == mtime) {
-                    //console.log('skip:', file.path)
                     continue;
                 }
             }
@@ -428,14 +416,12 @@ export class LocalInfo {
             const data = await vault.readBinary(file);
             const wordArray = WordArray.create(data);
             const md5Hash = MD5(wordArray).toString();
-            //console.log(`MD5 hash: ${md5Hash}`);
 
             this.fileInfoList[file.path] = {
                 path: file.path,
                 md5: md5Hash,
                 mtime: mtime
             };
-            //console.log('add to filelist', md5Hash, file.path)
             count += 1;
         }
         for (const key in this.fileInfoList) {
@@ -445,11 +431,13 @@ export class LocalInfo {
             }
         }
         console.log('update count:', count, 'total:', Object.keys(this.fileInfoList).length)
-        if (count > 0) {
-            this.save();
-        }
         console.log('@@@ after local file update ' + Object.keys(this.fileInfoList).length);
         this.plugin.hideNotice('temp')
+        if (count > 0) {
+            this.save();
+            return true;
+        }
+        return false;
     }
 
     save() {

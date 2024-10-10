@@ -1,7 +1,7 @@
 import { Notice } from 'obsidian';
 import { t } from "./lang/helpers"
 
-export class MindAnchorNotice {
+export class ExMemoNotice {
 	active: Record<string, Notice>;
 
 	constructor() {
@@ -9,7 +9,6 @@ export class MindAnchorNotice {
 	}
 
 	showInfo(id: string, message: string, opts: any = {}) {
-		console.log('AAA', id, message, opts)
 		if (typeof opts.timeout === 'undefined')
 			opts.timeout = 0;
 		else if (opts.timeout > 0) { // set message not support timeout

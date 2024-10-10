@@ -1,18 +1,19 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, MindAnchorSettings, MindAnchorSettingTab } from 'settings';
+import { DEFAULT_SETTINGS, ExMemoSettings, ExMemoSettingTab } from 'settings';
 import { Sync } from 'sync';
 import { SearchModal } from 'search';
-import { MindAnchorNotice } from 'notice';
+import { ExMemoNotice } from 'notice';
 import { t } from "./lang/helpers"
 
-export default class MindAnchorPlugin extends Plugin {
-	settings: MindAnchorSettings;
-	notice: MindAnchorNotice;
+export default class ExMemoPlugin extends Plugin {
+	settings: ExMemoSettings;
+	notice: ExMemoNotice;
 	sync: Sync;
+	syncIntervalId: number = 0;
 
 	async onload() {
 		await this.loadSettings();
-		this.notice = new MindAnchorNotice();
+		this.notice = new ExMemoNotice();
 		this.sync = new Sync(this, this.app, this.settings);
 
 		this.addCommand({
@@ -37,14 +38,12 @@ export default class MindAnchorPlugin extends Plugin {
 			}
 		});
 
-		this.addSettingTab(new MindAnchorSettingTab(this.app, this));
+		this.addSettingTab(new ExMemoSettingTab(this.app, this));
 
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
 		});
 
-		// later add logic to sync add files
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		this.resetSyncInterval();
 	}
 
 	showNotice(id: string, str: string, opts: any = {}) {
@@ -56,7 +55,10 @@ export default class MindAnchorPlugin extends Plugin {
 	}
 
 	onunload() {
-
+		if (this.syncIntervalId !== 0) {
+			window.clearInterval(this.syncIntervalId);
+			this.syncIntervalId = 0;
+		}
 	}
 
 	async loadSettings() {
@@ -70,7 +72,6 @@ export default class MindAnchorPlugin extends Plugin {
 	async getMyToken() {
 		this.showNotice('auth', t('login'));
 		await new Promise(resolve => setTimeout(resolve, 3000));
-		console.log('getMyToken');
 		const url = new URL(this.settings.url + '/api/auth/login/');
 		const requestOptions = {
 			method: 'POST',
@@ -84,7 +85,6 @@ export default class MindAnchorPlugin extends Plugin {
 			const response = await fetch(url.toString(), requestOptions);
 			if (response.ok) {
 				const data = await response.json();
-				console.log(data);
 				this.settings.myToken = data.token;
 				this.saveSettings();
 				this.hideNotice('auth');
@@ -112,6 +112,19 @@ export default class MindAnchorPlugin extends Plugin {
 				let showinfo = t('syncFailed') + ': ' + err.status;
 				this.showNotice('error', showinfo, { timeout: 3000 });
 			}
+		}
+	}
+
+	resetSyncInterval() {
+		let interval = this.settings.syncInterval;
+		// console.log("resetSyncInterval: : " + interval)
+		if (this.syncIntervalId !== 0) {
+			window.clearInterval(this.syncIntervalId);
+			this.syncIntervalId = 0;
+		}
+		if (interval > 0) {
+			this.syncIntervalId = window.setInterval(() => {this.sync.syncAll();},
+					interval * 60 * 1000);
 		}
 	}
 }

@@ -33,13 +33,12 @@ export async function searchData(plugin: any, keyword: string, auto_login: boole
         })
 
         .then(data => {
-            console.log(data);
+            // console.log(data);
             if (data.results) {
                 const editor = plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
                 if (editor) {
                     editor.replaceSelection('\n')
                     for (let i = 0; i < data.results.length; i++) {
-                        console.log('[' + data.results[i].title + '](' + data.results[i].addr + ')\n')
                         editor.replaceSelection('[' + data.results[i].title + '](' + data.results[i].addr + ')\n')
                         let content = data.results[i].raw
                         if (content) {
@@ -74,7 +73,7 @@ export async function searchData(plugin: any, keyword: string, auto_login: boole
 }
 
 export async function getDataList(plugin: any, ctype: string, etype: string,
-    status: string, keyword: string, startDate = '', endDate = '', auto_login = true) {
+    status: string, keyword: string, maxCount = '', startDate = '', endDate = '', auto_login = true) {
     if (plugin.settings.myToken == '') {
         await plugin.getMyToken();
     }
@@ -111,11 +110,7 @@ export async function getDataList(plugin: any, ctype: string, etype: string,
         new Notice(t('search') + ': ' + keyword);
     }
 
-    if ((startDate && startDate != '') || (endDate && endDate != '')) {
-        url.searchParams.append('max_count', '100');
-    } else {
-        url.searchParams.append('max_count', '20');
-    }
+    url.searchParams.append('max_count', maxCount);
 
     fetch(url.toString(), requestOptions)
         .then(response => {
@@ -131,7 +126,6 @@ export async function getDataList(plugin: any, ctype: string, etype: string,
                 editor.replaceSelection(t('total') + ":" + data.results.length + '\n\n');
                 let desc = '';
                 for (let i = 0; i < data.results.length; i++) {
-                    //console.log(data.results[i])
                     if (data.results[i].etype == 'web') {
                         desc = '* ' + JSON.stringify(data.results[i].title) + '\n'
                         desc = desc + '  ' + data.results[i].created_time + " " + data.results[i].ctype + "\n";
@@ -184,7 +178,7 @@ export async function getDataList(plugin: any, ctype: string, etype: string,
             plugin.parseError(err, false);
             if (err.status === 401) {
                 if (auto_login) {
-                    getDataList(plugin, ctype, etype, status, keyword, startDate, endDate, false);
+                    getDataList(plugin, ctype, etype, status, keyword, maxCount, startDate, endDate, false);
                 }
             } else {
                 console.error(err);
@@ -235,6 +229,32 @@ export class SearchModal extends Modal {
         contentEl.createEl('br');
         contentEl.createEl('br');
         //
+        contentEl.createEl('label').textContent = t('item_count_max') + ":";
+        let selectMaxCountEl = contentEl.createEl('select', {
+            attr: {
+                style: 'margin-left: 10px; margin-right: 10px;'
+            }
+        });
+        selectMaxCountEl.id = 'selectMaxCountEl';
+        let optionMaxCount10El = contentEl.createEl('option');
+        optionMaxCount10El.value = '10';
+        optionMaxCount10El.textContent = '10';
+        selectMaxCountEl.appendChild(optionMaxCount10El);
+        let optionMaxCount20El = contentEl.createEl('option');
+        optionMaxCount20El.value = '20';
+        optionMaxCount20El.textContent = '20';
+        selectMaxCountEl.appendChild(optionMaxCount20El);
+        let optionMaxCount50El = contentEl.createEl('option');
+        optionMaxCount50El.value = '50';
+        optionMaxCount50El.textContent = '50';
+        selectMaxCountEl.appendChild(optionMaxCount50El);
+        let optionMaxCount100El = contentEl.createEl('option');
+        optionMaxCount100El.value = '100';
+        optionMaxCount100El.textContent = '100';
+        selectMaxCountEl.appendChild(optionMaxCount100El);
+        contentEl.createEl('br');
+        contentEl.createEl('br');
+        //
         contentEl.createEl('label').textContent = t('range') + ":";
         let dateStartEl = contentEl.createEl('input', {
             attr: {
@@ -255,7 +275,7 @@ export class SearchModal extends Modal {
         let buttonEl = contentEl.createEl('button');
         buttonEl.textContent = t('search');
         buttonEl.addEventListener('click', () => {
-            getDataList(this.plugin, '', selectEl.value, '', inputEl.value, dateStartEl.value, dateEndEl.value);
+            getDataList(this.plugin, '', selectEl.value, '', inputEl.value, selectMaxCountEl.value, dateStartEl.value, dateEndEl.value);
             //searchData(this.plugin, inputEl.value);
             this.close();
         });
