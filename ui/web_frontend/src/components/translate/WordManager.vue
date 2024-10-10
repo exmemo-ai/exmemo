@@ -152,14 +152,10 @@ export default {
 <style scoped>
 .ellipsis-container {
     max-height: 40px;
-    /* 设置最大高度 */
     overflow: hidden;
-    /* 隐藏溢出部分 */
     text-overflow: ellipsis;
-    /* 显示省略号 */
 }
 
-/* 实现比较小的字体 */
 .custom-options {
     font-size: 12px;
     --el-input-font-size: 12px;
@@ -172,10 +168,8 @@ export default {
 .desktop-width {
     max-width: 80%;
     margin: 0 auto;
-    /* 居中显示，可选 */
 }
 
-/* 添加媒体查询，根据屏幕宽度调整样式 */
 @media (max-width: 767px) {
     .desktop-width {
         max-width: 100%;

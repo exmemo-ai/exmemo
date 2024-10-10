@@ -225,8 +225,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
     def perform_custom_logic(self, validated_data):
         # demo
         # if validated_data.get('price') and validated_data['price'] < 0:
-        #    raise ValidationError("价格不能为负值！")
-        # print(f"验证后的数据: {validated_data}")
+        #    raise ValidationError("price err！")
+        # print(f": {validated_data}")
         pass
 
     @action(detail=True, methods=["get"], url_path="download")

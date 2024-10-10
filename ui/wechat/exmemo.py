@@ -52,7 +52,6 @@ class ExMemo(Plugin):
         )
 
         if ret and isinstance(detail, dict) and "type" in detail:
-            # 回复对话
             reply = Reply()
             if detail["type"] == "file":
                 reply.type = ReplyType.FILE
@@ -72,7 +71,7 @@ class ExMemo(Plugin):
 
 def func(context, **kwargs):
     """
-    与后端交互，处理文本、文件、图片
+    Connect backend to process text, files, and images.
     """
     ret = False
     detail = {"type": "text", "content": "不能识别的命令"}

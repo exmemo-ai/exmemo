@@ -230,7 +230,6 @@ class UserOperate:
                 data = StoreUser.objects.filter(user_id=self.user_id).first()
         if data is not None:
             self.settings.set_json(data.settings)
-            # self.privilege.set_json(data.privilege) # 改为根据level设置
             self.level = data.level
             self.privilege.set_level(self.level)
             self.user_id = data.user_id

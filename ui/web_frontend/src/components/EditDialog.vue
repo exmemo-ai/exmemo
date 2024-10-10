@@ -41,9 +41,8 @@
                         </div>
                     </div>
                     <span v-else width="100%"
-                        style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">文件：{{
-                            file_path
-                        }}</span>
+                        style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">{{
+                            $t('file') }}: {{file_path}}</span>
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
                     <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
@@ -68,7 +67,7 @@
                 <el-label>{{ $t('title') }}</el-label>
             </div>
             <div style="flex-grow: 1;">
-                <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? '自动提取' : ''"
+                <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? $t('autoExtract') : ''"
                     :readonly="form.etype === 'file' || form.etype === 'note'"></el-input>
             </div>
         </div>
@@ -418,15 +417,11 @@ export default {
         },
         realDelete() {
             console.log('Delete', this.form.idx);
-            // 成功返回true，失败返回false
             let table_name = 'data'
             console.log(getURL() + 'api/entry/' + table_name + '/' + this.form.idx + '/')
             axios.delete(getURL() + 'api/entry/' + table_name + '/' + this.form.idx + '/')
                 .then(response => {
-                    // 请求成功，处理响应数据
-                    console.log('ret1', response);
-                    console.log('ret2', response.data);
-                    console.log('ret3', response.data.status);
+                    console.log('response', response);
                     if (response.data.status == 'success') {
                         this.$message({
                             type: 'success',

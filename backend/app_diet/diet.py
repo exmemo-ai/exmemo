@@ -374,10 +374,6 @@ class Food:
             print(e, "question", question)
 
 
-# Food().get_calorie('奶茶', debug=True) # for test
-# Food().find_food_calorie('奶茶', debug=True)
-
-
 def get_date(content):
     now = datetime.datetime.now()
     date = now.strftime("%Y-%m-%d")

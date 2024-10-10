@@ -138,7 +138,6 @@ export async function getDataList(plugin: any, ctype: string, etype: string,
                         desc = desc + "  " + content + "\n\n"
                         editor.replaceSelection(desc);
                     } else if (data.results[i].etype == 'note') {
-                        // 从 addr 中取出第一层路径
                         let addr = data.results[i].addr;
                         let path = addr.split('/');
                         let vault_name = path[0];

@@ -170,7 +170,7 @@ export default {
             }
         },
         handleShortPress(event, word) {
-            // 短按出词的翻译
+            // Short press to translate word.
             console.log("short press", event, word)
             this.setPos(event);
             this.currentWord = word;
@@ -182,7 +182,7 @@ export default {
             let selectedText = window.getSelection().toString();
             this.setPos(event);
             if (selectedText) {
-                // 长按并且有选中文本
+                // Long press with selected text.
                 console.log(selectedText);
                 this.translate('sentence', null, selectedText);
             } else {
@@ -212,7 +212,6 @@ export default {
         },
         getSentence(element) {
             console.log('getSentence:', element);
-            // 获取当前控件所在的句子
             let sentence = [];
             let text = [];
             let prev = element.previousSibling;

@@ -45,8 +45,7 @@ export class ExMemoNotice {
 	}
 
 	async hide(id: string) {
-		// 等2秒后再执行
-		await new Promise(resolve => setTimeout(resolve, 2000));
+		await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 second
 		if (this.active[id]) {
 			this.active[id].hide();
 			delete this.active[id];

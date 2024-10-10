@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     async check_password_set(user_name) {
-      // 访问远程，查看是否设置过密码
+      // check if a password has been set.
       try {
         const response = await axios.get(getURL() + "api/user/",
           { params: { user_id: user_name, rtype: 'check_password' } });
