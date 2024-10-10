@@ -6,6 +6,7 @@ export interface ExMemoSettings {
 	myPassword: string;
 	myToken: string;
 	lastSyncTime: number;
+	lastIndexTime: number;
 	syncInterval: number;
 	url: string;
 	include: string;
@@ -17,6 +18,7 @@ export const DEFAULT_SETTINGS: ExMemoSettings = {
 	myPassword: '123456',
 	myToken: '',
 	lastSyncTime: 0,
+	lastIndexTime: 0,
 	syncInterval: 0,
 	url: 'http://localhost:8005',
 	include: '',

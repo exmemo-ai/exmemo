@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { TFile, MarkdownView } from 'obsidian';
+import { normalizePath, TFile, MarkdownView } from 'obsidian';
 import { t } from "./lang/helpers"
 
 const MD5 = require('crypto-js/md5');
@@ -114,15 +114,11 @@ export class Sync {
         return new RegExp(regex);
     }
 
-    async getLocalFiles() {
-        // for syncall: get all files in vault, filter by include and exclude
-        const include_list = this.settings.include.split(',');
-        const exclude_list = this.settings.exclude.split(',');
-        //const files = this.app.vault.getMarkdownFiles();
+    async getLocalFiles(include_str:string, exclude_str:string) {
+        const include_list = include_str.split(',');
+        const exclude_list = exclude_str.split(',');
         const file_dict = await this.localInfo.fileInfoList;
-
         const fileList = [];
-        //for (const file of files) {
         for (const key in file_dict) {
             const file = file_dict[key];
             //if (file.path.contains('.md')) {
@@ -160,19 +156,42 @@ export class Sync {
         return fileList;
     }
 
+    regular_rules(rule_str: string) {
+        if (rule_str == '') {
+            return rule_str;
+        }
+        const rule_list = rule_str.split(',');
+        let ret_array = []
+        for (const rule of rule_list) {
+            let new_rule = normalizePath(rule);
+            ret_array.push(new_rule);
+        }
+        let ret_string = ret_array.join(',');
+        if (DEBUG) {
+            console.log('before regular_rules', rule_str)
+            console.log('after regular_rules ', ret_string)
+        }
+        return ret_string
+    }
+
     async syncAll(auto_login: boolean = true) {
-        const isUpdated = await this.localInfo.update();
-        if (!isUpdated) {
+        await this.localInfo.update();
+        // Later, add a backend API to check remote change after lastSyncTime, then enable these codes.
+        /*
+        if (this.settings.lastSyncTime > this.settings.lastIndexTime) {
             this.plugin.showNotice('temp', t('sync') + ": " + t('sync_no_file_change'), { timeout: 3000 });
             return;
         }
+        */
         if (this.settings.myToken == '') {
             await this.plugin.getMyToken();
         }
         if (this.settings.myToken == '') {
             return;
         }
-        const fileList = await this.getLocalFiles();
+        const include_str = this.regular_rules(this.settings.include);
+        const exclude_str = this.regular_rules(this.settings.exclude);
+        const fileList = await this.getLocalFiles(include_str, exclude_str);
         const url = new URL(this.settings.url + '/api/sync/');
         const requestOptions = {
             method: 'POST',
@@ -182,8 +201,8 @@ export class Sync {
         requestOptions.body.append('user_name', this.settings.myUsername);
         requestOptions.body.append('vault', this.app.vault.getName());
         requestOptions.body.append('rtype', 'compare');
-        requestOptions.body.append('include', this.settings.include);
-        requestOptions.body.append('exclude', this.settings.exclude);
+        requestOptions.body.append('include', include_str);
+        requestOptions.body.append('exclude', exclude_str);
         requestOptions.body.append('last_sync_time', this.settings.lastSyncTime.toString())
         requestOptions.body.append('files', JSON.stringify(fileList));
         await fetch(url.toString(), requestOptions)
@@ -194,6 +213,9 @@ export class Sync {
                 return response.json();
             })
             .then(async (data): Promise<void> => {
+                if (DEBUG) {
+                    console.log('syncAll data:', data)
+                }
                 this.interrupt = false;
                 let showinfo = ""
                 let upload_list = data.upload_list;
@@ -241,7 +263,7 @@ export class Sync {
                 // lastSyncTime only affects file only in cloud
                 // if file only in cloud, and lastSyncTime is new, remove cloud file
                 // if download not success, maybe accidentally remove cloud file
-                if (download_success) {
+                if (download_success && false == this.interrupt) {
                     this.settings.lastSyncTime = new Date().getTime() + 5000; // 5 sec delay
                     this.plugin.saveSettings();
                 }
@@ -267,7 +289,10 @@ export class Sync {
                 break;
             }
             try {
-                await this.app.vault.remove(dic['addr']);
+                if (DEBUG) {
+                    console.log('now remove file', dic['addr'])
+                }
+                this.app.vault.trash(this.app.vault.getAbstractFileByPath(dic['addr']));
             } catch (error) {
                 console.error(error);
             }
@@ -320,14 +345,14 @@ export class Sync {
             .then(async data => {
                 const reader = new FileReader();
                 reader.onload = async () => {
-                    let absolutePath = path.join(this.app.vault.basePath, filename);
+                    let absolutePath = path.join(this.app.vault.adapter.getBasePath(), filename);
                     let dirname = path.dirname(absolutePath);
                     if (!fs.existsSync(dirname)) {
                         fs.mkdirSync(dirname, { recursive: true });
                     }
                     const arrayBuffer = await reader.result;
                     if (arrayBuffer instanceof ArrayBuffer) {
-                        await this.app.vault.writeBinary(filename, arrayBuffer);
+                        await this.app.vault.adapter.writeBinary(filename, arrayBuffer);
                     }
                 };
                 await reader.readAsArrayBuffer(data.blobData);
@@ -336,6 +361,7 @@ export class Sync {
                 this.plugin.parseError(err);
                 ret = false;
             });
+        console.log('now download file', ret)
         return ret
     }
 
@@ -370,7 +396,7 @@ export class LocalInfo {
         this.plugin = plugin;
         this.app = app;
         this.fileInfoList = {};
-        this.jsonPath = path.join(this.app.vault.getBasePath(), this.plugin.manifest.dir,
+        this.jsonPath = path.join(this.app.vault.adapter.getBasePath(), this.plugin.manifest.dir,
             this.app.vault.getName() + '_file_info.json');
         if (DEBUG) {
             console.log('LocalInfo constructor:', this.jsonPath)
@@ -431,6 +457,8 @@ export class LocalInfo {
             console.log('Saving to:', absolutePath);
         }
         fs.writeFileSync(this.jsonPath, fileInfoStr);
+        this.plugin.settings.lastIndexTime = new Date().getTime();
+        this.plugin.saveSettings();
     }
 
     async load() {
