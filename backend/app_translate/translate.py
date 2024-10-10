@@ -162,7 +162,7 @@ def translate_sentence(user_id, sentence):
 
 
 def translate_word_role(user_id, word, sentence):
-    content = 'Please explain the meaning of the word "{word}" in the sentence "{sentence}", and try to keep the answer brief'.format(
+    content = 'Please explain the meaning of the word "{word}" in the sentence "{sentence}", and try to keep the answer brief in Chinese.'.format(
         word=word, sentence=sentence
     )
     ret, answer, _ = llm_query(user_id, MSG_ROLE, content, "translate", debug=True)
@@ -205,8 +205,12 @@ class TranslateWord:
         self.translator = Translator(to_lang="zh", from_lang="en")
 
     def translate_word_gpt(self, word, user_id, debug=False):
-        demo = "{'en_regular':'xxx', 'zh':'yyy'}"
-        req = f"请将 {word} 获取它的基本形式，并翻译成中文，以json格式返回: {demo}"
+        demo = "{'en_regular':'xxx', 'zh_main':'yyy', 'zh_all':'zzz'}"
+        req = f"""
+        Please take {word} and obtain its base form: when extracting the base form, 
+        the part of speech remains unchanged, but plural forms, tenses, etc., are removed. 
+        Translate its main meaning and all meanings into Chinese, and return them in JSON format: {demo}
+        """
         sysinfo = "You are an English teacher"
         ret, desc, _ = llm_query(
             user_id,
@@ -218,8 +222,8 @@ class TranslateWord:
         )
         if ret:
             dic = get_json_obj(desc)
-            if dic is not None and "en_regular" in dic and "zh" in dic:
-                return ret, dic["en_regular"], dic["zh"]
+            if dic is not None and "en_regular" in dic and "zh_main" in dic and 'zh_all' in dic:
+                return ret, dic["en_regular"], dic["zh_all"]
         return False, None, None
 
     def translate_word(self, word, user_id, with_gpt=False, sentence = None, debug=False):

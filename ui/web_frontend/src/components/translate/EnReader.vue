@@ -16,10 +16,10 @@
                 <el-button @click="gotoDataManager">{{ $t('dataManagement') }}</el-button>
             </div>
             <div class="header-buttons" style="float: right; text-align: right;">
-                <el-button @click="handleSave">{{ $t('save') }}</el-button>
-                <el-button @click="handleAnalysis">AI</el-button>
-                <el-button @click="gotoWordManager">{{ $t('vocabulary') }}</el-button>
-                <el-button @click="gotoArticleManager">{{ $t('articles') }}</el-button>
+                <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
+                <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
+                <el-button @click="gotoWordManager">{{ $t('vocabularyList') }}</el-button>
+                <el-button @click="gotoArticleManager">{{ $t('articleList') }}</el-button>
             </div>
         </div>
 
