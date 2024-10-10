@@ -1,5 +1,5 @@
 import { App, Modal } from 'obsidian';
-import { Editor, MarkdownView, Notice } from 'obsidian';
+import { MarkdownView, Notice } from 'obsidian';
 import { t } from "./lang/helpers"
 
 export async function searchData(plugin: any, keyword: string, auto_login: boolean = true) {

@@ -5,6 +5,7 @@ import { t } from "./lang/helpers"
 
 const MD5 = require('crypto-js/md5');
 const WordArray = require('crypto-js/lib-typedarrays');
+const DEBUG = false;
 
 export class Sync {
     app: any;
@@ -22,7 +23,7 @@ export class Sync {
         this.interrupt = false;
         this.interruptButton = {
             'text': t('interrupt'), 'callback': () => {
-                console.log('interruptButton callback')
+                console.log('warning: interrupt sync')
                 this.interrupt = true;
             }
         };
@@ -35,7 +36,9 @@ export class Sync {
         let uploadedList: TFile[] = [];
         let ret = true;
 
-        console.log('groupCount:', groupCount, 'groupSize:', groupSize, 'uploadList:', uploadList.length)
+        if (DEBUG) {
+            console.log('groupCount:', groupCount, 'groupSize:', groupSize, 'uploadList:', uploadList.length)
+        }
 
         this.plugin.showNotice('sync',
             t('upload') + ': ' + uploadedList.length + '/' + uploadList.length,
@@ -75,7 +78,9 @@ export class Sync {
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data);
+                    if (DEBUG) {
+                        console.log(data);
+                    }
                     if (data.list) {
                         for (const file of group) {
                             if (data.list.includes(file.path)) {
@@ -97,7 +102,9 @@ export class Sync {
                     ret = false;
                 });
         }
-        console.log('uploadedList' + uploadedList.length)
+        if (DEBUG) {
+            console.log('uploadedList' + uploadedList.length)
+        }
         return [ret, uploadedList];
     }
 
@@ -114,7 +121,6 @@ export class Sync {
         //const files = this.app.vault.getMarkdownFiles();
         const file_dict = await this.localInfo.fileInfoList;
 
-        console.log('vault total: ', Object.keys(file_dict).length)
         const fileList = [];
         //for (const file of files) {
         for (const key in file_dict) {
@@ -151,33 +157,7 @@ export class Sync {
                 fileList.push({ 'path': file.path, 'mtime': file.mtime, 'md5': file.md5 });
             }
         }
-        console.log('fileList total: ', fileList.length)
         return fileList;
-    }
-
-    async filterFiles(fileList: []) {
-        // check md5, it has already moved to cloud, later move this function
-        let filteredList: [] = [];
-        for (const dic of fileList) {
-            if ('md5' in dic) {
-                const file = this.app.vault.getAbstractFileByPath(dic['addr'])
-                if (file == null) {
-                    console.log('warning: file not exist: ', dic['addr'])
-                    filteredList.push(dic);
-                } else {
-                    await this.app.vault.read(file).then((content: any) => {
-                        const md5 = MD5(content).toString();
-                        if (md5 != dic['md5']) {
-                            filteredList.push(dic);
-                        }
-                    });
-                }
-            } else {
-                filteredList.push(dic);
-            }
-        }
-        // console.log('filteredList: ', fileList.length, filteredList.length)
-        return filteredList;
     }
 
     async syncAll(auto_login: boolean = true) {
@@ -220,11 +200,9 @@ export class Sync {
                 let download_list = data.download_list;
                 let download_success = true;
                 if (upload_list && upload_list.length > 0) {
-                    //upload_list = await this.filterFiles(upload_list)
                     showinfo += t('upload') + ': ' + upload_list.length + ' ' + t('files') + '\n';
                 }
                 if (download_list && download_list.length > 0) {
-                    //download_list = await this.filterFiles(download_list)
                     showinfo += t('download') + ': ' + download_list.length + ' ' + t('files') + '\n';
                 }
                 if (data.remove_list && data.remove_list.length > 0) {
@@ -236,7 +214,7 @@ export class Sync {
                 if (showinfo == "") {
                     showinfo = t('nothingToDo');
                     this.plugin.showNotice('temp', showinfo, { timeout: 3000 });
-                    console.log('syncAll nothing to do')
+                    console.log('warning: syncAll nothing to do')
                     return;
                 }
                 this.plugin.showNotice('temp', showinfo, { timeout: 3000 });
@@ -267,7 +245,9 @@ export class Sync {
                     this.settings.lastSyncTime = new Date().getTime() + 5000; // 5 sec delay
                     this.plugin.saveSettings();
                 }
-                console.log('syncAll finished, download_success:', download_success)
+                if (DEBUG) {
+                    console.log('syncAll finished, download_success:', download_success)
+                }
             })
             .catch(err => {
                 this.plugin.parseError(err, auto_login == false);
@@ -287,7 +267,7 @@ export class Sync {
                 break;
             }
             try {
-                await this.app.vault.adapter.remove(dic['addr']);
+                await this.app.vault.remove(dic['addr']);
             } catch (error) {
                 console.error(error);
             }
@@ -320,7 +300,9 @@ export class Sync {
     }
 
     async downloadFile(filename: string, idx: string) {
-        console.log('downloadFile', filename, idx)
+        if (DEBUG) {
+            console.log('downloadFile', filename, idx)
+        }
         let ret = true;
         const url = new URL(this.settings.url + '/api/entry/data/' + idx + '/' + 'download/');
         const requestOptions = {
@@ -338,14 +320,14 @@ export class Sync {
             .then(async data => {
                 const reader = new FileReader();
                 reader.onload = async () => {
-                    let absolutePath = path.join(this.app.vault.adapter.basePath, filename);
+                    let absolutePath = path.join(this.app.vault.basePath, filename);
                     let dirname = path.dirname(absolutePath);
                     if (!fs.existsSync(dirname)) {
                         fs.mkdirSync(dirname, { recursive: true });
                     }
                     const arrayBuffer = await reader.result;
                     if (arrayBuffer instanceof ArrayBuffer) {
-                        await this.app.vault.adapter.writeBinary(filename, arrayBuffer);
+                        await this.app.vault.writeBinary(filename, arrayBuffer);
                     }
                 };
                 await reader.readAsArrayBuffer(data.blobData);
@@ -388,9 +370,11 @@ export class LocalInfo {
         this.plugin = plugin;
         this.app = app;
         this.fileInfoList = {};
-        this.jsonPath = path.join(this.app.vault.adapter.getBasePath(), this.plugin.manifest.dir,
+        this.jsonPath = path.join(this.app.vault.getBasePath(), this.plugin.manifest.dir,
             this.app.vault.getName() + '_file_info.json');
-        console.log('LocalInfo constructor:', this.jsonPath)
+        if (DEBUG) {
+            console.log('LocalInfo constructor:', this.jsonPath)
+        }
         this.load();
     }
 
@@ -399,12 +383,11 @@ export class LocalInfo {
         const vault = this.app.vault;
         const files = vault.getFiles();
         if (files.length == 0) {
-            console.log('no vault files, wait for next update')
+            console.log('warning: no vault files, wait for next update')
             return;
         }
         this.plugin.showNotice('temp', 'ExMemo' + t('updateIndex'));
         let count = 0;
-        console.log('update, vault files: ' + files.length)
         for (const file of files) {
             const mtime = file.stat.mtime;
             if (file.path in this.fileInfoList) {
@@ -430,8 +413,9 @@ export class LocalInfo {
                 count += 1;
             }
         }
-        console.log('update count:', count, 'total:', Object.keys(this.fileInfoList).length)
-        console.log('@@@ after local file update ' + Object.keys(this.fileInfoList).length);
+        if (DEBUG) {
+            console.log('update count:', count, 'total:', Object.keys(this.fileInfoList).length)
+        }
         this.plugin.hideNotice('temp')
         if (count > 0) {
             this.save();
@@ -443,7 +427,9 @@ export class LocalInfo {
     save() {
         const fileInfoStr = JSON.stringify(this.fileInfoList, null, 2);
         const absolutePath = path.resolve(this.jsonPath);
-        console.log('Saving to:', absolutePath);
+        if (DEBUG) {
+            console.log('Saving to:', absolutePath);
+        }
         fs.writeFileSync(this.jsonPath, fileInfoStr);
     }
 
@@ -452,7 +438,9 @@ export class LocalInfo {
             const fileInfoStr = fs.readFileSync(this.jsonPath, 'utf8');
             this.fileInfoList = JSON.parse(fileInfoStr);
         }
-        console.log('load file info:', Object.keys(this.fileInfoList).length)
+        if (DEBUG) {
+            console.log('load file info:', Object.keys(this.fileInfoList).length)
+        }
         await this.update();
     }
 }
