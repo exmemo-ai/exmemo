@@ -31,7 +31,15 @@
                     </div>
                 </div>
                 <div v-if="form.etype === 'file' || form.etype === 'note'" width="100%">
-                    <input v-if="!form.idx" type="file" @change="handleFileUpload" width="100%">
+                    <div v-if="!form.idx">
+                        <div>
+                            <input type="file" @change="handleFileUpload" width="100%">
+                        </div>
+                        <div v-if="saveProgress > 0" style="margin: 10px">
+                            <progress :value="saveProgress" max="100">{{ saveProgress }}%</progress>
+                            <el-button style="margin: 2px;" @click="cancelUpload">{{ $t('cancel') }}</el-button>
+                        </div>
+                    </div>
                     <span v-else width="100%"
                         style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">文件：{{
                             file_path
@@ -112,6 +120,8 @@ export default {
             file_path: null,
             file: null,
             dialogVisible: false,
+            saveProgress: 0,
+            cancelTokenSource: null,
             form: {
                 idx: null,
                 title: '',
@@ -209,7 +219,7 @@ export default {
                 });
             });
         },
-        realSave() {
+        async realSave() {
             let func = 'api/entry/data/'
             const formData = new FormData();
             if (this.form.ctype !== '') {
@@ -243,7 +253,6 @@ export default {
                 }
                 formData.append('raw', this.form.raw);
             } else if (this.form.etype === 'file' && this.form.idx === null) {
-                console.log('@@@@@@@@@@@@@@@@@@@@@@@')
                 if (!this.file) {
                     this.$message({
                         type: 'error',
@@ -265,9 +274,10 @@ export default {
                 }
                 formData.append('addr', this.form.addr);
             }
+            this.cancelTokenSource = axios.CancelToken.source();
             if (this.form.idx !== null) {
                 func += this.form.idx + '/';
-                axios.put(getURL() + func, formData)
+                await axios.put(getURL() + func, formData)
                     .then(response => {
                         console.log('success');
                         console.log(response.data);
@@ -290,7 +300,13 @@ export default {
                         parseBackendError(this, error);
                     });
             } else {
-                axios.post(getURL() + func, formData)
+                await axios.post(getURL() + func, formData, {
+                    onUploadProgress: progressEvent => {
+                        this.saveProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        console.log('saveProgress' + this.saveProgress)
+                    },
+                    cancelToken: this.cancelTokenSource.token
+                })
                     .then(response => {
                         if (response.data.status == 'success') {
                             this.$message({
@@ -308,14 +324,27 @@ export default {
                         }
                     })
                     .catch(error => {
-                        parseBackendError(this, error);
+                        if (axios.isCancel(error)) {
+                            this.$message({
+                                type: 'info',
+                                message: this.$t('operationCancelled'),
+                            });
+                        } else {
+                            parseBackendError(this, error);
+                        }
                     });
             }
         },
         async doSave() {
-            console.log(this.$t('doSave'));
+            console.log("doSave");
             await this.realSave();
             this.closeEditDialog();
+        },
+        cancelUpload() {
+            if (this.cancelTokenSource) {
+                this.cancelTokenSource.cancel('cancel by user');
+                this.uploadProgress = 0;
+            }
         },
         realDownloadFile(obj, idx, filename) {
             console.log(this.$t('downloadFile', { idx, filename }));
