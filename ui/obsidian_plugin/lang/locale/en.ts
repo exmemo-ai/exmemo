@@ -53,4 +53,9 @@ export default {
   'auto_sync_interval': 'Auto sync interval',
   'auto_sync_interval_desc': 'Sync changes every X minutes. Set to 0 (default) to disable.',
   'sync_no_file_change': 'No file change',
+  'login_info_missing': 'Login info missing, Please fill in the settings.',
+  'are_you_sure': 'Are you sure?',
+  'yes': "Yes",
+  'no': "No",
+  'delete_files': 'Delete the following files:'
 }

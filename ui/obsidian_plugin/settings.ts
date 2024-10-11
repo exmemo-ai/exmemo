@@ -52,6 +52,7 @@ export class ExMemoSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.url)
 				.onChange(async (value) => {
 					this.plugin.settings.url = value;
+					this.plugin.settings.myToken = '';
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)
@@ -62,6 +63,7 @@ export class ExMemoSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.myUsername)
 				.onChange(async (value) => {
 					this.plugin.settings.myUsername = value;
+					this.plugin.settings.myToken = '';
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)
@@ -71,6 +73,7 @@ export class ExMemoSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.myPassword)
 				.onChange(async (value) => {
 					this.plugin.settings.myPassword = value;
+					this.plugin.settings.myToken = '';
 					await this.plugin.saveSettings();
 				}).inputEl.type = 'password');
 		new Setting(containerEl).setName(t('inexclude')).setHeading();

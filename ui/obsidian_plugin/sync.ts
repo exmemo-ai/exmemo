@@ -1,11 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { normalizePath, TFile, MarkdownView } from 'obsidian';
+import { TFile, MarkdownView, normalizePath } from 'obsidian';
+import { ConfirmModal } from 'utils';
 import { t } from "./lang/helpers"
 
 const MD5 = require('crypto-js/md5');
 const WordArray = require('crypto-js/lib-typedarrays');
-const DEBUG = false;
+const DEBUG = true;
 
 export class Sync {
     app: any;
@@ -23,7 +24,7 @@ export class Sync {
         this.interrupt = false;
         this.interruptButton = {
             'text': t('interrupt'), 'callback': () => {
-                console.log('warning: interrupt sync')
+                console.warn('interrupt sync')
                 this.interrupt = true;
             }
         };
@@ -114,7 +115,7 @@ export class Sync {
         return new RegExp(regex);
     }
 
-    async getLocalFiles(include_str:string, exclude_str:string) {
+    async getLocalFiles(include_str: string, exclude_str: string) {
         const include_list = include_str.split(',');
         const exclude_list = exclude_str.split(',');
         const file_dict = await this.localInfo.fileInfoList;
@@ -174,20 +175,53 @@ export class Sync {
         return ret_string
     }
 
+    async check_server_update() {
+        let ret = false;
+        const url = new URL(this.settings.url + '/api/sync/');
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Authorization': 'Token ' + this.settings.myToken },
+            body: new FormData()
+        };
+        requestOptions.body.append('user_name', this.settings.myUsername);
+        requestOptions.body.append('vault', this.app.vault.getName());
+        requestOptions.body.append('rtype', 'check_update');
+        requestOptions.body.append('last_sync_time', this.settings.lastSyncTime.toString())
+        await fetch(url.toString(), requestOptions)
+            .then(response => {
+                if (!response.ok) {
+                    throw response;
+                }
+                return response.json();
+            })
+            .then(async (data): Promise<void> => {
+                if (DEBUG) {
+                    console.log('check_update:', data)
+                }
+                if (data.update == true) {
+                    ret = true;
+                }
+            })
+            .catch(err => {
+                this.plugin.parseError(err, true);
+                this.plugin.showNotice('sync', t('syncFailed'), { timeout: 3000 });
+            });
+        return ret;
+    }
+
     async syncAll(auto_login: boolean = true) {
         await this.localInfo.update();
-        // Later, add a backend API to check remote change after lastSyncTime, then enable these codes.
-        /*
-        if (this.settings.lastSyncTime > this.settings.lastIndexTime) {
-            this.plugin.showNotice('temp', t('sync') + ": " + t('sync_no_file_change'), { timeout: 3000 });
-            return;
-        }
-        */
         if (this.settings.myToken == '') {
             await this.plugin.getMyToken();
         }
         if (this.settings.myToken == '') {
             return;
+        }
+        if (this.settings.lastSyncTime > this.settings.lastIndexTime) {
+            if (await this.check_server_update() == false) {
+                this.plugin.showNotice('temp', t('sync') + ": " + t('sync_no_file_change'), { timeout: 3000 });
+                return;
+            }
         }
         const include_str = this.regular_rules(this.settings.include);
         const exclude_str = this.regular_rules(this.settings.exclude);
@@ -236,7 +270,7 @@ export class Sync {
                 if (showinfo == "") {
                     showinfo = t('nothingToDo');
                     this.plugin.showNotice('temp', showinfo, { timeout: 3000 });
-                    console.log('warning: syncAll nothing to do')
+                    console.warn('syncAll nothing to do')
                     return;
                 }
                 this.plugin.showNotice('temp', showinfo, { timeout: 3000 });
@@ -284,17 +318,28 @@ export class Sync {
     }
 
     async removeFiles(filelist: []) {
+        let info = t('delete_files');
+        info += "\n"
         for (const dic of filelist) {
-            if (this.interrupt) {
-                break;
-            }
-            try {
-                if (DEBUG) {
-                    console.log('now remove file', dic['addr'])
+            info += '\n' + dic['addr'];
+        }
+        const userConfirmed = await new Promise((resolve) => {
+            new ConfirmModal(this.app, info, resolve).open();
+        });
+
+        if (userConfirmed) {
+            for (const dic of filelist) {
+                if (this.interrupt) {
+                    break;
                 }
-                this.app.vault.trash(this.app.vault.getAbstractFileByPath(dic['addr']));
-            } catch (error) {
-                console.error(error);
+                try {
+                    if (DEBUG) {
+                        console.log('now remove file', dic['addr'])
+                    }
+                    this.app.vault.trash(this.app.vault.getAbstractFileByPath(dic['addr']));
+                } catch (error) {
+                    console.error(error);
+                }
             }
         }
     }
@@ -409,7 +454,7 @@ export class LocalInfo {
         const vault = this.app.vault;
         const files = vault.getFiles();
         if (files.length == 0) {
-            console.log('warning: no vault files, wait for next update')
+            console.warn('no vault files, wait for next update')
             return;
         }
         this.plugin.showNotice('temp', 'ExMemo' + t('updateIndex'));

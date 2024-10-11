@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.db.models import Max
 from knox.auth import TokenAuthentication
 
 from backend.common.llm.llm_hub import EmbeddingTools
@@ -41,6 +42,8 @@ class SyncAPIView(APIView):
         logger.info(f"rtype {rtype}")
         if rtype == "compare":
             return self.do_compare(args, request)
+        elif rtype == "check_update": # check update status on server
+            return self.check_update(args, request)
         elif rtype == "check_embedding":
             return self.do_check_embedding(args, request)
         elif rtype == "regerate_embedding":
@@ -121,6 +124,36 @@ class SyncAPIView(APIView):
         logger.info(f"check embedding return {len(addr_list)}")
         return HttpResponse(json.dumps({"status": "success", "list": addr_list}))
 
+    def check_update(self, args, request, debug=False):
+        vault = request.GET.get("vault", request.POST.get("vault", None))
+        last_sync_time = request.GET.get(
+            "last_sync_time", request.POST.get("last_sync_time", 0)
+        )
+        last_sync_time = int(last_sync_time)
+        last_sync_time = timezone.datetime.fromtimestamp(
+            last_sync_time / 1000, pytz.UTC
+        )
+
+        uid = args["user_id"]
+        if vault is not None:
+            if not vault.endswith("/"):
+                vault = vault + "/"
+            entries = StoreEntry.objects.filter(
+                block_id=0, etype="note", addr__startswith=vault, user_id=uid
+            ).aggregate(Max("updated_time"))
+        else:
+            entries = StoreEntry.objects.filter(
+                block_id=0, etype="note", user_id=uid
+            ).aggregate(Max("updated_time"))
+        max_updated_time = entries['updated_time__max']
+        logger.info(f'check_update {last_sync_time} {max_updated_time}')
+        if max_updated_time is None:
+            max_updated_time = 0
+        if last_sync_time < max_updated_time:
+            return HttpResponse(json.dumps({"status": "success", "update": True}))
+        else:
+            return HttpResponse(json.dumps({"status": "success", "update": False}))
+    
     def do_compare(self, args, request, debug=False):
         """
         Compare Local Files and Cloud Files

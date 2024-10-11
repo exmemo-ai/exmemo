@@ -70,6 +70,10 @@ export default class ExMemoPlugin extends Plugin {
 	}
 
 	async getMyToken() {
+		if (this.settings.url === '' || this.settings.myUsername === '' || this.settings.myPassword === '') {
+			this.showNotice('temp', t('login_info_missing'), { timeout: 3000 });
+			return false
+		}
 		this.showNotice('auth', t('login'));
 		await new Promise(resolve => setTimeout(resolve, 3000));
 		const url = new URL(this.settings.url + '/api/auth/login/');

@@ -54,4 +54,9 @@ export default {
     'auto_sync_interval': '自动同步间隔',
     'auto_sync_interval_desc': '每隔 X 分钟同步一次，设置为 0（默认）以禁用。',
     'sync_no_file_change': '无文件更新',
+    'login_info_missing': '登录信息缺失，请在设置中填写完整。',
+    'are_you_sure': '请确认：',
+    'yes': "是",
+    'no': "否",
+    'delete_files': '是否删除以下文件',
 }
