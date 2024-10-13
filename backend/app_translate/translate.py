@@ -207,7 +207,7 @@ class TranslateWord:
     def translate_word_gpt(self, word, user_id, debug=False):
         demo = "{'en_regular':'xxx', 'zh_main':'yyy', 'zh_all':'zzz'}"
         req = f"""
-        Please take {word} and obtain its base form: when extracting the base form, 
+        Please take "{word}" and obtain its base form: when extracting the base form, 
         the part of speech remains unchanged, but plural forms, tenses, etc., are removed. 
         Translate its main meaning and all meanings into Chinese, and return them in JSON format: {demo}
         """
