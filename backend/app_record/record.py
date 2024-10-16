@@ -40,7 +40,7 @@ def get_export_file(uid):
     now = datetime.datetime.now()
     delta = datetime.timedelta(days=limit_export_record_day)
     before = now - delta
-    objs = StoreEntry.objects.filter(user_id=uid, created_time__gte=before)
+    objs = StoreEntry.objects.filter(user_id=uid, etype='record', block_id=0, created_time__gte=before)
     df = pd.DataFrame(objs.values())
     if len(df) > 0:
         col_dic = {
