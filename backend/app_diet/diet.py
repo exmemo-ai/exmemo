@@ -127,6 +127,8 @@ def calc_diet(content, uid):
         string = ""
         data = StoreDiet.objects.filter(date=date, uid=uid)
         df = pd.DataFrame.from_records(data.values())
+        if len(df) == 0:
+            return _("no_valid_records_founds_dot_")
         df["time_of_day_idx"] = df["time_of_day"].apply(
             lambda x: get_time_of_day_idx(x)
         )
@@ -229,7 +231,7 @@ class Food:
             # Take the current file path
             current_path = os.path.dirname(os.path.abspath(__file__))
             # Take the parent path
-            SRC_DIR = os.path.dirname(os.path.dirname(current_path))
+            SRC_DIR = os.path.dirname(current_path)
             # SRC_DIR = os.path.dirname(os.path.dirname(current_path))
             file_path = os.path.join(SRC_DIR, "data/food.csv")
             df = pd.read_csv(file_path)
