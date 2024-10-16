@@ -9,7 +9,7 @@ from translate import Translator
 from loguru import logger
 from django.utils.translation import gettext as _
 from backend.common.user.user import *
-from backend.common.llm.llm_hub import llm_query
+from backend.common.llm.llm_hub import llm_query, llm_query_json
 
 from . import regular_en
 from . import freq_en
@@ -212,7 +212,7 @@ class TranslateWord:
         Translate its main meaning and all meanings into Chinese, and return them in JSON format: {demo}
         """
         sysinfo = "You are an English teacher"
-        ret, desc, _ = llm_query(
+        ret, dic, _ = llm_query_json(
             user_id,
             sysinfo,
             req,
@@ -221,7 +221,6 @@ class TranslateWord:
             debug=False,
         )
         if ret:
-            dic = get_json_obj(desc)
             if dic is not None and "en_regular" in dic and "zh_main" in dic and 'zh_all' in dic:
                 return ret, dic["en_regular"], dic["zh_all"]
         return False, None, None
