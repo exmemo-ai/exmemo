@@ -53,9 +53,9 @@
                 <el-button style="margin: 2px;" width="100%" @click="extractInfo">{{ $t('extract') }}</el-button>
                 <el-button style="margin: 2px;" width="100%" v-if="form.idx" @click="showDeleteConfirmation">{{ $t('delete')
                 }}</el-button>
-                <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file' || form.etype === 'note'"
+                <el-button style="margin: 2px;" width="100%" v-if="(form.etype === 'file' || form.etype === 'note') && form.idx"
                     @click="downloadFile"> {{ $t('download') }}</el-button>
-                <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file'" @click="rename">{{ $t('rename')
+                <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file' && form.idx" @click="rename">{{ $t('rename')
                 }}</el-button>
             </div>
         </div>
@@ -136,6 +136,7 @@ export default {
     },
     methods: {
         openEditDialog(parent_obj, row = null) {
+            this.saveProgress = 0;
             this.parent_obj = parent_obj;
             if (row) {
                 this.form.idx = row.idx

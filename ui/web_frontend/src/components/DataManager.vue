@@ -21,7 +21,7 @@
         </el-container>
         <el-main class="custom-padding">
             <div class="custom-options" style="display: flex;margin: 5px;">
-                <div style="display: flex;" v-if="!isMobile">
+                <div style="display: flex; flex-grow: 1" v-if="!isMobile">
                     <div style="flex-shrink: 1;margin: 5px;">
                         <el-label>{{ $t('search') }}</el-label>
                     </div>
@@ -61,7 +61,7 @@
                         </el-select>
                     </div>
                 </div>
-                <div style="flex-shrink: 1;margin: 5px;">
+                <div style="flex-shrink: 0;margin: 5px;">
                     <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
                 </div>
             </div>
