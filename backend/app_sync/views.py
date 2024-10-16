@@ -55,10 +55,9 @@ class SyncAPIView(APIView):
         """
         if include == "" and exclude == "":
             return file_dic
-        include_list = include.split(",")
-        exclude_list = exclude.split(",")
         new_dic = {}
         if include != "":
+            include_list = include.split(",")
             for key, value in file_dic.items():
                 for item in include_list:
                     if key.startswith(item):
@@ -66,17 +65,18 @@ class SyncAPIView(APIView):
                         break
         else:
             new_dic = file_dic
-
-        exclude_rules = []
-        for item in exclude_list:
-            rule = item.replace(".", "\.").replace("*", ".*")
-            exclude_rules.append(rule)
-        # logger.warning(exclude_rules)
-        for key in list(new_dic.keys()):
-            for rule in exclude_rules:
-                if re.search(rule, key):
-                    del new_dic[key]
-                    break
+        if exclude != "":
+            exclude_list = exclude.split(",")
+            exclude_rules = []
+            for item in exclude_list:
+                rule = item.replace(".", "\.").replace("*", ".*")
+                exclude_rules.append(rule)
+            logger.warning(exclude_rules)
+            for key in list(new_dic.keys()):
+                for rule in exclude_rules:
+                    if re.search(rule, key):
+                        del new_dic[key]
+                        break
         logger.info(f"base_dic {len(file_dic)}, new_dic {len(new_dic)}")
         return new_dic
 
