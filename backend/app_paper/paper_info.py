@@ -4,6 +4,7 @@ import json
 from easy_literature.arxiv import arxivInfo
 from scholarly import scholarly, ProxyGenerator
 from backend.common.llm.llm_hub import llm_query
+from django.utils.translation import gettext as _
 
 PAPER_ROLE = "You are a paper reading expert robot, automatically collecting, extracting, and summarizing effective information for students from the perspective of paper learning."
 
@@ -41,7 +42,7 @@ def get_title(string, debug=False):
 
 def parse_paper_title(uid, string, debug=False):
     """
-    Parse the description at the beginning of the paper
+    Parse the description at the beginning of the paper, include institution
     demo: ret_dic, total_tokens = parse_paper_title(xxx)
     """
     if string is None or len(string.strip()) == 0:
@@ -92,6 +93,8 @@ def get_info_by_google(title, proxy=None, debug=False):
                 dic["url"] = paper["pub_url"]
             if "num_citations" in paper:
                 dic["citations"] = paper["num_citations"]
+            if "author" in dic and isinstance(dic["author"], list):
+                dic["author"] = ", ".join(dic["author"])                
             if debug:
                 print(paper)
             return dic
@@ -129,7 +132,7 @@ def get_arxiv_info(arxivId, proxy=None):
     arxiv_info = MyArxivInfo()
     arxiv_info.set_proxy_handler(proxy=proxy)
     bib_arxiv = arxiv_info.get_info_by_arxivid(arxivId)
-    print("@@@@", bib_arxiv)
+    print("bib_arxiv", bib_arxiv)
     return bib_arxiv
 
 

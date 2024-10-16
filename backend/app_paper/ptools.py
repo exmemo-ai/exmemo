@@ -1,17 +1,16 @@
 import os
 import re
-import json
 import datetime
+import arxiv
 import pandas as pd
 import frontmatter
 import requests
 from loguru import logger
 from django.utils.translation import gettext as _
 from backend.common.parser import converter, pdf_parser, block
-from backend.common.llm.llm_hub import llm_query
+from backend.common.llm.llm_hub import llm_query, llm_query_json
 from backend.common.files import utils_file
 from backend.common.files import filecache
-
 from .paper_info import *
 
 # Important Note: Different papers can present different architectures.
@@ -167,12 +166,9 @@ Content is as follows: '{string}'
     if debug:
         print("req", text)
 
-    ret, answer, detail = llm_query(uid, sys_info, text[:4096], "paper", debug=True)
-    try:
-        answer = json.loads(answer)
-    except Exception as e:
-        print("failed", e)
-        answer = {}
+    ret, answer, detail = llm_query_json(
+        uid, sys_info, text[:4096], "paper", debug=True
+    )
     return answer, detail["token_count"]
 
 
@@ -379,9 +375,9 @@ def paper_info_to_ob(info):
         ret.append(f"journal: {info['venue']}")
     else:
         ret.append(f"journal: ''")
-    ret.append(f"status: {_('Unread')}")
+    ret.append(f"status: {_('unread')}")
     ret.append(f"tags:")
-    ret.append(f"- {_('Paper Reading')}")
+    ret.append(f"- {_('paper_reading')}")
     if "title_zh" in info:
         ret.append(f"title: {info['title_zh']}")
     else:
@@ -395,7 +391,9 @@ def paper_info_to_ob(info):
     else:
         ret.append(_("english_name_colon_"))
     if "title_zh" in info:
-        ret.append(_("chinese_name_colon__{title_zh}").format(title_zh=info["title_zh"]))
+        ret.append(
+            _("chinese_name_colon__{title_zh}").format(title_zh=info["title_zh"])
+        )
     else:
         ret.append(_("chinese_name_colon_"))
     if "url" in info:
@@ -409,18 +407,24 @@ def paper_info_to_ob(info):
         ret.append(_("author_colon_"))
     if "institution" in info:
         ret.append(
-            _("institution_colon__{institution}").format(institution=info["institution"])
+            _("institution_colon__{institution}").format(
+                institution=info["institution"]
+            )
         )
     else:
         ret.append(_("institution_colon_"))
     if "published_date" in info:
         ret.append(
-            _("date_colon__{published_date}").format(published_date=info["published_date"])
+            _("date_colon__{published_date}").format(
+                published_date=info["published_date"]
+            )
         )
     else:
         ret.append(_("date_colon_"))
     if "citations" in info:
-        ret.append(_("citations_colon__{citations}").format(citations=info["citations"]))
+        ret.append(
+            _("citations_colon__{citations}").format(citations=info["citations"])
+        )
     else:
         ret.append(_("number_of_citations_colon_"))
     ret.append("")
@@ -436,7 +440,7 @@ def paper_info_to_ob(info):
     if "result" in info:
         ret.append(_("conclusion_colon__{result}").format(result=info["result"]))
     else:
-        ret.append(_("Conclusion:"))
+        ret.append(_("conclusion_colon_"))
     print("\r\n".join(ret))
     return "\r\n".join(ret)
 
@@ -475,18 +479,33 @@ def get_paper_info_from_pdf(path, debug=False):
     return meta_info, content
 
 
+def get_arxiv_info(desc):
+    info = {}
+    search = arxiv.Search(
+        query=desc, max_results=1, sort_by=arxiv.SortCriterion.Relevance
+    )
+    if search is not None:
+        results = list(search.results())
+        if len(results) > 0:
+            result = results[0]
+            info["title"] = result.title
+            info["abstract"] = result.summary
+            info["published_date"] = result.published.strftime("%Y-%m-%d")
+            info["url"] = result.pdf_url
+            info["author"] = ", ".join([author.name for author in result.authors])
+    return info
+
+
 def parse_paper(
     uid,
     text,
-    dst_dir,
-    save=True,
     use_llm=False,
     use_trans=True,
     use_google=False,
     debug=False,
 ):
     """
-    Parse the paper and store it in the database
+    Parse the paper (not support institution)
     Args:
         text Supports: paper path, paper URL, doi, arxiv_id, paper title
     Return:
@@ -495,66 +514,52 @@ def parse_paper(
     Later:
         text could be path, url, title, should first check in the database, if found return directly
     """
-    path, url = get_paper(dst_dir, text, save=save, debug=debug)
     info = {}
-    title = None
-    content = None
     arxiv_id = None
-    if debug:
-        print(f"path {path} url {url}")
+    title = None
 
-    if path is not None and os.path.exists(path):
-        info, content = get_paper_info_from_pdf(path, debug=debug)
-        if "title" in info:
-            title = info["title"]
+    if is_url(text):
+        info["url"] = text
+        if is_arxiv(text):
+            arxiv_id = get_arxiv_id(text)
+    elif text is not None:
+        title = text
 
-    if is_url(url):
-        info["url"] = url
-        if is_arxiv(url):
-            arxiv_id = get_arxiv_id(url)
-            print("arxiv", arxiv_id)
-    elif url is not None:
-        title = url
+    print("title", title)
+    print("arxiv_id", arxiv_id)
 
-    # Fetch information from arxiv
     if arxiv_id is not None:
         print("get_arxiv_info", arxiv_id)
         new_info = get_arxiv_info(arxiv_id)
-        if new_info is not None:
-            info.update(new_info)
-        info.update()  # Not sure if this is correct, don't remember why I changed it this way
     elif title is not None:
         print("get_arxiv_info_by_title", title)
-        new_info = info.update(get_arxiv_info_by_title(title))
-        if new_info is not None:
-            info.update(new_info)
+        info["title"] = title
+        new_info = get_arxiv_info(title)
+    else:
+        print("can't found arxiv_id or title")
+        return info
+    if new_info is not None:
+        info.update(new_info)
 
     # Fetching from Google Scholar
-    if title is not None and use_google:
-        print("get_info_by_google", title)
-        google_dic = get_info_by_google(title)
-        if google_dic is not None:
-            info.update(google_dic)
+    if "title" in info and use_google:
+        print("get_info_by_google", info["title"])
+        google_info = get_info_by_google(info["title"], debug=True)
+        if google_info is not None:
+            print("google_info", google_info)
+            google_info.update(info)  # info priority
+            info = google_info
 
     try:
         if use_llm:
-            if (
-                content is not None
-            ):  # Solve file headers with large models only if saved locally
-                print("get_info_by_llm", len(content), content[:50].replace("\n", " "))
-                ret_dic, tokens = parse_paper_title(uid, content, debug=debug)
-                # if debug:
-                print("parse_parer_title, token", tokens, "ret_dic", ret_dic)
-                info.update(ret_dic)
-            if "abstract" in info and "purpose" not in info:
+            if "abstract" in info:
                 ret_dic, tokens = parse_paper_abstract(
                     uid, info["abstract"], debug=debug
                 )
                 info.update(ret_dic)
-
-        if use_trans:
-            if "title" in info and "title_zh" not in info:
-                info["title_zh"], tokens = translate_text(uid, info["title"])
+            if use_trans:
+                if "title" in info and "title_zh" not in info:
+                    info["title_zh"], tokens = translate_text(uid, info["title"])
     except Exception as e:
         print("failed", e)
         import traceback
@@ -590,7 +595,7 @@ def polish(uid, content, debug=False):
     if content is None or len(content.strip()) == 0:
         return False, _("empty_contents")
     try:
-        text = "Please polish the following content: '{content}'".format(
+        text = "Please polish the following content: '{content}', Only respond with the polished result, no additional content needed.".format(
             content=content
         )
         if debug:
@@ -598,9 +603,16 @@ def polish(uid, content, debug=False):
         ret, answer, detail = llm_query(
             uid, PAPER_ROLE, text[:4096], "chat", debug=debug
         )
-        return True, _(
-            "Original text\n{content}\n=====================\nPolished text\n{answer}"
-        ).format(content=content, answer=answer)
+        return (
+            True,
+            _(
+                f"""{_('original_text')}
+{content}
+=====================
+{_('polished_text')}
+{answer}"""
+            ).format(content=content, answer=answer),
+        )
     except Exception as e:
         return False, e
 
@@ -615,11 +627,11 @@ def translate(uid, content):
         ret, token = translate_text(uid, content)
         return (
             True,
-            _("Original Text")
+            _("original_text")
             + "\n"
             + content
             + "\n=====================\n"
-            + _("Translated Text")
+            + _("translate_text")
             + "\n"
             + ret,
         )

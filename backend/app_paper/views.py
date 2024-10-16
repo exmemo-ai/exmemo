@@ -76,9 +76,8 @@ class PaperAPIView(APIView):
 
     def handle_search_request(self, content, args):
         logger.debug(f"content {content}")
-        dst_dir = os.path.join(MEDIA_ROOT, MEDIA_FILE_DIR)
         info = ptools.parse_paper(
-            args["user_id"], content, dst_dir, use_llm=True, use_google=True
+            args["user_id"], content, use_llm=True, use_google=True
         )  # for test
         return do_result(True, info)
 
