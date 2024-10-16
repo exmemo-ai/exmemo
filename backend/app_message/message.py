@@ -428,7 +428,7 @@ CommandManager.get_instance().register(
 def msg_record_input(args):
     if args["content"] == "":
         SessionManager.get_instance().set_cache(args["session_id"], "prev_cmd", "记录")
-        return True, {"type": "text", "content": _("Please enter the record content")}
+        return True, {"type": "text", "content": _("please_enter_the_record_content")}
     else:
         dic = {
             "user_id": args["user_id"],
