@@ -84,9 +84,6 @@ def real_logout(user_name):
         return True, f'登出失败, {e}'            
     
 def add_args(data, **kwargs):
-    '''
-    添加参数
-    '''
     for k,v in kwargs.items():
         data[k] = v
         
@@ -103,28 +100,24 @@ def add_args(data, **kwargs):
 
 def decode_content_disposition(header_value):
     '''
-    解码 Content-Disposition 头部，获取文件名
+    Decode Content-Disposition header，get filename
     '''
     decoded_header = decode_header(header_value)
-    if decoded_header[0][1] is not None:  # 如果头部是 MIME 编码的
+    if decoded_header[0][1] is not None:  #  Check MIME encode
         decoded_string = decoded_header[0][0].decode(decoded_header[0][1])
-    else:  # 如果头部不是 MIME 编码的
+    else:
         decoded_string = decoded_header[0][0]
     logger.debug(f'decoded_string {decoded_string}')
-    # 从解码后的头部获取文件名
     entries = decoded_string.split(';')
     for entry in entries:
         if 'filename' in entry:
-            filename = entry.split('=')[1].strip().strip('"')  # 删除两边的空格和引号
+            filename = entry.split('=')[1].strip().strip('"')
             return filename
     return None
 
 g_timer = None
 
 def rm_timer():
-    '''
-    删除定时器
-    '''
     global g_timer
     if g_timer is not None:
         try:
@@ -155,7 +148,6 @@ def parse_log_info(user_name, info):
 
 def parse_result(response, **kwargs):
     if response.status_code == 200:
-        # 解析返回的内容
         content_type = response.headers['Content-Type']
         logger.info(f'content_type {content_type}')
         if 'audio' in content_type or 'octet-stream' in content_type:
@@ -179,11 +171,11 @@ def parse_result(response, **kwargs):
                         ret, info = parse_log_info(kwargs['wechat_user_id'], ret_info['info'])
                         if ret:
                             return True, False, {'type':'text', 'content':info}
-                        if 'request_delay' in ret_info: # 长时操作，需要定时处理
+                        if 'request_delay' in ret_info:
                             delay = ret_info['request_delay']
                             logger.info(f'1. delay {delay} handle message')
                             rm_timer()
-                            if delay != -1: # 设置 request_delay 为 -1 时删除定时器
+                            if delay != -1:
                                 g_timer = threading.Timer(delay, handle_message, kwargs=kwargs)
                                 g_timer.start()
                         return True, False, {'type':'text', 'content':ret_info['info']}
@@ -206,9 +198,6 @@ def parse_result(response, **kwargs):
     return True, False, {'type':'text', 'content':'后端失败处理'}
 
 def parse_data(string, rtype='text', **kwargs):
-    '''
-    解析数据
-    '''
     ret = True
     retry = False
     token = TokenManager.get_instance().get_token(kwargs['wechat_user_id'])
@@ -246,20 +235,19 @@ def parse_data(string, rtype='text', **kwargs):
 
 def handle_message(**kwargs):
     '''
-    处理定时
+    Receive audio
     '''
     logger.debug('handle time message')
     rm_timer()
-    ret, dic = parse_data('获取音频', **kwargs) # 此处暂时只支持获取音频
+    ret, dic = parse_data('获取音频', **kwargs)
     if 'TEST' not in os.environ:
-        if 'e_context' in kwargs and dic['type'] == 'file': # 只在取到文件后才反馈用户
+        if 'e_context' in kwargs and dic['type'] == 'file':
             _send_info(kwargs['e_context'], dic)
 
-# 判断是否设置了测试标记 TEST
 if 'TEST' not in os.environ:
     def _send_info(e_context: EventContext, detail: dict):
         '''
-        发送消息，不在主循环中处理
+        Send_info, not in main loop
         '''
         logger.debug(f'_send_info {detail}')
         reply = Reply()

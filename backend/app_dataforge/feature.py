@@ -1,38 +1,21 @@
 import os
 import re
-import json
 import pandas as pd
+import traceback
 from loguru import logger
 from django.utils.translation import gettext as _
-from backend.common.llm.llm_hub import llm_query
+from backend.common.llm.llm_hub import llm_query, llm_query_json
 from backend.settings import BASE_DATA_DIR
 from .prompt import PROMPT_CLASSIFY, PROMPT_TITLE
+from backend.common.utils.text_tools import get_language_name
 from backend.common.utils.file_tools import convert_to_md
 from backend.common.utils.web_tools import read_md_content, get_web_title, download_file
 from backend.common.utils.text_tools import replace_chinese_punctuation_with_english
 from backend.settings import LANGUAGE_CODE
 
-DEFAULT_CATEGORY = "unclassified"
+DEFAULT_CATEGORY = _("unclassified")
 DEFAULT_STATUS = "init"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
-
-
-def parse_json(string):
-    '''
-    Convert a json string into a dict
-    demo: parse_json("""{'ctype': 'Knowledge Technology', 'atype': 'Subjective', 'status': 'Pending Organization'}""")
-    '''
-    if isinstance(string, dict):
-        return string
-    try:
-        return json.loads(string)
-    except Exception as e:
-        print(e)
-    try:
-        return eval(string)
-    except Exception as e:
-        print(e)
-    return None
 
 
 class EntryFeatureTool:
@@ -74,7 +57,7 @@ class EntryFeatureTool:
                 if ret:
                     dic["title"] = title
             if dic["ctype"] is None or dic["status"] is None:
-                dic_new, content = self.get_type(
+                dic_new, content = self.get_ctype(
                     dic["user_id"], content, dic["etype"], use_llm=use_llm, debug=debug
                 )
                 if dic["ctype"] is None and "ctype" in dic_new:
@@ -98,7 +81,7 @@ class EntryFeatureTool:
                 filename = os.path.basename(content)
                 dic["title"] = os.path.splitext(filename)[0]
             if dic["ctype"] is None:
-                dic_new, content = self.get_type(
+                dic_new, content = self.get_ctype(
                     dic["user_id"],
                     dic["title"],
                     dic["etype"],
@@ -121,7 +104,7 @@ class EntryFeatureTool:
                         ret, md_path = convert_to_md(path)
                         if ret:
                             content = read_md_content(md_path)
-                            dic_new, content = self.get_type(
+                            dic_new, content = self.get_ctype(
                                 dic["user_id"],
                                 content,
                                 dic["etype"],
@@ -193,7 +176,7 @@ class EntryFeatureTool:
                 return True, self.get_regular_ctype(l, etype), content
         return False, None, content
 
-    def get_type(self, user_id, content, etype, use_llm=True, debug=False):
+    def get_ctype(self, user_id, content, etype, use_llm=True, debug=False):
         """
         Return category
         """
@@ -260,7 +243,9 @@ class EntryFeatureTool:
         if len(line) <= 15:
             return True, line
         try:
-            query = PROMPT_TITLE.format(content=content, demo=_("themes"))
+            query = PROMPT_TITLE.format(
+                content=content, language=get_language_name(LANGUAGE_CODE.lower())
+            )
             if use_llm:
                 ret, answer, detail = llm_query(
                     user_id, RECORD_ROLE, query, "record", debug=True
@@ -304,10 +289,9 @@ class EntryFeatureTool:
                     }
                 ),
             )
-            ret, answer, detail = llm_query(
+            ret, dic, detail = llm_query_json(
                 user_id, RECORD_ROLE, query, "record", debug=True
             )
-            dic = parse_json(answer)
             if "status" in dic and dic["status"] is not None:
                 if dic["status"] not in status_list:
                     del dic["status"]
@@ -319,13 +303,6 @@ class EntryFeatureTool:
                     del dic["atype"]
             return dic
         except Exception as e:
-            import traceback
-
             traceback.print_exc()
             print("failed", e)
         return {"ctype": DEFAULT_CATEGORY, "atype": None, "status": None}
-
-
-def get_multi_language_str(string):
-    # demo: get_multi_language_str(DEFAULT_CATEGORY)
-    return _(string)

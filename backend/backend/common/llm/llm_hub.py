@@ -14,6 +14,7 @@ from backend.common.llm.llm_tools import DEFAULT_TOOL_LLM, DEFAULT_CHAT_LLM
 import backend.common.llm.chat_tools as chat_tools
 from backend.common.user.user import *
 from backend.common.user.resource import *
+from backend.common.utils import text_tools 
 
 EMBEDDING_CHUNK_SIZE = 512
 
@@ -103,10 +104,10 @@ def find_first_json(s):
 def llm_query_json(uid, role, question, app, engine_type=None, debug=False):
     ret, answer, dic = llm_query(uid, role, question, app, engine_type, debug)
     if ret:
-        json_object = find_first_json(answer)
+        json_object = text_tools.parse_json(answer)
         if json_object is not None:
             return ret, json_object, dic
-    return ret, None, dic
+    return ret, {}, dic
 
 
 def chat(uid, sid, content, engine_type=None, debug=False):

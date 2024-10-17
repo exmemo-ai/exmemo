@@ -16,7 +16,6 @@ export function setDefaultAuthHeader() {
   }
 }
 
-// 登录相关操作
 export function checkLogin(obj) {
   setDefaultAuthHeader();
   console.log('Checking login status');

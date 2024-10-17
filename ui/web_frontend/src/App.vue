@@ -9,7 +9,7 @@ export default {
   name: 'App',
 };
 
-// 解决ERROR ResizeObserver loop completed with undelivered notifications.
+// Debug: ResizeObserver loop completed with undelivered notifications.
 const debounce = (fn, delay) => {
   let timer = null;
   return function () {

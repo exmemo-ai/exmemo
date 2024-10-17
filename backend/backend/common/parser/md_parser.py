@@ -83,7 +83,7 @@ class MyRenderer(MarkdownRenderer):
         Since the hierarchy information is stored in a list, it is necessary to handle the Block at this layer.
         """
         # print('list attrs', token['attrs'], token)
-        # return super().list(token, state) # 需要访问子列表
+        # return super().list(token, state)
         self.parse_list(token)
         return ""
 

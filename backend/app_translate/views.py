@@ -21,37 +21,71 @@ class StoreWordViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = StoreTranslate.objects.filter().all().order_by("-times", "freq")
     serializer_class = StoreTranslateSerializer
+    pagination_class = PageNumberPagination
+
 
     def list(self, request, *args, **kwargs):
         user_id = get_user_id(request)
-        query_args = {}
-        if user_id == None:
+        
+        if user_id is None:
             return Response([])
-        else:
-            query_args["user_id"] = user_id
-        keywords = request.GET.get("keyword", None)
-        q_obj = Q()
+
+        query_args = {"user_id": user_id}
+        keywords = request.GET.get("keyword", "")
         keyword_arr = keywords.split(" ")
+
+        q_obj = Q()
         for keyword in keyword_arr:
-            q_obj &= Q(word__icontains=keyword)
+            if keyword:
+                q_obj &= Q(word__icontains=keyword)
+
         queryset = StoreTranslate.objects.filter(q_obj, **query_args)
         serializer = StoreTranslateSerializer(queryset, many=True)
-        data = sorted(serializer.data, key=lambda x: x["freq"])
-        paginator = PageNumberPagination()
-        if queryset.count() > 0:
-            paginator.page_size = queryset.count()
-        else:
-            paginator.page_size = 10
-        page = paginator.paginate_queryset(queryset, self.request)
-        return paginator.get_paginated_response(data)
+        data = serializer.data
 
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(data, request)
 
+        if page is not None:
+            return paginator.get_paginated_response(page)
+        return Response(data)
+    
+    
 class StoreArticleViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = StoreEnglishArticle.objects.filter().all()
     serializer_class = StoreEnglishArticleSerializer
+    pagination_class = PageNumberPagination
 
+    def list(self, request, *args, **kwargs):
+        user_id = get_user_id(request)
+        logger.debug(f"get list by {user_id}")
+        
+        if user_id is None:
+            return Response([])
+
+        query_args = {"user_id": user_id}
+        keywords = request.GET.get("keyword", "")
+        keyword_arr = keywords.split(" ")
+
+        q_obj = Q()
+        for keyword in keyword_arr:
+            if keyword:
+                q_obj &= Q(title__icontains=keyword)
+
+        queryset = StoreEnglishArticle.objects.filter(q_obj, **query_args)
+        serializer = StoreEnglishArticleSerializer(queryset, many=True)
+        data = serializer.data
+        
+        logger.debug(f'total {len(data)}')
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(data, request)
+
+        if page is not None:
+            return paginator.get_paginated_response(page)
+        return Response(data)
 
 class TranslateAssistantView(APIView):
     authentication_classes = [TokenAuthentication]

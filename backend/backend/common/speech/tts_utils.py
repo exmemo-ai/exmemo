@@ -31,9 +31,6 @@ def analysis_audio(path, debug=True):
     return np.mean(volume), volume
 
 
-# analysis_audio('/tmp/谢彦_new.mp3')
-
-
 def test_volume():
     m_xunfei, v_xunfei = analysis_audio("/tmp/test_xunfei.mp3")
     m_nan1, v_nan1 = analysis_audio("/tmp/test_nan1.mp3")

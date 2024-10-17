@@ -15,10 +15,10 @@ PROMPT_CLASSIFY = PromptTemplate(
 
 PROMPT_TEMPLATE_TITLE = """Please provide a title for the following content in ten words or less:
 "{content}"
-Please answer directly, in the format: "{demo}"
+Please answer directly, and reply in {language}
 """
 
 PROMPT_TITLE = PromptTemplate(
-    input_variables=["content", "demo"],
+    input_variables=["content", "language"],
     template=PROMPT_TEMPLATE_TITLE,
 )

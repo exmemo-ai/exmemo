@@ -32,8 +32,8 @@ import { getURL, setDefaultAuthHeader } from './conn'
 export default {
   created() {
     console.log('created set_password', this.$route.query);
-    if (this.$route.query.user_name && this.$route.query.user_name != "") {
-      this.username = this.$route.query.user_name;
+    if (this.$route.query.user_id && this.$route.query.user_id != "") {
+      this.username = this.$route.query.user_id;
       this.password_type = this.$route.query.password_type;
     }
   },

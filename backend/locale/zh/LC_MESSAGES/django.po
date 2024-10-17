@@ -245,6 +245,10 @@ msgstr "对比完成"
 msgid "unsupported_document_type"
 msgstr "不支持的文件类型"
 
+#: app_dataforge/feature.py:16
+msgid "unclassified"
+msgstr "未知类别"
+
 #: app_dataforge/feature.py:165
 msgid "to_be_organized"
 msgstr "待整理"
@@ -535,6 +539,10 @@ msgstr "原文"
 
 #: app_paper/ptools.py:602
 msgid "polished_text"
+msgstr "润色后的文本"
+
+#: app_paper/ptools.py:602
+msgid "translate_text"
 msgstr "翻译后的文本"
 
 #: backend/common/user/resource.py:70
@@ -563,7 +571,7 @@ msgstr "总计"
 
 #: backend/common/user/resource.py:79
 msgid "{}_usage"
-msgstr "{} 用法"
+msgstr "{} 用量"
 
 #: tests/test_app_user_manager.py:30
 msgid "username_already_exists"
@@ -635,15 +643,15 @@ msgstr "翻译书籍:"
 
 #: backend/common/user/user.py:157
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
-msgstr "模型速率限制：{limit_llm_day_formatted} 个token/天"
+msgstr "模型限制：{limit_llm_day_formatted} 个token/天"
 
 #: backend/common/user/user.py:162
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
-msgstr "语音合成速率限制：{limit_tts_day} 个标记/天"
+msgstr "语音合成限制：{limit_tts_day} 个标记/天"
 
 #: backend/common/user/user.py:167
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
-msgstr "语音合成速率限制：每次尝试{tokens}个标记"
+msgstr "语音合成限制：每次尝试 {tokens} 个标记"
 
 #: backend/common/user/user.py:172
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
@@ -1000,6 +1008,10 @@ msgstr "文件大于50M，暂不支持识别"
 #: app_message/message.py:342
 msgid "please_enter_what_you're_looking_for"
 msgstr "请输入待查找内容"
+
+#: app_message/message.py:431
+msgid "please_enter_the_record_content"
+msgstr "请输入记录内容"
 
 #: app_message/message.py:841
 msgid "nothing_entered"

@@ -34,7 +34,7 @@ class UserAPIView(APIView):
 
     def do_user(self, request):
         logger.debug(request)
-        rtype = request.GET.get("rtype", request.POST.get("rtype", "666"))
+        rtype = request.GET.get("rtype", request.POST.get("rtype", "unknown"))
         logger.debug(f"user, rtype: {rtype}")
         if rtype == "check_password":
             return self.password_check(request)
@@ -154,12 +154,12 @@ class SettingAPIView(APIView):
         user.set("tts_speed", speed_name, save=False)
         user.set("llm_chat_model", llm_name, save=False)
         user.save()
-        info = _("f'Settings were applied successfully'")
+        info = _("settings_were_applied_successfully")
         return do_result(True, info)
 
     def reset_settings(self, request, user):
         user.reset_setting()
-        info = _("f'Settings were applied successfully'")
+        info = _("settings_were_applied_successfully")
         return do_result(True, info)
 
 
