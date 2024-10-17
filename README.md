@@ -2,7 +2,11 @@ English | [中文简体](./README_cn.md)
 
 ## 1 Introduction
 
+![](./images/img1.png)
+
 ExMemo is a personal knowledge management project designed to centrally record and manage various information, including favorite texts, books, music, videos, web pages, work documents, as well as thoughts and reflections on life. Even specific information like item locations, phone numbers, and addresses can be automatically categorized and found whenever needed. By systematically integrating data, it breaks the limitations of thinking and discovers internal connections.
+
+![](./images/img2.png)
 
 The system consists of a database, backend, and multiple frontends. Distributed storage and databases are used to store user files, texts, and corresponding vector data. Data storage can be deployed locally to protect user privacy. The backend provides general interfaces for adding, deleting, modifying, and querying data, and is responsible for invoking large models and processing data. The system supports online large models such as OpenAI, Gemini, Qwen, as well as the offline Ollama model. Multiple frontends, including web services, WeChat bots, Obsidian plugins, and browser extensions, allow users to upload and download data.
 
@@ -71,7 +75,8 @@ $ cd ../../
 #### 2.2.4 Obsidian Plugin
 (Optional)
 
-Compile the Obsidian plugin as needed and install it in Obsidian. For details, see: ui/obsidian_plugin/README.md
+Compile the Obsidian plugin as needed and install it in Obsidian. For details, see:
+https://github.com/exmemo-ai/obsidian-exmemo-client
 
 ### 2.3 Start Services
 
@@ -130,11 +135,11 @@ Packaging can consume a lot of memory. If cloud server resources are limited, it
 
 The database password set in Docker Compose takes effect only when the database is created. If you need to change the password later, you will need to update it not only in the .env file but also by connecting to the database and using SQL commands to change it.
 
-## License
+## 3 License
 
 This project is licensed under the terms of the GNU Lesser General Public License v3.0. See the [LICENSE](./LICENSE) file for details.
 
-## Contributors
+## 4 Contributors
 
 <a href="https://github.com/Exmemo/exmemo/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=Exmemo/exmemo" />
