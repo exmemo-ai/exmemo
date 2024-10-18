@@ -78,6 +78,7 @@ BACKEND_ADDR_OUTER = os.getenv("BACKEND_ADDR_OUTER", "localhost")
 CORS_ALLOWED_ORIGINS = [
     # "chrome-extension://dffgooagglooblalbflhlbcminfoiojf",
     "chrome-extension://egfnajgieeffieaboibcmmjjbjcifbpn",
+    "app://obsidian.md",
     f"http://{BACKEND_ADDR_OUTER}:{BACKEND_PORT_OUTER}",  # Use external ports
 ]
 

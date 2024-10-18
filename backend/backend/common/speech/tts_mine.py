@@ -76,7 +76,6 @@ class TtsMine(TtsEngine):
                 if debug:
                     logger.debug(f"save to {output_path}")
                 sf.write(output_path, y, sr)
-                # regular_speed(text, output_path, output_path, speed)，已移到合成接口中
         except Exception as e:
             traceback.print_exc()
             return False, _("custom_synthesis_failed")

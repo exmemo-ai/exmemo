@@ -68,7 +68,7 @@ router.beforeEach((to, from, next) => {
 })
 
 const app = createApp(App);
-app.use(i18n); // 使用 i18n
+app.use(i18n);
 app.component('DataManager', DataManager);
 app.component('SupportTools', SupportTools);
 app.component('LoginView', LoginView);

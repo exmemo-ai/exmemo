@@ -121,7 +121,7 @@ export default {
     };
   },
   setup() {
-    const audioSrc = ref(getURL() + 'static/audio/openai.mp3');  // 改为你的音频文件路径
+    const audioSrc = ref(getURL() + 'static/audio/xxx.mp3');
     const audioPlayer = ref(null);
     const progress = ref(0);
     const duration = ref(0);

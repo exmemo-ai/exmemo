@@ -31,11 +31,18 @@
                     </div>
                 </div>
                 <div v-if="form.etype === 'file' || form.etype === 'note'" width="100%">
-                    <input v-if="!form.idx" type="file" @change="handleFileUpload" width="100%">
+                    <div v-if="!form.idx">
+                        <div>
+                            <input type="file" @change="handleFileUpload" width="100%">
+                        </div>
+                        <div v-if="saveProgress > 0" style="margin: 10px">
+                            <progress :value="saveProgress" max="100">{{ saveProgress }}%</progress>
+                            <el-button style="margin: 2px;" @click="cancelUpload">{{ $t('cancel') }}</el-button>
+                        </div>
+                    </div>
                     <span v-else width="100%"
-                        style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">文件：{{
-                            file_path
-                        }}</span>
+                        style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">{{
+                            $t('file') }}: {{file_path}}</span>
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
                     <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
@@ -46,9 +53,9 @@
                 <el-button style="margin: 2px;" width="100%" @click="extractInfo">{{ $t('extract') }}</el-button>
                 <el-button style="margin: 2px;" width="100%" v-if="form.idx" @click="showDeleteConfirmation">{{ $t('delete')
                 }}</el-button>
-                <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file' || form.etype === 'note'"
+                <el-button style="margin: 2px;" width="100%" v-if="(form.etype === 'file' || form.etype === 'note') && form.idx"
                     @click="downloadFile"> {{ $t('download') }}</el-button>
-                <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file'" @click="rename">{{ $t('rename')
+                <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file' && form.idx" @click="rename">{{ $t('rename')
                 }}</el-button>
             </div>
         </div>
@@ -60,7 +67,7 @@
                 <el-label>{{ $t('title') }}</el-label>
             </div>
             <div style="flex-grow: 1;">
-                <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? '自动提取' : ''"
+                <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? $t('autoExtract') : ''"
                     :readonly="form.etype === 'file' || form.etype === 'note'"></el-input>
             </div>
         </div>
@@ -112,6 +119,8 @@ export default {
             file_path: null,
             file: null,
             dialogVisible: false,
+            saveProgress: 0,
+            cancelTokenSource: null,
             form: {
                 idx: null,
                 title: '',
@@ -127,6 +136,7 @@ export default {
     },
     methods: {
         openEditDialog(parent_obj, row = null) {
+            this.saveProgress = 0;
             this.parent_obj = parent_obj;
             if (row) {
                 this.form.idx = row.idx
@@ -209,7 +219,7 @@ export default {
                 });
             });
         },
-        realSave() {
+        async realSave() {
             let func = 'api/entry/data/'
             const formData = new FormData();
             if (this.form.ctype !== '') {
@@ -243,7 +253,6 @@ export default {
                 }
                 formData.append('raw', this.form.raw);
             } else if (this.form.etype === 'file' && this.form.idx === null) {
-                console.log('@@@@@@@@@@@@@@@@@@@@@@@')
                 if (!this.file) {
                     this.$message({
                         type: 'error',
@@ -265,9 +274,10 @@ export default {
                 }
                 formData.append('addr', this.form.addr);
             }
+            this.cancelTokenSource = axios.CancelToken.source();
             if (this.form.idx !== null) {
                 func += this.form.idx + '/';
-                axios.put(getURL() + func, formData)
+                await axios.put(getURL() + func, formData)
                     .then(response => {
                         console.log('success');
                         console.log(response.data);
@@ -290,7 +300,13 @@ export default {
                         parseBackendError(this, error);
                     });
             } else {
-                axios.post(getURL() + func, formData)
+                await axios.post(getURL() + func, formData, {
+                    onUploadProgress: progressEvent => {
+                        this.saveProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        console.log('saveProgress' + this.saveProgress)
+                    },
+                    cancelToken: this.cancelTokenSource.token
+                })
                     .then(response => {
                         if (response.data.status == 'success') {
                             this.$message({
@@ -308,14 +324,27 @@ export default {
                         }
                     })
                     .catch(error => {
-                        parseBackendError(this, error);
+                        if (axios.isCancel(error)) {
+                            this.$message({
+                                type: 'info',
+                                message: this.$t('operationCancelled'),
+                            });
+                        } else {
+                            parseBackendError(this, error);
+                        }
                     });
             }
         },
         async doSave() {
-            console.log(this.$t('doSave'));
+            console.log("doSave");
             await this.realSave();
             this.closeEditDialog();
+        },
+        cancelUpload() {
+            if (this.cancelTokenSource) {
+                this.cancelTokenSource.cancel('cancel by user');
+                this.uploadProgress = 0;
+            }
         },
         realDownloadFile(obj, idx, filename) {
             console.log(this.$t('downloadFile', { idx, filename }));
@@ -389,15 +418,11 @@ export default {
         },
         realDelete() {
             console.log('Delete', this.form.idx);
-            // 成功返回true，失败返回false
             let table_name = 'data'
             console.log(getURL() + 'api/entry/' + table_name + '/' + this.form.idx + '/')
             axios.delete(getURL() + 'api/entry/' + table_name + '/' + this.form.idx + '/')
                 .then(response => {
-                    // 请求成功，处理响应数据
-                    console.log('ret1', response);
-                    console.log('ret2', response.data);
-                    console.log('ret3', response.data.status);
+                    console.log('response', response);
                     if (response.data.status == 'success') {
                         this.$message({
                             type: 'success',

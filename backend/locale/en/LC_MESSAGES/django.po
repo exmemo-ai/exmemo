@@ -246,6 +246,10 @@ msgstr "Comparison complete"
 msgid "unsupported_document_type"
 msgstr "Unsupported Document Type"
 
+#: app_dataforge/feature.py:16
+msgid "unclassified"
+msgstr "unclassified"
+
 #: app_dataforge/feature.py:165
 msgid "to_be_organized"
 msgstr "To be organized"
@@ -538,6 +542,10 @@ msgstr "Original text"
 msgid "polished_text"
 msgstr "Polished text"
 
+#: app_paper/ptools.py:602
+msgid "translate_text"
+msgstr "Translation"
+
 #: backend/common/user/resource.py:70
 msgid "speech_synthesis"
 msgstr "speech synthesis"
@@ -636,15 +644,15 @@ msgstr "Translation Book:"
 
 #: backend/common/user/user.py:157
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
-msgstr "Model rate limit: {limit_llm_day_formatted} tokens/day"
+msgstr "Model limit: {limit_llm_day_formatted} tokens/day"
 
 #: backend/common/user/user.py:162
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
-msgstr "Speech synthesis rate limit: {limit_tts_day} tokens/day"
+msgstr "Speech synthesis limit: {limit_tts_day} tokens/day"
 
 #: backend/common/user/user.py:167
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
-msgstr "Speech synthesis rate limit: {tokens} tokens/attempt"
+msgstr "Speech synthesis limit: {tokens} tokens/attempt"
 
 #: backend/common/user/user.py:172
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
@@ -1001,6 +1009,10 @@ msgstr "Files larger than 50MB are currently not supported for recognition"
 #: app_message/message.py:342
 msgid "please_enter_what_you're_looking_for"
 msgstr "Please enter what you're looking for"
+
+#: app_message/message.py:431
+msgid "please_enter_the_record_content"
+msgstr "Please enter the record content"
 
 #: app_message/message.py:841
 msgid "nothing_entered"

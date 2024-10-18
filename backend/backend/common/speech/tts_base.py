@@ -40,8 +40,7 @@ class TtsEngine:
 
 def adj_speed(path_in, path_out, speed):
     """
-    调整音频速度
-    demo: adj_speed("/tmp/谢彦_new_fast.mp3", '/tmp/ooo.mp3')
+    demo: adj_speed("/tmp/xx_new_fast.mp3", '/tmp/ooo.mp3')
     """
     try:
         with open(path_in, "rb") as f:
@@ -59,13 +58,12 @@ def adj_speed(path_in, path_out, speed):
 
 def regular_speed(context, in_path, out_path, speed=1.0):
     """
-    调整音频速度，使得合成的音频长度与文本长度相匹配
+    Adjust the audio speed so that the length of the synthesized audio matches the length of the text.
     pangbai: 23.9s
     shenlei2: 18.5s
-    xunfei较快：18.9s，效果好
-    xunfei正常: 22.9s
-    正常语速 160-200字/分钟，约3字/秒
-    这里认为正常语速是4.75字/句
+    xunfei faster: 18.9s
+    xunfei normal: 22.9s
+    Normal speaking rate: 160-200 chars/minute, about 3 chars/second, 4.75 chars/sentence
     """
     speed = float(speed)
     if speed == 1.0:
@@ -73,7 +71,7 @@ def regular_speed(context, in_path, out_path, speed=1.0):
     if speed > 1.0:
         logger.warning(f"adjust speed {speed} by tts service")
         adj_speed(in_path, out_path, speed)
-    return  # 转换后太难听，先去掉
+    return
     y, sr = librosa.load(in_path)
     snd_length = len(y) / sr
     str_length = len(context) / 4.75
@@ -90,10 +88,6 @@ def regular_speed(context, in_path, out_path, speed=1.0):
 
 
 def merge_audio(path_list, dst_path):
-    """
-    合并多个音频文件
-    """
-
     if len(path_list) == 1:
         os.rename(path_list[0], dst_path)
     else:

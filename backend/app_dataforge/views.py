@@ -138,7 +138,6 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         get entry list by page
         """
         debug = True  # for test
-        date_filter = False
         count_limit = 100
         query_args = {}
         user_id = get_user_id(request)
@@ -164,12 +163,10 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             query_args["created_time__gte"] = datetime.datetime.strptime(
                 start_date, "%Y-%m-%d"
             )
-            date_filter = True
         if end_date is not None and len(end_date) > 0:
             query_args["created_time__lte"] = datetime.datetime.strptime(
                 end_date, "%Y-%m-%d"
             )
-            date_filter = True
 
         if debug:
             logger.debug(f"args {query_args}, keyword {keywords}")
@@ -179,14 +176,13 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         queryset = get_entry_list(keywords, query_args, count_limit)
         logger.debug(f"list total: {len(queryset)}")
 
-        if max_count == -1:
+        if max_count == -1: # get item by page
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
                 return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        # Sort serializer.data by ctype
         data = sorted(serializer.data, key=lambda x: x["ctype"])
         paginator = PageNumberPagination()
         if queryset.count() > 0:
@@ -229,8 +225,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
     def perform_custom_logic(self, validated_data):
         # demo
         # if validated_data.get('price') and validated_data['price'] < 0:
-        #    raise ValidationError("价格不能为负值！")
-        # print(f"验证后的数据: {validated_data}")
+        #    raise ValidationError("price err！")
+        # print(f": {validated_data}")
         pass
 
     @action(detail=True, methods=["get"], url_path="download")

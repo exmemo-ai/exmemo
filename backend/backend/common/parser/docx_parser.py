@@ -44,7 +44,7 @@ def get_docx_blocks(path_in, debug=False):
     for idx1, section in enumerate(doc.sections):
         for idx2, block in enumerate(section.iter_inner_content()):
             if isinstance(block, docx.text.paragraph.Paragraph):
-                # if len(block.text.strip()) == 0: # 先保持格式
+                # if len(block.text.strip()) == 0:
                 #    continue
                 # print(idx1, idx2, 'para', len(block.text), block.text[:30], block.style.name)
                 if block.style.name.startswith("Heading "):
