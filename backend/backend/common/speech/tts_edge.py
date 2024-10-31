@@ -42,7 +42,7 @@ class TtsEdge(TtsEngine):
                 VOICE = "zh-CN-YunxiNeural"
             else:
                 VOICE = "en-GB-SoniaNeural"
-            communicate = edge_tts.Communicate(text, VOICE, rate=speed_delta)
+            communicate = edge_tts.Communicate(text, VOICE, rate=speed_delta, proxy=os.environ.get("HTTP_PROXY"))
             communicate.save_sync(output_path)
             return True, _("synthesis_complete")
         except Exception as e:
