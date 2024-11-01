@@ -1,5 +1,9 @@
 English | [中文简体](./README_cn.md)
 
+# ExMemo
+
+> Total Control Over My Data 🚀
+
 ## 1 Introduction
 
 ![](./images/img1.png)
