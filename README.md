@@ -2,7 +2,7 @@ English | [中文简体](./README_cn.md)
 
 # ExMemo
 
-**Total Control Over My Data 🚀**
+> Total Control Over My Data 🚀
 
 ## 1 Introduction
 
