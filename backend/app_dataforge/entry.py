@@ -140,11 +140,11 @@ def save_entry(dic, abstract, content, debug=False):
         return False, ret_emb, _("add_failed")
 
 
-def check_entry_exist(user_id, addr):
+def check_entry_exist(user_id, url, path):
     """
     Check if the data already exists in the database
     """
-    return StoreEntry.objects.filter(user_id=user_id, addr=addr).exists()
+    return StoreEntry.objects.filter(user_id=user_id, addr=url, path=path, is_deleted='f').exists()
 
 
 def add_record(dic, use_llm=True):
