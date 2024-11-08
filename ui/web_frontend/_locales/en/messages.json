@@ -89,6 +89,7 @@
     "rename": "Rename",
     "title": "Title",
     "type": "Type",
+    "all": "All",
     "source": "Source",
     "status": "Status",
     "subjective": "Subjective",
@@ -158,5 +159,8 @@
     "ask": "Ask",
     "articleList": "Article List",
     "time": "Time",
-    "recordContent": "Record Content"
+    "recordContent": "Record Content",
+    "unclassified": "Unclassified",
+    "todo": "To Do",
+    "init": "Init"
 }
