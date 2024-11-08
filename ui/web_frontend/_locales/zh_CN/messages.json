@@ -89,6 +89,7 @@
     "rename": "重命名",
     "title": "标题",
     "type": "类型",
+    "all": "全部",
     "source": "来源",
     "status": "状态",
     "subjective": "主观",
@@ -158,5 +159,8 @@
     "ask": "提问",
     "articleList": "文章列表",
     "time": "时间",
-    "recordContent": "记录内容"
+    "recordContent": "记录内容",
+    "unclassified": "未分类",
+    "todo": "待办",
+    "init": "初始化"
   }

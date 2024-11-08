@@ -104,11 +104,11 @@ export default {
             currentPage: 1,
             pageSize: 10,
             //
-            status_value: '',
+            status_value: this.$t('all'),
             status_options: [],
-            ctype_value: '',
+            ctype_value: this.$t('all'),
             ctype_options: [],
-            etype_value: '',
+            etype_value: this.$t('all'),
             etype_options: [],
             search_text: '',
             //
@@ -142,9 +142,12 @@ export default {
         fetchData() {
             console.log('fetchData');
             let func = 'api/entry/data/'
+            let etype_value = this.etype_value === this.$t('all') ? '' : this.etype_value;
+            let ctype_value = this.ctype_value === this.$t('all') ? '' : this.ctype_value;
+            let status_value = this.status_value === this.$t('all') ? '' : this.status_value;
             let params = {
-                keyword: this.search_text, etype: this.etype_value,
-                ctype: this.ctype_value, status: this.status_value,
+                keyword: this.search_text, etype: etype_value,
+                ctype: ctype_value, status: status_value,
                 page: this.currentPage, page_size: this.pageSize
             }
             axios.get(getURL() + func, { params: params })
@@ -169,27 +172,48 @@ export default {
                     console.log('getOptions success');
                     let ret = response.data;
                     if (ctype == 'ctype') {
-                        obj.ctype_options = ['', ''];
+                        obj.ctype_options[0] = {value:this.$t('all'), label:this.$t('all')};
                         for (let i = 0; i < ret.length; i++) {
-                            obj.ctype_options[i + 1] = {
-                                value: ret[i],
-                                label: ret[i]
+                            if (this.$t(ret[i]) == ret[i]) {
+                                obj.ctype_options[i + 1] = {
+                                    value: ret[i],
+                                    label: ret[i]
+                                }
+                            } else {
+                                obj.ctype_options[i + 1] = {
+                                    value: ret[i],
+                                    label: this.$t(ret[i])
+                                }
                             }
                         }
                     } else if (ctype == 'status') {
-                        obj.status_options = ['', ''];
+                        obj.status_options[0] = {value:this.$t('all'), label:this.$t('all')};
                         for (let i = 0; i < ret.length; i++) {
-                            obj.status_options[i + 1] = {
-                                value: ret[i],
-                                label: ret[i]
+                            if (this.$t(ret[i]) == ret[i]) {
+                                obj.status_options[i + 1] = {
+                                    value: ret[i],
+                                    label: ret[i]
+                                }
+                            } else {
+                                obj.status_options[i + 1] = {
+                                    value: ret[i],
+                                    label: this.$t(ret[i])
+                                }
                             }
                         }
                     } else if (ctype == 'etype') {
-                        obj.etype_options = ['', ''];
+                        obj.etype_options[0] = {value:this.$t('all'), label:this.$t('all')};
                         for (let i = 0; i < ret.length; i++) {
-                            obj.etype_options[i + 1] = {
-                                value: ret[i],
-                                label: ret[i]
+                            if (this.$t(ret[i]) == ret[i]) {
+                                obj.etype_options[i + 1] = {
+                                    value: ret[i],
+                                    label: ret[i]
+                                }
+                            } else {
+                                obj.etype_options[i + 1] = {
+                                    value: ret[i],
+                                    label: this.$t(ret[i])
+                                }
                             }
                         }
                     }
