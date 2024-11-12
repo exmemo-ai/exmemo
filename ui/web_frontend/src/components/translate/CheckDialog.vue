@@ -4,7 +4,7 @@
         <div style="display: flex; flex-direction: column; height: 100%;">
             <label>{{ $t('inputEnglish') }}</label>
             <el-input v-model="inputText" type="textarea" :rows="2" :placeholder="$t('placeholderInputWord')"
-                style="width: 100%;"></el-input>
+                style="width: 100%;" @keyup.enter="handleReq" @keydown.enter.prevent></el-input>
             <button @click="handleReq">{{ $t('searchDictionary') }}</button>
             <div style="height: 200px; overflow-y: auto; text-align: left; white-space: pre-line;">
                 {{ txtAnswer }}
@@ -39,7 +39,8 @@ export default {
         translateCallback(info) {
             this.txtAnswer = info
         },
-        handleReq() {
+        handleReq(event) {
+            if (event) event.preventDefault();
             translateFunc(this, 'word', this.inputText, null, this.translateCallback);
         }
     }

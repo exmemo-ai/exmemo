@@ -54,7 +54,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (localStorage.getItem('token') === null) {
-    if (to.path !== '/login' && to.path !== '/set_password') {
+    if (to.path !== '/login' && to.path !== '/set_password' && to.path !== '/register') {
       next({
         path: '/login',
         query: to.query

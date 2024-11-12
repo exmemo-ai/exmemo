@@ -16,6 +16,7 @@
                 <el-button @click="gotoDataManager">{{ $t('dataManagement') }}</el-button>
             </div>
             <div class="header-buttons" style="float: right; text-align: right;">
+                <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
                 <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
                 <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
                 <el-button @click="gotoWordManager">{{ $t('vocabularyList') }}</el-button>
@@ -49,18 +50,21 @@
         </div>
 
         <ChatDialog ref="chatDialog" />
+        <CheckDialog ref="checkDialog" />
     </div>
 </template>
 
 <script>
 import { getURL, parseBackendError, checkLogin, realLoginFunc, realLogoutFunc, gotoAssistantPage, gotoDataPage, gotoSetting } from '@/components/conn';
 import axios from 'axios';
+import CheckDialog from './CheckDialog.vue';
 import ChatDialog from './ChatDialog.vue';
 import { translateFunc } from './TransFunction';
 export default {
     name: 'EnReader',
     components: {
-        ChatDialog
+        ChatDialog,
+        CheckDialog
     },
     data() {
         return {
@@ -270,6 +274,9 @@ export default {
                 this.outerMargin = 50;
             }
         },
+        searchWord() {
+            this.$refs.checkDialog.openDialog(this);
+        }        
     },
     mounted() {
         this.handleResize()
