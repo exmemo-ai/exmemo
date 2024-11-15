@@ -1,11 +1,13 @@
 from collections import OrderedDict
 import pytz
+from loguru import logger
 
 from django.db.models import Q
 from django.utils import timezone
 from backend.common.utils.net_tools import do_result
 from backend.common.llm.llm_hub import llm_query
 from backend.common.utils.text_tools import get_language_name
+from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT
 from backend.settings import LANGUAGE_CODE
 from .message import MSG_ROLE
 from .models import StoreMessage
@@ -16,9 +18,15 @@ def get_messages(args, request):
     Get messages from a user
     """
     message_list = []
+
+    user = UserManager.get_instance().get_user(args["user_id"])
+    show_count = user.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT)
+    logger.debug(f'get_messages {show_count}')
+    if isinstance(show_count, str):
+        show_count = int(show_count)
     items = StoreMessage.objects.filter(
         user_id=args["user_id"], sid=args["sid"]
-    ).order_by("-created_time")[:50]
+    ).order_by("-created_time")[:show_count]
     for message in items:
         message_list.append(
             {

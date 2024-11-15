@@ -55,9 +55,9 @@ export default {
                 value: item.value
             }));
             this.llm_chat_value = settings.setting.llm_chat_model;
-            //this.llm_chat_prompt = settings.setting.llm_chat_prompt;
-            //this.llm_chat_show_count = settings.setting.llm_chat_show_count;
-            //this.llm_chat_memory_count = settings.setting.llm_chat_memory_count;
+            this.llm_chat_prompt = settings.setting.llm_chat_prompt;
+            this.llm_chat_show_count = settings.setting.llm_chat_show_count;
+            this.llm_chat_memory_count = settings.setting.llm_chat_memory_count;
         },
         getSettings() {
             return {

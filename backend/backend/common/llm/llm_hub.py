@@ -116,6 +116,12 @@ def chat(uid, sid, content, engine_type=None, debug=False):
     """
     start_time = time.time()
     user = UserManager.get_instance().get_user(uid)
+    # 241115
+    prompt = user.get("llm_chat_prompt", "")
+    if prompt != "" and content != "":
+        content = prompt + "\n" + content
+    logger.debug(f"chat {content}")
+    #
     privilege = user.privilege
     if engine_type is None:
         engine_type = user.get("llm_chat_model", DEFAULT_CHAT_LLM)

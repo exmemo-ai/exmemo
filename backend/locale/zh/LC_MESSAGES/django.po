@@ -617,6 +617,10 @@ msgstr "用户等级: {level_desc}"
 msgid "settings_were_applied_successfully"
 msgstr "设置成功"
 
+#: backend/common/user/user.py:37
+msgid "chat_prompt_default"
+msgstr "请简单回答"
+
 #: backend/common/user/user.py:147
 msgid "supports_ocr_colon_"
 msgstr "支持OCR:"

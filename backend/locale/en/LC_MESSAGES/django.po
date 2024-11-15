@@ -618,6 +618,10 @@ msgstr "User Level: {level_desc}"
 msgid "settings_were_applied_successfully"
 msgstr "Settings were applied successfully"
 
+#: backend/common/user/user.py:37
+msgid "chat_prompt_default"
+msgstr "Please answer briefly."
+
 #: backend/common/user/user.py:147
 msgid "supports_ocr_colon_"
 msgstr "Supports OCR:"
