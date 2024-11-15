@@ -1,21 +1,5 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <el-container>
-            <h3 style="text-align: left;">{{ $t('articleList') }}</h3>
-            <div style="display: flex; align-items: center; justify-content: flex-end; margin-left: auto; max-width: 100%;">
-                <el-label type="text" v-if="isLogin" style="margin-right: 5px;">{{ login_user }}</el-label>
-                <el-button type="text" @click="logoutFunc" v-if="isLogin">{{ $t('logout') }}</el-button>
-                <el-button type="text" @click="loginFunc" v-else>{{ $t('login') }}</el-button>
-                <el-button @click="gotoUserSetting" v-if="isLogin">{{ $t('userSetting') }}</el-button>
-            </div>
-        </el-container>
-        <el-container>
-            <el-header class="custom-padding">
-                <div class="header-buttons" style="float: right;">
-                    <el-button @click="gotoReader">{{ $t('readingTools') }}</el-button>
-                </div>
-            </el-header>
-        </el-container>
+    <div>
         <el-main class="custom-padding">
             <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
                 <div style="display: flex;" v-if="!isMobile">
@@ -44,7 +28,7 @@
 
 <script>
 import axios from 'axios';
-import { getURL, parseBackendError, checkLogin, realLoginFunc, realLogoutFunc, gotoAssistantPage, gotoReaderPage } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/conn';
 export default {
     name: 'ArticleManager',
     data() {
@@ -63,21 +47,6 @@ export default {
         };
     },
     methods: {
-        gotoUserSetting() {
-            this.$router.push('/user_setting');
-        },
-        gotoReader() {
-            gotoReaderPage(this);
-        },
-        gotoAssistant() {
-            gotoAssistantPage(this);
-        },
-        loginFunc() {
-            realLoginFunc(this);
-        },
-        logoutFunc() {
-            realLogoutFunc(this);
-        },
         handleSizeChange(val) {
             this.pageSize = val;
             this.fetchData();
@@ -115,10 +84,6 @@ export default {
         },
     },
     mounted() {
-        this.isLogin = checkLogin(this);
-        if (this.isLogin) {
-            this.login_user = localStorage.getItem('username');
-        }
         this.fetchData();
     }
 }
@@ -141,7 +106,7 @@ export default {
 }
 
 .desktop-width {
-    max-width: 80%;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -151,8 +116,4 @@ export default {
     }
 }
 
-.custom-padding {
-    --el-header-padding: 5px;
-    --el-main-padding: 5px;
-}
 </style>

@@ -3,12 +3,13 @@ import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue'
 import ElementPlus from 'element-plus';
 import DataManager from './components/DataManager.vue'; 
+import ChatManager from './components/ChatManager.vue';
 import SupportTools from './components/SupportTools.vue';
-import UserSetting from './components/UserSetting.vue';
+import SettingMain from './components/settings/SettingMain.vue';
 import LoginView from './components/LoginView.vue';
 import SetPassword from './components/SetPassword.vue';
 import RegisterUser from './components/RegisterUser.vue';
-import EnReader from './components/translate/EnReader.vue';
+import TranslateMain from './components/translate/TranslateMain.vue';
 import WordManager from './components/translate/WordManager.vue';
 import ArticleManager from './components/translate/ArticleManager.vue';
 import 'element-plus/theme-chalk/index.css';
@@ -17,6 +18,7 @@ import { createI18n } from 'vue-i18n';
 import enMessages from '../_locales/en/messages.json';
 import zhCNMessages from '../_locales/zh_CN/messages.json';
 import config from './components/config';
+import './assets/styles/common.css'
 
 const messages = {
   en: enMessages,
@@ -41,12 +43,13 @@ const router = createRouter({
   routes: [
     { path: '/', component: DataManager },
     { path: '/data', component: DataManager },
+    { path: '/chat', component: ChatManager },
     { path: '/support_tools', component: SupportTools },
     { path: '/login', component: LoginView },
-    { path: '/user_setting', component: UserSetting },
+    { path: '/user_setting', component: SettingMain },
     { path: '/set_password', component: SetPassword },
     { path: '/register', component: RegisterUser},
-    { path: '/enreader', component: EnReader},
+    { path: '/translate', component: TranslateMain},
     { path: '/word_manager', component: WordManager},
     { path: '/article_manager', component: ArticleManager}
   ]
@@ -70,12 +73,13 @@ router.beforeEach((to, from, next) => {
 const app = createApp(App);
 app.use(i18n);
 app.component('DataManager', DataManager);
+app.component('ChatManager', ChatManager);
 app.component('SupportTools', SupportTools);
 app.component('LoginView', LoginView);
 app.component('SetPassword', SetPassword);
 app.component('RegisterUser', RegisterUser);
-app.component('UserSetting', UserSetting);
-app.component('EnReader', EnReader);
+app.component('MainSetting', SettingMain);
+app.component('TranslateMain', TranslateMain);
 app.component('WordManager', WordManager);
 app.component('ArticleManager', ArticleManager);
 app.use(ElementPlus);

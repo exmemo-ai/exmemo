@@ -1,60 +1,49 @@
 <template>
     <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <el-container>
-            <h3 style="text-align: left;">{{ $t('dataManagement') }}</h3>
-            <div style="display: flex; align-items: center; justify-content: flex-end; margin-left: auto; max-width: 100%;">
-                <el-label type="text" v-if="isLogin" style="margin-right: 5px;">{{ login_user }}</el-label>
-                <el-button type="text" @click="logoutFunc" v-if="isLogin">{{ $t('logout') }}</el-button>
-                <el-button type="text" @click="loginFunc" v-else>{{ $t('login') }}</el-button>
-                <el-button @click="gotoUserSetting" v-if="isLogin">{{ $t('userSetting') }}</el-button>
+        <div style="display: flex; flex-direction: column;">
+            <app-navbar :title="$t('dataManagement')" :info="'DataManager'" />
+            <div class="header-buttons" style="float: right; text-align: right;">
             </div>
-        </el-container>
-        <el-container>
-            <el-header class="custom-padding">
-                <div class="header-buttons" style="float: right;">
-                    <el-button @click="gotoReader">{{ $t('readingTools') }}</el-button>
-                    <el-button @click="gotoAssistant">{{ $t('assistantTools') }}</el-button>
-                    <el-button @click="openEditDialog()">{{ $t('add') }}</el-button>
-                    <!--<el-button @click="exportRecord()">{{ $t('export') }}</el-button>-->
-                </div>
-            </el-header>
-        </el-container>
-        <el-main class="custom-padding">
+        </div>
+        <el-main class="custom-padding main-container">
             <div class="custom-options" style="display: flex;margin: 5px;">
-                <div style="display: flex; flex-grow: 1" v-if="!isMobile">
-                    <div style="flex-shrink: 1;margin: 5px;">
+                <div style="display: flex; flex-grow: 1; align-items: center;" v-if="!isMobile">
+                    <div class="label-container">
                         <el-label>{{ $t('search') }}</el-label>
                     </div>
                     <div style="flex-grow: 0;margin: 5px;">
                         <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
                     </div>
-                    <div style="flex-shrink: 1;margin: 5px;">
+                    <div class="label-container">
                         <el-label>{{ $t('type') }}</el-label>
                     </div>
                     <div style="flex-grow: 1;margin: 5px;">
-                        <el-select v-model="ctype_value" :placeholder="$t('selectPlaceholder')">
+                        <el-select v-if="ctype_options && ctype_options.length > 0" v-model="ctype_value"
+                            :placeholder="$t('selectPlaceholder')" popper-class="select-dropdown">
                             <el-option v-for="item in ctype_options" :key="item.value" :label="item.label"
                                 :value="item.value">
                             </el-option>
                         </el-select>
                     </div>
 
-                    <div style="flex-shrink: 1;margin: 5px;">
+                    <div class="label-container">
                         <el-label>{{ $t('data') }}</el-label>
                     </div>
                     <div style="flex-grow: 1;margin: 5px;">
-                        <el-select v-model="etype_value" :placeholder="$t('selectPlaceholder')">
+                        <el-select v-if="etype_options.length" v-model="etype_value"
+                            :placeholder="$t('selectPlaceholder')">
                             <el-option v-for="item in etype_options" :key="item.value" :label="item.label"
                                 :value="item.value">
                             </el-option>
                         </el-select>
                     </div>
 
-                    <div style="flex-shrink: 1;margin: 5px;">
+                    <div class="label-container">
                         <el-label>{{ $t('status') }}</el-label>
                     </div>
                     <div style="flex-grow: 1;margin: 5px;">
-                        <el-select v-model="status_value" :placeholder="$t('selectPlaceholder')">
+                        <el-select v-if="status_options.length" v-model="status_value"
+                            :placeholder="$t('selectPlaceholder')">
                             <el-option v-for="item in status_options" :key="item.value" :label="item.label"
                                 :value="item.value">
                             </el-option>
@@ -64,6 +53,14 @@
                 <div style="flex-shrink: 0;margin: 5px;">
                     <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
                 </div>
+                <div style="flex-shrink: 0;margin: 5px; margin-left: 15px;">
+                    <el-button @click="openEditDialog()">{{ $t('add') }}</el-button>
+                </div>
+                <!--
+                <div style="flex-shrink: 0;margin: 5px;">
+                    <el-button @click="exportRecord()">{{ $t('export') }}</el-button>
+                </div>
+                -->
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
                 <el-table-column prop="title" :label="$t('title')">
@@ -77,8 +74,9 @@
                     v-if="!isMobile"></el-table-column>
                 <el-table-column prop="status" :label="$t('status')" :width=70></el-table-column>
             </el-table>
-            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
-                :page-sizes="[10]" :page-size="10" layout="total, sizes, prev, pager, next, jumper" :total="total">
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                :current-page="currentPage" :page-sizes="[10]" :page-size="10"
+                layout="total, sizes, prev, pager, next, jumper" :total="total">
             </el-pagination>
         </el-main>
         <EditDialog ref="editDialog" />
@@ -88,17 +86,18 @@
 <script>
 import axios from 'axios';
 import EditDialog from './EditDialog.vue';
-import { getURL, parseBackendError, checkLogin, realLoginFunc, realLogoutFunc, gotoAssistantPage, gotoReaderPage } from './conn'
+import { getURL, parseBackendError } from './conn'
+import AppNavbar from '@/components/AppNavbar.vue'
+
 export default {
     name: 'NoteManager',
     components: {
-        EditDialog
+        EditDialog,
+        AppNavbar,
     },
     data() {
         return {
             isMobile: false,
-            isLogin: false,
-            login_user: '',
             // table page
             total: 0,
             currentPage: 1,
@@ -116,21 +115,6 @@ export default {
         };
     },
     methods: {
-        gotoUserSetting() {
-            this.$router.push('/user_setting');
-        },
-        gotoReader() {
-            gotoReaderPage(this);
-        },
-        gotoAssistant() {
-            gotoAssistantPage(this);
-        },
-        loginFunc() {
-            realLoginFunc(this);
-        },
-        logoutFunc() {
-            realLogoutFunc(this);
-        },
         handleSizeChange(val) {
             this.pageSize = val;
             this.fetchData();
@@ -165,64 +149,36 @@ export default {
             this.currentPage = 1;
             this.fetchData();
         },
-        getOptions(obj, ctype) {
+        async getOptions(obj, ctype) {
             let func = 'api/entry/tool/'
-            axios.get(getURL() + func, { params: { ctype: ctype, rtype: 'feature' } })
-                .then(response => {
-                    console.log('getOptions success');
-                    let ret = response.data;
-                    if (ctype == 'ctype') {
-                        obj.ctype_options[0] = {value:this.$t('all'), label:this.$t('all')};
-                        for (let i = 0; i < ret.length; i++) {
-                            if (this.$t(ret[i]) == ret[i]) {
-                                obj.ctype_options[i + 1] = {
-                                    value: ret[i],
-                                    label: ret[i]
-                                }
-                            } else {
-                                obj.ctype_options[i + 1] = {
-                                    value: ret[i],
-                                    label: this.$t(ret[i])
-                                }
-                            }
-                        }
-                    } else if (ctype == 'status') {
-                        obj.status_options[0] = {value:this.$t('all'), label:this.$t('all')};
-                        for (let i = 0; i < ret.length; i++) {
-                            if (this.$t(ret[i]) == ret[i]) {
-                                obj.status_options[i + 1] = {
-                                    value: ret[i],
-                                    label: ret[i]
-                                }
-                            } else {
-                                obj.status_options[i + 1] = {
-                                    value: ret[i],
-                                    label: this.$t(ret[i])
-                                }
-                            }
-                        }
-                    } else if (ctype == 'etype') {
-                        obj.etype_options[0] = {value:this.$t('all'), label:this.$t('all')};
-                        for (let i = 0; i < ret.length; i++) {
-                            if (this.$t(ret[i]) == ret[i]) {
-                                obj.etype_options[i + 1] = {
-                                    value: ret[i],
-                                    label: ret[i]
-                                }
-                            } else {
-                                obj.etype_options[i + 1] = {
-                                    value: ret[i],
-                                    label: this.$t(ret[i])
-                                }
-                            }
-                        }
-                    }
-                    return response.data;
-                })
-                .catch(error => {
-                    console.log('getOptions error', error);
+            try {
+                const response = await axios.get(getURL() + func, {
+                    params: { ctype: ctype, rtype: 'feature' }
                 });
-            return []
+
+                console.log('getOptions success');
+                let ret = response.data;
+                const options = [{ value: this.$t('all'), label: this.$t('all') }];
+
+                ret.forEach(item => {
+                    options.push({
+                        value: item,
+                        label: this.$t(item) === item ? item : this.$t(item)
+                    });
+                });
+
+                // 使用nextTick确保DOM更新后再设置options
+                await this.$nextTick();
+                if (ctype === 'ctype') {
+                    this.ctype_options = options;
+                } else if (ctype === 'status') {
+                    this.status_options = options;
+                } else if (ctype === 'etype') {
+                    this.etype_options = options;
+                }
+            } catch (error) {
+                console.log('getOptions error', error);
+            }
         },
         openEditDialog() {
             this.$refs.editDialog.openEditDialog(this);
@@ -231,15 +187,18 @@ export default {
             console.log(column, event)
             this.$refs.editDialog.openEditDialog(this, row);
         },
+        handleResize() {
+            this.isMobile = window.innerWidth < 768;
+        },
     },
-    mounted() {
-        this.isLogin = checkLogin(this);
-        if (this.isLogin) {
-            this.login_user = localStorage.getItem('username');
-        }
-        this.getOptions(this, "ctype");
-        this.getOptions(this, "status");
-        this.getOptions(this, "etype");
+    async mounted() {
+        this.isMobile = window.innerWidth < 768;
+        window.addEventListener('resize', this.handleResize);
+        this.handleResize();
+        await this.getOptions(this, "ctype");
+        await this.getOptions(this, "status");
+        await this.getOptions(this, "etype");
+        await this.$nextTick();
         this.fetchData();
     }
 }
@@ -255,6 +214,7 @@ export default {
 .custom-options {
     font-size: 12px;
     --el-input-font-size: 12px;
+    align-items: center;
 }
 
 .full-width {
@@ -262,7 +222,7 @@ export default {
 }
 
 .desktop-width {
-    max-width: 80%;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -272,8 +232,25 @@ export default {
     }
 }
 
-.custom-padding {
-    --el-header-padding: 5px;
-    --el-main-padding: 5px;
+.select-dropdown {
+    min-width: 100px !important;
+}
+
+.label-container {
+    display: flex;
+    align-items: center;
+    margin: 5px;
+    flex-shrink: 1;
+}
+
+.main-container {
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+    .main-container {
+        max-width: 100%;
+    }
 }
 </style>

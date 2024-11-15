@@ -1,117 +1,107 @@
 <template>
   <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-    <el-container>
-      <h3 style="text-align: left;">{{ $t('toolTitle') }}</h3>
-      <div style="display: flex; align-items: center; justify-content: flex-end; margin-left: auto; max-width: 100%;">
-        <el-label type="text" v-if="isLogin" style="margin-right: 5px;">{{ login_user }}</el-label>
-        <el-button type="text" @click="logoutFunc" v-if="isLogin">{{ $t('logout') }}</el-button>
-        <el-button type="text" @click="loginFunc" v-else>{{ $t('login') }}</el-button>
-        <el-button @click="gotoUserSetting" v-if="isLogin">{{ $t('userSetting') }}</el-button>
-      </div>
-    </el-container>
-    <el-container>
-      <el-header class="custom-padding">
-        <div class="header-buttons" style="float: right;">
-          <el-button @click="gotoDataManager">{{ $t('dataManager') }}</el-button>
-        </div>
-      </el-header>
-    </el-container>
+    <div style="display: flex; flex-direction: column;">
+      <app-navbar :title="$t('toolTitle')" :info="'SupportTools'" />
+    </div>
+    
+    <el-container class="main-container">
+      <el-aside width="200px" style="background-color: #f5f7fa">
+        <el-menu
+          :default-active="activeView"
+          @select="handleMenuSelect">
+          <el-menu-item index="paper">
+            <span>{{ $t('paperAnalysis') }}</span>
+          </el-menu-item>
+          <el-menu-item index="web">
+            <span>{{ $t('webTools') }}</span>
+          </el-menu-item>
+          <el-menu-item index="tts">
+            <span>{{ $t('voiceReading') }}</span>
+          </el-menu-item>
+        </el-menu>
+      </el-aside>
 
-    <el-container>
-      <h4 style="text-align: left;">{{ $t('paperAnalysis') }}</h4>
-    </el-container>
-    <el-container>
-      <el-main class="custom-padding">
-        <div style="display: flex;margin: 5px;">
-          <div style="flex-shrink: 1;margin: 5px;">
-            <el-label>{{ $t('paperInfo') }}</el-label>
-          </div>
-          <div style="flex-grow: 1;margin: 5px;">
-            <el-input v-model="search_text" :placeholder="$t('paperPlaceholder')"></el-input>
-          </div>
-          <div style="flex-shrink: 1;margin: 5px;">
-            <el-button @click="searchPaper">{{ $t('search') }}</el-button>
-          </div>
+      <el-main>
+        <div v-show="activeView === 'paper'">
+          <el-container style="display: flex; flex-direction: column;">
+            <div style="display: flex;margin: 5px;">
+              <div style="flex-shrink: 1;margin: 5px;">
+                <el-label>{{ $t('paperInfo') }}</el-label>
+              </div>
+              <div style="flex-grow: 1;margin: 5px;">
+                <el-input v-model="search_text" :placeholder="$t('paperPlaceholder')"></el-input>
+              </div>
+              <div style="flex-shrink: 1;margin: 5px;">
+                <el-button @click="searchPaper">{{ $t('search') }}</el-button>
+              </div>
+            </div>
+            <div style="margin: 5px;">
+              <pre class="file-content">{{ info_content }}</pre>
+            </div>
+          </el-container>
         </div>
-        <div style="margin: 5px;">
-          <pre class="file-content">{{ info_content }}</pre>
+
+        <div v-show="activeView === 'web'">
+          <el-container style="display: flex; flex-direction: column;">
+            <div style="display: flex;margin: 5px;">
+              <div style="flex-shrink: 1;margin: 5px;">
+                <el-label>{{ $t('webAddress') }}</el-label>
+              </div>
+              <div style="flex-grow: 1;margin: 5px;">
+                <el-input v-model="web_addr" placeholder="http://"></el-input>
+              </div>
+              <div style="flex-shrink: 1;margin: 5px;">
+                <el-button @click="getWebContent">{{ $t('getWebContent') }}</el-button>
+                <el-button @click="getWebAbstract">{{ $t('getWebAbstract') }}</el-button>
+                <el-button @click="getWebSave">{{ $t('saveWeb') }}</el-button>
+              </div>
+            </div>
+            <div style="margin: 5px;">
+              <pre class="file-content">{{ web_info }}</pre>
+            </div>
+          </el-container>
+        </div>
+
+        <div v-show="activeView === 'tts'">
+          <el-container style="display: flex; flex-direction: column;">
+            <div style="display: flex;margin: 5px;">
+              <div style="margin: 5px;">
+                <el-button @click="doProcess('tts')">{{ $t('convertToSpeech') }}</el-button>
+                <el-button @click="doProcess('polish')">{{ $t('polish') }}</el-button>
+                <el-button @click="doProcess('gpt')">{{ $t('gpt') }}</el-button>
+                <el-button @click="doProcess('translate')">{{ $t('translateToChinese') }}</el-button>
+              </div>
+            </div>
+            <el-input v-model="textarea_value" type="textarea" :rows="8" :placeholder="$t('inputTextPlaceholder')"
+              style="width: 100%; margin-top: 10px;"></el-input>
+            <div style="margin-top: 10px;">
+              <audio ref="audioPlayer" :src="audioSrc" @timeupdate="updateProgress"></audio>
+              <el-slider v-model="progress" :max="duration" @change="changeProgress"></el-slider>
+              <el-button type="primary" @click="playAudio">{{ $t('play') }}</el-button>
+              <el-button type="primary" @click="pauseAudio">{{ $t('pause') }}</el-button>
+            </div>
+          </el-container>
         </div>
       </el-main>
     </el-container>
-
-    <el-container>
-      <h4 style="text-align: left;">{{ $t('webTools') }}</h4>
-    </el-container>
-
-    <el-container>
-      <el-main class="custom-padding">
-        <div style="display: flex;margin: 5px;">
-          <div style="flex-shrink: 1;margin: 5px;">
-            <el-label>{{ $t('webAddress') }}</el-label>
-          </div>
-          <div style="flex-grow: 1;margin: 5px;">
-            <el-input v-model="web_addr" placeholder="http://"></el-input>
-          </div>
-          <div style="flex-shrink: 1;margin: 5px;">
-            <el-button @click="getWebContent">{{ $t('getWebContent') }}</el-button>
-          </div>
-          <div style="flex-shrink: 1;margin: 5px;">
-            <el-button @click="getWebAbstract">{{ $t('getWebAbstract') }}</el-button>
-          </div>
-          <div style="flex-shrink: 1;margin: 5px;">
-            <el-button @click="getWebSave">{{ $t('saveWeb') }}</el-button>
-          </div>
-        </div>
-        <div style="margin: 5px;">
-          <pre class="file-content">{{ web_info }}</pre>
-        </div>
-      </el-main>
-    </el-container>
-
-
-    <el-container>
-      <h4 style="text-align: left;">{{ $t('voiceReading') }}</h4>
-    </el-container>
-
-    <el-main class="custom-padding">
-      <div style="display: flex;">
-        <div style="flex-shrink: 1;margin: 5px;">
-          <el-button @click="doProcess('tts')">{{ $t('convertToSpeech') }}</el-button>
-        </div>
-        <div style="flex-shrink: 1;margin: 5px;">
-          <el-button @click="doProcess('polish')">{{ $t('polish') }}</el-button>
-        </div>
-        <div style="flex-shrink: 1;margin: 5px;">
-          <el-button @click="doProcess('gpt')">{{ $t('gpt') }}</el-button>
-        </div>
-        <div style="flex-shrink: 1;margin: 5px;">
-          <el-button @click="doProcess('translate')">{{ $t('translateToChinese') }}</el-button>
-        </div>
-      </div>
-
-      <el-input v-model="textarea_value" type="textarea" :rows="8" :placeholder="$t('inputTextPlaceholder')"
-        style="width: 100%;"></el-input>
-
-      <div style="margin-top: 10px;">
-        <audio ref="audioPlayer" :src="audioSrc" @timeupdate="updateProgress"></audio>
-        <el-slider v-model="progress" :max="duration" @change="changeProgress"></el-slider>
-        <el-button type="primary" @click="playAudio">{{ $t('play') }}</el-button>
-        <el-button type="primary" @click="pauseAudio">{{ $t('pause') }}</el-button>
-      </div>
-    </el-main>
   </div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue';
-import { getURL, checkLogin, realLoginFunc, realLogoutFunc, parseBackendError, gotoDataPage, gotoSetting } from './conn'
+import { getURL, parseBackendError } from './conn'
 import axios from 'axios';
+import AppNavbar from '@/components/AppNavbar.vue'
 
 export default {
+  components: {
+    AppNavbar
+  },
   data() {
     return {
       isMobile: false,
       isLogin: true,
+      activeView: 'paper',
       login_user: '',
       search_text: '',
       info_content: '',
@@ -160,6 +150,9 @@ export default {
     };
   },
   methods: {
+    handleMenuSelect(key) {
+      this.activeView = key;
+    },
     getWebContent() {
       this.webTools('content')
     },
@@ -168,12 +161,6 @@ export default {
     },
     getWebSave() {
       this.webTools('save')
-    },
-    gotoUserSetting() {
-      gotoSetting(this);
-    },
-    gotoDataManager() {
-      gotoDataPage(this);
     },
     webTools(rtype) {
       if (this.web_addr === '') {
@@ -317,24 +304,25 @@ export default {
         parseBackendError(this, err);
       });
     },
-    loginFunc() {
-      realLoginFunc(this);
-    },
-    logoutFunc() {
-      realLogoutFunc(this);
-    },
   },
   mounted() {
-    checkLogin(this);
     this.isMobile = window.innerWidth < 768;
   },
 }
 </script>
 
 <style>
+.main-container {
+  height: calc(100vh - 60px);
+}
+
 .file-content {
   text-align: left;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.el-aside {
+  border-right: 1px solid #e6e6e6;
 }
 </style>

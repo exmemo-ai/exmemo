@@ -212,7 +212,6 @@ export class ChatService {
                 throw new Error('Token expired');
             }
             info = await this.parseInfo(response);
-            console.log('info', info);
         } catch (error) {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);

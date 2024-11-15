@@ -44,12 +44,10 @@ export default defineComponent({
 
     methods: {
         async fetchMessages(event) {
-            console.log('fetchMessages', event)
             this.messagesLoaded = false;
             try {
                 const sessionId = event.room?.roomId;
                 const sessionName = event.room?.roomName;
-                console.log('sss', sessionId, sessionName);
                 this.chat.setSession(sessionId, sessionName);
                 await this.chat.fetchMessages();
             } catch (error) {

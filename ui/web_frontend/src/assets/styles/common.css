@@ -1,0 +1,109 @@
+.nav-container {
+    background-color: #f5f7fa;
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 0px !important;
+    border-radius: 4px;
+    margin-bottom: 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #dcdfe6;
+}
+
+.custom-padding {
+    --el-header-padding: 10px;
+    --el-main-padding: 10px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.user-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f7fa;
+    padding: 20px;
+}
+
+.user-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.user-title {
+    text-align: center;
+    color: #303133;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.user-button {
+    flex: 1;
+    height: 40px;
+    font-size: 16px;
+}
+
+
+.settings-container {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    padding: 20px;
+    gap: 20px;
+    display: flex;
+}
+
+.settings-content {
+    flex: 1;
+    padding: 0 20px;
+    overflow: auto;
+}
+
+.settings-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #e1e4e8;
+    padding: 16px;
+    text-align: right;
+    background: white;
+}
+
+.settings-nav {
+    width: 200px;
+    border-right: 1px solid #e1e4e8;
+    padding-right: 20px;
+}
+
+@media (max-width: 768px) {
+    .user-card {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .title {
+        margin-bottom: 20px;
+        font-size: 1.5em;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+}
