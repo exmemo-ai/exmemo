@@ -21,7 +21,10 @@
     "@babel/eslint-parser": "^7.24.1",
     "@vue/cli-service": "^5.0.8",
     "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.22.0"
+    "eslint-plugin-vue": "^9.22.0",
+    "sass-loader": "^16.0.3",
+    "vue-advanced-chat": "^2.1.0",
+    "vuex": "^4.1.0"
   },
   "eslintConfig": {
     "root": true,
