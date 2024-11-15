@@ -1,13 +1,15 @@
 from collections import OrderedDict
-from loguru import logger
 import pytz
 
 from django.db.models import Q
 from django.utils import timezone
 from backend.common.utils.net_tools import do_result
 from backend.common.llm.llm_hub import llm_query
+from backend.common.utils.text_tools import get_language_name
+from backend.settings import LANGUAGE_CODE
 from .message import MSG_ROLE
 from .models import StoreMessage
+from app_dataforge.prompt import PROMPT_TITLE
 
 def get_messages(args, request):
     """
@@ -83,10 +85,11 @@ def get_session_name(args, items):
             if len(string) > 500:
                 break
     if len(string) > 0:
-        content = f"给下是对话片段，请给这段话起一个十字以内的主题名:\n\n{string}"
-        logger.debug(f"content {content}")
+        query = PROMPT_TITLE.format(
+            content=string, language=get_language_name(LANGUAGE_CODE.lower())
+        )
         ret, answer, _ = llm_query(
-            args["user_id"], MSG_ROLE, content, "chat", debug=False
+            args["user_id"], MSG_ROLE, query, "chat", debug=False
         )
         if ret:
             if sid.startswith("20"):

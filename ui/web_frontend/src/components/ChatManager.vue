@@ -28,7 +28,7 @@ export default defineComponent({
 
     setup() {
         register()
-        const chat = new ChatService(this)
+        const chat = new ChatService()
         return { chat }
     },
 
@@ -104,6 +104,7 @@ export default defineComponent({
         },
     },
     mounted() {
+        this.chat.setObj(this);
         this.isMobile = window.innerWidth < 768;
         window.addEventListener('resize', this.handleResize);
         this.handleResize();        

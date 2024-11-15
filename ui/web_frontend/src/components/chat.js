@@ -1,11 +1,11 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import { getURL, setDefaultAuthHeader } from './conn';
-import defaultAvatar from '@/assets/images/default-avatar.png'
+import defaultAvatar from '@/assets/images/chat.png'
 
 export class ChatService {
     constructor(obj) {
-        this.obj = obj;
+        this.obj = null;
         this.messages = [];
         this.sessions = [];
         this.currentUserId = localStorage.getItem('username');
@@ -18,9 +18,13 @@ export class ChatService {
         this.botId = 'Bot';
     }
 
+    setObj(obj) {
+        this.obj = obj;
+    }
+
     createSession() {
         this.currentSessionId = `${new Date().toISOString().replace('T', ' ').replace(/\.\d+Z/, '')}`;
-        this.currentSessionId = this.currentSessionId.slice(0, 16);
+        this.currentSessionId = this.currentSessionId.slice(0, 19);
         this.currentSessionName = this.currentSessionId;
         sessionStorage.setItem('sid', this.currentSessionId);
         sessionStorage.setItem('sname', this.currentSessionName);
@@ -177,7 +181,7 @@ export class ChatService {
 
     addDefaultMessage() {
         if (this.messages.length === 0) {
-            this.addMessage('你好，现在可以和我聊天了', this.botId);
+            this.addMessage(this.obj.$t('letsChat'), this.botId);
         }
     }
 
