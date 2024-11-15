@@ -5,6 +5,7 @@ from loguru import logger
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from knox.auth import TokenAuthentication
+from django.utils.translation import gettext as _
 
 import backend.common.files.filecache as filecache
 from backend.common.utils.net_tools import do_result
@@ -14,6 +15,7 @@ from backend.common.user.user import DEFAULT_USER
 from backend.common.utils.file_tools import get_ext
 import app_message.user_manager as user_manager
 from .message import *
+from .data_process import get_messages, get_sessions, clear_session, save_session
 
 
 class MessageAPIView(APIView):
@@ -30,6 +32,8 @@ class MessageAPIView(APIView):
             has_token = True
 
         args = parse_common_args(request)
+        args['sid'] = request.GET.get("sid", request.POST.get("sid", args['session_id']))
+        args['sname'] = request.GET.get("sname", request.POST.get("sname", args['sid']))
         logger.info(
             f'request.data {request.data}, has_token {has_token}, is_group {args["is_group"]}'
         )
@@ -40,7 +44,7 @@ class MessageAPIView(APIView):
                 args["user_id"] = DEFAULT_USER
             if args["user_id"] == DEFAULT_USER:
                 LoginView.create_user_default()
-
+            args["source"] = request.POST.get("source", "wechat") # later move to parse_common_args
             rtype = request.POST.get("rtype", "text")
             try:
                 if rtype == "text":
@@ -48,7 +52,15 @@ class MessageAPIView(APIView):
                     logger.debug(f"{ret}, {detail}")
                     return do_result(ret, detail)
                 elif rtype == "file":
-                    return self.upload_file(request)
+                    return self.upload_file(args,request)
+                elif rtype == "get_messages":
+                    return get_messages(args,request)
+                elif rtype == "get_sessions":
+                    return get_sessions(args,request)
+                elif rtype == "save_session":
+                    return save_session(args,request)
+                elif rtype == "clear_session":
+                    return clear_session(args,request)
             except Exception as e:
                 logger.warning(f"message failed {e}")
                 traceback.print_exc()

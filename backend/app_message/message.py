@@ -7,8 +7,8 @@ import re
 import traceback
 from loguru import logger
 import pandas as pd
-from django.utils.translation import gettext as _
 
+from django.utils.translation import gettext as _
 from backend.common.user.user import *
 from backend.common.user.session import *
 from backend.common.user.resource import *
@@ -46,6 +46,7 @@ from app_dataforge.misc_tools import add_url
 
 from .command import *
 from .function import *
+from .data_process import save_message
 
 MSG_ROLE = "You're a smart assistant"
 WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
@@ -862,6 +863,7 @@ def do_message(args):
         logger.info(f"content:{content} ret:{ret} detail:{detail}")
         if not ret:
             ret, detail = do_chat(args)
+        save_message(content, args, detail)
         return True, detail
     except Exception as e:
         traceback.print_exc()
