@@ -39,7 +39,7 @@ class StoreWordViewSet(viewsets.ModelViewSet):
             if keyword:
                 q_obj &= Q(word__icontains=keyword)
 
-        queryset = StoreTranslate.objects.filter(q_obj, **query_args)
+        queryset = StoreTranslate.objects.filter(q_obj, **query_args).order_by("-times", "freq")
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
 

@@ -18,6 +18,7 @@
                 </div>
                 <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
                     <el-table-column prop="word" :label="$t('english')"></el-table-column>
+                    <el-table-column prop="info.translate" :label="$t('translate')"></el-table-column>
                     <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
                     <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
                     <el-table-column :label="$t('operation')" :width=100>

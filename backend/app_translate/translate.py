@@ -139,14 +139,15 @@ def add_to_db(word, regular_word, dst, user_id, sentence=None):
             info["sentence"] = sentence
     logger.debug(f"info {info}")
 
-    if StoreTranslate.objects.filter(word=word, user_id=user_id).exists():
-        obj = StoreTranslate.objects.get(word=word, user_id=user_id)
+    db_word = regular_word
+    if StoreTranslate.objects.filter(word=db_word, user_id=user_id).exists():
+        obj = StoreTranslate.objects.get(word=db_word, user_id=user_id)
         obj.times = obj.times + 1
         obj.info = info
         obj.save()
     else:
         obj = StoreTranslate.objects.create(
-            word=word, info=info, freq=freq, user_id=user_id, times=1,
+            word=db_word, info=info, freq=freq, user_id=user_id, times=1,
             created_time=timestr
         )
     return True, obj

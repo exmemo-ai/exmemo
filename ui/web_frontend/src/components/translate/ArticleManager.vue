@@ -23,6 +23,12 @@
                 </el-pagination>
             </div>
         </el-main>
+        <el-dialog
+            :title="selectedItem.title"
+            v-model="dialogVisible"
+            width="70%">
+            <div style="white-space: pre-wrap;">{{ selectedItem.content }}</div>
+        </el-dialog>
     </div>
 </template>
 
@@ -44,6 +50,11 @@ export default {
             search_text: '',
             //
             fileList: [],
+            dialogVisible: false,
+            selectedItem: {
+                title: '',
+                content: ''
+            },
         };
     },
     methods: {
@@ -80,7 +91,8 @@ export default {
         openEditDialog() {
         },
         handleRowClick(row, column, event) {
-            console.log(column, event)
+            this.selectedItem = row;
+            this.dialogVisible = true;
         },
     },
     mounted() {

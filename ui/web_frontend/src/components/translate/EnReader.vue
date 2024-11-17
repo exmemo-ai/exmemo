@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <div class="header-buttons" style="float: right; text-align: right;">
+    <div style="display: flex; flex-direction: column;">
+        <div class="header-buttons" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
             <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
             <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
             <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
@@ -33,9 +33,10 @@
                     </div>
                 </div>
             </div>
-        </el-main>
+        
         <ChatDialog ref="chatDialog" />
         <CheckDialog ref="checkDialog" />
+    </el-main>
     </div>
 </template>
 

@@ -58,6 +58,7 @@
     "polish": "润色",
     "gpt": "GPT",
     "translateToChinese": "英译中",
+    "translate": "翻译",
     "inputTextPlaceholder": "请输入要转换的文本",
     "play": "播放",
     "pause": "暂停",
