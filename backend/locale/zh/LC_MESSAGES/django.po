@@ -447,7 +447,7 @@ msgstr "论文阅读"
 
 #: app_paper/ptools.py:394
 msgid "english_title_colon__{title}"
-msgstr "中文标题：{title}"
+msgstr "英文名称：{title}"
 
 #: app_paper/ptools.py:396
 msgid "english_name_colon_"
