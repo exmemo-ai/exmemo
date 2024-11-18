@@ -26,6 +26,7 @@ const messages = {
 };
 
 const i18n = createI18n({
+  legacy: false, // set to false to support Composition API
   locale: getLocale(),
   messages,
 });
