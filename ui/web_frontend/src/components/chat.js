@@ -2,12 +2,15 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { getURL, setDefaultAuthHeader } from './conn';
 import defaultAvatar from '@/assets/images/chat.png'
+import { useI18n } from 'vue-i18n'
 
 export class ChatService {
-    constructor(obj) {
+    constructor() {
         this.obj = null;
         this.messages = [];
         this.sessions = [];
+        const { t } = useI18n();
+        this.t = t;
         this.currentUserId = localStorage.getItem('username');
         this.currentSessionId = sessionStorage.getItem('sid');
         this.currentSessionName = sessionStorage.getItem('sname');
@@ -181,7 +184,7 @@ export class ChatService {
 
     addDefaultMessage() {
         if (this.messages.length === 0) {
-            this.addMessage(this.obj.$t('letsChat'), this.botId);
+            this.addMessage(this.t('letsChat'), this.botId);
         }
     }
 

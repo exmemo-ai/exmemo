@@ -15,12 +15,11 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import { register } from 'vue-advanced-chat'
 import { ChatService } from './chat.js'
 import AppNavbar from '@/components/AppNavbar.vue'
 
-export default defineComponent({
+export default ({
     name: 'ChatManager',
     components: {
         AppNavbar
