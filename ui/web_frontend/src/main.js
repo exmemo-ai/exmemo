@@ -2,13 +2,13 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue'
 import ElementPlus from 'element-plus';
-import DataManager from './components/DataManager.vue'; 
-import ChatManager from './components/ChatManager.vue';
-import SupportTools from './components/SupportTools.vue';
+import DataManager from './components/manager/DataManager.vue'; 
+import ChatManager from './components/chat/ChatManager.vue';
+import SupportTools from './components/assistive/AssistiveMain.vue';
 import SettingMain from './components/settings/SettingMain.vue';
-import LoginView from './components/LoginView.vue';
-import SetPassword from './components/SetPassword.vue';
-import RegisterUser from './components/RegisterUser.vue';
+import LoginView from './components/user/LoginView.vue';
+import SetPassword from './components/user/SetPassword.vue';
+import RegisterUser from './components/user/RegisterUser.vue';
 import TranslateMain from './components/translate/TranslateMain.vue';
 import WordManager from './components/translate/WordManager.vue';
 import ArticleManager from './components/translate/ArticleManager.vue';
@@ -17,7 +17,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { createI18n } from 'vue-i18n'; 
 import enMessages from '../_locales/en/messages.json';
 import zhCNMessages from '../_locales/zh_CN/messages.json';
-import config from './components/config';
+import config from './components/support/config';
 import './assets/styles/common.css'
 
 const messages = {
