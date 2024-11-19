@@ -1017,6 +1017,10 @@ msgstr "请输入待查找内容"
 msgid "please_enter_the_record_content"
 msgstr "请输入记录内容"
 
+#: app_message/message.py:812
+msgid "translation_failed"
+msgstr "翻译失败"
+
 #: app_message/message.py:841
 msgid "nothing_entered"
 msgstr "没有输入"

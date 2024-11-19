@@ -802,13 +802,16 @@ CommandManager.get_instance().register(
 )
 
 if is_app_installed("app_translate"):
-    from app_translate.translate import add_translate
+    from app_translate.translate import translate_word
 
     def msg_translate(args):
-        ret, detail = add_translate(args["content"], args["user_id"])
-        return True, {"type": "text", "content": detail}
+        ret, en_regular, tranlation = translate_word(args["content"], args["user_id"])
+        if ret:
+            return True, {"type": "text", "content": tranlation}
+        else:
+            return True, {"type": "text", "content": _("translation_failed")}
 
-    CommandManager.get_instance().register(
+CommandManager.get_instance().register(
         Command(msg_translate, ["翻译"], level=LEVEL_NORMAL)
     )
 
