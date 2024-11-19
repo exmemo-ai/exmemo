@@ -1,53 +1,39 @@
 <template>
   <div class="user-container">
     <el-card class="user-card">
-      <h3 v-if="password_type === 'none'" class="user-title">{{ $t('initialLoginPrompt') }}</h3>
-      <h2 v-else class="user-title">{{ $t('setPassword') }}</h2>
-
-      <form @submit.prevent="set_password" class="user-form">
-        <el-form-item v-if="password_type !== 'none'" :label="$t('oldPassword')">
-          <el-input type="password" v-model="password_old" required></el-input>
+      <h2 class="user-title">{{ $t('userRegistration') }}</h2>
+      <el-form @submit.native.prevent="register" class="user-form">
+        <el-form-item :label="$t('username')">
+          <el-input v-model="username" placeholder="请输入用户名"></el-input>
         </el-form-item>
-
         <el-form-item :label="$t('newPassword')">
-          <el-input type="password" v-model="password1" required></el-input>
+          <el-input type="password" v-model="password1" placeholder="请输入密码" show-password></el-input>
         </el-form-item>
-
         <el-form-item :label="$t('confirmPassword')">
-          <el-input type="password" v-model="password2" required></el-input>
+          <el-input type="password" v-model="password2" placeholder="请确认密码" show-password></el-input>
         </el-form-item>
-
-        <div class="button-group">
-          <el-button type="primary" @click="set_password" class="user-button">
-            {{ $t('submit') }}
-          </el-button>
-        </div>
-      </form>
+        <el-form-item>
+          <el-button type="primary" @click="register" style="width: 100%">{{ $t('submit') }}</el-button>
+        </el-form-item>
+      </el-form>
     </el-card>
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { getURL, setDefaultAuthHeader } from './conn'
+import { getURL } from '@/components/support/conn';
 
 export default {
-  created() {
-    if (this.$route.query.user_id && this.$route.query.user_id != "") {
-      this.username = this.$route.query.user_id;
-      this.password_type = this.$route.query.password_type;
-    }
-  },
   data() {
     return {
       username: "",
-      password_old: "",
       password1: "",
       password2: "",
     };
   },
   methods: {
-    async set_password() {
+    async register() {
       if (this.password1 == "" || this.password2 == "") {
         this.$message({
           type: 'error',
@@ -64,13 +50,10 @@ export default {
       }
       try {
         const formData = new FormData();
-        formData.append('rtype', 'set_password');
+        formData.append('rtype', 'register');
         formData.append('user_id', this.username);
-        formData.append('password_new', this.password1);
-        if (this.password_old != "") {
-          formData.append('password_old', this.password_old);
-        }
-        setDefaultAuthHeader();
+        formData.append('password', this.password1);
+        delete axios.defaults.headers.common['Authorization'];
         const response = await axios.post(getURL() + "api/user/", formData);
         if (response.data.status == "success") {
           this.$router.push("/login?user_name=" + this.username);
@@ -86,6 +69,10 @@ export default {
         }
       } catch (error) {
         console.log(error);
+        this.$message({
+          type: 'error',
+          message: error,
+        });
       }
     },
   },

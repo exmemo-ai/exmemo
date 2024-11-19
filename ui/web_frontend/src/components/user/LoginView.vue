@@ -36,7 +36,7 @@
 <script>
 import axios from "axios";
 import { ElMessage } from "element-plus";
-import { getURL } from './conn'
+import { getURL } from '@/components/support/conn';
 
 export default {
   created() {

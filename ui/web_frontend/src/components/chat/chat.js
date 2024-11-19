@@ -1,6 +1,6 @@
 import axios from 'axios';
 import FormData from 'form-data';
-import { getURL, setDefaultAuthHeader } from './conn';
+import { getURL, setDefaultAuthHeader } from '@/components/support/conn';
 import defaultAvatar from '@/assets/images/chat.png'
 import { useI18n } from 'vue-i18n'
 
@@ -50,7 +50,7 @@ export class ChatService {
         this.sessions.unshift(newSession);
     }
 
-    async sendMessage(content) {
+    async sendMessage(content) {        
         let info = '';
         try {
             const formData = new FormData();
@@ -72,7 +72,6 @@ export class ChatService {
         } catch (error) {
             info = String(error);
         }
-        this.addMessage(content, this.currentUserId);
         this.addMessage(info, this.botId);
     }
 

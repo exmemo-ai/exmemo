@@ -3,31 +3,36 @@
         <div>
             <app-navbar :title="$t('userSetting')" :info="'Setting'" />
         </div>
-        <div class="settings-container">
-            <div class="settings-nav">
-                <div class="nav-item" 
-                     v-for="item in navItems" 
-                     :key="item.key"
-                     :class="{ active: currentSection === item.key }"
-                     @click="currentSection = item.key">
-                    {{ $t(item.label) }}
-                </div>
-            </div>
+        <el-container>
+            <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
+                <el-menu :default-active="currentSection" @select="handleSelect">
+                    <el-menu-item index="voice">
+                        <span>{{ $t('voiceSynthesis') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="dialog">
+                        <span>{{ $t('dialogModel') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="privilege">
+                        <span>{{ $t('privileges') }}</span>
+                    </el-menu-item>
+                </el-menu>
+            </el-aside>
+            <el-main>
+                <div class="settings-content">
+                    <div v-show="currentSection === 'voice'" class="section-content">
+                        <setting-t-t-s ref="ttsSettings" />
+                    </div>
 
-            <div class="settings-content">
-                <div v-show="currentSection === 'voice'" class="section-content">
-                    <setting-t-t-s ref="ttsSettings" />
-                </div>
+                    <div v-show="currentSection === 'dialog'" class="section-content">
+                        <setting-l-l-m ref="llmSettings" />
+                    </div>
 
-                <div v-show="currentSection === 'dialog'" class="section-content">
-                    <setting-l-l-m ref="llmSettings" />
+                    <div v-show="currentSection === 'privilege'" class="section-content">
+                        <pre class="file-content">{{ info_privilege }}</pre>
+                    </div>
                 </div>
-
-                <div v-show="currentSection === 'privilege'" class="section-content">
-                    <pre class="file-content">{{ info_privilege }}</pre>
-                </div>
-            </div>
-        </div>
+            </el-main>
+        </el-container>
 
         <el-footer class="settings-footer">
             <el-button @click='saveFunc' type="primary">{{ $t('save') }}</el-button>
@@ -38,10 +43,10 @@
 </template>
 
 <script>
-import { getURL, parseBackendError } from '../conn'
+import { getURL, parseBackendError } from '@/components/support/conn'
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
-import AppNavbar from '@/components/AppNavbar.vue'
+import AppNavbar from '@/components/support/AppNavbar.vue'
 import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
 
@@ -61,12 +66,7 @@ export default {
             isLogin: true,
             login_user: '',
             info_privilege: '',
-            currentSection: 'voice',
-            navItems: [
-                { key: 'voice', label: 'voiceSynthesis' },
-                { key: 'dialog', label: 'dialogModel' },
-                { key: 'privilege', label: 'privileges' }
-            ]
+            currentSection: 'voice'
         };
     },
     methods: {
@@ -162,6 +162,9 @@ export default {
                 parseBackendError(this, err);
             });
         },
+        handleSelect(key) {
+            this.currentSection = key;
+        }
     },
     mounted() {
         this.isMobile = window.innerWidth < 768;
@@ -176,31 +179,34 @@ export default {
 </script>
 
 <style scoped>
+
+.settings-container {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    padding: 20px;
+    gap: 20px;
+    display: flex;
+}
+
+.settings-content {
+    flex: 1;
+    padding: 0 20px;
+    overflow: auto;
+}
+
+.settings-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #e1e4e8;
+    padding: 16px;
+    text-align: right;
+    background: white;
+}
+
 .setting-page {
     display: flex;
     flex-direction: column;
     height: 100vh;
-}
-
-.nav-container {
-    flex-shrink: 0;
-}
-
-.nav-item {
-    padding: 8px 16px;
-    margin: 4px 0;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.3s;
-}
-
-.nav-item:hover {
-    background-color: #f6f8fa;
-}
-
-.nav-item.active {
-    background-color: #f1f8ff;
-    color: #0366d6;
 }
 
 .section-content {
@@ -211,14 +217,21 @@ export default {
     .settings-container {
         flex-direction: column;
     }
+}
 
-    .settings-nav {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e1e4e8;
-        padding-bottom: 16px;
-        margin-bottom: 16px;
-        flex-shrink: 0;
+.aside-menu {
+    border-right: solid 1px #e6e6e6;
+    min-height: calc(100vh - 60px);
+    width: 200px;
+}
+
+.mobile-aside {
+    width: 120px;
+}
+
+@media (max-width: 767px) {
+    .aside-menu {
+        transition: width 0.3s;
     }
 }
 </style>

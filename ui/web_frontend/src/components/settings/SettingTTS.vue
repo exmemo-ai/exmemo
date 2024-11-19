@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { getURL, parseBackendError } from '../conn'
+import { getURL, parseBackendError } from '@/components/support/conn';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
 

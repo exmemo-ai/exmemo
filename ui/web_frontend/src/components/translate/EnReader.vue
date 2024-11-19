@@ -1,47 +1,48 @@
 <template>
     <div style="display: flex; flex-direction: column;">
-        <div class="header-buttons" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+        <div class="header-buttons">
             <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
             <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
             <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
         </div>
-        <el-main class="custom-padding">
-            <div style="display: flex; flex-direction: column;">
-                <label style="margin: 10px 0;">{{ $t('editArea') }}</label>
-                <textarea v-model="inputText" @input="handleInput" style="width: 100%; height: 20vh; margin-bottom: 10px;"></textarea>
-                <label style="margin: 10px 0;">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</label>
-                <div style="width: 100%; height: 33vh; overflow: auto; text-align: left; white-space: pre-line; margin-top: 10px;">
-                    <span v-for="word in words" :key="word" @mousedown="handleMouseDown"
-                        @mouseup="handleMouseUp($event, word)">
-                        {{ word }}&nbsp;
-                    </span>
-                </div>
-            </div>
 
-            <div v-if="showPopup"
-                :style="{ top: `${popupPosition.y}px`, left: `${popupPosition.x}px`, maxHeight: '200px', height: 'auto', overflow: 'auto' }"
-                class="popup">
-                <div style="display: flex; flex-direction: column; margin: 5px;">
-                    <div style="flex-grow: 1;">
-                        <button @click="wordInSentence" style="font-size: 12px;">{{ $t('definitionInSentence')
-                            }}</button>
-                        <button @click="translateSelection" style="font-size: 12px;">{{ $t('translateSelection')
-                            }}</button>
-                    </div>
-                    <div style="flex-grow: 0; text-align: left; white-space: pre-line;">
-                        {{ showText }}
-                    </div>
+        <div style="display: flex; flex-direction: column;">
+            <el-label style="margin: 10px 0;">{{ $t('editArea') }}</el-label>
+            <textarea v-model="inputText" @input="handleInput"
+                style="width: 100%; height: 20vh; margin-bottom: 10px;"></textarea>
+            <el-label style="margin: 10px 0;">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</el-label>
+            <div
+                style="width: 100%; height: 33vh; overflow: auto; text-align: left; white-space: pre-line; margin-top: 10px;">
+                <span v-for="word in words" :key="word" @mousedown="handleMouseDown"
+                    @mouseup="handleMouseUp($event, word)">
+                    {{ word }}&nbsp;
+                </span>
+            </div>
+        </div>
+
+        <div v-if="showPopup"
+            :style="{ top: `${popupPosition.y}px`, left: `${popupPosition.x}px`, maxHeight: '200px', height: 'auto', overflow: 'auto' }"
+            class="popup">
+            <div style="display: flex; flex-direction: column; margin: 5px;">
+                <div style="flex-grow: 1;">
+                    <button @click="wordInSentence" style="font-size: 12px;">{{ $t('definitionInSentence')
+                        }}</button>
+                    <button @click="translateSelection" style="font-size: 12px;">{{ $t('translateSelection')
+                        }}</button>
+                </div>
+                <div style="flex-grow: 0; text-align: left; white-space: pre-line;">
+                    {{ showText }}
                 </div>
             </div>
-        
+        </div>
+
         <ChatDialog ref="chatDialog" />
         <CheckDialog ref="checkDialog" />
-    </el-main>
     </div>
 </template>
 
 <script>
-import { getURL, parseBackendError } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import ChatDialog from './ChatDialog.vue';

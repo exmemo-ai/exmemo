@@ -1,11 +1,10 @@
-
 <template>
     <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
         <div style="display: flex; flex-direction: column;">
             <app-navbar :title="navTitle" :info="navInfo" />
         </div>
         <el-container>
-            <el-aside width="200px" class="aside-menu">
+            <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
                 <el-menu :default-active="activeMenu" @select="handleSelect">
                     <el-menu-item index="reader">
                         <span>{{ $t('englishReading') }}</span>
@@ -29,7 +28,7 @@
 import EnReader from './EnReader.vue'
 import WordManager from './WordManager.vue'
 import ArticleManager from './ArticleManager.vue'
-import AppNavbar from '@/components/AppNavbar.vue'
+import AppNavbar from '@/components/support/AppNavbar.vue'
 
 export default {
     name: 'TranslateMain',
@@ -96,11 +95,20 @@ export default {
 .aside-menu {
     border-right: solid 1px #e6e6e6;
     min-height: calc(100vh - 60px);
+    width: 200px;
+}
+
+.mobile-aside {
+    width: 120px;
 }
 
 @media (max-width: 767px) {
     .desktop-width {
         max-width: 100%;
+    }
+    
+    .aside-menu {
+        transition: width 0.3s;
     }
 }
 </style>

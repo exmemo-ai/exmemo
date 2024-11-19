@@ -10,11 +10,6 @@
     border: 1px solid #dcdfe6;
 }
 
-.custom-padding {
-    --el-header-padding: 10px;
-    --el-main-padding: 10px;
-}
-
 body {
     margin: 0;
     padding: 0;
@@ -40,7 +35,7 @@ body {
 .user-title {
     text-align: center;
     color: #303133;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     font-size: 24px;
 }
 
@@ -53,7 +48,7 @@ body {
 .button-group {
     display: flex;
     gap: 15px;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 .user-button {
@@ -62,34 +57,16 @@ body {
     font-size: 16px;
 }
 
-
-.settings-container {
-    flex: 1;
-    overflow: auto;
-    min-height: 0;
-    padding: 20px;
-    gap: 20px;
-    display: flex;
-}
-
-.settings-content {
-    flex: 1;
-    padding: 0 20px;
-    overflow: auto;
-}
-
-.settings-footer {
-    flex-shrink: 0;
-    border-top: 1px solid #e1e4e8;
-    padding: 16px;
+.header-buttons {
     text-align: right;
-    background: white;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 5px;
 }
 
-.settings-nav {
-    width: 200px;
-    border-right: 1px solid #e1e4e8;
-    padding-right: 20px;
+.header-buttons .el-button {
+    margin: 5px;
 }
 
 @media (max-width: 768px) {

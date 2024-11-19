@@ -1,38 +1,33 @@
 <template>
-    <div>
-        <div class="header-buttons" style="float: right; text-align: right;">
-            <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
-        </div>
-        <el-main class="custom-padding">
-            <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
-                <div style="display: flex;" v-if="!isMobile">
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-label>{{ $t('search') }}</el-label>
-                    </div>
-                    <div style="flex-grow: 0;margin: 5px;">
-                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
-                    </div>
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
-                    </div>
+    <div style="display: flex; flex-direction: column;">
+        <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
+            <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;"
+                v-if="!isMobile">
+                <div style="display: flex; align-items: center; flex: 1; min-width: 300px; gap: 10px;">
+                    <el-label style="white-space: nowrap;">{{ $t('search') }}</el-label>
+                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
+                    <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
                 </div>
-                <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                    <el-table-column prop="word" :label="$t('english')"></el-table-column>
-                    <el-table-column prop="info.translate" :label="$t('translate')"></el-table-column>
-                    <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
-                    <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
-                    <el-table-column :label="$t('operation')" :width=100>
-                        <template v-slot="scope">
-                            <el-button type="text" @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
-                        </template>
-                    </el-table-column>
-                </el-table>
-                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                    :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                    layout="total, sizes, prev, pager, next, jumper" :total="total">
-                </el-pagination>
+                <div style="text-align: right; margin-left: 20px;">
+                    <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
+                </div>
             </div>
-        </el-main>
+            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
+                <el-table-column prop="word" :label="$t('english')"></el-table-column>
+                <el-table-column prop="info.translate" :label="$t('translate')"></el-table-column>
+                <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
+                <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
+                <el-table-column :label="$t('operation')" :width=100>
+                    <template v-slot="scope">
+                        <el-button type="text" @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                :current-page="currentPage" :page-sizes="[10]" :page-size="10"
+                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            </el-pagination>
+        </div>
         <CheckDialog ref="checkDialog" />
     </div>
 </template>
@@ -40,7 +35,7 @@
 <script>
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
-import { getURL, parseBackendError } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
 
 export default {
     name: 'WordManager',

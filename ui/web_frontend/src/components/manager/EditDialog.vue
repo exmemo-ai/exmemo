@@ -110,7 +110,7 @@
   
 <script>
 import axios from 'axios';
-import { getURL, parseBackendError, parseBlobData } from './conn'
+import { getURL, parseBackendError, parseBlobData } from '@/components/support/conn'
 export default {
     data() {
         return {

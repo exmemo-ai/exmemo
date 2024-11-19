@@ -1,23 +1,25 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <div style="display: flex; flex-direction: column;">
+    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }" class="chat-container">
+        <div class="header">
             <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
-            <div class="header-buttons" style="float: right; text-align: right;">
+            <div class="header-buttons">
                 <el-button @click="clearSession">{{ $t('clearSession') }}</el-button>
                 <el-button @click="newSession">{{ $t('newSession') }}</el-button>
             </div>
         </div>
-        <vue-advanced-chat height="calc(100vh - 150px)" :current-user-id="chat.getCurrentUserId()"
-            :rooms="JSON.stringify(sessions)" :messages="JSON.stringify(messages)" :rooms-loaded="sessionsLoaded"
-            :messages-loaded="messagesLoaded" @send-message="sendMessage($event.detail[0])"
-            @fetch-messages="fetchMessages($event.detail[0])" />
+        <div class="chat-area">
+            <vue-advanced-chat height="100%" :current-user-id="chat.getCurrentUserId()"
+                :rooms="JSON.stringify(sessions)" :messages="JSON.stringify(messages)" :rooms-loaded="sessionsLoaded"
+                :messages-loaded="messagesLoaded" @send-message="sendMessage($event.detail[0])"
+                @fetch-messages="fetchMessages($event.detail[0])" />
+        </div>
     </div>
 </template>
 
 <script>
 import { register } from 'vue-advanced-chat'
 import { ChatService } from './chat.js'
-import AppNavbar from '@/components/AppNavbar.vue'
+import AppNavbar from '@/components/support/AppNavbar.vue'
 
 export default ({
     name: 'ChatManager',
@@ -74,12 +76,15 @@ export default ({
 
         async sendMessage(message) {
             try {
+                this.chat.addMessage(message.content, this.chat.currentUserId);
+                this.messages = [];
+                this.messages = this.chat.getMessages();
                 await this.chat.sendMessage(message.content)
+                this.messages = [];
+                this.messages = this.chat.getMessages();
             } catch (error) {
                 console.error('Error sending message:', error)
             }
-            this.messages = []; // only change will refresh the chat
-            this.messages = this.chat.getMessages();
         },
         async newSession() {
             await this.fetchSessions();
@@ -113,16 +118,31 @@ export default ({
 </script>
 
 <style lang="scss">
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.chat-area {
+    flex: 1;
+    min-height: 0; // 防止flex子元素溢出
+}
+
 html,
 body {
-    //margin: 30;
-    //margin: 0;
+    margin: 0;
     height: 100%;
     font-family: 'Quicksand', sans-serif;
 }
 
 #app {
-    //margin: 30;
     margin: 0;
     text-align: left;
 }

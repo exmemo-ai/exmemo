@@ -2,22 +2,22 @@
     <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
         <div style="display: flex; flex-direction: column;">
             <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
-            <div class="header-buttons" style="float: right; text-align: right;">
-            </div>
         </div>
-        <el-main class="custom-padding main-container">
-            <div class="custom-options" style="display: flex;margin: 5px;">
-                <div style="display: flex; flex-grow: 1; align-items: center;" v-if="!isMobile">
+        <el-main class="main-container custom-options">
+            <div class="header-buttons">
+                <div class="search-container">
                     <div class="label-container">
                         <el-label>{{ t('search') }}</el-label>
                     </div>
-                    <div style="flex-grow: 0;margin: 5px;">
+                    <div :class="{'mobile-input': isMobile}">
                         <el-input v-model="search_text" :placeholder="t('searchPlaceholder')"></el-input>
                     </div>
+                </div>
+                <div style="display: flex; flex-grow: 1; align-items: center; gap: 5px;" v-if="!isMobile">
                     <div class="label-container">
                         <el-label>{{ t('type') }}</el-label>
                     </div>
-                    <div style="flex-grow: 1;margin: 5px;">
+                    <div style="flex-grow: 1;">
                         <el-select v-if="ctype_options && ctype_options.length > 0" v-model="ctype_value"
                             :placeholder="t('selectPlaceholder')" popper-class="select-dropdown">
                             <el-option v-for="item in ctype_options" :key="item.value" :label="item.label"
@@ -29,7 +29,7 @@
                     <div class="label-container">
                         <el-label>{{ t('data') }}</el-label>
                     </div>
-                    <div style="flex-grow: 1;margin: 5px;">
+                    <div style="flex-grow: 1;">
                         <el-select v-if="etype_options.length" v-model="etype_value"
                             :placeholder="t('selectPlaceholder')">
                             <el-option v-for="item in etype_options" :key="item.value" :label="item.label"
@@ -37,11 +37,10 @@
                             </el-option>
                         </el-select>
                     </div>
-
                     <div class="label-container">
                         <el-label>{{ t('status') }}</el-label>
                     </div>
-                    <div style="flex-grow: 1;margin: 5px;">
+                    <div style="flex-grow: 1;">
                         <el-select v-if="status_options.length" v-model="status_value"
                             :placeholder="t('selectPlaceholder')">
                             <el-option v-for="item in status_options" :key="item.value" :label="item.label"
@@ -50,29 +49,48 @@
                         </el-select>
                     </div>
                 </div>
-                <div style="flex-shrink: 0;margin: 5px;">
-                    <el-button @click="searchKeyword">{{ t('search') }}</el-button>
+                <div style="display: flex; flex-grow: 0; align-items: center;">
+                    <!--使用element-ui的icon-->
+                    <el-button @click="searchKeyword" icon>
+                        <el-icon>
+                            <Search />
+                        </el-icon>
+                    </el-button>
                 </div>
-                <div style="flex-shrink: 0;margin: 5px; margin-left: 15px;">
-                    <el-button @click="openEditDialog()">{{ t('add') }}</el-button>
+                <div style="flex-shrink: 0;">
+                    <el-button @click="openEditDialog" icon>
+                        <el-icon>
+                            <Plus />
+                        </el-icon>
+                    </el-button>
                 </div>
-                <!--
-                <div style="flex-shrink: 0;margin: 5px;">
-                    <el-button @click="exportRecord()">{{ t('export') }}</el-button>
-                </div>
-                -->
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
                 <el-table-column prop="title" :label="t('title')">
                     <template v-slot="scope">
-                        <div class="ellipsis-container">{{ scope.row.title }}</div>
+                        <div class="ellipsis-container" style="white-space: nowrap;">{{ scope.row.title }}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="ctype" :label="t('type')" :width=100></el-table-column>
-                <el-table-column prop="etype" :label="t('data')" :width=70 v-if="!isMobile"></el-table-column>
-                <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100
-                    v-if="!isMobile"></el-table-column>
-                <el-table-column prop="status" :label="t('status')" :width=70></el-table-column>
+                <el-table-column prop="ctype" :label="t('type')" :width=100>
+                    <template v-slot="scope">
+                        <div style="white-space: nowrap;">{{ scope.row.ctype }}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="etype" :label="t('data')" :width=70 v-if="!isMobile">
+                    <template v-slot="scope">
+                        <div style="white-space: nowrap;">{{ scope.row.etype }}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100 v-if="!isMobile">
+                    <template v-slot="scope">
+                        <div style="white-space: nowrap;">{{ scope.row.updated_time }}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="status" :label="t('status')" :width=70>
+                    <template v-slot="scope">
+                        <div style="white-space: nowrap;">{{ scope.row.status }}</div>
+                    </template>
+                </el-table-column>
             </el-table>
             <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                 :current-page="currentPage" :page-sizes="[10]" :page-size="10"
@@ -84,10 +102,11 @@
 </template>
 
 <script>
+import { Search, Plus } from '@element-plus/icons-vue'
 import axios from 'axios';
 import EditDialog from './EditDialog.vue';
-import { getURL, parseBackendError } from './conn'
-import AppNavbar from '@/components/AppNavbar.vue'
+import { getURL, parseBackendError } from '@/components/support/conn'
+import AppNavbar from '@/components/support/AppNavbar.vue'
 import { useI18n } from 'vue-i18n'
 
 export default {
@@ -95,6 +114,8 @@ export default {
     components: {
         EditDialog,
         AppNavbar,
+        Search,
+        Plus
     },
     setup() {
         const { t } = useI18n();
@@ -242,7 +263,6 @@ export default {
 .label-container {
     display: flex;
     align-items: center;
-    margin: 5px;
     flex-shrink: 1;
 }
 
@@ -254,6 +274,44 @@ export default {
 @media (max-width: 767px) {
     .main-container {
         max-width: 100%;
+    }
+}
+
+:deep(.el-icon) {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.el-button {
+    padding: 8px;
+}
+
+.header-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    align-items: center;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.mobile-input {
+    width: 120px;
+}
+
+@media (max-width: 767px) {
+    .header-buttons {
+        gap: 2px;
+    }
+    
+    .el-button {
+        padding: 6px;
     }
 }
 </style>

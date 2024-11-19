@@ -1,5 +1,5 @@
 import axios from 'axios';
-import config from './config.js';
+import config from '@/components/support/config';
 
 export function getURL() {
   let url = config.baseURL;

@@ -1,32 +1,27 @@
 <template>
     <div>
-        <el-main class="custom-padding">
-            <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
-                <div style="display: flex;" v-if="!isMobile">
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-label>{{ $t('search') }}</el-label>
-                    </div>
-                    <div style="flex-grow: 0;margin: 5px;">
-                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
-                    </div>
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
-                    </div>
+        <div class="custom-options" style="display: flex; flex-direction: column;">
+            <div class="header-buttons" style="display: flex; align-items: center;">
+                <div style="flex-shrink: 1;">
+                    <el-label>{{ $t('search') }}</el-label>
                 </div>
-                <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                    <el-table-column prop="title" :label="$t('title')"></el-table-column>
-                    <el-table-column prop="created_time" :label="$t('time')" :width=100></el-table-column>
-                </el-table>
-                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                    :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                    layout="total, sizes, prev, pager, next, jumper" :total="total">
-                </el-pagination>
+                <div style="flex-grow: 1;">
+                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
+                </div>
+                <div style="flex-shrink: 1;">
+                    <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
+                </div>
             </div>
-        </el-main>
-        <el-dialog
-            :title="selectedItem.title"
-            v-model="dialogVisible"
-            width="70%">
+            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
+                <el-table-column prop="title" :label="$t('title')"></el-table-column>
+                <el-table-column prop="created_time" :label="$t('time')" :width=100></el-table-column>
+            </el-table>
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                :current-page="currentPage" :page-sizes="[10]" :page-size="10"
+                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            </el-pagination>
+        </div>
+        <el-dialog :title="selectedItem.title" v-model="dialogVisible" width="70%">
             <div style="white-space: pre-wrap;">{{ selectedItem.content }}</div>
         </el-dialog>
     </div>
@@ -34,7 +29,7 @@
 
 <script>
 import axios from 'axios';
-import { getURL, parseBackendError } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
 export default {
     name: 'ArticleManager',
     data() {
@@ -127,5 +122,4 @@ export default {
         max-width: 100%;
     }
 }
-
 </style>

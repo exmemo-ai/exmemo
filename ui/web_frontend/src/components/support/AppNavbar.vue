@@ -52,8 +52,7 @@
 <script>
 import logo from '@/assets/images/logo.png'
 import axios from 'axios';
-import { setDefaultAuthHeader } from './conn';
-import { getURL } from './conn';
+import { setDefaultAuthHeader,getURL } from './conn';
 import { Setting, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
 
 export default {
@@ -268,5 +267,31 @@ export default {
     background: var(--el-color-primary);
     color: white;
     font-weight: bold;
+}
+
+/* 添加移动设备适配样式 */
+@media screen and (max-width: 768px) {
+    .title {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .nav-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .username {
+        display: none; /* 在移动端隐藏用户名 */
+    }
+
+    .user-dropdown-trigger {
+        padding: 2px;
+    }
+
+    :deep(.el-tabs__item) {
+        padding: 0 10px !important;
+        font-size: 14px;
+    }
 }
 </style>

@@ -1,0 +1,114 @@
+<template>
+  <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
+    <div style="display: flex; flex-direction: column;">
+      <app-navbar :title="$t('toolTitle')" :info="'SupportTools'" />
+    </div>
+    
+    <el-container class="main-container">
+      <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
+        <el-menu
+          :default-active="activeView"
+          @select="handleMenuSelect">
+          <el-menu-item index="paper">
+            <span>{{ $t('paperAnalysis') }}</span>
+          </el-menu-item>
+          <el-menu-item index="web">
+            <span>{{ $t('webTools') }}</span>
+          </el-menu-item>
+          <el-menu-item index="tts">
+            <span>{{ $t('voiceReading') }}</span>
+          </el-menu-item>
+        </el-menu>
+      </el-aside>
+
+      <el-main>
+        <div v-show="activeView === 'paper'">
+          <paper-analysis />
+        </div>
+
+        <div v-show="activeView === 'web'">
+          <web-tools />
+        </div>
+
+        <div v-show="activeView === 'tts'">
+          <voice-reader />
+        </div>
+      </el-main>
+    </el-container>
+  </div>
+</template>
+
+<script>
+import AppNavbar from '@/components/support/AppNavbar.vue'
+import VoiceReader from './VoiceReader.vue'
+import PaperAnalysis from './PaperAnalysis.vue'
+import WebTools from './WebTools.vue'
+
+export default {
+  components: {
+    AppNavbar,
+    VoiceReader,
+    PaperAnalysis,
+    WebTools
+  },
+  data() {
+    return {
+      isMobile: false,
+      isLogin: true,
+      activeView: 'paper',
+      login_user: '',
+    };
+  },
+  methods: {
+    handleMenuSelect(key) {
+      this.activeView = key;
+    },
+    handleResize() {
+      this.isMobile = window.innerWidth < 768;
+    }
+  },
+  mounted() {
+    this.handleResize();
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.handleResize);
+  }
+}
+</script>
+
+<style>
+.main-container {
+  height: calc(100vh - 60px);
+}
+
+.file-content {
+  text-align: left;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.el-aside {
+  border-right: 1px solid #e6e6e6;
+}
+
+.aside-menu {
+  border-right: solid 1px #e6e6e6;
+  min-height: calc(100vh - 60px);
+  width: 200px !important;
+}
+
+.mobile-aside {
+  width: 120px !important;
+}
+
+@media (max-width: 767px) {
+  .desktop-width {
+    max-width: 100%;
+  }
+  
+  .aside-menu.mobile-aside {
+    width: 120px !important;
+  }
+}
+</style>
