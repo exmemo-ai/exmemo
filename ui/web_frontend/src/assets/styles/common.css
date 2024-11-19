@@ -1,0 +1,126 @@
+.nav-container {
+    background-color: #f5f7fa;
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 0px !important;
+    border-radius: 4px;
+    margin-bottom: 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #dcdfe6;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.user-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f7fa;
+    padding: 20px;
+}
+
+.user-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.user-title {
+    text-align: center;
+    color: #303133;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.user-button {
+    flex: 1;
+    height: 40px;
+    font-size: 16px;
+}
+
+.header-buttons {
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.header-buttons .el-button {
+    margin: 5px;
+}
+
+@media (max-width: 768px) {
+    .user-card {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .title {
+        margin-bottom: 20px;
+        font-size: 1.5em;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .el-button {
+        padding: 6px;
+    }
+
+    .aside-menu.mobile-aside {
+        width: 120px !important;
+    }
+}
+
+.el-button {
+    padding: 8px;
+}
+
+.icon-button {
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.icon-button .el-icon {
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+}
+
+.aside-menu {
+    border-right: solid 1px #e6e6e6;
+    min-height: calc(100vh - 160px);
+    width: 200px !important;
+}
+
+.el-aside {
+    border-right: 1px solid #e6e6e6;
+}
+
+.mobile-aside {
+    width: 120px !important;
+}

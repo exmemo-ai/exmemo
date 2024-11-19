@@ -11,7 +11,7 @@ from knox.views import LoginView as KnoxLoginView
 
 from backend.common.utils.net_tools import do_result
 from backend.common.speech.tts import tts_get_voice_list, tts_get_engine_list
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, get_llm_list
+from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM,  get_llm_list
 from backend.common.user.user import (
     UserManager,
     USER_LEVEL_GUEST,
@@ -20,6 +20,9 @@ from backend.common.user.user import (
     DEFAULT_USER,
     ADMIN_USER,
     ADMIN_PASSWORD,
+    DEFAULT_CHAT_LLM_MEMORY_COUNT,
+    DEFAULT_CHAT_LLM_PROMPT, 
+    DEFAULT_CHAT_LLM_SHOW_COUNT,
 )
 from .utils import parse_common_args
 
@@ -148,11 +151,17 @@ class SettingAPIView(APIView):
         llm_name = request.GET.get(
             "llm_chat_model", request.POST.get("llm_chat_model", DEFAULT_CHAT_LLM)
         )
+        llm_chat_prompt = request.GET.get("llm_chat_prompt", request.POST.get("llm_chat_prompt", DEFAULT_CHAT_LLM_PROMPT))
+        llm_chat_show_count = request.GET.get("llm_chat_show_count", request.POST.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT))
+        llm_chat_memory_count = request.GET.get("llm_chat_memory_count", request.POST.get("llm_chat_memory_count", DEFAULT_CHAT_LLM_MEMORY_COUNT))
         user.set("tts_engine", engine_name, save=False)
         user.set("tts_voice", voice_name, save=False)
         user.set("tts_language", language_name, save=False)
         user.set("tts_speed", speed_name, save=False)
         user.set("llm_chat_model", llm_name, save=False)
+        user.set("llm_chat_prompt", llm_chat_prompt, save=False)
+        user.set("llm_chat_show_count", llm_chat_show_count, save=False)
+        user.set("llm_chat_memory_count", llm_chat_memory_count, save=False)
         user.save()
         info = _("settings_were_applied_successfully")
         return do_result(True, info)

@@ -16,7 +16,9 @@ DEFAULT_PASSWORD = "1234567890"
 DEFAULT_SESSION = "_unknown"
 ADMIN_USER = "admin"
 ADMIN_PASSWORD = "admin123456"
-
+DEFAULT_CHAT_LLM_PROMPT = _("chat_prompt_default")
+DEFAULT_CHAT_LLM_SHOW_COUNT = 50
+DEFAULT_CHAT_LLM_MEMORY_COUNT = 5
 
 def convert_units(num):
     if num >= 10**6:
@@ -34,6 +36,9 @@ class UserSettings:
         self.tts_speed = "1.0"
         self.tts_voice = "caicai"
         self.llm_chat_model = DEFAULT_CHAT_LLM
+        self.llm_chat_prompt = DEFAULT_CHAT_LLM_PROMPT
+        self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
+        self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
 
     def get_json(self):
         return {
@@ -42,6 +47,9 @@ class UserSettings:
             "tts_speed": self.tts_speed,
             "tts_voice": self.tts_voice,
             "llm_chat_model": self.llm_chat_model,
+            "llm_chat_prompt": self.llm_chat_prompt,
+            "llm_chat_show_count": self.llm_chat_show_count,
+            "llm_chat_memory_count": self.llm_chat_memory_count,
         }
 
     def set_json(self, data):
@@ -53,6 +61,13 @@ class UserSettings:
             self.tts_speed = data.get("tts_speed", self.tts_speed)
             self.tts_voice = data.get("tts_voice", "caicai")
             self.llm_chat_model = data.get("llm_chat_model", self.llm_chat_model)
+            self.llm_chat_prompt = data.get("llm_chat_prompt", self.llm_chat_prompt)
+            self.llm_chat_show_count = data.get(
+                "llm_chat_show_count", self.llm_chat_show_count
+            )
+            self.llm_chat_memory_count = data.get(
+                "llm_chat_memory_count", self.llm_chat_memory_count
+            )
 
     def set(self, name, value):
         if hasattr(self, name):

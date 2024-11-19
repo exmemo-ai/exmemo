@@ -447,7 +447,7 @@ msgstr "论文阅读"
 
 #: app_paper/ptools.py:394
 msgid "english_title_colon__{title}"
-msgstr "中文标题：{title}"
+msgstr "英文名称：{title}"
 
 #: app_paper/ptools.py:396
 msgid "english_name_colon_"
@@ -617,6 +617,10 @@ msgstr "用户等级: {level_desc}"
 msgid "settings_were_applied_successfully"
 msgstr "设置成功"
 
+#: backend/common/user/user.py:37
+msgid "chat_prompt_default"
+msgstr "请简单回答"
+
 #: backend/common/user/user.py:147
 msgid "supports_ocr_colon_"
 msgstr "支持OCR:"
@@ -647,11 +651,11 @@ msgstr "模型限制：{limit_llm_day_formatted} 个token/天"
 
 #: backend/common/user/user.py:162
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
-msgstr "语音合成限制：{limit_tts_day} 个标记/天"
+msgstr "语音合成限制：{limit_tts_day} 个token/天"
 
 #: backend/common/user/user.py:167
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
-msgstr "语音合成限制：每次尝试 {tokens} 个标记"
+msgstr "语音合成限制：每次尝试 {tokens} 个token"
 
 #: backend/common/user/user.py:172
 msgid "recording_export_range_colon__{limit_export_record_day}_days"

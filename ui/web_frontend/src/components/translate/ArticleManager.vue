@@ -1,52 +1,44 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <el-container>
-            <h3 style="text-align: left;">{{ $t('articleList') }}</h3>
-            <div style="display: flex; align-items: center; justify-content: flex-end; margin-left: auto; max-width: 100%;">
-                <el-label type="text" v-if="isLogin" style="margin-right: 5px;">{{ login_user }}</el-label>
-                <el-button type="text" @click="logoutFunc" v-if="isLogin">{{ $t('logout') }}</el-button>
-                <el-button type="text" @click="loginFunc" v-else>{{ $t('login') }}</el-button>
-                <el-button @click="gotoUserSetting" v-if="isLogin">{{ $t('userSetting') }}</el-button>
-            </div>
-        </el-container>
-        <el-container>
-            <el-header class="custom-padding">
-                <div class="header-buttons" style="float: right;">
-                    <el-button @click="gotoReader">{{ $t('readingTools') }}</el-button>
+    <div>
+        <div class="custom-options" style="display: flex; flex-direction: column;">
+            <div class="header-buttons" style="display: flex; align-items: center;">
+                <div style="flex-shrink: 1;">
+                    <el-label>{{ $t('search') }}</el-label>
                 </div>
-            </el-header>
-        </el-container>
-        <el-main class="custom-padding">
-            <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
-                <div style="display: flex;" v-if="!isMobile">
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-label>{{ $t('search') }}</el-label>
-                    </div>
-                    <div style="flex-grow: 0;margin: 5px;">
-                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
-                    </div>
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
-                    </div>
+                <div style="flex-grow: 1;">
+                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
                 </div>
-                <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                    <el-table-column prop="title" :label="$t('title')"></el-table-column>
-                    <el-table-column prop="created_time" :label="$t('time')" :width=100></el-table-column>
-                </el-table>
-                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                    :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                    layout="total, sizes, prev, pager, next, jumper" :total="total">
-                </el-pagination>
+                <div style="flex-shrink: 1;">
+                    <el-button class="icon-button"  @click="searchKeyword">
+                        <el-icon><Search /></el-icon>
+                    </el-button>
+                </div>
             </div>
-        </el-main>
+            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
+                <el-table-column prop="title" :label="$t('title')"></el-table-column>
+                <el-table-column prop="created_time" :label="$t('time')" :width=100></el-table-column>
+            </el-table>
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                :current-page="currentPage" :page-sizes="[10]" :page-size="10"
+                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            </el-pagination>
+        </div>
+        <el-dialog :title="selectedItem.title" v-model="dialogVisible" width="70%">
+            <div style="white-space: pre-wrap;">{{ selectedItem.content }}</div>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import axios from 'axios';
-import { getURL, parseBackendError, checkLogin, realLoginFunc, realLogoutFunc, gotoAssistantPage, gotoReaderPage } from '@/components/conn';
+import { Search } from '@element-plus/icons-vue';
+import { getURL, parseBackendError } from '@/components/support/conn';
+
 export default {
     name: 'ArticleManager',
+    components: {
+        Search,
+    },
     data() {
         return {
             isMobile: false,
@@ -60,24 +52,14 @@ export default {
             search_text: '',
             //
             fileList: [],
+            dialogVisible: false,
+            selectedItem: {
+                title: '',
+                content: ''
+            },
         };
     },
     methods: {
-        gotoUserSetting() {
-            this.$router.push('/user_setting');
-        },
-        gotoReader() {
-            gotoReaderPage(this);
-        },
-        gotoAssistant() {
-            gotoAssistantPage(this);
-        },
-        loginFunc() {
-            realLoginFunc(this);
-        },
-        logoutFunc() {
-            realLogoutFunc(this);
-        },
         handleSizeChange(val) {
             this.pageSize = val;
             this.fetchData();
@@ -111,14 +93,11 @@ export default {
         openEditDialog() {
         },
         handleRowClick(row, column, event) {
-            console.log(column, event)
+            this.selectedItem = row;
+            this.dialogVisible = true;
         },
     },
     mounted() {
-        this.isLogin = checkLogin(this);
-        if (this.isLogin) {
-            this.login_user = localStorage.getItem('username');
-        }
         this.fetchData();
     }
 }
@@ -141,7 +120,7 @@ export default {
 }
 
 .desktop-width {
-    max-width: 80%;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -149,10 +128,5 @@ export default {
     .desktop-width {
         max-width: 100%;
     }
-}
-
-.custom-padding {
-    --el-header-padding: 5px;
-    --el-main-padding: 5px;
 }
 </style>

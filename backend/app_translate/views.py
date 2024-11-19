@@ -39,7 +39,7 @@ class StoreWordViewSet(viewsets.ModelViewSet):
             if keyword:
                 q_obj &= Q(word__icontains=keyword)
 
-        queryset = StoreTranslate.objects.filter(q_obj, **query_args)
+        queryset = StoreTranslate.objects.filter(q_obj, **query_args).order_by("-times", "freq")
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
 
@@ -140,7 +140,7 @@ class TranslateAPIView(APIView):
         rtype = request.GET.get("rtype", request.POST.get("rtype", "word"))
         word = request.GET.get("word", request.POST.get("word", None))
         sentence = request.GET.get("sentence", request.POST.get("sentence", None))
-        logger.debug(f"translate rtype:{rtype} wprd:{word} sentence:{sentence}")
+        logger.debug(f"translate rtype:{rtype} word:{word} sentence:{sentence}")
         if rtype == "word":
             return self.translate_word(args, word, sentence)
         elif rtype == "sentence":

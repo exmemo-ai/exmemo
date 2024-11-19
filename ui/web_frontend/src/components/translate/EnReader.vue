@@ -1,35 +1,20 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }" :style="{ margin: outerMargin + 'px' }">
-        <el-container>
-            <h3 style="text-align: left;">{{ $t('englishReading') }}</h3>
-            <div style="display: flex; align-items: center; justify-content: flex-end; margin-left: auto; max-width: 100%;">
-                <el-label type="text" v-if="isLogin" style="margin-right: 5px;">{{ login_user }}</el-label>
-                <el-button type="text" @click="logoutFunc" v-if="isLogin">{{ $t('logout') }}</el-button>
-                <el-button type="text" @click="loginFunc" v-else>{{ $t('login') }}</el-button>
-                <el-button @click="gotoUserSetting" v-if="isLogin">{{ $t('userSetting') }}</el-button>
-            </div>
-        </el-container>
-
-        <div class="custom-padding" style="display: flex; flex-direction: column;">
-            <div class="header-buttons" style="float: right; margin-bottom: 5px; text-align: right;">
-                <el-button @click="gotoAssistant">{{ $t('assistantTools') }}</el-button>
-                <el-button @click="gotoDataManager">{{ $t('dataManagement') }}</el-button>
-            </div>
-            <div class="header-buttons" style="float: right; text-align: right;">
-                <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
-                <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
-                <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
-                <el-button @click="gotoWordManager">{{ $t('vocabularyList') }}</el-button>
-                <el-button @click="gotoArticleManager">{{ $t('articleList') }}</el-button>
-            </div>
+    <div style="display: flex; flex-direction: column;">
+        <div class="header-buttons">
+            <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
+            <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
+            <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
         </div>
 
         <div style="display: flex; flex-direction: column;">
-            <label style="margin=2px">{{ $t('editArea') }}</label>
-            <textarea v-model="inputText" @input="handleInput" style="width: 100%; height: 20vh;"></textarea>
-            <label style="margin=2px">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</label>
-            <div style="width: 100%; height: 33vh; overflow: auto; text-align: left; white-space: pre-line;">
-                <span v-for="word in words" :key="word" @mousedown="handleMouseDown" @mouseup="handleMouseUp($event, word)">
+            <el-label style="margin: 10px 0;">{{ $t('editArea') }}</el-label>
+            <textarea v-model="inputText" @input="handleInput"
+                style="width: 100%; height: 20vh; margin-bottom: 10px;"></textarea>
+            <el-label style="margin: 10px 0;">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</el-label>
+            <div
+                style="width: 100%; height: 33vh; overflow: auto; text-align: left; white-space: pre-line; margin-top: 10px;">
+                <span v-for="word in words" :key="word" @mousedown="handleMouseDown"
+                    @mouseup="handleMouseUp($event, word)">
                     {{ word }}&nbsp;
                 </span>
             </div>
@@ -40,8 +25,10 @@
             class="popup">
             <div style="display: flex; flex-direction: column; margin: 5px;">
                 <div style="flex-grow: 1;">
-                    <button @click="wordInSentence" style="font-size: 12px;">{{ $t('definitionInSentence') }}</button>
-                    <button @click="translateSelection" style="font-size: 12px;">{{ $t('translateSelection') }}</button>
+                    <button @click="wordInSentence" style="font-size: 12px;">{{ $t('definitionInSentence')
+                        }}</button>
+                    <button @click="translateSelection" style="font-size: 12px;">{{ $t('translateSelection')
+                        }}</button>
                 </div>
                 <div style="flex-grow: 0; text-align: left; white-space: pre-line;">
                     {{ showText }}
@@ -55,11 +42,12 @@
 </template>
 
 <script>
-import { getURL, parseBackendError, checkLogin, realLoginFunc, realLogoutFunc, gotoAssistantPage, gotoDataPage, gotoSetting } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import ChatDialog from './ChatDialog.vue';
 import { translateFunc } from './TransFunction';
+
 export default {
     name: 'EnReader',
     components: {
@@ -68,7 +56,6 @@ export default {
     },
     data() {
         return {
-            isLogin: false,
             isMobile: false,
             outerMargin: 50,
             inputText: '',
@@ -82,27 +69,6 @@ export default {
         };
     },
     methods: {
-        gotoUserSetting() {
-            gotoSetting(this);
-        },
-        gotoAssistant() {
-            gotoAssistantPage(this);
-        },
-        gotoDataManager() {
-            gotoDataPage(this);
-        },
-        gotoWordManager() {
-            this.$router.push('/word_manager');
-        },
-        gotoArticleManager() {
-            this.$router.push('/article_manager');
-        },
-        loginFunc() {
-            realLoginFunc(this);
-        },
-        logoutFunc() {
-            realLogoutFunc(this);
-        },
         handleSave() {
             console.log('save:', this.inputText);
             if (this.inputText === '') {
@@ -271,21 +237,17 @@ export default {
             if (this.isMobile) {
                 this.outerMargin = 0;
             } else {
-                this.outerMargin = 50;
+                this.outerMargin = 0;
             }
         },
         searchWord() {
             this.$refs.checkDialog.openDialog(this);
-        }        
+        }
     },
     mounted() {
         this.handleResize()
         window.addEventListener('resize', this.handleResize);
         window.addEventListener('click', this.hidePopup);
-        this.isLogin = checkLogin(this);
-        if (this.isLogin) {
-            this.login_user = localStorage.getItem('username');
-        }
     },
     beforeUnmount() {
         window.removeEventListener('click', this.hidePopup);
@@ -303,10 +265,5 @@ export default {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     font-size: 12px;
-}
-
-.custom-padding {
-    --el-header-padding: 5px;
-    --el-main-padding: 5px;
 }
 </style>

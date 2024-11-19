@@ -1,51 +1,39 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <el-container>
-            <h3 style="text-align: left;">{{ $t('vocabularyList') }}</h3>
-            <div style="display: flex; align-items: center; justify-content: flex-end; margin-left: auto; max-width: 100%;">
-                <el-label type="text" v-if="isLogin" style="margin-right: 5px;">{{ login_user }}</el-label>
-                <el-button type="text" @click="logoutFunc" v-if="isLogin">{{ $t('logout') }}</el-button>
-                <el-button type="text" @click="loginFunc" v-else>{{ $t('login') }}</el-button>
-                <el-button @click="gotoUserSetting" v-if="isLogin">{{ $t('userSetting') }}</el-button>
-            </div>
-        </el-container>
-        <el-container>
-            <el-header class="custom-padding">
-                <div class="header-buttons" style="float: right;">
+    <div style="display: flex; flex-direction: column;">
+        <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
+            <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;"
+                v-if="!isMobile">
+                <div style="display: flex; align-items: center; flex: 1; min-width: 300px; gap: 10px;">
+                    <el-label style="white-space: nowrap;">{{ $t('search') }}</el-label>
+                    <div class="search-container">
+                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"/>
+                    </div>
+                    <el-button class="icon-button" @click="searchKeyword">
+                        <el-icon>
+                            <Search />
+                        </el-icon>
+                    </el-button>
+                </div>
+                <div style="text-align: right; margin-left: 20px;">
                     <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
-                    <el-button @click="gotoReader">{{ $t('readingTools') }}</el-button>
                 </div>
-            </el-header>
-        </el-container>
-        <el-main class="custom-padding">
-            <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
-                <div style="display: flex;" v-if="!isMobile">
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-label>{{ $t('search') }}</el-label>
-                    </div>
-                    <div style="flex-grow: 0;margin: 5px;">
-                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
-                    </div>
-                    <div style="flex-shrink: 1;margin: 5px;">
-                        <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
-                    </div>
-                </div>
-                <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                    <el-table-column prop="word" :label="$t('english')"></el-table-column>
-                    <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
-                    <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
-                    <el-table-column :label="$t('operation')" :width=100>
-                        <template v-slot="scope">
-                            <el-button type="text" @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
-                        </template>
-                    </el-table-column>
-                </el-table>
-                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                    :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                    layout="total, sizes, prev, pager, next, jumper" :total="total">
-                </el-pagination>
             </div>
-        </el-main>
+            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
+                <el-table-column prop="word" :label="$t('english')"></el-table-column>
+                <el-table-column prop="info.translate" :label="$t('translate')"></el-table-column>
+                <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
+                <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
+                <el-table-column :label="$t('operation')" :width=100>
+                    <template v-slot="scope">
+                        <el-button type="text" @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                :current-page="currentPage" :page-sizes="[10]" :page-size="10"
+                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            </el-pagination>
+        </div>
         <CheckDialog ref="checkDialog" />
     </div>
 </template>
@@ -53,11 +41,14 @@
 <script>
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
-import { getURL, parseBackendError, checkLogin, realLoginFunc, realLogoutFunc, gotoAssistantPage, gotoReaderPage } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
+import { Search } from '@element-plus/icons-vue';
+
 export default {
     name: 'WordManager',
     components: {
-        CheckDialog
+        CheckDialog,
+        Search
     },
     data() {
         return {
@@ -75,21 +66,6 @@ export default {
         };
     },
     methods: {
-        gotoUserSetting() {
-            this.$router.push('/user_setting');
-        },
-        gotoReader() {
-            gotoReaderPage(this);
-        },
-        gotoAssistant() {
-            gotoAssistantPage(this);
-        },
-        loginFunc() {
-            realLoginFunc(this);
-        },
-        logoutFunc() {
-            realLogoutFunc(this);
-        },
         handleSizeChange(val) {
             this.pageSize = val;
             this.fetchData();
@@ -140,10 +116,6 @@ export default {
         }
     },
     mounted() {
-        this.isLogin = checkLogin(this);
-        if (this.isLogin) {
-            this.login_user = localStorage.getItem('username');
-        }
         this.fetchData();
     }
 }
@@ -166,7 +138,7 @@ export default {
 }
 
 .desktop-width {
-    max-width: 80%;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -176,8 +148,16 @@ export default {
     }
 }
 
-.custom-padding {
-    --el-header-padding: 5px;
-    --el-main-padding: 5px;
+.search-icon {
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.search-icon:hover {
+    color: var(--el-color-primary);
+}
+
+.search-container {
+    flex: 1;
 }
 </style>

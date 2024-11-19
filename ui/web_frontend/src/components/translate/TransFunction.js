@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getURL, parseBackendError } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
 
 export function translateFunc(obj, rtype, word, sentence, callback) {
     console.log('translate', 'type:', rtype, 'word:', word, 'sent:', sentence);

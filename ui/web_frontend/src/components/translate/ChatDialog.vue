@@ -15,7 +15,7 @@
 
 <script>
 import axios from 'axios';
-import { getURL, parseBackendError } from '@/components/conn';
+import { getURL, parseBackendError } from '@/components/support/conn';
 export default {
     data() {
         return {

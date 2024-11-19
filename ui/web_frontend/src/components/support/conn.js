@@ -1,5 +1,5 @@
 import axios from 'axios';
-import config from './config.js';
+import config from '@/components/support/config';
 
 export function getURL() {
   let url = config.baseURL;
@@ -14,52 +14,6 @@ export function setDefaultAuthHeader() {
   if (token) {
     axios.defaults.headers.common['Authorization'] = 'Token ' + token;
   }
-}
-
-export function checkLogin(obj) {
-  setDefaultAuthHeader();
-  console.log('Checking login status');
-  if (localStorage.getItem('username') !== null) {
-    console.log('Logged in');
-    obj.login_user = localStorage.getItem('username');
-    obj.isLogin = true;
-    return true;
-  } else {
-    console.log('Not logged in');
-    obj.isLogin = false;
-    return false;
-  }
-}
-
-export function realLoginFunc(obj) {
-  obj.$router.push('/login');
-}
-
-export function realLogoutFunc(obj) {
-  console.log("Logout button clicked!");
-  if (localStorage.getItem('username') === null) {
-    obj.$message({
-      type: 'error',
-      message: obj.$t('notLoggedIn')
-    })
-    return;
-  }
-  try {
-    axios.post(getURL() + "api/auth/logout/");
-    obj.$message({
-      type: 'success',
-      message: obj.$t('logoutSuccess'),
-    })
-  } catch (error) {
-    obj.$message({
-      type: 'warning',
-      message: obj.$t('logoutFailed', { error: error.response.data }),
-    })
-  }
-  localStorage.removeItem('username');
-  delete axios.defaults.headers.common['Authorization'];
-  obj.isLogin = false;
-  obj.$router.push('/login');
 }
 
 export function parseBackendError(obj, err) {
@@ -84,22 +38,6 @@ export function parseBackendError(obj, err) {
       type: 'warning'
     });
   }
-}
-
-export function gotoAssistantPage(obj) {
-  obj.$router.push('/support_tools');
-}
-
-export function gotoReaderPage(obj) {
-  obj.$router.push('/enreader');
-}
-
-export function gotoSetting(obj) {
-  obj.$router.push('/user_setting');
-}
-
-export function gotoDataPage(obj) {
-  obj.$router.push('/');
 }
 
 export function realExportRecord(obj) { // later move to record ui
