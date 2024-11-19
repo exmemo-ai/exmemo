@@ -651,11 +651,11 @@ msgstr "模型限制：{limit_llm_day_formatted} 个token/天"
 
 #: backend/common/user/user.py:162
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
-msgstr "语音合成限制：{limit_tts_day} 个标记/天"
+msgstr "语音合成限制：{limit_tts_day} 个token/天"
 
 #: backend/common/user/user.py:167
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
-msgstr "语音合成限制：每次尝试 {tokens} 个标记"
+msgstr "语音合成限制：每次尝试 {tokens} 个token"
 
 #: backend/common/user/user.py:172
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
