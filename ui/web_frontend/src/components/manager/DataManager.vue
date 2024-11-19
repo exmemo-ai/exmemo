@@ -50,15 +50,14 @@
                     </div>
                 </div>
                 <div style="display: flex; flex-grow: 0; align-items: center;">
-                    <!--使用element-ui的icon-->
-                    <el-button @click="searchKeyword" icon>
+                    <el-button class="icon-button" @click="searchKeyword" icon>
                         <el-icon>
                             <Search />
                         </el-icon>
                     </el-button>
                 </div>
                 <div style="flex-shrink: 0;">
-                    <el-button @click="openEditDialog" icon>
+                    <el-button class="icon-button" @click="openEditDialog" icon>
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -191,7 +190,6 @@ export default {
                     });
                 });
 
-                // 使用nextTick确保DOM更新后再设置options
                 await this.$nextTick();
                 if (ctype === 'ctype') {
                     this.ctype_options = options;
@@ -277,16 +275,6 @@ export default {
     }
 }
 
-:deep(.el-icon) {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-}
-
-.el-button {
-    padding: 8px;
-}
-
 .header-buttons {
     display: flex;
     flex-wrap: nowrap;
@@ -308,10 +296,6 @@ export default {
 @media (max-width: 767px) {
     .header-buttons {
         gap: 2px;
-    }
-    
-    .el-button {
-        padding: 6px;
     }
 }
 </style>

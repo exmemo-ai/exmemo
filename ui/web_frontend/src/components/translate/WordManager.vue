@@ -5,8 +5,14 @@
                 v-if="!isMobile">
                 <div style="display: flex; align-items: center; flex: 1; min-width: 300px; gap: 10px;">
                     <el-label style="white-space: nowrap;">{{ $t('search') }}</el-label>
-                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
-                    <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
+                    <div class="search-container">
+                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"/>
+                    </div>
+                    <el-button class="icon-button" @click="searchKeyword">
+                        <el-icon>
+                            <Search />
+                        </el-icon>
+                    </el-button>
                 </div>
                 <div style="text-align: right; margin-left: 20px;">
                     <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
@@ -36,11 +42,13 @@
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
+import { Search } from '@element-plus/icons-vue';
 
 export default {
     name: 'WordManager',
     components: {
-        CheckDialog
+        CheckDialog,
+        Search
     },
     data() {
         return {
@@ -140,4 +148,16 @@ export default {
     }
 }
 
+.search-icon {
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.search-icon:hover {
+    color: var(--el-color-primary);
+}
+
+.search-container {
+    flex: 1;
+}
 </style>

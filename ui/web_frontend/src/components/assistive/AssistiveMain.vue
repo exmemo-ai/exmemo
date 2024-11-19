@@ -4,7 +4,7 @@
       <app-navbar :title="$t('toolTitle')" :info="'SupportTools'" />
     </div>
     
-    <el-container class="main-container">
+    <el-container>
       <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
         <el-menu
           :default-active="activeView"
@@ -78,37 +78,15 @@ export default {
 </script>
 
 <style>
-.main-container {
-  height: calc(100vh - 60px);
-}
-
 .file-content {
   text-align: left;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
-.el-aside {
-  border-right: 1px solid #e6e6e6;
-}
-
-.aside-menu {
-  border-right: solid 1px #e6e6e6;
-  min-height: calc(100vh - 60px);
-  width: 200px !important;
-}
-
-.mobile-aside {
-  width: 120px !important;
-}
-
 @media (max-width: 767px) {
   .desktop-width {
     max-width: 100%;
-  }
-  
-  .aside-menu.mobile-aside {
-    width: 120px !important;
   }
 }
 </style>

@@ -9,7 +9,9 @@
                     <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
                 </div>
                 <div style="flex-shrink: 1;">
-                    <el-button @click="searchKeyword">{{ $t('search') }}</el-button>
+                    <el-button class="icon-button"  @click="searchKeyword">
+                        <el-icon><Search /></el-icon>
+                    </el-button>
                 </div>
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
@@ -29,9 +31,14 @@
 
 <script>
 import axios from 'axios';
+import { Search } from '@element-plus/icons-vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
+
 export default {
     name: 'ArticleManager',
+    components: {
+        Search,
+    },
     data() {
         return {
             isMobile: false,

@@ -92,23 +92,9 @@ export default {
     margin: 0 auto;
 }
 
-.aside-menu {
-    border-right: solid 1px #e6e6e6;
-    min-height: calc(100vh - 60px);
-    width: 200px;
-}
-
-.mobile-aside {
-    width: 120px;
-}
-
 @media (max-width: 767px) {
     .desktop-width {
         max-width: 100%;
-    }
-    
-    .aside-menu {
-        transition: width 0.3s;
     }
 }
 </style>

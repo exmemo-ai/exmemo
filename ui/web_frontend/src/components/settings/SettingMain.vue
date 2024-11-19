@@ -36,8 +36,8 @@
 
         <el-footer class="settings-footer">
             <el-button @click='saveFunc' type="primary">{{ $t('save') }}</el-button>
-            <el-button @click='resetFunc' type="primary">{{ $t('reset') }}</el-button>
-            <el-button @click='resetPassword' type="primary">{{ $t('set_password') }}</el-button>
+            <el-button @click='resetFunc'>{{ $t('reset') }}</el-button>
+            <el-button @click='resetPassword'>{{ $t('set_password') }}</el-button>
         </el-footer>
     </div>
 </template>
@@ -179,7 +179,6 @@ export default {
 </script>
 
 <style scoped>
-
 .settings-container {
     flex: 1;
     overflow: auto;
@@ -216,22 +215,6 @@ export default {
 @media (max-width: 768px) {
     .settings-container {
         flex-direction: column;
-    }
-}
-
-.aside-menu {
-    border-right: solid 1px #e6e6e6;
-    min-height: calc(100vh - 60px);
-    width: 200px;
-}
-
-.mobile-aside {
-    width: 120px;
-}
-
-@media (max-width: 767px) {
-    .aside-menu {
-        transition: width 0.3s;
     }
 }
 </style>

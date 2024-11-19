@@ -3,7 +3,7 @@
     <div class="header-buttons">
       <el-label>{{ $t('paperInfo') }}</el-label>
       <el-input v-model="search_text" :placeholder="$t('paperPlaceholder')" />
-      <el-button @click="searchPaper">
+      <el-button class="icon-button" @click="searchPaper">
         <el-icon>
           <Search />
         </el-icon>
@@ -72,19 +72,10 @@ export default {
 .el-label {
   white-space: nowrap;
   flex-shrink: 0;
-  font-size: 14px;
 }
 
 :deep(.el-input) {
   flex: 1;
-}
-
-.el-button {
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
 .input-group {
@@ -104,12 +95,6 @@ export default {
   word-wrap: break-word;
 }
 
-:deep(.el-icon) {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-}
-
 :deep(.el-form-item) {
   margin-right: 0;
 }
@@ -117,4 +102,5 @@ export default {
 :deep(.el-form-item__content) {
   margin-right: 0 !important;
 }
+
 </style>
