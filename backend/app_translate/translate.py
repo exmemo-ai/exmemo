@@ -117,8 +117,8 @@ def add_translate(content, user_id, save=True):
 
 
 def find_word_from_db(word):
-    if StoreTranslate.objects.filter(word=word).exists():
-        obj = StoreTranslate.objects.get(word=word)
+    obj = StoreTranslate.objects.filter(word=word).first()
+    if obj:
         if "regular_word" in obj.info:
             return True, obj.info["regular_word"], obj.info["translate"]
         else:
@@ -141,7 +141,7 @@ def add_to_db(word, regular_word, dst, user_id, sentence=None):
 
     db_word = regular_word
     if StoreTranslate.objects.filter(word=db_word, user_id=user_id).exists():
-        obj = StoreTranslate.objects.get(word=db_word, user_id=user_id)
+        obj = StoreTranslate.objects.filter(word=word, user_id=user_id).first()
         obj.times = obj.times + 1
         obj.info = info
         obj.save()
