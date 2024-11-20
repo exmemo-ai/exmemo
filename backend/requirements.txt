@@ -1,7 +1,6 @@
 openpyxl
 xlrd
-nltk
-pystardict
+simplemma==1.1.1
 pdfplumber==0.9.0
 pypdf2
 bs4

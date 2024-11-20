@@ -412,6 +412,7 @@ def get_type_options(ctype):
             ctype, flat=True
         ).distinct()  # pgsql not support distinct
         unique_values = list(set(unique_values))
+        unique_values = [x for x in unique_values if x is not None and len(x) > 0]
         logger.debug(f"unique_values {unique_values}")
         return HttpResponse(json.dumps(unique_values))
     except Exception as e:

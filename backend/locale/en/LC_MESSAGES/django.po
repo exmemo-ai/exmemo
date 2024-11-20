@@ -1018,6 +1018,10 @@ msgstr "Please enter what you're looking for"
 msgid "please_enter_the_record_content"
 msgstr "Please enter the record content"
 
+#: app_message/message.py:812
+msgid "translation_failed"
+msgstr "Translation failed"
+
 #: app_message/message.py:841
 msgid "nothing_entered"
 msgstr "Nothing Entered"
