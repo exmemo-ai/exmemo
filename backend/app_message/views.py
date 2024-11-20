@@ -15,7 +15,7 @@ from backend.common.user.user import DEFAULT_USER
 from backend.common.utils.file_tools import get_ext
 import app_message.user_manager as user_manager
 from .message import *
-from .data_process import get_messages, get_sessions, clear_session, save_session
+from .session import get_messages, get_sessions, remove_session, update_session_name
 
 
 class MessageAPIView(APIView):
@@ -54,13 +54,13 @@ class MessageAPIView(APIView):
                 elif rtype == "file":
                     return self.upload_file(args,request)
                 elif rtype == "get_messages":
-                    return get_messages(args,request)
-                elif rtype == "get_sessions":
-                    return get_sessions(args,request)
-                elif rtype == "save_session":
-                    return save_session(args,request)
+                    return get_messages(args)
                 elif rtype == "clear_session":
-                    return clear_session(args,request)
+                    return remove_session(args)
+                elif rtype == "get_sessions":
+                    return get_sessions(args['user_id'])
+                elif rtype == "save_session":
+                    return update_session_name(args['user_id'], args['sid'])
             except Exception as e:
                 logger.warning(f"message failed {e}")
                 traceback.print_exc()

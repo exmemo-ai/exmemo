@@ -10,7 +10,7 @@ from langchain.memory.chat_memory import BaseChatMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import get_buffer_string
-from .llm_tools import select_llm_model, DEFAULT_CHAT_LLM
+from .llm_tools import select_llm_model
 from typing import Any, Dict
 
 
@@ -92,54 +92,3 @@ class ChatEngine:
 
     def clear_memory(self):
         self.memory.clear()
-
-
-class ChatManager:
-    """
-    Chat manager for managing multiple sessions
-    """
-
-    __instance = None
-
-    @staticmethod
-    def get_instance():
-        if ChatManager.__instance == None:
-            ChatManager.__instance = ChatManager()
-        return ChatManager.__instance
-
-    def __init__(self):
-        # FIFO, maximum of 100 sessions saved
-        self.sessions = {}
-
-    def get_session(self, sid, model=None, debug=False):
-        if model is None:
-            model = os.getenv("DEFAULT_CHAT_LLM", DEFAULT_CHAT_LLM)
-        if sid not in self.sessions:
-            if len(self.sessions) > 100:
-                self.clear_session(list(self.sessions.keys())[0])  # FIFO
-            self.sessions[sid] = {"engine": ChatEngine(model), "model": model}
-        elif self.sessions[sid]["model"] != model:
-            if debug:
-                logger.info(
-                    f"Session {sid} model changed from {self.sessions[sid]['model']} to {model}"
-                )
-            self.clear_session(sid)
-            self.sessions[sid] = {"engine": ChatEngine(model), "model": model}
-        return self.sessions[sid]["engine"]
-
-    def clear_session(self, uid):
-        if uid in self.sessions:
-            self.sessions[uid]["engine"].clear_memory()
-            del self.sessions[uid]
-
-    def clear_all_sessions(self):
-        for uid in self.sessions.keys():
-            self.clear_session(uid)
-
-
-def test_chat_manager():
-    chat_manager = ChatManager.get_instance()
-    x = chat_manager.get_session("test", "gemini")
-    print(x.predict("Hello"))
-    x = chat_manager.get_session("test", DEFAULT_CHAT_LLM)
-    print(x.predict("Hello"))

@@ -57,7 +57,6 @@ class PaperAPIView(APIView):
             "tmp",
             content,
             args["user_id"],
-            args["session_id"],
             force_fg=True,
             debug=True,
         )

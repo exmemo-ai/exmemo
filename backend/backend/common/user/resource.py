@@ -1,6 +1,5 @@
 from django.utils.translation import gettext as _
 from .user import *
-from .session import *
 from .models import StoreResourceUsage
 
 

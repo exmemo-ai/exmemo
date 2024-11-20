@@ -18,7 +18,6 @@ import backend.common.speech.tts_tools as tts_tools
 import backend.common.speech.tts_mine as tts_mine
 from backend.common.user.user import *
 from backend.common.user.resource import ResourceManager
-from backend.common.user.session import SessionManager
 from backend.common.user.models import StoreResourceUsage
 
 
@@ -39,14 +38,13 @@ def tts_finished(dic):
     )
 
 
-def start_tts(title, content, uid, sid, force_fg=False, debug=True):
+def start_tts(title, content, uid, force_fg=False, debug=True):
     """
     Speech Synthesis
     Args:
         title: MP3 filename
         content: Synthesis content
         uid: user id
-        sid: session id
         fg: Whether to force foreground synthesis
     """
     user = UserManager.get_instance().get_user(uid)
@@ -78,7 +76,6 @@ def start_tts(title, content, uid, sid, force_fg=False, debug=True):
         )
         logger.info(f"do_tts conv_time: {conv_time}")
         if conv_time > 30 and not force_fg:
-            SessionManager.get_instance().set_cache(sid, "tts_file_title", title)
             ret, info = tts_tools.do_tts(
                 content,
                 uid,
@@ -234,8 +231,8 @@ def tts_get_engine_list(uid):
     return ret
 
 
-def run_tts(title, content, uid, sid, fg=False, debug=True):
-    ret, delay, detail = start_tts(title, content, uid, sid, debug=debug)
+def run_tts(title, content, uid, fg=False, debug=True):
+    ret, delay, detail = start_tts(title, content, uid, debug=debug)
     if ret:
         dic = {"type": "text"}
         if isinstance(detail, dict):

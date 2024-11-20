@@ -10,7 +10,6 @@ import pandas as pd
 
 from django.utils.translation import gettext as _
 from backend.common.user.user import *
-from backend.common.user.session import *
 from backend.common.user.resource import *
 from backend.common.llm.llm_hub import llm_query
 from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, get_llm_list
@@ -46,7 +45,7 @@ from app_dataforge.misc_tools import add_url
 
 from .command import *
 from .function import *
-from .data_process import save_message
+from .session import *
 
 MSG_ROLE = "You're a smart assistant"
 WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
@@ -131,13 +130,18 @@ CommandManager.get_instance().register(
 )
 
 
+def msg_run_tts(title, content, user_id, session_id):
+    SessionManager.get_instance().set_cache(session_id, "tts_file_title", title)
+    return run_tts(title, content, user_id)
+
+
 def msg_web_audio(args):
     url = SessionManager.get_instance().get_cache(args["session_id"], "url")
     title, content = get_url_content(url)
     title = regular_title(title)
     if title is not None:
         title = f"网页_{title[:10]}"
-        return run_tts(title, content, args["user_id"], args["session_id"])
+        return msg_run_tts(title, content, args["user_id"], args["session_id"])
     else:
         return True, {"type": "text", "content": _("page_not_found")}
 
@@ -230,7 +234,8 @@ CommandManager.get_instance().register(
 
 def msg_file_extract(args):
     logger.debug("in msg_extract_file")
-    ret, detail = get_file_abstract(args["session_id"], args["user_id"])
+    data = SessionManager.get_instance().get_cache(args["session_id"], "file")
+    ret, detail = get_file_abstract(data, args["user_id"])
     if ret:
         return True, {"type": "text", "content": detail}
     return True, {"type": "text", "content": _("please_upload_or_share_a_file_first")}
@@ -242,9 +247,10 @@ CommandManager.get_instance().register(
 
 
 def msg_file_tts(args):
-    ret, path, title, content = get_file_content(args["session_id"])
+    data = SessionManager.get_instance().get_cache(args["session_id"], "file")
+    ret, path, title, content = get_file_content(data)
     if ret:
-        return run_tts(title, content, args["user_id"], args["session_id"])
+        return msg_run_tts(title, content, args["user_id"], args["session_id"])
     return True, {"type": "text", "content": _("please_upload_or_share_a_file_first")}
 
 
@@ -569,8 +575,7 @@ def msg_tts_result(args):
     ret, delay, info = get_tts_result(args["user_id"])
 
     if ret:
-        session = SessionManager.get_instance().get_session(args["session_id"])
-        title = session.get_cache("tts_file_title", "转换音频")
+        title = SessionManager.get_instance().get_cache(args["session_id"], "tts_file_title", "转换音频")
         return True, {"type": "audio", "content": info, "filename": f"{title}.mp3"}
     else:
         if delay != -1:
@@ -593,7 +598,7 @@ def msg_tts_convert(args):
     else:
         content = args["content"].strip()
         if len(content) > 0:
-            return run_tts(
+            return msg_run_tts(
                 f"文本_{content[:5]}", content, args["user_id"], args["session_id"]
             )
         else:
@@ -921,6 +926,9 @@ def msg_add_url(url, args, status):
 
 
 def search_data(args, dic={}):
+    """
+    Search for data
+    """
     condition = {"user_id": args["user_id"]}
     condition.update(dic)
     if "content" in args and len(args["content"]) > 0:
