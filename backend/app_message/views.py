@@ -15,10 +15,23 @@ from backend.common.user.user import DEFAULT_USER
 from backend.common.utils.file_tools import get_ext
 import app_message.user_manager as user_manager
 from .message import *
-from .session import get_messages, get_sessions, remove_session, update_session_name
+from .session import SessionManager
 
 
 class MessageAPIView(APIView):
+    def get_session(self, request):
+        """
+        Get the session list of the user
+        """
+        args = parse_common_args(request)
+        sid = request.GET.get("sid", request.POST.get("sid", args['session_id']))
+        sname = request.GET.get("sname", request.POST.get("sname", sid))
+        source = request.GET.get("source", request.POST.get("source", "wechat")) # later move to parse_common_args
+        sdata = SessionManager.get_instance().get_session(sid, sname, args['user_id'], args['is_group'], source)
+        sdata.current_content = args['content']
+        sdata.args = args
+        return sdata
+
     def post(self, request):
         """
         Accept and process text messages, including URLs
@@ -31,36 +44,34 @@ class MessageAPIView(APIView):
             request.user, request.auth = user_auth_tuple
             has_token = True
 
-        args = parse_common_args(request)
-        args['sid'] = request.GET.get("sid", request.POST.get("sid", args['session_id']))
-        args['sname'] = request.GET.get("sname", request.POST.get("sname", args['sid']))
+        sdata = self.get_session(request)
         logger.info(
-            f'request.data {request.data}, has_token {has_token}, is_group {args["is_group"]}'
+            f'request.data {request.data}, has_token {has_token}, is_group {sdata.is_group}'
         )
 
-        if has_token or args["is_group"]:
-            logger.info(f"message recv: args {args}")
-            if "user_id" not in args or args["user_id"] is None:
-                args["user_id"] = DEFAULT_USER
-            if args["user_id"] == DEFAULT_USER:
+        if has_token or sdata.is_group:
+            logger.info(f"message recv: args {sdata.args}")
+            if "user_id" not in sdata.args or sdata.args["user_id"] is None:
+                sdata.args["user_id"] = DEFAULT_USER
+            if sdata.args["user_id"] == DEFAULT_USER:
                 LoginView.create_user_default()
-            args["source"] = request.POST.get("source", "wechat") # later move to parse_common_args
+            
             rtype = request.POST.get("rtype", "text")
             try:
                 if rtype == "text":
-                    ret, detail = do_message(args)
+                    ret, detail = do_message(sdata)
                     logger.debug(f"{ret}, {detail}")
                     return do_result(ret, detail)
                 elif rtype == "file":
-                    return self.upload_file(args,request)
+                    return self.upload_file(sdata, request)
                 elif rtype == "get_messages":
-                    return get_messages(args)
+                    return sdata.get_messages()
                 elif rtype == "clear_session":
-                    return remove_session(args)
+                    return sdata.clear_session()
                 elif rtype == "get_sessions":
-                    return get_sessions(args['user_id'])
+                    return SessionManager.get_sessions(sdata.user_id)
                 elif rtype == "save_session":
-                    return update_session_name(args['user_id'], args['sid'])
+                    return SessionManager.update_sessions_name(sdata.user_id)
             except Exception as e:
                 logger.warning(f"message failed {e}")
                 traceback.print_exc()
@@ -84,12 +95,11 @@ class MessageAPIView(APIView):
             ret = user_manager.UserTools.get_instance().chat(user_name, content)
             return HttpResponse(json.dumps({"status": "success", "info": ret}))
 
-    def upload_file(self, request):
-        args = parse_common_args(request)
+    def upload_file(self, sdata, request):
         ret, path, filename = real_upload_file(request)
         if ret:
             ret, detail = msg_recv_file(
-                path, filename, args
+                path, filename, sdata
             )  # May return files or text
             return do_result(True, detail)  # return True to show info
         return HttpResponse(

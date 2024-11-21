@@ -19,25 +19,25 @@ def regular_title(title):
     return title
 
 
-def do_chat(args):
+def do_chat(sdata):
     """
     Call the model for a chat
     """
-    content = args["content"]
+    content = sdata.current_content
     if content is not None:
         content = content.strip()
-    ret, answer = chat(args["user_id"], args["session_id"], content)
+    ret, answer = chat(sdata, content)
     if ret:
         return True, {"type": "text", "content": answer}
     else:
         return True, {"type": "text", "content": _("chat_call_failed")}
 
-def chat(uid, sid, content, engine_type=None, debug=False): # later move to app_manager
+def chat(sdata, content, engine_type=None, debug=False): # later move to app_manager
     """
     Provides chat, internal saving chat records.
     """
     start_time = time.time()
-    user = UserManager.get_instance().get_user(uid)
+    user = UserManager.get_instance().get_user(sdata.user_id)
     # 241115
     prompt = user.get("llm_chat_prompt", "")
     if prompt != "" and content != "":
@@ -49,7 +49,7 @@ def chat(uid, sid, content, engine_type=None, debug=False): # later move to app_
         engine_type = user.get("llm_chat_model", DEFAULT_CHAT_LLM)
     limit_llm_day = privilege.get("limit_llm_day", -1)
     used_llm_count = ResourceManager.get_instance().get_usage(
-        uid, dtype="day", rtype="llm"
+        sdata.user_id, dtype="day", rtype="llm"
     )
     if debug:
         logger.info(
@@ -66,20 +66,18 @@ def chat(uid, sid, content, engine_type=None, debug=False): # later move to app_
         else:
             pre = f"[{engine_type}] "
         ret, answer, token_count = (
-            SessionManager.get_instance()
-            .get_chat(sid, model=engine_type)
-            .predict(content)
+            sdata.get_chat_engine(model=engine_type).predict(content)
         )
         if debug:
             logger.info(
-                f"chat sid {sid} content {content} answer {answer} count {token_count}"
+                f"chat sid {sdata.sid} content {content} answer {answer} count {token_count}"
             )
         if ret:
             end_time = time.time()
             duration = end_time - start_time
             dic = {"token_count": token_count}
             ResourceManager.get_instance().add(
-                uid, "chat", "llm", engine_type, token_count, duration, "success", dic
+                sdata.user_id, "chat", "llm", engine_type, token_count, duration, "success", dic
             )
         return ret, pre + answer
     except Exception as e:

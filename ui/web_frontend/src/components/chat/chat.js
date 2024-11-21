@@ -11,14 +11,14 @@ export class ChatService {
         this.sessions = [];
         const { t } = useI18n();
         this.t = t;
-        this.currentUserId = localStorage.getItem('username');
+        this.currentUserId = 'user';
         this.currentSessionId = sessionStorage.getItem('sid');
         this.currentSessionName = sessionStorage.getItem('sname');
         //this.currentSessionId = null; // for test
         if (!this.currentSessionId) {
             this.createSession();
         }
-        this.botId = 'Bot';
+        this.botId = 'assistant';
     }
 
     setObj(obj) {
@@ -43,8 +43,8 @@ export class ChatService {
             roomName: sessionName,
             avatar: defaultAvatar,
             users: [
-                { _id: this.currentUserId, username: this.currentUserId },
-                { _id: this.botId, username: 'Bot' }
+                { _id: this.currentUserId, username: 'user' },
+                { _id: this.botId, username: 'assistant' }
             ]
         }
         this.sessions.unshift(newSession);
