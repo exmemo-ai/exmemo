@@ -32,7 +32,7 @@ def do_chat(sdata):
     else:
         return True, {"type": "text", "content": _("chat_call_failed")}
 
-def chat(sdata, content, engine_type=None, debug=False): # later move to app_manager
+def chat(sdata, content, engine_type=None, debug=False):
     """
     Provides chat, internal saving chat records.
     """
