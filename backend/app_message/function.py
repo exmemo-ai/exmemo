@@ -2,7 +2,6 @@ import re
 import time
 from django.utils.translation import gettext as _
 from .command import *
-from app_message.session import SessionManager
 from backend.common.user.resource import ResourceManager
 
 CMD_INNER_GET = "CMD_INNER_GET"
@@ -28,9 +27,9 @@ def do_chat(sdata):
         content = content.strip()
     ret, answer = chat(sdata, content)
     if ret:
-        return True, {"type": "text", "content": answer}
+        return True, answer
     else:
-        return True, {"type": "text", "content": _("chat_call_failed")}
+        return False, _("chat_call_failed")
 
 def chat(sdata, content, engine_type=None, debug=False):
     """

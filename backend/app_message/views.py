@@ -24,10 +24,10 @@ class MessageAPIView(APIView):
         Get the session list of the user
         """
         args = parse_common_args(request)
-        sid = request.GET.get("sid", request.POST.get("sid", args['session_id']))
-        sname = request.GET.get("sname", request.POST.get("sname", sid))
+        sid = request.GET.get("sid", request.POST.get("sid", ''))
         source = request.GET.get("source", request.POST.get("source", "wechat")) # later move to parse_common_args
-        sdata = SessionManager.get_instance().get_session(sid, sname, args['user_id'], args['is_group'], source)
+        sdata = SessionManager.get_instance().get_session(sid, args['user_id'], args['is_group'], 
+                                                          source)
         sdata.current_content = args['content']
         sdata.args = args
         return sdata
@@ -67,17 +67,20 @@ class MessageAPIView(APIView):
                 elif rtype == "get_messages":
                     return sdata.get_messages()
                 elif rtype == "clear_session":
-                    return sdata.clear_session()
+                    return SessionManager.get_instance().clear_session(sdata)
                 elif rtype == "get_sessions":
-                    return SessionManager.get_sessions(sdata.user_id)
+                    return SessionManager.get_instance().get_sessions(sdata.user_id)
                 elif rtype == "save_session":
                     return SessionManager.update_sessions_name(sdata.user_id)
+                elif rtype == "get_current_session":
+                    detail = {"type": "text", "content": sdata.sid}
+                    return do_result(True, detail)
             except Exception as e:
                 logger.warning(f"message failed {e}")
                 traceback.print_exc()
             return HttpResponse(
                 json.dumps(
-                    {"status": "failed", "info": _("f'Backend processing failed'")}
+                    {"status": "failed", "info": _("backend_processing_failed")}
                 )
             )
         else:
@@ -103,7 +106,7 @@ class MessageAPIView(APIView):
             )  # May return files or text
             return do_result(True, detail)  # return True to show info
         return HttpResponse(
-            json.dumps({"status": "failed", "info": _("f'Backend processing failed'")})
+            json.dumps({"status": "failed", "info": _("backend_processing_failed")})
         )
 
 

@@ -22,6 +22,10 @@ def do_result(ret, detail):
                     f'attachment; filename="{detail["filename"]}"'
                 )
                 return response
+            elif ("type" in detail and detail["type"] == "json"):
+                if 'status' not in detail:
+                    detail['status'] = 'success'
+                return HttpResponse(json.dumps(detail))
             else:
                 ret_dic = {"status": "success", "info": detail["content"]}
                 if "type" in detail:

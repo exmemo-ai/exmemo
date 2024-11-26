@@ -5,7 +5,8 @@ import defaultAvatar from '@/assets/images/chat.png'
 import { useI18n } from 'vue-i18n'
 
 export class ChatService {
-    constructor() {
+    constructor(eventBus) {
+        this.eventBus = eventBus;
         this.obj = null;
         this.messages = [];
         this.sessions = [];
@@ -13,27 +14,50 @@ export class ChatService {
         this.t = t;
         this.currentUserId = 'user';
         this.currentSessionId = sessionStorage.getItem('sid');
-        this.currentSessionName = sessionStorage.getItem('sname');
         //this.currentSessionId = null; // for test
-        if (!this.currentSessionId) {
-            this.createSession();
-        }
         this.botId = 'assistant';
+    }
+
+    async checkSession() {
+        if (!this.currentSessionId) {
+            await this.createSession();
+            return false;
+        }
+        return true;
     }
 
     setObj(obj) {
         this.obj = obj;
     }
 
-    createSession() {
-        this.currentSessionId = `${new Date().toISOString().replace('T', ' ').replace(/\.\d+Z/, '')}`;
-        this.currentSessionId = this.currentSessionId.slice(0, 19);
-        this.currentSessionName = this.currentSessionId;
-        sessionStorage.setItem('sid', this.currentSessionId);
-        sessionStorage.setItem('sname', this.currentSessionName);
-        this.pushSession(this.currentSessionId, this.currentSessionName);
-        this.messages = [];
-        this.addDefaultMessage();
+    async createSession() {
+        let info = '';
+        this.currentSessionId = null;
+        try {
+            const formData = new FormData();
+            formData.append('rtype', 'get_current_session');
+            formData.append('sid', '')
+            formData.append('is_group', 'false');
+            formData.append('source', 'web');
+            const func = 'api/message/';
+            setDefaultAuthHeader();
+            const response = await axios.post(getURL() + func, formData);
+            if (response.status === 401) {
+                parseBackendError(this.obj, error);
+                throw new Error('Token expired');
+            }
+            info = await this.parseInfo(response);
+            this.reloadSessions(info);
+        } catch (error) {
+            info = String(error);
+            this.addMessage(info, this.botId);
+        }
+    }
+
+    async reloadSessions(sid) {
+        this.currentSessionId = sid;
+        sessionStorage.setItem('sid', sid);
+        await this.fetchSessions();
     }
 
     pushSession(sessionId, sessionName) {
@@ -50,14 +74,13 @@ export class ChatService {
         this.sessions.unshift(newSession);
     }
 
-    async sendMessage(content) {        
+    async sendMessage(content) {
         let info = '';
         try {
             const formData = new FormData();
             formData.append('rtype', 'text');
             formData.append('content', content.trim());
             formData.append('sid', this.currentSessionId);
-            formData.append('sname', this.currentSessionName);
             formData.append('source', 'web');
             formData.append('is_group', 'false');
 
@@ -68,7 +91,15 @@ export class ChatService {
                 parseBackendError(this.obj, error);
                 throw new Error('Token expired');
             }
-            info = await this.parseInfo(response);
+            const [ret, message, sid] = this.parseMessageReturn(response);
+            if (ret === true) {
+                info = message;
+                if (sid != this.currentSessionId) {
+                    await this.reloadSessions(sid);
+                }
+            } else {
+                info = message;
+            }
         } catch (error) {
             info = String(error);
         }
@@ -94,6 +125,18 @@ export class ChatService {
         this.messages.push(newMessage);
     }
 
+    parseMessageReturn(response) {
+        if (response.status === 200) {
+            const result = response.data;
+            if (result.status === 'success') {
+                if (result.type === 'json') {
+                    return [true, result.content.info, result.content.sid];
+                }
+            }
+        }
+        return [false, 'Message sending failed', null]; // later change to i18n
+    }
+
     async parseInfo(response) {
         if (response.status === 200) {
             const result = response.data;
@@ -105,7 +148,7 @@ export class ChatService {
                 }
             }
         }
-        return 'Message sending failed';
+        return 'parseInfo failed'; // later change to i18n
     }
 
     async parseMessages(response) {
@@ -122,6 +165,10 @@ export class ChatService {
                         //console.log('item', item);
                         this.addMessage(item.content, item.sender, item.created_time);
                     }
+                    this.addDefaultMessage();
+                    if (this.eventBus) {
+                        this.eventBus.emit('message-updated', this.messages);
+                    }    
                 }
             }
         }
@@ -137,14 +184,21 @@ export class ChatService {
                         this.pushSession(item.sid, item.sname);
                     }
                 }
+                if (this.eventBus) {
+                    this.eventBus.emit('session-updated', this.sessions);
+                }
             }
         }
     }
 
     async fetchSessions() {
+        if (await this.checkSession() === false) {
+            return;
+        }
         try {
             const formData = new FormData();
             formData.append('rtype', 'get_sessions');
+            formData.append('sid', this.currentSessionId);
 
             const func = 'api/message/';
             setDefaultAuthHeader();
@@ -187,9 +241,8 @@ export class ChatService {
         }
     }
 
-    setSession(sessionId, sessionName) {
+    setSession(sessionId) {
         this.currentSessionId = sessionId;
-        this.currentSessionName = sessionName;
     }
 
     getCurrentUserId() {
@@ -217,13 +270,12 @@ export class ChatService {
                 parseBackendError(this.obj, error);
                 throw new Error('Token expired');
             }
-            info = await this.parseInfo(response);
+            await this.parseInfo(response);
         } catch (error) {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
-        await this.fetchSessions();
-        this.createSession();
+        await this.createSession();
     }
 
     async newSession() {
@@ -243,7 +295,6 @@ export class ChatService {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
-        await this.fetchSessions();
-        this.createSession();
+        await this.createSession();
     }
 }

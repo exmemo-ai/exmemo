@@ -820,7 +820,7 @@ CommandManager.get_instance().register(
 )
 
 
-def do_message(sdata):
+def do_message(sdata:Session):
     """
     Handling WeChat Chat Entry
     """
@@ -847,7 +847,10 @@ def do_message(sdata):
         logger.info(f"content:{content} ret:{ret} detail:{detail}")
         if not ret:
             ret, detail = do_chat(sdata)
-        sdata.add_message(content, detail)
+            if ret:
+                detail = SessionManager.get_instance().add_message(content, detail, sdata)
+            else:
+                detail = {"type": "text", "content": detail}
         return True, detail
     except Exception as e:
         traceback.print_exc()

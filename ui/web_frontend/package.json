@@ -23,6 +23,7 @@
     "@vue/cli-service": "^5.0.8",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.22.0",
+    "mitt": "^3.0.1",
     "sass": "^1.81.0",
     "sass-loader": "^16.0.3",
     "vue-advanced-chat": "^2.1.0",
