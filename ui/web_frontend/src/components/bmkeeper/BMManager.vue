@@ -51,7 +51,7 @@
 <script>
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import { Search } from '@element-plus/icons-vue'
-import axiosInstance from '@/utils/axios-config'
+import axios from 'axios'
 import { getURL } from '@/components/support/conn'
 
 export default {
@@ -76,7 +76,11 @@ export default {
         formData.append('param', this.searchQuery.toString())
         
         try {
-          const response = await axiosInstance.post(getURL() + 'api/keeper/', formData)
+          const response = await axios.post(getURL() + 'api/keeper/', formData, {
+            timeout: 10000,
+            withCredentials: true,
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
           if (response.data.status === 'success') {
             this.searchResults = response.data.bookmarks
           }
@@ -98,7 +102,11 @@ export default {
       const randomFormData = new FormData()
       randomFormData.append('type', 'random')
       randomFormData.append('param', '5')
-      const randomResponse = await axiosInstance.post(getURL() + 'api/keeper/', randomFormData)
+      const randomResponse = await axios.post(getURL() + 'api/keeper/', randomFormData, {
+        timeout: 10000,
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       if (randomResponse.data.status === 'success') {
         this.randomBookmarks = randomResponse.data.bookmarks
       }
@@ -107,7 +115,11 @@ export default {
       const readLaterFormData = new FormData()
       readLaterFormData.append('type', 'readlater')
       readLaterFormData.append('param', '5')
-      const readLaterResponse = await axiosInstance.post(getURL() + 'api/keeper/', readLaterFormData)
+      const readLaterResponse = await axios.post(getURL() + 'api/keeper/', readLaterFormData, {
+        timeout: 10000,
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       if (readLaterResponse.data.status === 'success') {
         this.recentReadLater = readLaterResponse.data.bookmarks
       }
