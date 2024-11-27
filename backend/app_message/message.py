@@ -848,7 +848,7 @@ def do_message(sdata:Session):
         if not ret:
             ret, detail = do_chat(sdata)
             if ret:
-                detail = SessionManager.get_instance().add_message(content, detail, sdata)
+                detail = SessionManager.get_instance().send_message(content, detail, sdata)
             else:
                 detail = {"type": "text", "content": detail}
         return True, detail

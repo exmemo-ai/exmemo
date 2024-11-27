@@ -73,7 +73,7 @@ class Session:
         if len(items) > 0:
             session = Session(sid, user_id, False, "db", items[0].sname)
             for item in items:
-                session.add_message(item.content, {"type": item.rtype, "content": item.content}, insert_to_db=False)
+                session.add_message(item.sender, item.content, item.created_time)
             return session
         return None
     
@@ -148,7 +148,7 @@ class Session:
         detail = {"type": "text", "content": self.messages}
         return do_result(True, detail)
 
-    def add_message(self, msg1, msg2, insert_to_db = True):
+    def send_message(self, msg1, msg2, insert_to_db = True):
         """
         Save the chat message
         """
@@ -180,18 +180,15 @@ class Session:
                 source=self.source,
                 created_time=created_time,
             )
+        self.add_message("user", msg1, created_time)
+        self.add_message("assistant", msg2, created_time)
 
+
+    def add_message(self, sender, content, created_time):
         self.messages.append(
             {
-                "sender": "user",
-                "content": msg1,
-                "created_time": created_time.strftime("%Y-%m-%d %H:%M:%S"),
-            }
-        )
-        self.messages.append(
-            {
-                "sender": "assistant",
-                "content": msg2,
+                "sender": sender,
+                "content": content,
                 "created_time": created_time.strftime("%Y-%m-%d %H:%M:%S"),
             }
         )
@@ -347,14 +344,25 @@ class SessionManager:
         logger.error(f'get_sessions {detail}')
         return do_result(True, detail)
     
-    def add_message(self, msg1:str, msg2:str, sdata: Session):
+    def send_message(self, msg1:str, msg2:str, sdata: Session):
+        need_create_new = False
+        """
+        if len(sdata.messages) > 0: # 这个逻辑应该来自刷新时候，而不是reload时刻
+            last_time = sdata.messages[-1]["created_time"]
+            if timezone.now() - last_time > timezone.timedelta(hours=24):
+                need_create_new = True
+        """
         if len(sdata.messages) > MAX_MESSAGES:
-        #if True: # for test
+            need_create_new = True
+        if need_create_new:
             sdata.close()
             self.remove_session(sdata.sid)
             sdata = Session.create_session(sdata.user_id, sdata.is_group, sdata.source)
             self.add_session(sdata)
-        sdata.add_message(msg1, msg2)
+        sdata.send_message(msg1, msg2)
+        if sdata.sid in self.sessions:
+            self.sessions.move_to_end(sdata.sid)
+
         logger.warning(f'add_message ret {sdata.sid}')
         return {"type": "json", "content": {"info": msg2, "sid": sdata.sid}}
     
