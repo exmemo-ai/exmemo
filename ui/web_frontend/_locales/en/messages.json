@@ -172,5 +172,8 @@
     "todo": "To Do",
     "init": "Init",
     "newSession": "New Session",
-    "clearSession": "Clear Session"
+    "clearSession": "Clear Session",
+    "quickNavigation": "Quick Navigation",
+    "readLater": "Read Later",
+    "searchTitle": "Search Bookmarks"
 }

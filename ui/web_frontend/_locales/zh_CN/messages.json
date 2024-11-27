@@ -172,5 +172,8 @@
     "todo": "待办",
     "init": "初始化",
     "newSession": "新会话",
-    "clearSession": "清空会话"
+    "clearSession": "清空会话",
+    "quickNavigation": "快速导航",
+    "readLater": "稍后阅读",
+    "searchTitle": "书签检索"
   }
