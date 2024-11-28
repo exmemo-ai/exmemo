@@ -29,7 +29,7 @@ export class ChatService {
         this.obj = obj;
     }
 
-    async getCurrentSession() {
+    async getCurrentSession(create = false) {
         let info = '';
         this.currentSessionId = null;
         try {
@@ -38,6 +38,7 @@ export class ChatService {
             formData.append('sid', '')
             formData.append('is_group', 'false');
             formData.append('source', 'web');
+            formData.append('create', create);
             const func = 'api/message/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
@@ -296,6 +297,6 @@ export class ChatService {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
-        await this.getCurrentSession();
+        await this.getCurrentSession(true);
     }
 }

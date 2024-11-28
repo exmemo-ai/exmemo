@@ -44,7 +44,9 @@ def add_data(dic, path=None, use_llm=True):
         return False, False, _("unknown_type_colon_") + dic["etype"]
 
 def add_chat(dic, use_llm=True):
-    return save_entry(dic, dic['abstract'], dic["raw"])
+    abstract = dic["abstract"]
+    del dic["abstract"]
+    return save_entry(dic, abstract, dic["raw"])
 
 def add_file(dic, path, use_llm=True):
     mtime_datetime = timezone.now().astimezone(pytz.UTC)

@@ -26,8 +26,13 @@ class MessageAPIView(APIView):
         args = parse_common_args(request)
         sid = request.GET.get("sid", request.POST.get("sid", ''))
         source = request.GET.get("source", request.POST.get("source", "wechat")) # later move to parse_common_args
+        create = request.GET.get("create", request.POST.get("create", False))
+        if create == 'true':
+            create = True
+        else:
+            create = False
         sdata = SessionManager.get_instance().get_session(sid, args['user_id'], args['is_group'], 
-                                                          source)
+                                                          source, force_create=create)
         sdata.current_content = args['content']
         sdata.args = args
         return sdata
@@ -71,7 +76,8 @@ class MessageAPIView(APIView):
                 elif rtype == "get_sessions":
                     return SessionManager.get_instance().get_sessions(sdata.user_id)
                 elif rtype == "save_session":
-                    return sdata.save_to_db()
+                    sdata.save_to_db()
+                    return do_result(True, {"type": "text", "content": "session saved"})
                 elif rtype == "get_current_session":
                     detail = {"type": "text", "content": sdata.sid}
                     return do_result(True, detail)
