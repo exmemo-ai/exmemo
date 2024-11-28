@@ -90,6 +90,7 @@
     "file": "文件",
     "web": "网页",
     "note": "笔记",
+    "chat": "聊天记录",
     "extract": "提 取",
     "delete": "删 除",
     "download": "下 载",
@@ -171,5 +172,6 @@
     "todo": "待办",
     "init": "初始化",
     "newSession": "新会话",
-    "clearSession": "清空会话"
+    "clearSession": "清空会话",
+    "messageSendingFailed": "消息发送失败"
   }

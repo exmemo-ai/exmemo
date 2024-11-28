@@ -36,11 +36,15 @@ def add_data(dic, path=None, use_llm=True):
         return add_file(dic, path, use_llm=use_llm)
     elif dic["etype"] == "record":
         return add_record(dic, use_llm=use_llm)
+    elif dic["etype"] == "chat":
+        return add_chat(dic, use_llm=use_llm)
     elif dic["etype"] == "web":
         return add_web(dic, use_llm=use_llm)
     else:
         return False, False, _("unknown_type_colon_") + dic["etype"]
 
+def add_chat(dic, use_llm=True):
+    return save_entry(dic, dic['abstract'], dic["raw"])
 
 def add_file(dic, path, use_llm=True):
     mtime_datetime = timezone.now().astimezone(pytz.UTC)
@@ -350,24 +354,25 @@ def get_entry(idx):
         return None
 
 
-def get_entry_list(keywords, query_args, max_count):
+def get_entry_list(keywords, query_args, max_count, fields = None):
     logger.warning(f"query_args {query_args}")
     query_args["block_id"] = 0
     query_args["is_deleted"] = False
-    fields = [
-        "idx",
-        "block_id",
-        "raw",
-        "title",
-        "etype",
-        "atype",
-        "ctype",
-        "status",
-        "addr",
-        "path",
-        "created_time",
-        "updated_time",
-    ]
+    if fields is None:
+        fields = [
+            "idx",
+            "block_id",
+            "raw",
+            "title",
+            "etype",
+            "atype",
+            "ctype",
+            "status",
+            "addr",
+            "path",
+            "created_time",
+            "updated_time",
+        ]
     if keywords is not None and len(keywords) > 0:
         keywords = regular_keyword(keywords)
         keyword_arr = keywords.split(" ")

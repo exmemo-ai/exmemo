@@ -44,7 +44,7 @@
                         style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">{{
                             $t('file') }}: {{file_path}}</span>
                 </div>
-                <div v-if="form.etype === 'record'" width="100%">
+                <div v-if="form.etype === 'record' || form.etype == 'chat'" width="100%">
                     <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
                 </div>
             </div>

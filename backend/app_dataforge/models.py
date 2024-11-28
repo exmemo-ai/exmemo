@@ -9,6 +9,7 @@ class StoreEntry(models.Model):
         NOTE = "note"  # Notes, usually are text
         FILE = "file"  # Files
         WEB = "web"  # Web Pages
+        CHAT = "chat" # Chat Records
 
     idx = models.UUIDField(
         unique=True, primary_key=True, default=uuid.uuid4, editable=False

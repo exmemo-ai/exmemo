@@ -90,6 +90,7 @@
     "file": "File",
     "web": "Web",
     "note": "Note",
+    "chat": "Chat",
     "extract": "Extract",
     "delete": "Delete",
     "download": "Download",
@@ -171,5 +172,6 @@
     "todo": "To Do",
     "init": "Init",
     "newSession": "New Session",
-    "clearSession": "Clear Session"
+    "clearSession": "Clear Session",
+    "messageSendingFailed": "Message sending failed"
 }

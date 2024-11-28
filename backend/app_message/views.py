@@ -71,7 +71,7 @@ class MessageAPIView(APIView):
                 elif rtype == "get_sessions":
                     return SessionManager.get_instance().get_sessions(sdata.user_id)
                 elif rtype == "save_session":
-                    return SessionManager.update_sessions_name(sdata.user_id)
+                    return sdata.save_to_db()
                 elif rtype == "get_current_session":
                     detail = {"type": "text", "content": sdata.sid}
                     return do_result(True, detail)

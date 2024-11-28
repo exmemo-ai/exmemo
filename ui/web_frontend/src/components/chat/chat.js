@@ -13,14 +13,13 @@ export class ChatService {
         const { t } = useI18n();
         this.t = t;
         this.currentUserId = 'user';
-        this.currentSessionId = sessionStorage.getItem('sid');
-        //this.currentSessionId = null; // for test
+        this.currentSessionId = null;
         this.botId = 'assistant';
     }
 
     async checkSession() {
         if (!this.currentSessionId) {
-            await this.createSession();
+            await this.getCurrentSession();
             return false;
         }
         return true;
@@ -30,7 +29,7 @@ export class ChatService {
         this.obj = obj;
     }
 
-    async createSession() {
+    async getCurrentSession() {
         let info = '';
         this.currentSessionId = null;
         try {
@@ -56,7 +55,6 @@ export class ChatService {
 
     async reloadSessions(sid) {
         this.currentSessionId = sid;
-        sessionStorage.setItem('sid', sid);
         await this.fetchSessions();
     }
 
@@ -113,8 +111,6 @@ export class ChatService {
         }
         let date = dt.split(' ')[0];
         let timestamp = dt.split(' ')[1].slice(0, 5);
-        //timestamp = new Date().toString().substring(16, 21),
-        //date = new Date().toDateString()
         const newMessage = {
             _id: this.messages.length,
             content: message,
@@ -134,7 +130,7 @@ export class ChatService {
                 }
             }
         }
-        return [false, 'Message sending failed', null]; // later change to i18n
+        return [false, this.t('messageSendingFailed'), null]; // later change to i18n
     }
 
     async parseInfo(response) {
@@ -162,7 +158,7 @@ export class ChatService {
                 } else if (Array.isArray(result.info)) {
                     this.messages = [];
                     for (const item of result.info) {
-                        //console.log('item', item);
+                        console.log('item', item);
                         this.addMessage(item.content, item.sender, item.created_time);
                     }
                     this.addDefaultMessage();
@@ -199,6 +195,7 @@ export class ChatService {
             const formData = new FormData();
             formData.append('rtype', 'get_sessions');
             formData.append('sid', this.currentSessionId);
+            formData.append('source', 'web');
 
             const func = 'api/message/';
             setDefaultAuthHeader();
@@ -219,6 +216,7 @@ export class ChatService {
             const formData = new FormData();
             formData.append('rtype', 'get_messages');
             formData.append('sid', this.currentSessionId);
+            formData.append('source', 'web');
 
             const func = 'api/message/';
             setDefaultAuthHeader();
@@ -262,6 +260,7 @@ export class ChatService {
             const formData = new FormData();
             formData.append('rtype', 'clear_session');
             formData.append('sid', this.currentSessionId);
+            formData.append('source', 'web');
 
             const func = 'api/message/';
             setDefaultAuthHeader();
@@ -275,7 +274,7 @@ export class ChatService {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
-        await this.createSession();
+        await this.getCurrentSession();
     }
 
     async newSession() {
@@ -283,6 +282,8 @@ export class ChatService {
             const formData = new FormData();
             formData.append('rtype', 'save_session');
             formData.append('sid', this.currentSessionId);
+            formData.append('source', 'web');
+
             const func = 'api/message/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
@@ -295,6 +296,6 @@ export class ChatService {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
-        await this.createSession();
+        await this.getCurrentSession();
     }
 }

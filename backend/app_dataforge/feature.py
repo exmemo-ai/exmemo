@@ -16,7 +16,7 @@ from backend.settings import LANGUAGE_CODE
 DEFAULT_CATEGORY = _("unclassified")
 DEFAULT_STATUS = "init"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
-
+TITLE_LENGTH = 20
 
 class EntryFeatureTool:
     _instance = None
@@ -126,8 +126,8 @@ class EntryFeatureTool:
             dic["atype"] = "subjective"
         if dic["title"] is None:
             dic["title"] = content
-        if len(dic["title"]) > 10:
-            dic["title"] = dic["title"] + "..."
+        if len(dic["title"]) > TITLE_LENGTH:
+            dic["title"] = dic["title"][:TITLE_LENGTH] + "..."
         return True, dic
 
     def regular_status(self, dic_base, dic_detect):
