@@ -175,5 +175,22 @@
     "clearSession": "清空会话",
     "quickNavigation": "快速导航",
     "readLater": "稍后阅读",
-    "searchTitle": "书签检索"
+    "searchTitle": "书签检索",
+    "importance": "重要程度",
+    "mostClicked": "最常访问",
+    "recentlyAdded": "最近添加",
+    "clicks": "点击次数",
+    "sortBy": "排序方式:",
+    "addSummary": "添加总结",
+    "moveToBookmark": "移动到书签",
+    "deleteBookmark": "删除",
+    "inputSummary": "请输入网页总结",
+    "addSummaryTitle": "添加总结",
+    "inputFolderPath": "请输入目标文件夹路径",
+    "moveToBookmarkTitle": "移动到书签", 
+    "summaryAdded": "总结已添加",
+    "movedToBookmark": "已移动到书签",
+    "confirmDeleteReadLater": "确定要删除这个待读项吗?",
+    "warningTitle": "警告",
+    "deleted": "已删除"
   }

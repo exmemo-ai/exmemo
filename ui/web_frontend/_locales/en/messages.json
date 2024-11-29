@@ -175,5 +175,22 @@
     "clearSession": "Clear Session",
     "quickNavigation": "Quick Navigation",
     "readLater": "Read Later",
-    "searchTitle": "Search Bookmarks"
+    "searchTitle": "Search Bookmarks",
+    "importance": "Importance",
+    "mostClicked": "Most Clicked",
+    "recentlyAdded": "Recently Added",
+    "clicks": "clicks",
+    "sortBy": "Sort By:",
+    "addSummary": "Add Summary",
+    "moveToBookmark": "Move to Bookmarks", 
+    "deleteBookmark": "Delete",
+    "inputSummary": "Please input webpage summary",
+    "addSummaryTitle": "Add Summary",
+    "inputFolderPath": "Please input target folder path",
+    "moveToBookmarkTitle": "Move to Bookmark",
+    "summaryAdded": "Summary added",
+    "movedToBookmark": "Moved to bookmark",
+    "confirmDeleteReadLater": "Are you sure to delete this read later item?",
+    "warningTitle": "Warning",
+    "deleted": "Deleted"
 }
