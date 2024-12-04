@@ -18,9 +18,6 @@ def parse_common_args(request):
     rtype = request.GET.get("rtype", request.POST.get("rtype", "html"))
     content = request.GET.get("content", request.POST.get("content", None))
     raw = request.GET.get("raw", request.POST.get("raw", None))
-    session_id = request.GET.get(
-        "session_id", request.POST.get("session_id", DEFAULT_SESSION)
-    )
     is_group = request.GET.get("is_group", request.POST.get("is_group", "false"))
     if isinstance(is_group, str) and is_group.lower() == "true":
         is_group = True
@@ -32,7 +29,6 @@ def parse_common_args(request):
         "content": content,
         "raw": raw,
         "user_id": user_id,
-        "session_id": session_id,
         "is_group": is_group,
     }
     return args
