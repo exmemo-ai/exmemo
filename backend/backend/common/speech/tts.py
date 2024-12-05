@@ -71,7 +71,7 @@ def start_tts(title, content, uid, force_fg=False, debug=True):
         if length > 0 and len(content) > length:
             content = content[:length]
             logger.debug(f"length limit {len(content)}")
-        conv_time, _ = tts_tools.estimate_time(
+        conv_time, audio_time = tts_tools.estimate_time(
             content, settings, TTSResource.get_instance().get_dic()
         )
         logger.info(f"do_tts conv_time: {conv_time}")
@@ -88,9 +88,7 @@ def start_tts(title, content, uid, force_fg=False, debug=True):
                 return (
                     ret,
                     conv_time,
-                    _(
-                        'The content is relatively long {length} characters, and it will take about {time} minutes to synthesize. If you do not wish to continue converting, please reply "stop"'
-                    ).format(length=len(content), time=round(conv_time / 60, 1)),
+                    _('the_content_is_relatively_long_{length}_characters_comma__and_it_will_take_about_{time}_minutes_to_synthesize_dot__if_you_do_not_wish_to_continue_converting_comma__please_reply_colon__stop').format(length=len(content), time=round(conv_time / 60, 1)),
                 )
             else:
                 return ret, 0, info
