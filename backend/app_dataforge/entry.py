@@ -381,24 +381,22 @@ def get_entry_list(keywords, query_args, max_count, fields = None):
         # find by title
         q_obj = Q()
         for keyword in keyword_arr:
-            q_obj &= Q(title__icontains=keyword)
-        queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[
-            :max_count
-        ]
+            q_obj &= Q(title__iregex=keyword)
+        queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
+        
         if len(queryset) == 0:
             # find by raw
             q_obj = Q()
             for keyword in keyword_arr:
-                q_obj &= Q(raw__icontains=keyword)
+                q_obj &= Q(raw__iregex=keyword)
             query_args_2 = query_args.copy()
             query_args_2.pop("block_id")
             queryset = StoreEntry.objects.filter(q_obj, **query_args_2).values(*fields)
             if len(queryset) > 0:
-                queryset = queryset.order_by("addr", "block_id").distinct("addr")[
-                    :max_count
-                ]
+                queryset = queryset.order_by("addr", "block_id").distinct("addr")[:max_count]
+
         if len(queryset) == 0:
-            # find by title trigram, sometimes right
+            # find by title trigram
             queryset = (
                 StoreEntry.objects.filter(**query_args)
                 .annotate(
