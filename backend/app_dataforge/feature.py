@@ -262,7 +262,7 @@ class EntryFeatureTool:
         """
         Determine the Category Through the Language Model
         """
-        if etype == "record":
+        if etype == "record" or etype == "chat":
             df = self.df_record
         else:
             df = self.df_web

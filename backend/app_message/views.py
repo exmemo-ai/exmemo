@@ -9,34 +9,14 @@ from django.utils.translation import gettext as _
 
 import backend.common.files.filecache as filecache
 from backend.common.utils.net_tools import do_result
-from backend.common.user.utils import parse_common_args
 from backend.common.user.views import LoginView
 from backend.common.user.user import DEFAULT_USER
 from backend.common.utils.file_tools import get_ext
 import app_message.user_manager as user_manager
 from .message import *
-from .session import SessionManager
-
+from .session import SessionManager, get_session_by_req
 
 class MessageAPIView(APIView):
-    def get_session(self, request):
-        """
-        Get the session list of the user
-        """
-        args = parse_common_args(request)
-        sid = request.GET.get("sid", request.POST.get("sid", ''))
-        source = request.GET.get("source", request.POST.get("source", "wechat")) # later move to parse_common_args
-        create = request.GET.get("create", request.POST.get("create", False))
-        if create == 'true':
-            create = True
-        else:
-            create = False
-        sdata = SessionManager.get_instance().get_session(sid, args['user_id'], args['is_group'], 
-                                                          source, force_create=create)
-        sdata.current_content = args['content']
-        sdata.args = args
-        return sdata
-
     def post(self, request):
         """
         Accept and process text messages, including URLs
@@ -49,7 +29,7 @@ class MessageAPIView(APIView):
             request.user, request.auth = user_auth_tuple
             has_token = True
 
-        sdata = self.get_session(request)
+        sdata = get_session_by_req(request)
         logger.info(
             f'request.data {request.data}, has_token {has_token}, is_group {sdata.is_group}'
         )

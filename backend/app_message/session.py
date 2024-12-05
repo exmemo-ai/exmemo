@@ -7,15 +7,11 @@ from threading import Timer
 from django.utils import timezone
 import backend.common.llm.chat_tools as chat_tools
 from backend.common.utils.net_tools import do_result
-from backend.common.llm.llm_hub import llm_query
-from backend.common.utils.text_tools import get_language_name
 from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT
-from backend.settings import LANGUAGE_CODE
-from .message import MSG_ROLE
-from app_dataforge.prompt import PROMPT_TITLE
+from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
 from app_dataforge.models import StoreEntry
-from app_dataforge.feature import TITLE_LENGTH
+from app_dataforge.feature import TITLE_LENGTH, EntryFeatureTool
 
 MAX_MESSAGES = 200
 MAX_SESSIONS = 1000
@@ -118,18 +114,24 @@ class Session:
         obj = self.get_item_from_db()
         messages = [item.to_dict() for item in self.messages]
         if obj is None:
-            abstract = self.calc_session_name()
-            title = abstract
-            if len(abstract) > TITLE_LENGTH:
-                title = abstract[:TITLE_LENGTH] + "..."
+            string = self.reduce_message()
+            raw = self.get_raw()
+            abstract = raw
+            if len(abstract) > 1024:
+                abstract = abstract[:1024] + "\n..."
+            title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
+            type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
+            if len(title) > TITLE_LENGTH:
+                title = title[:TITLE_LENGTH] + "..."
             dic = {
                 "title": title,
                 "abstract": abstract,
                 "status": "collect",
                 "atype": "subjective",
                 "user_id": self.user_id,
+                "ctype": type_dic['ctype'],
                 "etype": "chat",
-                "raw": self.get_raw(),
+                "raw": raw,
                 "source": self.source,
                 "addr": self.sid,
                 "meta": {"sid": self.sid, "is_group": self.is_group, 
@@ -229,7 +231,8 @@ class Session:
         self.last_chat_time = timezone.now()
         logger.warning(f"after add_messages, len {len(self.messages)}, sid {self.sid}")
 
-    def calc_session_name(self):
+
+    def reduce_message(self):
         string = ""
         if len(self.messages) == 0:
             return ""
@@ -243,16 +246,8 @@ class Session:
                 string += "\n"
                 if len(string) > 500:
                     break
-        if len(string) > 0:
-            query = PROMPT_TITLE.format(
-                content=string, language=get_language_name(LANGUAGE_CODE.lower())
-            )
-            ret, answer, _ = llm_query(
-                self.user_id, MSG_ROLE, query, "chat", debug=False
-            )
-            if ret:
-                return answer
-        return ""
+        return string
+    
 
 class SessionManager:
     __instance = None
@@ -428,6 +423,23 @@ class SessionManager:
         detail = {"type": "text", "content": 'session cleared'}
         return do_result(True, detail)
 
+def get_session_by_req(request):
+    """
+    Get the session list of the user
+    """
+    args = parse_common_args(request)
+    sid = request.GET.get("sid", request.POST.get("sid", ''))
+    source = request.GET.get("source", request.POST.get("source", "wechat")) # later move to parse_common_args
+    create = request.GET.get("create", request.POST.get("create", False))
+    if create == 'true':
+        create = True
+    else:
+        create = False
+    sdata = SessionManager.get_instance().get_session(sid, args['user_id'], args['is_group'], 
+                                                        source, force_create=create)
+    sdata.current_content = args['content']
+    sdata.args = args
+    return sdata
 
 def test_chat_manager():
     chat_manager = SessionManager.get_instance()
