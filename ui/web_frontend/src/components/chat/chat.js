@@ -39,7 +39,7 @@ export class ChatService {
             formData.append('is_group', 'false');
             formData.append('source', 'web');
             formData.append('create', create);
-            const func = 'api/message/';
+            const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
             if (response.status === 401) {
@@ -125,6 +125,7 @@ export class ChatService {
     parseMessageReturn(response) {
         if (response.status === 200) {
             const result = response.data;
+            console.log('@@@@@', result)
             if (result.status === 'success') {
                 if (result.type === 'json') {
                     return [true, result.content.info, result.content.sid];
@@ -198,7 +199,7 @@ export class ChatService {
             formData.append('sid', this.currentSessionId);
             formData.append('source', 'web');
 
-            const func = 'api/message/';
+            const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
             if (response.status === 401) {
@@ -219,7 +220,7 @@ export class ChatService {
             formData.append('sid', this.currentSessionId);
             formData.append('source', 'web');
 
-            const func = 'api/message/';
+            const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
             if (response.status === 401) {
@@ -263,7 +264,7 @@ export class ChatService {
             formData.append('sid', this.currentSessionId);
             formData.append('source', 'web');
 
-            const func = 'api/message/';
+            const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
             if (response.status === 401) {
@@ -285,7 +286,7 @@ export class ChatService {
             formData.append('sid', this.currentSessionId);
             formData.append('source', 'web');
 
-            const func = 'api/message/';
+            const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
             if (response.status === 401) {

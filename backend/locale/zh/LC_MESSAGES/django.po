@@ -767,7 +767,7 @@ msgstr "已达到每日合成字符限制 {limit_tts_day}"
 
 #: backend/common/speech/tts.py:95
 msgid "the_content_is_relatively_long_{length}_characters_comma__and_it_will_take_about_{time}_minutes_to_synthesize_dot__if_you_do_not_wish_to_continue_converting_comma__please_reply_colon__stop"
-msgstr "内容相对较长，有 {length} 个字符，预计需要 {time} 分钟来合成。如果你不想继续转换，请回复: 停止"
+msgstr "内容相对较长，有 {length} 个字符，预计需要 {time} 分钟来合成。如果你不想继续转换，请回复: 停止语音合成"
 
 #: backend/common/speech/tts.py:112
 msgid "no_content_found"

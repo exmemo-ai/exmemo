@@ -188,12 +188,16 @@ def parse_result(response, data, **kwargs):
             if 'status' in ret_info:
                 if ret_info['status'] == 'success':
                     if 'type' in ret_info and ret_info['type'] == 'json' and 'content' in ret_info:
+                        if 'info' in ret_info['content']:
+                            ret, info = parse_log_info(user_id, ret_info['content']['info'])
+                            if ret:
+                                return True, False, {'type':'text', 'content':info}
                         if 'sid' in ret_info['content']:
                             user = UserManager.get_instance().get_user(user_id)
                             if user is not None:
                                 user.set_sid(data['local_sid'], ret_info['content']['sid'])
                         return True, False, {'type':'text', 'content':ret_info['content']['info']}
-                    elif 'info' in ret_info:
+                    elif 'info' in ret_info: # later remove
                         ret, info = parse_log_info(user_id, ret_info['info'])
                         if ret:
                             return True, False, {'type':'text', 'content':info}

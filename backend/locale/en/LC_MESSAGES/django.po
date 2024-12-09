@@ -768,7 +768,7 @@ msgstr "The daily limit of synthesized characters has been reached {limit_tts_da
 
 #: backend/common/speech/tts.py:95
 msgid "the_content_is_relatively_long_{length}_characters_comma__and_it_will_take_about_{time}_minutes_to_synthesize_dot__if_you_do_not_wish_to_continue_converting_comma__please_reply_colon__stop"
-msgstr "The content is relatively long {length} characters, and it will take about {time} minutes to synthesize. If you do not wish to continue converting, please reply: stop"
+msgstr "The content is relatively long {length} characters, and it will take about {time} minutes to synthesize. If you do not wish to continue converting, please reply: stop tts"
 
 #: backend/common/speech/tts.py:112
 msgid "no_content_found"

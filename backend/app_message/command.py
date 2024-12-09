@@ -149,3 +149,17 @@ otherwise reply 'not a command', do not reply with other content."""
                             )
                         )
                 keys.append(keyword)
+
+def msg_common_select(sdata, cmd_list, detail=None):
+    """
+    Unified processing of selection commands
+    """
+    logger.debug(cmd_list)
+    sdata.set_cache("next_cmd", cmd_list)
+    if detail is not None:
+        content = f"{detail}\n"
+    else:
+        content = _("please_choose_colon_\n")
+    for idx, (label, value) in enumerate(cmd_list):
+        content += f"\n{idx+1}.{label}"
+    return True, {"type": "text", "content": content}

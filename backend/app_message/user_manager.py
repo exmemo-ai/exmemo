@@ -23,7 +23,7 @@ def register(user_id: str, password: str) -> dict:
         if UserManager.get_instance().check_user_exist(user_id):
             return {"status": False, "info": _("username_already_exists")}
         if UserManager.get_instance().create_user(user_id, password):
-            return {"user_id": user_id, "password": password}
+            return {"status": True, "user_id": user_id, "password": password}
         else:
             return {"status": False, "info": _("registration_failed")}
     else:
