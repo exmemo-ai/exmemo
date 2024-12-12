@@ -192,5 +192,8 @@
     "movedToBookmark": "已移动到书签",
     "confirmDeleteReadLater": "确定要删除这个待读项吗?",
     "warningTitle": "警告",
-    "deleted": "已删除"
+    "deleted": "已删除",
+    "editBookmark": "编辑书签",
+    "bookmarkBar": "书签栏",
+    "dragToFolder": "「{title}」移动至「{target}」"
   }

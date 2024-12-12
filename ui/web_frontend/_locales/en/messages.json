@@ -192,5 +192,8 @@
     "movedToBookmark": "Moved to bookmark",
     "confirmDeleteReadLater": "Are you sure to delete this read later item?",
     "warningTitle": "Warning",
-    "deleted": "Deleted"
+    "deleted": "Deleted",
+    "editBookmark": "Edit Bookmark",
+    "bookmarkBar": "Bookmark Bar",
+    "dragToFolder": "Move \"{title}\" to \"{target}\""
 }

@@ -15,6 +15,9 @@
           <el-menu-item index="readlater">
             <span>{{ $t('readLater') }}</span>
           </el-menu-item>
+          <el-menu-item index="bookmarks">
+            <span>{{ $t('bookmarkManager') }}</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main>
@@ -29,6 +32,7 @@ import AppNavbar from '@/components/support/AppNavbar.vue'
 import SearchManager from './BMSearch.vue'
 import NavigationManager from './BMNavigation.vue'
 import ReadLaterManager from './BMReadLater.vue'
+import BookmarkTree from './BMBookmarkTree.vue'
 import './BMManagerStyles.css'
 
 export default {
@@ -37,7 +41,8 @@ export default {
     AppNavbar,
     SearchManager,
     NavigationManager,
-    ReadLaterManager
+    ReadLaterManager,
+    BookmarkTree
   },
   data() {
     return {
@@ -63,6 +68,10 @@ export default {
         case 'readlater':
           this.currentComponent = 'ReadLaterManager';
           this.navTitle = this.$t('readLater');
+          break;
+        case 'bookmarks':
+          this.currentComponent = 'BookmarkTree';
+          this.navTitle = this.$t('bookmarkTree');
           break;
       }
     },

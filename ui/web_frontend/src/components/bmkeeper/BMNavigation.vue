@@ -13,9 +13,15 @@
             :label="$t(label)"
             :value="value" />
         </el-select>
-        <el-select v-model="bookmarkLimit" size="small" @change="refreshBookmarks" class="limit-select" :placeholder="$t('selectPlaceholder')" :teleported="false">
+        <el-select v-model="bookmarkLimit" size="small" @change="refreshBookmarks">
+          <template #prefix>
+            <span class="selected-text">{{ $t('showLimit') }}</span>
+          </template>
           <el-option v-for="n in [3,6,9,12]" :key="n" :label="n" :value="n" />
         </el-select>
+        <el-button v-if="bookmarkSort === 'random'" @click="refreshBookmarks" size="small">
+          <el-icon><Refresh /></el-icon>
+        </el-button>
       </div>
     </div>
     
@@ -58,13 +64,13 @@
 </template>
 
 <script>
-import { Histogram } from '@element-plus/icons-vue'
+import { Histogram, Refresh } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
 
 export default {
   name: 'NavigationManager',
-  components: { Histogram },
+  components: { Histogram, Refresh },
   data() {
     return {
       bookmarkSort: 'clicks',
@@ -73,40 +79,30 @@ export default {
       sortOptions: {
         'clicks': 'mostClicked',
         'recent': 'recentlyAdded',
-        'weight': 'importance'
+        'weight': 'importance',
+        'random': 'random'
       },
-      // 添加这些缓存相关的属性
       faviconCache: new Map(),
       faviconQueue: [],
-      faviconLoading: new Set(),
+      faviconLoading: new Set()
     }
   },
   methods: {
-    async fetchBookmarks(type, count = this.bookmarkLimit) {
+    async fetchBookmarks() {
       try {
-        let func = 'api/keeper/'
         const params = { 
-          type: type,
-          param: count.toString(),
+          type: 'navigation',
+          param: this.bookmarkLimit.toString(),
           sort: this.bookmarkSort
         }
         
-        const response = await axios.get(getURL() + func, { params })
-        console.log(`${type} bookmarks:`, response.data)
+        const response = await axios.get(getURL() + 'api/keeper/', { params })
         if(response.data.code === 200) {
-          const formattedData = response.data.data.map(bookmark => ({
+          this.sortedBookmarks = response.data.data.map(bookmark => ({
             ...bookmark,
-            id: bookmark.id || Math.random(),
-            url: bookmark.url,
-            title: bookmark.title,
-            created_at: bookmark.created_at,
             clicks: bookmark.clicks || 0,
             weight: bookmark.weight || 0
           }))
-          
-          if(type === 'random') {
-            this.sortedBookmarks = this.sortBookmarks(formattedData)
-          }
         }
       } catch (error) {
         parseBackendError(this, error)
@@ -136,8 +132,8 @@ export default {
       }
     },
 
-    async refreshBookmarks() {
-      await this.fetchBookmarks('random')
+    refreshBookmarks() {
+      this.fetchBookmarks()
     },
 
     getFavicon(url) {
@@ -208,7 +204,28 @@ export default {
   },
 
   async mounted() {
-    await this.fetchBookmarks('random')
+    await this.fetchBookmarks()
   }
 }
 </script>
+
+<style scoped>
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.selected-text {
+  margin-right: 8px;
+  color: #606266;
+  font-size: 14px;
+}
+</style>
