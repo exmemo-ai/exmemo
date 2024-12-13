@@ -268,7 +268,14 @@ class WebAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = "网页处理"
-        self.instructions = "收藏网页、设置待看网页、总结网页内容、获取文本内容"
+        self.instructions = "本代理提供：收藏网页、设置待看网页、总结网页内容、获取文本内容，网页转音频, 网页功能列表；如果未指定具体操作，则调用网页功能列表。"
+
+    @staticmethod
+    def _afunc_web_op(context_variables: dict, web_addr: str = None):
+        """网页功能列表"""
+        sdata = context_variables["sdata"]
+        sdata.current_content = web_addr
+        return msg_web_main(sdata)
 
     @staticmethod
     def _afunc_web_collect(context_variables: dict, content: str = None):
@@ -699,4 +706,33 @@ class UserAgentManager(BaseAgentManager):
         super().__init__()
         self.add_agent(UserAgent())
 
+from backend.common.utils.web_tools import (
+    regular_url,
+    get_url_content,
+)
 
+def msg_web_main(sdata):
+    """
+    Web functionality entry
+    """
+    if sdata.current_content != "":
+        url = regular_url(sdata.current_content)
+        logger.debug(
+            f"before regular {sdata.current_content}\nafter regular {url}",
+        )
+        if url is not None:
+            sdata.set_cache("url", url)
+            title, content = get_url_content(url)
+            if content is None:
+                return True, {"type": "text", "content": "没有找到网页内容"}
+
+            length = len(content)
+            cmd_list = []
+            for func in WebAgent().get_functions():
+                cmd_list.append((func.__doc__, func.__doc__))
+            return msg_common_select(
+                sdata,
+                cmd_list=cmd_list,
+                detail=f"收到网页，正文共{length}字",
+            )
+    return True, {"type": "text", "content": _("please_enter_the_url_or_share_the_page_with_me")}

@@ -108,8 +108,8 @@ class MessageAPIView(APIView):
                 )
             #ret = user_manager.UserTools.get_instance().chat(user_name, content)
             #return HttpResponse(json.dumps({"status": "success", "info": ret}))
-            ret = agents.UserAgentManager.get_instance().chat(sdata)
-            return HttpResponse(json.dumps({"status": "success", "type":"json", "content":{"info": ret, "sid": sdata.sid}}))
+            ret, detail = agents.UserAgentManager.get_instance().do_command(sdata)
+            return HttpResponse(json.dumps({"status": "success", "type":"json", "content":{"info": detail, "sid": sdata.sid}}))
 
     def upload_file(self, sdata, request):
         ret, path, filename = real_upload_file(request)

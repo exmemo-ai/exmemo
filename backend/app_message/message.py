@@ -11,10 +11,6 @@ from django.utils.translation import gettext as _
 from backend.common.user.user import *
 from backend.common.user.resource import *
 from backend.common.files import utils_filemanager, filecache
-from backend.common.utils.web_tools import (
-    regular_url,
-    get_url_content,
-)
 from backend.common.utils.net_tools import is_valid_url
 from backend.common.utils.file_tools import (
     support_file,
@@ -34,39 +30,14 @@ agents.AllAgentManager.get_instance() # Initialize the agent manager first
 
 ####################
 
+"""
 def msg_web_my_op(sdata):
     return True, {"type": "text", "content": "请输入网址或者分享网页给我"}
 
 CommandManager.get_instance().register(
     Command(msg_web_my_op, ["操作网页"], level=LEVEL_NORMAL)
 )
-
-
-def msg_web_main(sdata):
-    """
-    Web functionality entry
-    """
-    if sdata.current_content != "":
-        url = regular_url(sdata.current_content)
-        logger.debug(
-            f"before regular {sdata.current_content}\nafter regular {url}",
-        )
-        if url is not None:
-            sdata.set_cache("url", url)
-            title, content = get_url_content(url)
-            if content is None:
-                return True, {"type": "text", "content": "没有找到网页内容"}
-
-            length = len(content)
-            cmd_list = []
-            for func in agents.WebAgent().get_functions():
-                cmd_list.append((func.__doc__, func.__doc__))
-            return msg_common_select(
-                sdata,
-                cmd_list=cmd_list,
-                detail=f"收到网页，正文共{length}字",
-            )
-    return True, {"type": "text", "content": _("please_enter_the_url_or_share_the_page_with_me")}
+"""
 
 def msg_upload_main(sdata):
     (path, filename) = sdata.get_cache("file")
@@ -122,7 +93,7 @@ def do_message(sdata:Session):
         prev_cmd = sdata.get_cache("prev_cmd")
 
         if is_valid_url(content):  # Enter Website
-            ret, detail = msg_web_main(sdata)
+            ret, detail = agents.msg_web_main(sdata)
         if (not ret and prev_cmd is not None):  
             # The previous conversation was asking the user to enter information
             sdata.current_content = prev_cmd + " " + sdata.current_content

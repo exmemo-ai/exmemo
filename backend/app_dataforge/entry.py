@@ -276,6 +276,8 @@ def add_web(dic, use_llm=True, parse_content=True, debug=False):
     if "error" in dic and dic["error"] is not None:
         if "resource_path" in dic:
             dic = process_metadata(dic, is_chrome=True)
+        if "error" in dic:
+            del dic["error"]
         ret, ret_emb, detail = save_entry(dic, None, None)
         if ret:
             ret, detail = process_ret(ret, dic)

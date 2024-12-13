@@ -131,4 +131,5 @@ class BaseAgentManager:
                 ret = ret + "\n" + user_manager.DEFAULT_TEXT
         else:
             ret = response.messages[-1]["content"]
+        sdata.cache = response.context_variables['sdata'].cache # tmp，由于 deep_copy，sdata未被修改，需要手动更新
         return True, ret
