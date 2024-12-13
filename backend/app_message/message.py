@@ -23,32 +23,14 @@ from backend.common.utils.file_tools import (
     get_ext,
 )
 from backend.common.utils.text_tools import replace_fullwidth_numbers_with_halfwidth
-from backend.common.utils.sys_tools import is_app_installed
-
 from app_dataforge.entry import get_entry
-
 from .command import *
 from .function import *
 from .session import *
+from .chat_tools import do_chat
+import app_message.agents as agents
 
-from app_message import my_agent
-
-my_agent.WebAgent().add_commands()
-my_agent.DataAgent().add_commands()
-my_agent.AudioAgent().add_commands()
-my_agent.SettingAgent().add_commands()
-my_agent.FileAgent().add_commands()
-my_agent.HelpAgent().add_commands()
-
-if is_app_installed("app_record"):
-    my_agent.RecordAgent().add_commands()
-
-if is_app_installed("app_diet"):
-    #my_agent.DietAgent().register() # later use it
-    my_agent.DietAgent().add_commands()
-
-if is_app_installed("app_translate"):
-    my_agent.TranslateAgent().add_commands()
+agents.AllAgentManager.get_instance() # Initialize the agent manager first
 
 ####################
 
@@ -77,7 +59,7 @@ def msg_web_main(sdata):
 
             length = len(content)
             cmd_list = []
-            for func in my_agent.WebAgent().get_functions():
+            for func in agents.WebAgent().get_functions():
                 cmd_list.append((func.__doc__, func.__doc__))
             return msg_common_select(
                 sdata,
@@ -102,7 +84,8 @@ def msg_upload_main(sdata):
         }
 
 
-def msg_search_detail(sdata):
+def msg_search_detail(dic):
+    sdata = dic['sdata']
     uid = sdata.user_id
     idx = sdata.current_content
     obj = get_entry(idx)
@@ -132,7 +115,7 @@ def do_message(sdata:Session):
     """
     try:
         content = sdata.current_content
-        if pd.isnull(content):
+        if pd.isnull(content) or content == "":
             return False, {"type": "text", "content": _("nothing_entered")}
         ret = False
         detail = {"type": "text", "content": _("unrecognized_command")}
@@ -148,14 +131,22 @@ def do_message(sdata:Session):
         if not ret:  # Enter a numerical value
             ret, detail = parse_select_number(sdata)
         if not ret:  # Enter Command
-            ret, detail = CommandManager.get_instance().msg_do_command(sdata)
+            if content.startswith('/'):
+                ret, detail = CommandManager.get_instance().msg_do_command(sdata)
+                if not ret:
+                    ret, detail = agents.AllAgentManager.get_instance().do_command(sdata)
+                    detail = {"type": "text", "content": detail}
         logger.info(f"content:{content} ret:{ret} detail:{detail}")
         if not ret:
+            ret = True
             ret, detail = do_chat(sdata)
             if ret:
                 detail = SessionManager.get_instance().send_message(content, detail, sdata)
             else:
                 detail = {"type": "text", "content": detail}
+        if "type" in detail and detail["type"] == "text": # tmp, later adjust
+            detail["type"] = "json"
+            detail["content"] = {"info": detail["content"], "sid": sdata.sid}
         return True, detail
     except Exception as e:
         traceback.print_exc()

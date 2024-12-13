@@ -22,7 +22,7 @@ if BASE_DIR not in os.sys.path:
     os.sys.path.append(BASE_DIR)
 
 env_path = os.path.join(BASE_DIR, ".env")
-load_dotenv(env_path)
+load_dotenv(env_path, override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/

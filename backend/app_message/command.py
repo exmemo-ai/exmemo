@@ -130,7 +130,7 @@ otherwise reply 'not a command', do not reply with other content."""
             sdata.current_content = content_adj
             for command in self.commands:
                 if cmd in command.cmd_list:
-                    return command.function(sdata)
+                    return command.function({'sdata':sdata})
         return False, {"type": "text", "content": _("command_not_found")}
 
     def check_conflict(self):

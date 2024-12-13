@@ -5,7 +5,6 @@ import pytz
 from threading import Timer
 
 from django.utils import timezone
-import backend.common.llm.chat_tools as chat_tools
 from backend.common.utils.net_tools import do_result
 from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT
 from backend.common.user.utils import parse_common_args
@@ -44,8 +43,7 @@ class Session:
     """
     def __init__(self, sid, user_id, is_group, source, sname = None):
         self.cache = {}
-        self.messages = []
-        self.chat = None
+        self.messages = [Message]
         self.user_id = user_id
         self.sid = sid
         self.sname = sname
@@ -54,7 +52,7 @@ class Session:
         self.current_content = ""
         self.args = {}
         self.sync_idx = -1
-        self.last_chat_time = timezone.now()
+        self.last_chat_time = timezone.now().astimezone(pytz.UTC)
 
     def get_name(self):
         if self.sname is not None:
@@ -73,21 +71,9 @@ class Session:
             return self.cache[key]
         return default_value
 
-    def get_chat_engine(self, model=None, debug=False):
-        if model is None:
-            model = os.getenv("DEFAULT_CHAT_LLM", chat_tools.DEFAULT_CHAT_LLM)
-        if self.chat is None:
-            self.chat = {"engine": chat_tools.ChatEngine(model), "model": model}
-        elif self.chat["model"] != model:
-            if debug:
-                logger.info(
-                    f"Session {self.sid} model changed from {self.chat['model']} to {model}"
-                )
-            self.clear_chat()
-            self.chat = {"engine": chat_tools.ChatEngine(model), "model": model}
-        return self.chat["engine"]
-
     def load_from_db(self):
+        if self.is_logged_in() == False:
+            return
         user = UserManager.get_instance().get_user(self.user_id)
         show_count = user.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT)
         if isinstance(show_count, str):
@@ -108,6 +94,8 @@ class Session:
         self.messages = self.messages[-show_count:]
 
     def save_to_db(self):
+        if self.is_logged_in() == False:
+            return
         logger.warning('save_to_db')
         if len(self.messages) == 0:
             return
@@ -119,7 +107,11 @@ class Session:
             abstract = raw
             if len(abstract) > 1024:
                 abstract = abstract[:1024] + "\n..."
-            title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
+            ret_title, info_title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
+            if ret_title:
+                title = info_title
+            else:
+                title = abstract
             type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
             if len(title) > TITLE_LENGTH:
                 title = title[:TITLE_LENGTH] + "..."
@@ -194,13 +186,13 @@ class Session:
         sid = user_id + "_" + timezone.now().strftime("%Y%m%d%H%M%S%f")
         return Session(sid, user_id, is_group, source)
     
-    def clear_chat(self):
-        if self.chat is not None:
-            self.chat["engine"].clear_memory()
+    def is_logged_in(self):
+        if self.user_id is None or self.user_id == "tmp":
+            return False
+        return True
 
     def close(self):
         self.save_to_db()
-        self.clear_chat()        
 
     def clear_session(self):
         """
@@ -209,7 +201,6 @@ class Session:
         StoreEntry.objects.filter(
             user_id=self.user_id, addr=self.sid
         ).delete()
-        self.clear_chat()
         self.messages = []
 
     def get_messages(self, force = False):
@@ -220,17 +211,16 @@ class Session:
         return do_result(True, detail)
 
     def send_message(self, msg1, msg2):
+        self.add_message("user", msg1)
+        self.add_message("assistant", msg2)
+
+    def add_message(self, sender, content):
         created_time = timezone.now().astimezone(pytz.UTC)
-        self.add_message("user", msg1, created_time)
-        self.add_message("assistant", msg2, created_time)
+        self.messages.append(Message(len(self.messages), sender, content, created_time.strftime("%Y-%m-%d %H:%M:%S")))
+        self.last_chat_time = created_time
+        logger.info(f"after add_messages, len {len(self.messages)}, sid {self.sid}")
         if len(self.messages) - self.sync_idx > 10:
             self.save_to_db()
-
-    def add_message(self, sender, content, created_time):
-        self.messages.append(Message(len(self.messages), sender, content, created_time.strftime("%Y-%m-%d %H:%M:%S")))
-        self.last_chat_time = timezone.now()
-        logger.warning(f"after add_messages, len {len(self.messages)}, sid {self.sid}")
-
 
     def reduce_message(self):
         string = ""
@@ -266,7 +256,7 @@ class SessionManager:
 
     def check_session_cache(self):
         logger.info("Check session cache")
-        current_time = timezone.now()
+        current_time = timezone.now().astimezone(pytz.UTC)
         sessions_to_remove = []
         
         for sid, session in self.sessions.items():
@@ -302,7 +292,7 @@ class SessionManager:
     def get_session_by_user(self, user_id, is_group, source):
         logger.info(f'get_session_by_user {user_id}, {is_group}, {source}')
         # get last session from db
-        items = StoreEntry.objects.filter(user_id=user_id, etype="chat", source=source).order_by('-updated_time').values("addr", "title", "meta")[:1]
+        items = StoreEntry.objects.filter(is_deleted=False, user_id=user_id, etype="chat", source=source).order_by('-updated_time').values("addr", "title", "meta")[:1]
         if len(items) > 0:
             sid = items[0]["addr"]
             if sid not in self.sessions:
@@ -316,6 +306,7 @@ class SessionManager:
         for sid, sess in self.sessions.items():
             if sess.user_id == user_id and sess.source == source:
                 if len(sess.messages) == 0:
+                    logger.info(f'sid {sid}')
                     time_str = sid.split('_')[1]
                     # sid: xx_20241128093936091810
                     last_time = timezone.datetime.strptime(
@@ -441,11 +432,6 @@ def get_session_by_req(request):
     sdata.args = args
     return sdata
 
-def test_chat_manager():
-    chat_manager = SessionManager.get_instance()
-    x = chat_manager.get_chat_engine("test", "gemini")
-    print(x.predict("Hello"))
-    x = chat_manager.get_chat_engine("test", chat_tools.DEFAULT_CHAT_LLM)
-    print(x.predict("Hello"))
+
 
 
