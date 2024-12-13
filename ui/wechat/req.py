@@ -215,6 +215,7 @@ def parse_result(response, data, **kwargs):
         else:
             logger.info(f'unsupport content type: {content_type}')
     elif response.status_code == 401:
+        user_id = kwargs['wechat_user_id']
         UserManager.get_instance().remove_token(user_id)
         user:User = UserManager.get_instance().get_user(user_id)
         if user is not None:
