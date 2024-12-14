@@ -43,7 +43,7 @@ class Session:
     """
     def __init__(self, sid, user_id, is_group, source, sname = None):
         self.cache = {}
-        self.messages = [Message]
+        self.messages = []
         self.user_id = user_id
         self.sid = sid
         self.sname = sname
