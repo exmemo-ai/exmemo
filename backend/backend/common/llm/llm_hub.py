@@ -21,8 +21,6 @@ EMBEDDING_CHUNK_SIZE = 512
 def llm_query(uid, role, question, app, engine_type=None, debug=False):
     start_time = time.time()
     user = UserManager.get_instance().get_user(uid)
-    if engine_type is None:
-        engine_type = DEFAULT_TOOL_LLM
     privilege = user.privilege
     limit_llm_day = privilege.get("limit_llm_day", -1)
     used_tts_count = ResourceManager.get_instance().get_usage(
@@ -41,25 +39,27 @@ def llm_query(uid, role, question, app, engine_type=None, debug=False):
                 _("the_maximum_number_of_words_called_today_has_been_reached"),
                 {},
             )
+        
+    if engine_type is None:
+        engine_type = user.get("llm_tool_model", DEFAULT_TOOL_LLM)
     try:
         if debug:
             logger.debug(f"role {role}")
             logger.debug(f"question {question}")
             logger.debug(f"https_proxy {os.getenv('HTTPS_PROXY')}")
             logger.debug(f"http_proxy {os.getenv('HTTP_PROXY')}")
-
-        api_method, api_key, url, model_name = llm_tools.select_llm_model(engine_type)
-        if api_method == "gemini":
+        llm_info = llm_tools.LLMInfo.get_info(engine_type)
+        if llm_info.api_method == "gemini":
             ret, answer, token_count = llm_tools.query_gemini(
-                role, question, api_key=api_key, model_name=model_name, debug=debug
+                role, question, api_key=llm_info.api_key, model_name=llm_info.model_name, debug=debug
             )
         else:
             ret, answer, token_count = llm_tools.query_openai(
                 role,
                 question,
-                api_key=api_key,
-                url=url,
-                model_name=model_name,
+                api_key=llm_info.api_key,
+                url=llm_info.url,
+                model_name=llm_info.model_name,
                 debug=debug,
             )
         end_time = time.time()

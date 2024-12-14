@@ -190,13 +190,13 @@ class RecordAgent(BaseAgent):
 
 from backend.common.user.user import *
 from backend.common.user.resource import *
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, get_llm_list
+from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, DEFAULT_TOOL_LLM, get_llm_list
 
 class SettingAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = "设置"
-        self.instructions = "用户权限、用量统计、语言模型设置、语音合成设置"
+        self.instructions = "用户权限、用量统计、语音合成设置、工具模型设置、聊天模型设置"
 
     @staticmethod
     def _afunc_user_privilege(context_variables: dict):
@@ -217,12 +217,41 @@ class SettingAgent(BaseAgent):
         }
 
     @staticmethod
-    def _afunc_llm_setting(context_variables: dict, content: str = None):
-        """设置语言模型"""
+    def _afunc_llm_tool_setting(context_variables: dict, content: str = None):
+        """设置工具模型"""
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content        
-        logger.debug(f"msg_llm_setting '{content}'")
+        logger.debug(f"msg_llm_tool_setting '{content}'")
+        user = UserManager.get_instance().get_user(sdata.user_id)
+
+        if content == "":
+            llm_setting = user.get("llm_tool_model", DEFAULT_TOOL_LLM)
+            logger.debug(f"llm_setting {llm_setting}")
+            if user.privilege.b_llm:
+                llm_list = get_llm_list()
+                cmd_list = []
+                for item in llm_list:
+                    if item["value"] == llm_setting:
+                        cmd = (f"{item['label']} *", f"设置语言模型 {item['value']}")
+                    else:
+                        cmd = (f"{item['label']}", f"设置语言模型 {item['value']}")
+                    cmd_list.append(cmd)
+            logger.debug(f"cmd_list {cmd_list}")
+            return msg_common_select(sdata, cmd_list)
+        else:
+            name = content
+            llm_setting = name.strip()
+            user.set("llm_tool_model", llm_setting)
+            return True, {"type": "text", "content": "设置成功"}
+
+    @staticmethod
+    def _afunc_llm_chat_setting(context_variables: dict, content: str = None):
+        """设置聊天模型"""
+        sdata = context_variables["sdata"]
+        if content is None:
+            content = sdata.current_content        
+        logger.debug(f"msg_llm_chat_setting '{content}'")
         user = UserManager.get_instance().get_user(sdata.user_id)
 
         if content == "":

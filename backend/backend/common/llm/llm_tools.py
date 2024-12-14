@@ -9,6 +9,66 @@ DEFAULT_CHAT_LLM = os.getenv("DEFAULT_CHAT_LLM", "gpt3.5-turbo")
 DEFAULT_TOOL_LLM = os.getenv("DEFAULT_TOOL_LLM", "gpt3.5-turbo")
 
 
+class LLMInfo:
+    def __init__(self, engine_type=None, api_method=None, url=None, api_key=None, model_name=None):
+        self.engine_type = engine_type
+        self.api_method = api_method
+        self.url = url
+        self.api_key = api_key
+        self.model_name = model_name
+
+    @staticmethod
+    def get_info(engine_type:str):
+        api_method = "openai"
+        if engine_type.startswith("ollama"):
+            api_key = os.getenv("OLLAMA_LLM_API_KEY")
+            url = os.getenv("OLLAMA_LLM_URL")
+            model_name = os.getenv("OLLAMA_LLM_MODEL")
+        elif engine_type.startswith("deepseek"):
+            api_key = os.getenv("DEEPSEEK_API_KEY")
+            url = os.getenv("DEEPSEEK_URL")
+            model_name = os.getenv("DEEPSEEK_MODEL")
+        elif engine_type.startswith("xunfei"):
+            api_key = os.getenv("XUNFEI_LLM_API_KEY")
+            url = os.getenv("XUNFEI_LLM_URL")
+            model_name = os.getenv("XUNFEI_LLM_MODEL")
+        elif engine_type.startswith("kimi"):
+            api_key = os.getenv("KIMI_API_KEY")
+            url = os.getenv("KIMI_URL")
+            model_name = os.getenv("KIMI_MODEL")
+        elif engine_type.startswith("qwen"):
+            api_key = os.getenv("QWEN_API_KEY")
+            url = os.getenv("QWEN_URL")
+            model_name = os.getenv("QWEN_MODEL")
+        elif engine_type.startswith("userdefine"):
+            api_key = os.getenv("USER_DEFINE_API_KEY")
+            url = os.getenv("USER_DEFINE_URL")
+            model_name = os.getenv("USER_DEFINE_MODEL")
+        elif engine_type.startswith("gemini"):
+            api_method = "gemini"
+            url = None
+            api_key = os.getenv("GEMINI_API_KEY")
+            model_name = os.getenv("GEMINI_MODEL")
+        elif engine_type == "gpt4o" or engine_type == "gpt-4o":
+            url = os.getenv("OPENAI_BASE_URL")
+            api_key = os.getenv("OPENAI_API_KEY")
+            model_name = "gpt-4o"
+        else:
+            url = os.getenv("OPENAI_BASE_URL")
+            api_key = os.getenv("OPENAI_API_KEY")
+            model_name = "gpt-3.5-turbo"
+        return LLMInfo(engine_type, api_method, url, api_key, model_name)
+    
+
+    def __str__(self):
+        if self.api_key is not None:
+            return f"engine_type {self.engine_type}, api_method: {self.api_method}, url: {self.url}, key: {self.api_key[:10]}... model_name: {self.model_name}"
+        else:
+            return f"engine_type {self.engine_type}, api_method: {self.api_method}, url: {self.url}, key: {self.api_key} model_name: {self.model_name}"
+    
+    def __repr__(self):
+        return self.__str__()
+
 def get_llm_list():
     llm_list = []
     if os.getenv("OPENAI_API_KEY") is not None and len(os.getenv("OPENAI_API_KEY")) > 3:
@@ -38,48 +98,6 @@ def get_llm_list():
     ):
         llm_list.append({"label": "UserDefine", "value": "userdefine"})
     return llm_list
-
-
-def select_llm_model(engine_type):
-    api_method = "openai"
-    if engine_type == "ollama":
-        api_key = os.getenv("OLLAMA_LLM_API_KEY")
-        url = os.getenv("OLLAMA_LLM_URL")
-        model_name = os.getenv("OLLAMA_LLM_MODEL")
-    elif engine_type == "deepseek":
-        api_key = os.getenv("DEEPSEEK_API_KEY")
-        url = os.getenv("DEEPSEEK_URL")
-        model_name = os.getenv("DEEPSEEK_MODEL")
-    elif engine_type == "xunfei":
-        api_key = os.getenv("XUNFEI_LLM_API_KEY")
-        url = os.getenv("XUNFEI_LLM_URL")
-        model_name = os.getenv("XUNFEI_LLM_MODEL")
-    elif engine_type == "kimi":
-        api_key = os.getenv("KIMI_API_KEY")
-        url = os.getenv("KIMI_URL")
-        model_name = os.getenv("KIMI_MODEL")
-    elif engine_type == "qwen":
-        api_key = os.getenv("QWEN_API_KEY")
-        url = os.getenv("QWEN_URL")
-        model_name = os.getenv("QWEN_MODEL")
-    elif engine_type == "userdefine":
-        api_key = os.getenv("USER_DEFINE_API_KEY")
-        url = os.getenv("USER_DEFINE_URL")
-        model_name = os.getenv("USER_DEFINE_MODEL")
-    elif engine_type == "gemini":
-        api_method = "gemini"
-        url = None
-        api_key = os.getenv("GEMINI_API_KEY")
-        model_name = os.getenv("GEMINI_MODEL")
-    elif engine_type == "gpt4o" or engine_type == "gpt-4o":
-        url = os.getenv("OPENAI_BASE_URL")
-        api_key = os.getenv("OPENAI_API_KEY")
-        model_name = "gpt-4o"
-    else:
-        url = os.getenv("OPENAI_BASE_URL")
-        api_key = os.getenv("OPENAI_API_KEY")
-        model_name = "gpt-3.5-turbo"
-    return api_method, api_key, url, model_name
 
 
 def query_openai(

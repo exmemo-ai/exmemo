@@ -4,7 +4,7 @@ from collections import deque
 from loguru import logger
 from django.contrib.auth.models import User as UserSystem
 from django.utils.translation import gettext as _
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM
+from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, DEFAULT_TOOL_LLM
 from .models import StoreUser
 
 USER_LEVEL_GUEST = -1
@@ -36,6 +36,7 @@ class UserSettings:
         self.tts_speed = "1.0"
         self.tts_voice = "caicai"
         self.llm_chat_model = DEFAULT_CHAT_LLM
+        self.llm_tool_model = DEFAULT_TOOL_LLM
         self.llm_chat_prompt = DEFAULT_CHAT_LLM_PROMPT
         self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
         self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
@@ -47,6 +48,7 @@ class UserSettings:
             "tts_speed": self.tts_speed,
             "tts_voice": self.tts_voice,
             "llm_chat_model": self.llm_chat_model,
+            "llm_tool_model": self.llm_tool_model,
             "llm_chat_prompt": self.llm_chat_prompt,
             "llm_chat_show_count": self.llm_chat_show_count,
             "llm_chat_memory_count": self.llm_chat_memory_count,
@@ -61,6 +63,7 @@ class UserSettings:
             self.tts_speed = data.get("tts_speed", self.tts_speed)
             self.tts_voice = data.get("tts_voice", "caicai")
             self.llm_chat_model = data.get("llm_chat_model", self.llm_chat_model)
+            self.llm_tool_model = data.get("llm_tool_model", self.llm_tool_model)
             self.llm_chat_prompt = data.get("llm_chat_prompt", self.llm_chat_prompt)
             self.llm_chat_show_count = data.get(
                 "llm_chat_show_count", self.llm_chat_show_count
@@ -81,7 +84,7 @@ class UserSettings:
         return default_value
 
     def __repr__(self):
-        return f"<UserSettings {self.tts_engine} {self.tts_langugage} {self.tts_speed} {self.llm_chat_model}>"
+        return f"<UserSettings {self.tts_engine} {self.tts_langugage} {self.tts_speed} {self.llm_chat_model} {self.llm_tool_model}>"
 
 
 class UserPrivilege:

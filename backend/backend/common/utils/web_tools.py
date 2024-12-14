@@ -17,7 +17,7 @@ from backend.common.llm.llm_hub import llm_query
 DEFAULT_TITLE = _("unknown_title")
 
 
-def get_text_extract(uid, content, limit=2000, engine_type=None, debug=False):
+def get_text_extract(uid, content, limit=2000, debug=False):
     """
     Extract the main content from the text
     """
@@ -37,7 +37,7 @@ def get_text_extract(uid, content, limit=2000, engine_type=None, debug=False):
             content=content
         )
         ret, answer, detail = llm_query(
-            uid, sys_info, text, "web", engine_type=engine_type, debug=debug
+            uid, sys_info, text, "web", debug=debug
         )
         if ret:
             return answer

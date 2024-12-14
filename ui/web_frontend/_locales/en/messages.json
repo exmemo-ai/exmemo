@@ -13,6 +13,8 @@
     "speed": "Speed",
     "dialogModel": "Dialog",
     "model": "Model",
+    "chatModel": "Chat model",
+    "toolModel": "Tool model",
     "prompt": "Prompt",
     "showCount": "Number of displayed chat messages",
     "memoryCount": "Messages to reference in chat",

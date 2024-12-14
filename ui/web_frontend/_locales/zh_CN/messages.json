@@ -13,6 +13,8 @@
     "speed": "速度",
     "dialogModel": "对话",
     "model": "模型",
+    "chatModel": "聊天模型",
+    "toolModel": "工具模型",
     "prompt": "提示词",
     "showCount": "显示的聊天条数",
     "memoryCount": "参考的历史对话条数",

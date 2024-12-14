@@ -33,7 +33,8 @@ class BaseAgent:
             )
             cmd_list.append((func.__doc__, func.__doc__))
 
-        def msg_main(sdata):
+        def msg_main(context_variables: dict):
+            sdata = context_variables['sdata']
             return msg_common_select(sdata, cmd_list)
 
         CommandManager.get_instance().register(
@@ -68,17 +69,17 @@ class BaseAgentManager:
 
         user = UserManager.get_instance().get_user(sdata.user_id)
         if engine_type is None:
-            engine_type = user.get("llm_chat_model", llm_tools.DEFAULT_CHAT_LLM)
-        api_method, api_key, url, model_name = llm_tools.select_llm_model(engine_type)
+            engine_type = user.get("llm_tool_model", llm_tools.DEFAULT_TOOL_LLM)
+        llm_info = llm_tools.LLMInfo.get_info(engine_type)
         # later check api_method is openai/gemini
-        logger.warning(f'api_method {api_method} {url}, {model_name}')
-        llm = OpenAI(base_url=url, api_key=api_key)
+        logger.warning(f'llm_info {llm_info}')
+        llm = OpenAI(base_url=llm_info.url, api_key=llm_info.api_key)
         client = ExSmarm(llm)
         transfer_functions = []
         for a in alist:
             agent = Agent(
                     name=a.agent_name,
-                    model=model_name,
+                    model=llm_info.model_name,
                     instructions=a.instructions,
                     functions=a.get_functions()
                 )
@@ -99,7 +100,7 @@ class BaseAgentManager:
 
         triage_agent = Agent(
             name="Triage Agent", 
-            model=model_name,
+            model=llm_info.model_name,
             instructions=self.triage_instructions,
             functions=transfer_functions
         )

@@ -148,8 +148,11 @@ class SettingAPIView(APIView):
         )
         logger.debug(f"language_name {language_name}")
         speed_name = request.GET.get("tts_speed", request.POST.get("tts_speed", "1.0"))
-        llm_name = request.GET.get(
+        llm_chat_model = request.GET.get(
             "llm_chat_model", request.POST.get("llm_chat_model", DEFAULT_CHAT_LLM)
+        )
+        llm_tool_model = request.GET.get(
+            "llm_tool_model", request.POST.get("llm_tool_model", DEFAULT_CHAT_LLM)
         )
         llm_chat_prompt = request.GET.get("llm_chat_prompt", request.POST.get("llm_chat_prompt", DEFAULT_CHAT_LLM_PROMPT))
         llm_chat_show_count = request.GET.get("llm_chat_show_count", request.POST.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT))
@@ -158,7 +161,8 @@ class SettingAPIView(APIView):
         user.set("tts_voice", voice_name, save=False)
         user.set("tts_language", language_name, save=False)
         user.set("tts_speed", speed_name, save=False)
-        user.set("llm_chat_model", llm_name, save=False)
+        user.set("llm_chat_model", llm_chat_model, save=False)
+        user.set("llm_tool_model", llm_tool_model, save=False)
         user.set("llm_chat_prompt", llm_chat_prompt, save=False)
         user.set("llm_chat_show_count", llm_chat_show_count, save=False)
         user.set("llm_chat_memory_count", llm_chat_memory_count, save=False)
