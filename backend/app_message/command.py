@@ -91,6 +91,8 @@ otherwise reply 'not a command', do not reply with other content."""
         Handle command execution
         """
         content = sdata.current_content
+        if content.startswith('/'):
+            content = content[1:]        
         content = re.sub(r"^\d+[\.\s]*", "", content)  # Strike out the first digit
         cmd = None
         content_adj = None
@@ -154,7 +156,7 @@ def msg_common_select(sdata, cmd_list, detail=None):
     """
     Unified processing of selection commands
     """
-    logger.debug(cmd_list)
+    logger.debug(f"{sdata.sid} {cmd_list}")
     sdata.set_cache("next_cmd", cmd_list)
     if detail is not None:
         content = f"{detail}\n"
