@@ -6,13 +6,12 @@ from threading import Timer
 
 from django.utils import timezone
 from backend.common.utils.net_tools import do_result
-from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT
+from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, DEFAULT_CHAT_LLM_MEMORY_COUNT, DEFAULT_USER
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
 from app_dataforge.models import StoreEntry
 from app_dataforge.feature import TITLE_LENGTH, EntryFeatureTool
 
-MAX_MESSAGES = 200
 MAX_SESSIONS = 1000
 
 class Message:
@@ -182,12 +181,12 @@ class Session:
     @staticmethod
     def create_session(user_id, is_group, source):
         if user_id is None or user_id == "":
-            user_id = "tmp"
+            user_id = DEFAULT_USER
         sid = user_id + "_" + timezone.now().strftime("%Y%m%d%H%M%S%f")
         return Session(sid, user_id, is_group, source)
     
     def is_logged_in(self):
-        if self.user_id is None or self.user_id == "tmp":
+        if self.user_id is None or self.user_id == DEFAULT_USER or len(self.user_id) == 0:
             return False
         return True
 
@@ -237,7 +236,15 @@ class Session:
                 if len(string) > 500:
                     break
         return string
-    
+
+    def get_recent_messages(self):
+        user = UserManager.get_instance().get_user(self.user_id)
+        count = user.get("llm_chat_memory_count", DEFAULT_CHAT_LLM_MEMORY_COUNT)
+        if isinstance(count, str):
+            count = int(count)
+        if count == 0:
+            return []
+        return self.messages[-count:]
 
 class SessionManager:
     __instance = None
@@ -393,7 +400,14 @@ class SessionManager:
     
     def send_message(self, msg1:str, msg2:str, sdata: Session):
         need_create_new = False
-        if len(sdata.messages) > MAX_MESSAGES:
+
+        user = UserManager.get_instance().get_user(sdata.user_id)
+        show_count = user.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT)
+        if isinstance(show_count, str):
+            show_count = int(show_count)
+        logger.warning(f'check send_message {len(sdata.messages)} {show_count}')
+
+        if len(sdata.messages) > show_count:
             need_create_new = True
         if need_create_new:
             sdata.close()
@@ -429,6 +443,7 @@ def get_session_by_req(request):
     sdata = SessionManager.get_instance().get_session(sid, args['user_id'], args['is_group'], 
                                                         source, force_create=create)
     sdata.current_content = args['content']
+    sdata.is_group = args['is_group']
     sdata.args = args
     return sdata
 
