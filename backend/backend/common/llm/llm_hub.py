@@ -17,38 +17,22 @@ from backend.common.utils import text_tools
 
 EMBEDDING_CHUNK_SIZE = 512
 
-
 def llm_query(uid, role, question, app, engine_type=None, debug=False):
     start_time = time.time()
     user = UserManager.get_instance().get_user(uid)
-    privilege = user.privilege
-    limit_llm_day = privilege.get("limit_llm_day", -1)
-    used_tts_count = ResourceManager.get_instance().get_usage(
-        uid, dtype="day", rtype="llm"
-    )
-    if limit_llm_day > 0:
-        if debug:
-            logger.info(
-                "Usage limit: {limit_llm_day}, Used: {used_tts_count}".format(
-                    limit_llm_day=limit_llm_day, used_tts_count=used_tts_count
-                )
-            )
-        if used_tts_count >= limit_llm_day:
-            return (
-                False,
-                _("the_maximum_number_of_words_called_today_has_been_reached"),
-                {},
-            )
+
+    ret, desc = llm_tools.check_llm_limit(user, debug)
+    if not ret:
+        return ret, desc, {}
         
     if engine_type is None:
         engine_type = user.get("llm_tool_model", DEFAULT_TOOL_LLM)
     try:
-        if debug:
-            logger.debug(f"role {role}")
-            logger.debug(f"question {question}")
-            logger.debug(f"https_proxy {os.getenv('HTTPS_PROXY')}")
-            logger.debug(f"http_proxy {os.getenv('HTTP_PROXY')}")
         llm_info = llm_tools.LLMInfo.get_info(engine_type)
+        if debug:
+            logger.debug(f"Role {role}")
+            logger.debug(f"Question {question}")
+            logger.debug(f"Proxy {os.getenv('HTTPS_PROXY')}")
         if llm_info.api_method == "gemini":
             ret, answer, token_count = llm_tools.query_gemini(
                 role, question, api_key=llm_info.api_key, model_name=llm_info.model_name, debug=debug
@@ -62,27 +46,18 @@ def llm_query(uid, role, question, app, engine_type=None, debug=False):
                 model_name=llm_info.model_name,
                 debug=debug,
             )
-        end_time = time.time()
-        duration = round(end_time - start_time, 3)
-        dic = {
-            "token_count": token_count,
-            "engine_type": engine_type,
-            "duration": duration,
-        }
         if ret:
-            ResourceManager.get_instance().add(
-                uid, app, "llm", engine_type, token_count, duration, "success", dic
-            )
+            duration = round(time.time() - start_time, 3)    
+            dic = llm_tools.save_llm_usage(user, app, engine_type, duration, token_count)
             if debug:
-                logger.debug("Question: {question}".format(question=question))
                 logger.debug("---------------------------")
                 logger.debug("Answer: {answer}...".format(answer=answer[:50]))
                 logger.debug(f"desc: {dic}")
-        return ret, answer, dic
+            return ret, answer, dic
     except Exception as e:
         logger.warning(f"{engine_type} failed {e}")
         traceback.print_exc()
-        return False, _("call_failed"), {"token_count": 0}
+    return False, _("call_failed"), {"token_count": 0}
 
 
 def find_first_json(s):
