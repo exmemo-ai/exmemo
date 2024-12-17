@@ -4,10 +4,38 @@ from loguru import logger
 from openai import OpenAI
 import google.generativeai as genai
 from django.utils.translation import gettext as _
-
+from backend.common.user.resource import *
 DEFAULT_CHAT_LLM = os.getenv("DEFAULT_CHAT_LLM", "gpt3.5-turbo")
 DEFAULT_TOOL_LLM = os.getenv("DEFAULT_TOOL_LLM", "gpt3.5-turbo")
 
+def check_llm_limit(user, debug=False):
+    privilege = user.privilege
+    limit_llm_day = privilege.get("limit_llm_day", -1)
+    used_tts_count = ResourceManager.get_instance().get_usage(
+        user.user_id, dtype="day", rtype="llm"
+    )
+    if debug:
+        logger.info(
+            "Usage limit: {limit_llm_day}, Used: {used_tts_count}".format(
+                limit_llm_day=limit_llm_day, used_tts_count=used_tts_count
+            )
+        )
+    if limit_llm_day > 0:
+        if used_tts_count >= limit_llm_day:
+            return False, _("the_maximum_number_of_words_called_today_has_been_reached")
+    return True, ''
+
+def save_llm_usage(user, app, engine_type, duration, token_count):
+    dic = {
+        "token_count": token_count,
+        "engine_type": engine_type,
+        "duration": duration,
+    }
+    if token_count > 0:
+        ResourceManager.get_instance().add(
+            user.user_id, app, "llm", engine_type, token_count, duration, "success", dic
+        )
+    return dic
 
 class LLMInfo:
     def __init__(self, engine_type=None, api_method=None, url=None, api_key=None, model_name=None):
@@ -50,11 +78,11 @@ class LLMInfo:
             api_key = os.getenv("GEMINI_API_KEY")
             model_name = os.getenv("GEMINI_MODEL")
         elif engine_type == "gpt4o" or engine_type == "gpt-4o":
-            url = os.getenv("OPENAI_BASE_URL")
+            url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
             api_key = os.getenv("OPENAI_API_KEY")
             model_name = "gpt-4o"
         else:
-            url = os.getenv("OPENAI_BASE_URL")
+            url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
             api_key = os.getenv("OPENAI_API_KEY")
             model_name = "gpt-3.5-turbo"
         return LLMInfo(engine_type, api_method, url, api_key, model_name)
