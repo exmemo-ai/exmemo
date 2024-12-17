@@ -1,4 +1,4 @@
-from .user import DEFAULT_SESSION
+from .user import DEFAULT_USER
 from loguru import logger
 
 
@@ -7,7 +7,7 @@ def get_user_id(request):
         return request.user.username
     except Exception as e:
         logger.error(f"get_user_id failed {e}")
-    return None
+    return DEFAULT_USER
 
 
 def parse_common_args(request):
