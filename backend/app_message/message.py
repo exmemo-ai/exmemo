@@ -132,7 +132,7 @@ def parse_select_number(sdata):
     if content.isdigit():
         idx = int(content)
         next_cmd = sdata.get_cache("next_cmd")
-        logger.info(f"next_cmd {next_cmd} idx {idx}")
+        logger.info(f"next_cmd {next_cmd} idx {idx} sid {sdata.sid}")
         if next_cmd is None or len(next_cmd) < idx:
             return False, _("no_optional_commands")
         sdata.current_content = next_cmd[idx - 1][1]  # cmd value
