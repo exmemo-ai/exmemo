@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, LLMInfo
 from backend.common.user.resource import ResourceManager 
 from backend.common.user.user import UserManager
+from backend.common.llm import llm_tools
 
 class ChatEngine:
     def __init__(self, llm_info, sdata, debug=False):
@@ -28,8 +29,9 @@ class ChatEngine:
         try:
             #self.sdata.add_message("user", input)
             messages = [{"role": "user", "content": input}]
-            formatted_msgs = [{"role": m.sender, "content": m.content} for m in self.sdata.messages]
-            messages = messages + formatted_msgs
+            formatted_msgs = [{"role": m.sender, "content": m.content} for m in self.sdata.get_recent_messages()]
+            messages = formatted_msgs + messages
+            logger.warning(f"messages: {messages}")
             answer = self.get_llm_response(messages) 
             #self.sdata.add_message("assistant", answer)
             count = len(input + answer) // 4 # Rough token estimate
@@ -65,21 +67,11 @@ def do_chat(sdata, debug=False):
         content = prompt + "\n" + content
     if debug:
         logger.debug(f"chat {content}")
-    #
-    privilege = user.privilege
-    limit_llm_day = privilege.get("limit_llm_day", -1)
-    used_llm_count = ResourceManager.get_instance().get_usage(
-        sdata.user_id, dtype="day", rtype="llm"
-    )
-    if debug:
-        logger.info(
-            "Usage limit: {limit_llm_day}, Used: {used_llm_count}".format(
-                limit_llm_day=limit_llm_day, used_llm_count=used_llm_count
-            )
-        )
-    if limit_llm_day > 0:
-        if used_llm_count >= limit_llm_day:
-            return False, _("the_maximum_number_of_words_called_today_has_been_reached")
+
+    ret, desc = llm_tools.check_llm_limit(user, debug)
+    if not ret:
+        return ret, desc        
+
     try:
         engine_type = user.get("llm_chat_model", DEFAULT_CHAT_LLM)
         llm_info = LLMInfo.get_info(engine_type)
@@ -95,12 +87,8 @@ def do_chat(sdata, debug=False):
                 f"chat sid {sdata.sid} content {content} answer {answer} count {token_count}"
             )
         if ret:
-            end_time = time.time()
-            duration = end_time - start_time
-            dic = {"token_count": token_count}
-            ResourceManager.get_instance().add(
-                sdata.user_id, "chat", "llm", engine_type, token_count, duration, "success", dic
-            )
+            duration = time.time() - start_time
+            llm_tools.save_llm_usage(user, "chat", engine_type, duration, token_count)
         return ret, pre + answer
     except Exception as e:
         logger.warning(f"failed {e}")
