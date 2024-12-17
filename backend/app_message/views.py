@@ -70,14 +70,8 @@ class MessageAPIView(APIView):
             f'request.data {request.data}, has_token {has_token}, is_group {sdata.is_group}'
         )
 
-        if has_token or sdata.is_group:
-        #if False:
-            logger.info(f"message recv: args {sdata.args}")
-            if "user_id" not in sdata.args or sdata.args["user_id"] is None:
-                sdata.args["user_id"] = DEFAULT_USER
-            if sdata.args["user_id"] == DEFAULT_USER:
-                LoginView.create_user_default()
-            
+        if has_token:
+            logger.info(f"message recv: args {sdata.args}")            
             rtype = request.POST.get("rtype", "text")
             try:
                 if rtype == "text":
@@ -94,9 +88,25 @@ class MessageAPIView(APIView):
                     {"status": "failed", "info": _("backend_processing_failed")}
                 )
             )
+        elif sdata.is_group: # only in wechat group
+            if sdata.args["user_id"] == DEFAULT_USER:
+                LoginView.create_user_default()
+            rtype = request.POST.get("rtype", "text")
+            try:
+                if rtype == "text":
+                    ret, detail = do_message(sdata)
+                    logger.debug(f"{ret}, {detail}")
+                    return do_result(ret, detail)
+            except Exception as e:
+                logger.warning(f"message failed {e}")
+                traceback.print_exc()
+            return HttpResponse(
+                json.dumps(
+                    {"status": "failed", "info": _("backend_processing_failed")}
+                )
+            )
         else:
             content = request.POST.get("content", None)
-            user_name = request.POST.get("user_name", DEFAULT_USER)
             if content is None:
                 return HttpResponse(
                     json.dumps(
@@ -106,8 +116,6 @@ class MessageAPIView(APIView):
                         }
                     )
                 )
-            #ret = user_manager.UserTools.get_instance().chat(user_name, content)
-            #return HttpResponse(json.dumps({"status": "success", "info": ret}))
             ret, detail = agents.UserAgentManager.get_instance().do_command(sdata)
             return HttpResponse(json.dumps({"status": "success", "type":"json", "content":{"info": detail, "sid": sdata.sid}}))
 
