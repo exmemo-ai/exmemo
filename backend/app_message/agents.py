@@ -1,6 +1,5 @@
 from loguru import logger
 from django.utils.translation import gettext as _
-import app_message.user_manager as user_manager
 from app_message.command import CommandManager, LEVEL_TOP, msg_common_select
 from backend.common.speech.tts import (
     stop_tts,
@@ -28,10 +27,47 @@ class UserAgent(BaseAgent):
         self.instructions = "This agent can register, login, and change passwords, 如果输入与此无关的内容，则返回请用户先登录再聊天."
 
     @staticmethod
+    def register(user_id: str, password: str) -> dict:
+        if (
+            user_id is not None
+            and len(user_id) > 0
+            and password is not None
+            and len(password) > 0
+        ):
+            if UserManager.get_instance().check_user_exist(user_id):
+                return {"status": False, "info": _("username_already_exists")}
+            if UserManager.get_instance().create_user(user_id, password):
+                return {"status": True, "user_id": user_id, "password": password}
+            else:
+                return {"status": False, "info": _("registration_failed")}
+        else:
+            return {"status": False, "info": _("user_or_password_are_empty_dot_")}
+
+    @staticmethod
+    def change_password(user_id: str, password_old: str, password_new: str) -> dict:
+        if user_id is None or user_id == "":
+            return {"status": False, "info": _("empty_username")}
+        if password_old is None or password_old == "":
+            return {"status": False, "info": _("old_password_is_empty")}
+        if password_new is None or password_new == "":
+            return {"status": False, "info": _("the_new_password_is_blank")}
+        if password_old == password_new:
+            return {"status": False, "info": _("old_and_new_passwords_are_identical_dot_")}
+        if not UserManager.get_instance().check_user_exist(user_id):
+            return {"status": False, "info": _("user_does_not_exist")}
+        if not UserManager.get_instance().check_user_password(user_id, password_old):
+            return {"status": False, "info": _("original_password_error")}
+        if UserManager.get_instance().change_user_password(user_id, password_new):
+            return {"status": True, "info": _("successfully_set")}
+        else:
+            return {"status": False, "info": _("setup_failed")}
+
+
+    @staticmethod
     def _afunc_register(context_variables: dict, user_id: str, password: str) -> dict:
         """User registration tool: if a username or password is entered, set it to the string '', cannot fabricate or guess the password."""
         print('register', user_id, password, context_variables)
-        dic = user_manager.register(user_id, password)
+        dic = UserAgent.register(user_id, password)
         if dic is not None and 'status' in dic and dic['status']:
             if context_variables is not None and 'sdata' in context_variables:
                 context_variables['sdata'].set_cache('user_id', user_id)
@@ -59,7 +95,7 @@ class UserAgent(BaseAgent):
     def _afunc_change_password(context_variables: dict, user_id: str, password_old: str, password_new: str) -> dict:
         """User password change tool: if no username, old password, or new password is provided, set them as the string ''; if only one password is provided, set the old password as ''"""
         print('change_password', user_id, password_old, password_new, context_variables)
-        dic = user_manager.change_password(user_id, password_old, password_new)
+        dic = UserAgent.change_password(user_id, password_old, password_new)
         if dic is not None and 'status' in dic and dic['status']:
             if context_variables is not None and 'sdata' in context_variables:
                 context_variables['sdata'].set_cache('user_id', user_id)
