@@ -70,12 +70,12 @@ class UserManager:
         if uid in self.user_dict:
             del self.user_dict[uid]
 
-def real_login(user_name, user_id, password):
+def real_login(uid, user_id, password):
     url = URL_ADDR + '/api/auth/login/'
     data = {'username':user_id, 'password':password}
     r = requests.post(url, data=data)
     if r.status_code == 200:
-        UserManager.get_instance().set(user_name, user_id, password, r.json()['token'])
+        UserManager.get_instance().set(uid, user_id, password, r.json()['token'])
         logger.info(f'login success')
         return True, '登录成功'
     else:
@@ -84,15 +84,15 @@ def real_login(user_name, user_id, password):
             return True, '用户名或密码错误，请重新登录'
         return True, f'登录失败, status code {r.status_code}'
    
-def real_logout(user_name):
+def real_logout(uid):
     url = URL_ADDR + '/api/auth/logout/'
-    token = UserManager.get_instance().get_token(user_name)
+    token = UserManager.get_instance().get_token(uid)
     try:        
         if token is not None:
             headers = {'Authorization': f'Token {token}'}
         else:
             headers = None
-        UserManager.get_instance().remove_user(user_name)        
+        UserManager.get_instance().remove_user(uid)        
         r = requests.post(url, headers=headers)
         if r.status_code == 200 or r.status_code == 204:
             return True, '登出成功'
@@ -145,7 +145,7 @@ def rm_timer():
             logger.warning(f'rm_timer {e}')
         g_timer = None
 
-def parse_log_info(user_name, info):
+def parse_log_info(uid, info):
     try:
         if isinstance(info, str):
             match = re.search(r'{.*}', info)
@@ -157,9 +157,9 @@ def parse_log_info(user_name, info):
         else:
             return False, f'not support info type {type(info)}'
         if 'user_id' in dic and 'password' in dic:
-            return real_login(user_name, dic['user_id'], dic['password'])
+            return real_login(uid, dic['user_id'], dic['password'])
         if 'logout' in dic:
-            return real_logout(user_name)
+            return real_logout(uid)
     except Exception as e:
         logger.error(f'login {e}')
         return False, str(e)
@@ -167,7 +167,7 @@ def parse_log_info(user_name, info):
 
 def parse_result(response, data, **kwargs):
     if response.status_code == 200:
-        user_id = kwargs['wechat_user_id']
+        uid = kwargs['wechat_user_id']
         content_type = response.headers['Content-Type']
         logger.info(f'content_type {content_type}')
         if 'audio' in content_type or 'octet-stream' in content_type:
@@ -189,16 +189,18 @@ def parse_result(response, data, **kwargs):
                 if ret_info['status'] == 'success':
                     if 'type' in ret_info and ret_info['type'] == 'json' and 'content' in ret_info:
                         if 'info' in ret_info['content']:
-                            ret, info = parse_log_info(user_id, ret_info['content']['info'])
+                            ret, info = parse_log_info(uid, ret_info['content']['info']) # login/logout
                             if ret:
                                 return True, False, {'type':'text', 'content':info}
                         if 'sid' in ret_info['content']:
-                            user = UserManager.get_instance().get_user(user_id)
-                            if user is not None:
-                                user.set_sid(data['local_sid'], ret_info['content']['sid'])
+                            user = UserManager.get_instance().get_user(uid)
+                            if user is None:
+                                UserManager.get_instance().set(uid, None, None, None)
+                                user = UserManager.get_instance().get_user(uid)
+                            user.set_sid(data['local_sid'], ret_info['content']['sid'])
                         return True, False, {'type':'text', 'content':ret_info['content']['info']}
                     elif 'info' in ret_info: # later remove
-                        ret, info = parse_log_info(user_id, ret_info['info'])
+                        ret, info = parse_log_info(uid, ret_info['info'])
                         if ret:
                             return True, False, {'type':'text', 'content':info}
                         if 'request_delay' in ret_info:
@@ -215,11 +217,11 @@ def parse_result(response, data, **kwargs):
         else:
             logger.info(f'unsupport content type: {content_type}')
     elif response.status_code == 401:
-        user_id = kwargs['wechat_user_id']
-        UserManager.get_instance().remove_token(user_id)
-        user:User = UserManager.get_instance().get_user(user_id)
+        uid = kwargs['wechat_user_id']
+        UserManager.get_instance().remove_token(uid)
+        user:User = UserManager.get_instance().get_user(uid)
         if user is not None:
-            ret, info = real_login(user_id, user.user_id, user.password)
+            ret, info = real_login(uid, user.user_id, user.password)
             if ret:
                 return True, True, {'type':'text', 'content':'登录过期，正在重新登录...'}
             else:
