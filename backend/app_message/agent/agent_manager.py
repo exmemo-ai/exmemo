@@ -1,51 +1,28 @@
 import time
 from openai import OpenAI
-from typing import List, Callable
 from swarm import Agent
 from loguru import logger
 from django.utils.translation import gettext as _
 
+from app_message.agent.other_agent import (
+    AudioAgent,
+    HelpAgent,
+    LLMAgent,
+    DietAgent,
+    TranslateAgent,
+)
+from app_message.agent.user_agent import UserAgent, SettingAgent
+from app_message.agent.data_agent import DataAgent, WebAgent, FileAgent, RecordAgent
 from app_message.session import Session
 from app_message.exsmarm import ExSmarm
-from app_message.command import CommandManager, Command, LEVEL_NORMAL, LEVEL_TOP, msg_common_select
 from backend.common.user.user import UserManager
 from backend.common.llm import llm_tools
 from backend.common.user.resource import *
+from backend.common.utils.sys_tools import is_app_installed
 
 DEFAULT_TEXT = _(
     "please_register_or_log_in_first_comma___enter_formatted_as_colon__register_username_xxx_comma__password_xxx__enter_or_log_in_username_xxx_comma__password_xxx"
 )
-
-class BaseAgent:
-    def __init__(self):
-        self.agent_name = "BaseAgent"
-        self.instructions = "Determine which function to call based on the user's input."
-
-    def get_functions(self) -> List[Callable]:
-        ret = []
-        for attr_name in dir(self):
-            attr = getattr(self, attr_name)
-            if callable(attr) and attr_name.startswith('_afunc_'):
-                ret.append(attr)
-        return ret
-    
-    def add_commands(self): # later remove
-        funcs = self.get_functions()
-        cmd_list = []
-        for func in funcs:
-            logger.debug(f'add_commands {func.__doc__}')
-            CommandManager.get_instance().register(
-                Command(func, [func.__doc__], level=LEVEL_NORMAL)
-            )
-            cmd_list.append((func.__doc__, func.__doc__))
-
-        def msg_main(context_variables: dict):
-            sdata = context_variables['sdata']
-            return msg_common_select(sdata, cmd_list)
-
-        CommandManager.get_instance().register(
-            Command(msg_main, [self.agent_name], level=LEVEL_TOP)
-        )
 
 class BaseAgentManager:    
     def __init__(self):
@@ -63,8 +40,9 @@ class BaseAgentManager:
         logger.error(f"is_logged_in: {is_logged_in}")
 
         return f"""You are to triage a users request, and call a tool to transfer to the right intent.
-        用户是否登录: {is_logged_in}，如果没有登录，请 transfer to User Agent 处理登录，或者提示用户登录，不回答其它问题。
-        如果已经登录，请根据用户的问题，调用相应的工具转接到正确的意图。
+        User login status: {is_logged_in}. If not logged in, please transfer to User Agent to handle login,
+        or prompt the user to login first, do not answer other questions.
+        If logged in, please call the appropriate tool to transfer to the correct intent based on user's question.
         """
 
     def do_command(self, sdata: Session, engine_type: str = None, debug = False):
@@ -135,11 +113,11 @@ class BaseAgentManager:
 
         if not sdata.is_logged_in():
             if response.context_variables['sdata'].get_cache('user_id') != "" and response.context_variables['sdata'].get_cache('password') != "":
-                logger.debug('返回 json，可以登录')
+                logger.debug('Returning json, can login')
                 ret = {"user_id": response.context_variables['sdata'].get_cache('user_id'), 
                     "password": response.context_variables['sdata'].get_cache('password')}
             else:
-                logger.debug('返回提示')
+                logger.debug('Returning prompt')
                 ret = response.messages[-1]["content"]
                 ret = ret + "\n" + DEFAULT_TEXT
         else:
@@ -151,5 +129,48 @@ class BaseAgentManager:
             if total_count > 0:
                 duration = round(time.time() - start_time, 3)    
                 llm_tools.save_llm_usage(user, "agent", engine_type, duration, total_count)
-        sdata.cache = response.context_variables['sdata'].cache # tmp，由于 deep_copy，sdata未被修改，需要手动更新
+        sdata.cache = response.context_variables['sdata'].cache
         return True, ret
+
+class AllAgentManager(BaseAgentManager):
+    _instance = None
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = AllAgentManager()
+        return cls._instance
+    
+    def __init__(self):
+        super().__init__()
+        self.add_agent(WebAgent())
+        self.add_agent(DataAgent())  
+        self.add_agent(AudioAgent())
+        self.add_agent(SettingAgent())
+        self.add_agent(FileAgent())
+        self.add_agent(HelpAgent())
+        self.add_agent(UserAgent())
+        self.add_agent(LLMAgent()) # tmp
+        
+        if is_app_installed("app_record"):
+            self.add_agent(RecordAgent())
+            
+        if is_app_installed("app_diet"):
+            self.add_agent(DietAgent())
+            
+        if is_app_installed("app_translate"):
+            self.add_agent(TranslateAgent())
+
+
+class UserAgentManager(BaseAgentManager):
+    _instance = None
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = UserAgentManager()
+        return cls._instance
+
+    def __init__(self):
+        super().__init__()
+        self.add_agent(UserAgent())

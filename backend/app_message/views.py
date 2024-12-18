@@ -15,7 +15,7 @@ from backend.common.utils.file_tools import get_ext
 from .message import *
 from .session import SessionManager, get_session_by_req
 from rest_framework.permissions import IsAuthenticated
-import app_message.agents as agents
+from app_message.agent import agent_manager
 
 class SessionAPIView(APIView):
     authentication_classes = [TokenAuthentication]
@@ -116,7 +116,7 @@ class MessageAPIView(APIView):
                         }
                     )
                 )
-            ret, detail = agents.UserAgentManager.get_instance().do_command(sdata)
+            ret, detail = agent_manager.UserAgentManager.get_instance().do_command(sdata)
             return HttpResponse(json.dumps({"status": "success", "type":"json", "content":{"info": detail, "sid": sdata.sid}}))
 
     def upload_file(self, sdata, request):
