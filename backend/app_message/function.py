@@ -4,9 +4,11 @@ from django.utils.translation import gettext as _
 from .command import *
 from backend.common.utils.regular_tools import regular_str
 from app_dataforge.entry import get_entry_list
+from backend.common.speech.tts import (
+    run_tts,
+)
 
 CMD_INNER_GET = "CMD_INNER_GET"
-
 
 def regular_title(title):
     """
@@ -45,3 +47,7 @@ def search_data(sdata, dic={}):
         return CommandManager.get_instance().msg_do_command(sdata)
     else:
         return msg_common_select(sdata, arr)
+
+def msg_run_tts(title, content, sdata): # later rename
+    sdata.set_cache("tts_file_title", title)
+    return run_tts(title, content, sdata.user_id)

@@ -605,13 +605,11 @@ def polish(uid, content, debug=False):
         )
         return (
             True,
-            _(
-                f"""{_('original_text')}
+            f"""{_('original_text')}
 {content}
 =====================
 {_('polished_text')}
-{answer}"""
-            ).format(content=content, answer=answer),
+{answer}""".format(content=content, answer=answer),
         )
     except Exception as e:
         return False, e

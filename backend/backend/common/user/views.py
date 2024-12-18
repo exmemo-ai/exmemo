@@ -116,7 +116,7 @@ class SettingAPIView(APIView):
         engine_list = tts_get_engine_list(uid)
         llm_list = get_llm_list()
         privilege = (
-            _("User Level: {level_desc}\n").format(level_desc=user.get_level_desc())
+            _("user_level: {level}\n").format(level=user.get_level_desc())
             + user.privilege.get_descript()
         )
         info = {

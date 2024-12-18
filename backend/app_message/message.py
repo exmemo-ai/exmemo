@@ -24,30 +24,25 @@ from .command import *
 from .function import *
 from .session import *
 from .chat_tools import do_chat
-import app_message.agents as agents
+from app_message.agent import agent_manager
+from app_message.agent import data_agent
 
-agents.AllAgentManager.get_instance() # Initialize the agent manager first
+agent_manager.AllAgentManager.get_instance() # Initialize the agent manager first
 
 ####################
-
-"""
-def msg_web_my_op(sdata):
-    return True, {"type": "text", "content": "请输入网址或者分享网页给我"}
-
-CommandManager.get_instance().register(
-    Command(msg_web_my_op, ["操作网页"], level=LEVEL_NORMAL)
-)
-"""
 
 def msg_upload_main(sdata):
     (path, filename) = sdata.get_cache("file")
     if path is not None:
-        cmd_list = [("收藏文件", "收藏文件")]
+        cmd_list = [(_("collect_file"), _("collect_file"))]
         if is_doc_file(path):
-            cmd_list += [("总结文件内容", "总结文件内容"), ("文本转音频", "文本转音频")]
+            cmd_list += [
+                (_("summarize_file_content"), _("summarize_file_content")), 
+                (_("file_to_audio"), _("file_to_audio"))
+            ]
         elif is_audio_file(path):
-            cmd_list += [("语音识别", "语音识别")]
-        return msg_common_select(sdata, cmd_list, detail="收到文件")
+            cmd_list += [(_("speech_recognition"), _("speech_recognition"))]
+        return msg_common_select(sdata, cmd_list, detail=_("file_received"))
     else:
         return True, {
             "type": "text",
@@ -93,7 +88,7 @@ def do_message(sdata:Session):
         prev_cmd = sdata.get_cache("prev_cmd")
 
         if is_valid_url(content):  # Enter Website
-            ret, detail = agents.msg_web_main(sdata)
+            ret, detail = data_agent.msg_web_main(sdata)
         if (not ret and prev_cmd is not None):  
             # The previous conversation was asking the user to enter information
             sdata.current_content = prev_cmd + " " + sdata.current_content
@@ -105,7 +100,7 @@ def do_message(sdata:Session):
             if content.startswith('/'):
                 ret, detail = CommandManager.get_instance().msg_do_command(sdata)
                 if not ret:
-                    ret, detail = agents.AllAgentManager.get_instance().do_command(sdata)
+                    ret, detail = agent_manager.AllAgentManager.get_instance().do_command(sdata)
                     detail = {"type": "text", "content": detail}
         logger.info(f"content:{content} ret:{ret} detail:{detail}")
         if not ret:
