@@ -43,19 +43,41 @@
              :style="{ paddingLeft: node.level * 16 + 'px' }">
           <template v-if="data.type === 'folder'">
             <el-icon><Folder /></el-icon>
-            <span class="folder-name">
-              {{ formatLabel(data.title) }}
-            </span>
+            <el-tooltip :content="$t('doubleClickToEdit')" placement="top">
+              <span class="folder-name" @dblclick="handleFolderEdit(data)">
+                {{ formatLabel(data.title) }}
+              </span>
+            </el-tooltip>
             <span class="bookmark-count">({{ data.children?.length || 0 }})</span>
+            <div class="bookmark-actions">
+              <el-tooltip :content="$t('deleteFolder')" placement="top">
+                <el-button size="small" type="danger" @click.stop="handleFolderDelete(node, data)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </div>
           </template>
           <template v-else>
             <img :src="getFavicon(data.url)" class="favicon" @error="handleFaviconError">
             <a :href="data.url" 
                target="_blank" 
                class="bookmark-link"
-               :title="`${data.title}\n${data.url}`">
+               :title="`${data.title}\n${data.url}`"
+               @click.stop>
               {{ formatLabel(data.title) }}
             </a>
+            <div class="bookmark-actions">
+              <el-tooltip :content="$t('editBookmark')" placement="top">
+                <el-button size="small" @click.stop="handleEdit(data)">
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip :content="$t('deleteBookmark')" placement="top">
+                <el-button size="small" type="danger" @click.stop="handleDelete(node, data)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </div>
           </template>
         </div>
       </template>
@@ -82,6 +104,23 @@
         </el-form-item>
         <el-form-item :label="$t('folder')">
           <el-input v-model="editForm.folder" />
+        </el-form-item>
+        <el-form-item :label="$t('tags')">
+          <el-select
+            v-model="editForm.tags"
+            :placeholder="$t('enterTags')"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            style="width: 100%">
+            <el-option
+              v-for="tag in availableTags"
+              :key="tag"
+              :label="tag"
+              :value="tag">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -123,8 +162,10 @@ export default {
         id: null,
         title: '',
         url: '',
-        folder: ''
+        folder: '',
+        tags: []  // 新增 tags 字段
       },
+      availableTags: [],  // 存储可用的标签选项
       faviconCache: new Map(),
       faviconQueue: [],
       faviconLoading: new Set(),
@@ -343,42 +384,112 @@ export default {
     },
     async submitEdit() {
       try {
+        // 发送更新请求前先保存展开状态
+        const currentExpandedKeys = [...this.expandedKeys];
         const response = await axios.put(getURL() + 'api/keeper/', {
+          type: 'tree',
           id: this.editForm.id,
           title: this.editForm.title,
           url: this.editForm.url,
-          folder: this.editForm.folder
+          folder: this.editForm.folder,
+          tags: this.editForm.tags.join(',')
         })
 
         if (response.data.code === 200) {
-          ElMessage.success(this.$t('updateSuccess'))
-          this.editDialogVisible = false
-          this.fetchBookmarks()
+          // 更新本地节点数据
+          this.updateBookmarkInTree(this.treeData[0], {
+            id: this.editForm.id,
+            title: this.editForm.title,
+            url: this.editForm.url || response.data.data.url,
+            folder: this.editForm.folder || response.data.data.folder,
+            tags: this.editForm.tags,
+            type: 'bookmark'
+          });
+          
+          // 恢复展开状态
+          this.expandedKeys = currentExpandedKeys;
+          
+          ElMessage.success(this.$t('updateSuccess'));
+          this.editDialogVisible = false;
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(this, error);
       }
+    },
+
+    // 添加新方法: 在树中更新书签
+    updateBookmarkInTree(node, updatedData) {
+      if (node.id === updatedData.id) {
+        // 只更新必要的属性，保持其他属性和树结构不变
+        node.title = updatedData.title;
+        if (updatedData.url) node.url = updatedData.url;
+        if (updatedData.folder) node.folder = updatedData.folder;
+        if (updatedData.tags) node.tags = updatedData.tags;
+        return true;
+      }
+      
+      if (node.children) {
+        for (const child of node.children) {
+          if (this.updateBookmarkInTree(child, updatedData)) {
+            return true
+          }
+        }
+      }
+      return false
+    },
+
+    // 从树中删除节点
+    removeNodeFromTree(node, targetId) {
+      if (node.children) {
+        const index = node.children.findIndex(child => child.id === targetId);
+        if (index !== -1) {
+          // 找到目标节点，从父节点的 children 数组中删除
+          node.children.splice(index, 1);
+          return true;
+        }
+        // 递归搜索子节点
+        for (const child of node.children) {
+          if (this.removeNodeFromTree(child, targetId)) {
+            return true;
+          }
+        }
+      }
+      return false;
     },
 
     async handleDelete(node, data) {
       try {
         await ElMessageBox.confirm(
           this.$t('confirmDelete'),
-          this.$t('warning'),
-          { type: 'warning' }
+          {
+            type: 'warning',
+            confirmButtonText: this.$t('confirm'),
+            cancelButtonText: this.$t('cancel')
+          }
         )
 
+        // 保存当前展开状态
+        const currentExpandedKeys = [...this.expandedKeys];
+
         const response = await axios.delete(getURL() + 'api/keeper/', {
-          params: { id: data.id }
+          params: { 
+            id: data.id,
+            real_delete: true
+          }
         })
 
         if (response.data.code === 200) {
-          ElMessage.success(this.$t('deleteSuccess'))
-          this.fetchBookmarks()
+          // 直接在前端树中删除节点
+          this.removeNodeFromTree(this.treeData[0], data.id);
+          
+          // 恢复展开状态
+          this.expandedKeys = currentExpandedKeys;
+          
+          ElMessage.success(this.$t('deleteSuccess'));
         }
       } catch (error) {
         if (error !== 'cancel') {
-          parseBackendError(this, error)
+          parseBackendError(this, error);
         }
       }
     },
@@ -590,10 +701,108 @@ export default {
         window.open(data.url, '_blank')
       }
     },
+
+    handleEdit(data) {
+      this.editForm = {
+        ...data,
+        tags: data.tags ? data.tags.split(',').filter(Boolean) : []
+      }
+      this.editDialogVisible = true
+    },
+
+    async fetchAvailableTags() {
+      try {
+        const response = await axios.get(getURL() + 'api/keeper/', {
+          params: { type: 'tags' }
+        });
+        if (response.data.code === 200) {
+          this.availableTags = response.data.data || [];
+        }
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+      }
+    },
+
+    async handleFolderEdit(data) {
+      try {
+        const { value: newName } = await this.$prompt(
+          this.$t('enterNewFolderName'),
+          this.$t('editFolder'),
+          {
+            confirmButtonText: this.$t('confirm'),
+            cancelButtonText: this.$t('cancel'),
+            inputValue: data.title,
+            inputValidator: (value) => {
+              if (!value) {
+                return this.$t('folderNameRequired');
+              }
+              if (value.includes('/')) {
+                return this.$t('folderNameNoSlash');
+              }
+              return true;
+            }
+          }
+        );
+
+        if (newName && newName !== data.title) {
+          const bookmarks = this.getAllBookmarksInFolder(data);
+          const oldPath = `${this._getBookmarkBarPath()}${data.title}/`;
+          const newPath = `${this._getBookmarkBarPath()}${newName}/`;
+
+          const updatePromises = bookmarks.map(bookmark => {
+            const updatedFolder = bookmark.folder.replace(oldPath, newPath);
+            return axios.put(getURL() + 'api/keeper/', {
+              id: bookmark.id,
+              folder: updatedFolder
+            });
+          });
+
+          await Promise.all(updatePromises);
+          ElMessage.success(this.$t('updateSuccess'));
+          this.fetchBookmarks();
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          parseBackendError(this, error);
+        }
+      }
+    },
+
+    async handleFolderDelete(node, data) {
+      try {
+        await ElMessageBox.confirm(
+          this.$t('confirmDeleteFolder'),
+          {
+            type: 'warning',
+            confirmButtonText: this.$t('confirm'),
+            cancelButtonText: this.$t('cancel')
+          }
+        );
+
+        const bookmarks = this.getAllBookmarksInFolder(data);
+        const deletePromises = bookmarks.map(bookmark => 
+          axios.delete(getURL() + 'api/keeper/', {
+            params: { 
+              id: bookmark.id,
+              real_delete: true
+            }
+          })
+        );
+
+        await Promise.all(deletePromises);
+        ElMessage.success(this.$t('deleteFolderSuccess'));
+        this.fetchBookmarks();
+      } catch (error) {
+        if (error !== 'cancel') {
+          parseBackendError(this, error);
+        }
+      }
+    },
   },
 
   mounted() {
     this.fetchBookmarks()
+    this.fetchAvailableTags()  // 获取可用标签
   }
 }
 </script>
@@ -657,6 +866,11 @@ export default {
 
 .folder-name {
   font-weight: 500;
+  cursor: pointer;
+}
+
+.folder-name:hover {
+  color: var(--el-color-primary);
 }
 
 .el-tree-node__content {

@@ -129,6 +129,14 @@
     "readingTools": "Reading Tools",
     "assistantTools": "Assistant Tools",
     "bookmarkManager": "Bookmark Manager",
+    "doubleClickToEdit": "Double click to edit folder name",
+    "enterNewFolderName": "Please enter new folder name",
+    "editFolder": "Edit Folder",
+    "folderNameRequired": "Folder name cannot be empty",
+    "folderNameNoSlash": "Folder name cannot contain slashes",
+    "deleteFolder": "Delete Folder",
+    "confirmDeleteFolder": "Are you sure to delete this folder and all bookmarks inside?",
+    "deleteFolderSuccess": "Folder deleted successfully",
     "add": "Add",
     "export": "Export",
     "searchPlaceholder": "Search Keywords",
@@ -195,5 +203,10 @@
     "deleted": "Deleted",
     "editBookmark": "Edit Bookmark",
     "bookmarkBar": "Bookmark Bar",
-    "dragToFolder": "Move \"{title}\" to \"{target}\""
+    "dragToFolder": "Move \"{title}\" to \"{target}\"",
+    "confirmDelete": "Are you sure to delete this bookmark?",
+    "tags": "Tags",
+    "enterTags": "Enter or select tags",
+    "bookmarkTitle": "Title",
+    "selectFolder": "Select Folder"
 }

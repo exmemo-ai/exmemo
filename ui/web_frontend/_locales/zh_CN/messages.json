@@ -195,5 +195,18 @@
     "deleted": "已删除",
     "editBookmark": "编辑书签",
     "bookmarkBar": "书签栏",
-    "dragToFolder": "「{title}」移动至「{target}」"
-  }
+    "dragToFolder": "「{title}」移动至「{target}」",
+    "confirmDelete": "确定要删除这个书签吗?",
+    "tags": "标签",
+    "enterTags": "输入或选择标签",
+    "doubleClickToEdit": "双击编辑文件夹名称",
+    "enterNewFolderName": "请输入新的文件夹名称",
+    "editFolder": "编辑文件夹",
+    "folderNameRequired": "文件夹名称不能为空",
+    "folderNameNoSlash": "文件夹名称不能包含斜杠",
+    "deleteFolder": "删除文件夹",
+    "confirmDeleteFolder": "确定要删除此文件夹及其包含的所有书签吗？",
+    "deleteFolderSuccess": "文件夹删除成功",
+    "bookmarkTitle": "标题",
+    "selectFolder": "选择文件夹"
+}
