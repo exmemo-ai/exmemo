@@ -45,7 +45,7 @@ $ vi backend/.env
 * At least the following parameters need to be set: IP address, LANGUAGE_CODE, and PGSQL_PASSWORD.
 * It is recommended to use OpenAI as the backend model:
     * If you can connect to OpenAI, set the OPENAI_API_KEY.
-    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_LLM and DEFAULT_TOOL_LLM to deepseek and configure the DEEPSEEK section.
+    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek and configure the DEEPSEEK section.
 
 ### 2.2 Build Images
 

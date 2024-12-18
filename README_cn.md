@@ -43,7 +43,7 @@ $ vi backend/.env
 * 至少需要设置以下几个参数：IP 地址、LANGUAGE_CODE 和 PGSQL_PASSWORD。
 * 建议使用 OpenAI 作为后端模型：
 	* 如果可以连接 OpenAI，请设置 OPENAI_API_KEY。
-	* 如果无法连接 OpenAI，例如在中国使用，可以将 DEFAULT_CHAT_LLM 和 DEFAULT_TOOL_LLM 设置为 deepseek，并配置 DEEPSEEK 部分。
+	* 如果无法连接 OpenAI，例如在中国使用，可以将 DEFAULT_CHAT_* 和 DEFAULT_TOOL_* 设置为 deepseek，并配置 DEEPSEEK 部分。
 
 ### 2.2 制作镜像
 

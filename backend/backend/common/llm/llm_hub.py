@@ -10,7 +10,6 @@ from langchain_community.embeddings import OllamaEmbeddings
 from django.utils.translation import gettext as _
 
 from backend.common.llm import llm_tools
-from backend.common.llm.llm_tools import DEFAULT_TOOL_LLM
 from backend.common.user.user import *
 from backend.common.user.resource import *
 from backend.common.utils import text_tools 
@@ -26,9 +25,9 @@ def llm_query(uid, role, question, app, engine_type=None, debug=False):
         return ret, desc, {}
         
     if engine_type is None:
-        engine_type = user.get("llm_tool_model", DEFAULT_TOOL_LLM)
+        engine_type = user.get("llm_tool_model", {})
     try:
-        llm_info = llm_tools.LLMInfo.get_info(engine_type)
+        llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
         if debug:
             logger.debug(f"Role {role}")
             logger.debug(f"Question {question}")
@@ -48,7 +47,7 @@ def llm_query(uid, role, question, app, engine_type=None, debug=False):
             )
         if ret:
             duration = round(time.time() - start_time, 3)    
-            dic = llm_tools.save_llm_usage(user, app, engine_type, duration, token_count)
+            dic = llm_tools.save_llm_usage(user, app, llm_info.get_desc(), duration, token_count)
             if debug:
                 logger.debug("---------------------------")
                 logger.debug("Answer: {answer}...".format(answer=answer[:50]))

@@ -5,8 +5,8 @@ from openai import OpenAI
 import google.generativeai as genai
 from django.utils.translation import gettext as _
 from backend.common.user.resource import *
-DEFAULT_CHAT_LLM = os.getenv("DEFAULT_CHAT_LLM", "gpt3.5-turbo")
-DEFAULT_TOOL_LLM = os.getenv("DEFAULT_TOOL_LLM", "gpt3.5-turbo")
+LLM_DEFUALT = 'default'
+LLM_CUSTOM = 'custom'
 
 def check_llm_limit(user, debug=False):
     privilege = user.privilege
@@ -32,6 +32,8 @@ def save_llm_usage(user, app, engine_type, duration, token_count):
         "duration": duration,
     }
     if token_count > 0:
+        if len(engine_type) > 30:
+            engine_type = engine_type[:30]
         ResourceManager.get_instance().add(
             user.user_id, app, "llm", engine_type, token_count, duration, "success", dic
         )
@@ -46,7 +48,26 @@ class LLMInfo:
         self.model_name = model_name
 
     @staticmethod
-    def get_info(engine_type:str):
+    def get_info(engine_type, rtype='llm_tool_model'):
+        api_method = "openai"
+        ltype = LLM_DEFUALT
+        if isinstance(engine_type, dict):
+            ltype = engine_type.get("type")
+            url = engine_type.get("url")
+            model_name = engine_type.get("model")
+            api_key = engine_type.get("apikey")
+        if ltype != LLM_CUSTOM:
+            if rtype == 'llm_tool_model':
+                url = os.getenv('DEFAULT_TOOL_URL')
+                api_key = os.getenv('DEFAULT_TOOL_API_KEY')
+                model_name = os.getenv('DEFAULT_TOOL_MODEL')
+            else:
+                url = os.getenv('DEFAULT_CHAT_URL')
+                api_key = os.getenv('DEFAULT_CHAT_API_KEY')
+                model_name = os.getenv('DEFAULT_CHAT_MODEL')
+        if model_name is not None and model_name.find('gemini') >= 0:
+            api_method = "gemini"
+        """
         api_method = "openai"
         if engine_type.startswith("ollama"):
             api_key = os.getenv("OLLAMA_LLM_API_KEY")
@@ -85,7 +106,8 @@ class LLMInfo:
             url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
             api_key = os.getenv("OPENAI_API_KEY")
             model_name = "gpt-3.5-turbo"
-        return LLMInfo(engine_type, api_method, url, api_key, model_name)
+        """
+        return LLMInfo(ltype, api_method, url, api_key, model_name)
     
 
     def __str__(self):
@@ -96,6 +118,9 @@ class LLMInfo:
     
     def __repr__(self):
         return self.__str__()
+    
+    def get_desc(self):
+        return f"{self.engine_type}_{self.model_name}"
 
 def get_llm_list():
     llm_list = []

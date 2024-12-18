@@ -3,8 +3,7 @@ import traceback
 from loguru import logger
 from django.utils.translation import gettext as _
 
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, LLMInfo
-from backend.common.user.resource import ResourceManager 
+from backend.common.llm.llm_tools import LLMInfo, LLM_CUSTOM
 from backend.common.user.user import UserManager
 from backend.common.llm import llm_tools
 
@@ -73,12 +72,12 @@ def do_chat(sdata, debug=False):
         return ret, desc        
 
     try:
-        engine_type = user.get("llm_chat_model", DEFAULT_CHAT_LLM)
-        llm_info = LLMInfo.get_info(engine_type)
-        if engine_type.startswith("gpt3.5"):
-            pre = ""
+        engine_type = user.get("llm_chat_model", {})
+        llm_info = LLMInfo.get_info(engine_type, 'llm_chat_model')
+        if llm_info.engine_type == LLM_CUSTOM:
+            pre = "[{" + _('custom') + "}] "
         else:
-            pre = f"[{engine_type}] "
+            pre = ""
         ret, answer, token_count = (
             ChatEngine(llm_info, sdata).predict(content)
         )
@@ -88,9 +87,9 @@ def do_chat(sdata, debug=False):
             )
         if ret:
             duration = time.time() - start_time
-            llm_tools.save_llm_usage(user, "chat", engine_type, duration, token_count)
+            llm_tools.save_llm_usage(user, "chat", llm_info.get_desc(), duration, token_count)
         return ret, pre + answer
     except Exception as e:
-        logger.warning(f"failed {e}")
+        logger.warning(f"failed: {e}")
         traceback.print_exc()
         return False, _("chat_call_failed")

@@ -11,7 +11,6 @@ from knox.views import LoginView as KnoxLoginView
 
 from backend.common.utils.net_tools import do_result
 from backend.common.speech.tts import tts_get_voice_list, tts_get_engine_list
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM,  get_llm_list
 from backend.common.user.user import (
     UserManager,
     USER_LEVEL_GUEST,
@@ -114,7 +113,6 @@ class SettingAPIView(APIView):
         setting = user.settings.get_json()
         logger.debug(f"setting {setting}")
         engine_list = tts_get_engine_list(uid)
-        llm_list = get_llm_list()
         privilege = (
             _("user_level: {level}\n").format(level=user.get_level_desc())
             + user.privilege.get_descript()
@@ -122,7 +120,6 @@ class SettingAPIView(APIView):
         info = {
             "setting": setting,
             "engine_list": engine_list,
-            "llm_list": llm_list,
             "privilege": privilege,
         }
         return HttpResponse(json.dumps({"status": "success", "info": info}))
@@ -149,11 +146,15 @@ class SettingAPIView(APIView):
         logger.debug(f"language_name {language_name}")
         speed_name = request.GET.get("tts_speed", request.POST.get("tts_speed", "1.0"))
         llm_chat_model = request.GET.get(
-            "llm_chat_model", request.POST.get("llm_chat_model", DEFAULT_CHAT_LLM)
+            "llm_chat_model", request.POST.get("llm_chat_model", "{}")
         )
+        if llm_chat_model.startswith("{") and llm_chat_model.endswith("}"):
+            llm_chat_model = json.loads(llm_chat_model)
         llm_tool_model = request.GET.get(
-            "llm_tool_model", request.POST.get("llm_tool_model", DEFAULT_CHAT_LLM)
+            "llm_tool_model", request.POST.get("llm_tool_model", "{}")
         )
+        if llm_tool_model.startswith("{") and llm_tool_model.endswith("}"):
+            llm_tool_model = json.loads(llm_tool_model)
         llm_chat_prompt = request.GET.get("llm_chat_prompt", request.POST.get("llm_chat_prompt", DEFAULT_CHAT_LLM_PROMPT))
         llm_chat_show_count = request.GET.get("llm_chat_show_count", request.POST.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT))
         llm_chat_memory_count = request.GET.get("llm_chat_memory_count", request.POST.get("llm_chat_memory_count", DEFAULT_CHAT_LLM_MEMORY_COUNT))

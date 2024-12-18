@@ -59,8 +59,8 @@ class BaseAgentManager:
             return check_ret, desc
 
         if engine_type is None:
-            engine_type = user.get("llm_tool_model", llm_tools.DEFAULT_TOOL_LLM)
-        llm_info = llm_tools.LLMInfo.get_info(engine_type)
+            engine_type = user.get("llm_tool_model", {})
+        llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
         # later check api_method is openai/gemini
         logger.warning(f'llm_info {llm_info}')
         llm = OpenAI(base_url=llm_info.url, api_key=llm_info.api_key)
@@ -128,7 +128,7 @@ class BaseAgentManager:
             total_count = response.context_variables['total_count']
             if total_count > 0:
                 duration = round(time.time() - start_time, 3)    
-                llm_tools.save_llm_usage(user, "agent", engine_type, duration, total_count)
+                llm_tools.save_llm_usage(user, "agent", llm_info.get_desc(), duration, total_count)
         sdata.cache = response.context_variables['sdata'].cache
         return True, ret
 

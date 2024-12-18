@@ -11,8 +11,7 @@
     "voice": "语音",
     "language": "语言",
     "speed": "速度",
-    "dialogModel": "对话",
-    "model": "模型",
+    "dialogModel": "大语言模型",
     "chatModel": "聊天模型",
     "toolModel": "工具模型",
     "prompt": "提示词",
@@ -175,5 +174,13 @@
     "init": "初始化",
     "newSession": "新会话",
     "clearSession": "清空会话",
-    "messageSendingFailed": "消息发送失败"
+    "messageSendingFailed": "消息发送失败",
+    "modelType": "模型类型",
+    "defaultModel": "默认模型",
+    "customModel": "自定义模型",
+    "apiKey": "API密钥",
+    "apiUrl": "接口地址",
+    "model": "模型名称",
+    "chatSettings": "聊天模型设置",
+    "toolSettings": "工具模型设置"
   }

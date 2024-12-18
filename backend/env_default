@@ -33,45 +33,12 @@ MINIO_SECRET_KEY='password'
 MY_TTS_SERV_ADDR=""
 
 # LLM
-DEFAULT_CHAT_LLM='gpt3.5-turbo' # or deepseek
-DEFAULT_TOOL_LLM='gpt3.5-turbo' # as AGENT_LLM
-
-# OPENAI
-OPENAI_API_KEY="sk-xxx"
-
-# GEMINI
-GEMINI_API_KEY='xxx'
-GEMINI_MODEL='gemini-pro'
-
-# KIMI
-KIMI_URL='https://api.moonshot.cn/v1'
-KIMI_API_KEY='xxx'
-KIMI_MODEL='moonshot-v1-8k'
-
-# XUNFEI
-XUNFEI_LLM_URL='https://spark-api-open.xf-yun.com/v1'
-XUNFEI_LLM_API_KEY='xxx'
-XUNFEI_LLM_MODEL='general'
-
-# DEEPSEEK
-DEEPSEEK_URL='https://api.deepseek.com'
-DEEPSEEK_API_KEY='xxx'
-DEEPSEEK_MODEL='deepseek-chat'
-
-# QWEN
-QWEN_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
-QWEN_API_KEY="xxx"
-QWEN_MODEL="qwen-turbo-0624"
-
-# OLLAMA
-OLLAMA_LLM_URL='xxx'
-OLLAMA_LLM_API_KEY='xxx'
-OLLAMA_LLM_MODEL='llama3'
-
-# USER_DEFINE
-USER_DEFINE_URL='xxx'
-USER_DEFINE_API_KEY='xxx'
-USER_DEFINE_MODEL='xxx'
+DEFAULT_CHAT_MODEL='gpt-3.5-turbo'
+DEFAULT_CHAT_URL='https://api.openai.com/v1'
+DEFAULT_CHAT_API_KEY='sk-'
+DEFAULT_TOOL_MODEL='gpt-4o-mini'
+DEFAULT_TOOL_URL='https://api.openai.com/v1'
+DEFAULT_TOOL_API_KEY='sk-'
 
 # EMBEDDING
 USE_EMBEDDING='False'

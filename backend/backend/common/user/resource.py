@@ -51,11 +51,11 @@ class ResourceManager:
                 f"get_usage: method {method}, dtype {dtype}, rtype {rtype}, {day} {uid}"
             )
         if day == -1:
-            data = StoreResourceUsage.objects.filter(user_id=uid).all()
+            data = StoreResourceUsage.objects.filter(user_id=uid).filter(method__startswith='default').all()
         else:
             data = StoreResourceUsage.objects.filter(
                 user_id=uid, updated_time__gte=day
-            ).all()
+            ).filter(method__startswith='default').all()
         if method is not None:
             data = data.filter(method=method).all()
         if rtype is not None:

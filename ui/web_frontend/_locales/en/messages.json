@@ -11,8 +11,7 @@
     "voice": "Voice",
     "language": "Language",
     "speed": "Speed",
-    "dialogModel": "Dialog",
-    "model": "Model",
+    "dialogModel": "LLM",
     "chatModel": "Chat model",
     "toolModel": "Tool model",
     "prompt": "Prompt",
@@ -175,5 +174,13 @@
     "init": "Init",
     "newSession": "New Session",
     "clearSession": "Clear Session",
-    "messageSendingFailed": "Message sending failed"
+    "messageSendingFailed": "Message sending failed",
+    "modelType": "Model Type",
+    "defaultModel": "Default Model",
+    "customModel": "Custom Model",
+    "apiKey": "API Key",
+    "apiUrl": "API URL",
+    "model": "Model Name",
+    "chatSettings": "Chat Settings",
+    "toolSettings": "Tool Settings"
 }

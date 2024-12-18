@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-18 06:47+0000\n"
+"POT-Creation-Date: 2024-12-18 11:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: backend/app_bm_syncex/views.py:70
+msgid "data_already_exists"
+msgstr "数据已存在"
 
 #: backend/app_dataforge/entry.py:44
 msgid "unknown_type_colon_"
@@ -374,14 +378,9 @@ msgid "please_upload_or_share_a_file_first"
 msgstr "请先上传或分享文件"
 
 #: backend/app_message/agent/data_agent.py:243
+#: backend/app_message/message.py:41
 msgid "file_to_audio"
 msgstr "文件转音频"
-
-#: backend/app_message/agent/other_agent.py:71
-#: backend/app_message/agent/other_agent.py:78
-#: backend/app_message/message.py:41
-msgid "text_to_audio"
-msgstr "文本转音频"
 
 #: backend/app_message/agent/data_agent.py:253
 #: backend/app_message/message.py:37
@@ -434,6 +433,11 @@ msgstr "请输入饮食内容"
 #: backend/app_message/agent/other_agent.py:68
 msgid "voice_assistant"
 msgstr "语音助手"
+
+#: backend/app_message/agent/other_agent.py:71
+#: backend/app_message/agent/other_agent.py:78
+msgid "text_to_audio"
+msgstr "文本转音频"
 
 #: backend/app_message/agent/other_agent.py:79
 msgid "please_enter_conversion_content"
@@ -525,140 +529,123 @@ msgstr "Gemini聊天"
 msgid "gemini_call_failed"
 msgstr "Gemini调用失败"
 
-#: backend/app_message/agent/user_agent.py:16
+#: backend/app_message/agent/user_agent.py:15
 msgid "user_management"
 msgstr "用户管理"
 
-#: backend/app_message/agent/user_agent.py:28
-#: backend/backend/common/user/views.py:56
+#: backend/app_message/agent/user_agent.py:27
+#: backend/backend/common/user/views.py:55
 #: backend/tests/test_app_user_manager.py:30
 msgid "username_already_exists"
 msgstr "用户已存在"
 
-#: backend/app_message/agent/user_agent.py:32
-#: backend/app_message/agent/user_agent.py:69
-#: backend/backend/common/user/views.py:60
+#: backend/app_message/agent/user_agent.py:31
+#: backend/app_message/agent/user_agent.py:68
+#: backend/backend/common/user/views.py:59
 msgid "registration_failed"
 msgstr "注册失败"
 
-#: backend/app_message/agent/user_agent.py:34
-#: backend/backend/common/user/views.py:62
+#: backend/app_message/agent/user_agent.py:33
+#: backend/backend/common/user/views.py:61
 msgid "user_or_password_are_empty_dot_"
 msgstr "用户名或密码为空"
 
-#: backend/app_message/agent/user_agent.py:39
+#: backend/app_message/agent/user_agent.py:38
 msgid "empty_username"
 msgstr "用户名为空"
 
-#: backend/app_message/agent/user_agent.py:41
+#: backend/app_message/agent/user_agent.py:40
 #: backend/tests/test_app_user_manager.py:64
 msgid "old_password_is_empty"
 msgstr "原密码为空"
 
-#: backend/app_message/agent/user_agent.py:43
-#: backend/backend/common/user/views.py:83
+#: backend/app_message/agent/user_agent.py:42
+#: backend/backend/common/user/views.py:82
 msgid "the_new_password_is_blank"
 msgstr "新密码为空"
 
-#: backend/app_message/agent/user_agent.py:45
+#: backend/app_message/agent/user_agent.py:44
 msgid "old_and_new_passwords_are_identical_dot_"
 msgstr "新旧密码相同"
 
-#: backend/app_message/agent/user_agent.py:47
-#: backend/backend/common/user/views.py:68
+#: backend/app_message/agent/user_agent.py:46
+#: backend/backend/common/user/views.py:67
 #: backend/tests/test_app_user_manager.py:42
 msgid "user_does_not_exist"
 msgstr "用户不存在"
 
-#: backend/app_message/agent/user_agent.py:49
-#: backend/backend/common/user/views.py:76
+#: backend/app_message/agent/user_agent.py:48
+#: backend/backend/common/user/views.py:75
 #: backend/tests/test_app_user_manager.py:64
 msgid "original_password_error"
 msgstr "原密码错误"
 
-#: backend/app_message/agent/user_agent.py:51
-#: backend/backend/common/user/views.py:79
+#: backend/app_message/agent/user_agent.py:50
+#: backend/backend/common/user/views.py:78
 #: backend/tests/test_app_user_manager.py:57
 msgid "successfully_set"
 msgstr "设置成功"
 
-#: backend/app_message/agent/user_agent.py:53
-#: backend/backend/common/user/views.py:81
+#: backend/app_message/agent/user_agent.py:52
+#: backend/backend/common/user/views.py:80
 msgid "setup_failed"
 msgstr "设置失败"
 
-#: backend/app_message/agent/user_agent.py:56
+#: backend/app_message/agent/user_agent.py:55
 msgid "user_registration"
 msgstr "用户注册"
 
-#: backend/app_message/agent/user_agent.py:64
+#: backend/app_message/agent/user_agent.py:63
 msgid "registration_successful"
 msgstr "注册成功"
 
-#: backend/app_message/agent/user_agent.py:71
+#: backend/app_message/agent/user_agent.py:70
 msgid "user_login"
 msgstr "用户登录"
 
-#: backend/app_message/agent/user_agent.py:80
+#: backend/app_message/agent/user_agent.py:79
 msgid "change_password"
 msgstr "修改密码"
 
-#: backend/app_message/agent/user_agent.py:88
+#: backend/app_message/agent/user_agent.py:87
 msgid "change_successful"
 msgstr "修改成功"
 
-#: backend/app_message/agent/user_agent.py:93
+#: backend/app_message/agent/user_agent.py:92
 msgid "change_failed"
 msgstr "修改失败"
 
-#: backend/app_message/agent/user_agent.py:95
+#: backend/app_message/agent/user_agent.py:94
 msgid "user_logout"
 msgstr "用户登出"
 
-#: backend/app_message/agent/user_agent.py:108
+#: backend/app_message/agent/user_agent.py:106
 msgid "system_settings"
 msgstr "系统设置"
 
-#: backend/app_message/agent/user_agent.py:111
+#: backend/app_message/agent/user_agent.py:109
 msgid "query_user_privileges"
 msgstr "查询用户权限"
 
-#: backend/app_message/agent/user_agent.py:116
+#: backend/app_message/agent/user_agent.py:114
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "用户等级：{level}"
 
-#: backend/app_message/agent/user_agent.py:119
+#: backend/app_message/agent/user_agent.py:117
 msgid "query_resource_usage"
 msgstr "查询资源使用情况"
 
-#: backend/app_message/agent/user_agent.py:129
-msgid "set_tool_model"
-msgstr "设置工具模型"
-
-#: backend/app_message/agent/user_agent.py:146
-#: backend/app_message/agent/user_agent.py:148
-#: backend/app_message/agent/user_agent.py:175
-#: backend/app_message/agent/user_agent.py:177
-#, python-brace-format
-msgid "set_language_model {value}"
-msgstr "设置语言模型 {value}"
-
-#: backend/app_message/agent/user_agent.py:156
-#: backend/app_message/agent/user_agent.py:185
-msgid "setting_successful"
-msgstr "设置成功"
-
-#: backend/app_message/agent/user_agent.py:158
-msgid "set_chat_model"
-msgstr "设置聊天模型"
-
-#: backend/app_message/agent/user_agent.py:187
-#: backend/app_message/agent/user_agent.py:195
+#: backend/app_message/agent/user_agent.py:127
+#: backend/app_message/agent/user_agent.py:135
 msgid "set_text_to_speech"
 msgstr "设置语音合成"
 
-#: backend/app_message/chat_tools.py:96
+#: backend/app_message/chat_tools.py:78
+msgid "custom"
+msgstr "自定义"
+
+#: backend/app_message/chat_tools.py:95
 msgid "chat_call_failed"
 msgstr "chat调用失败"
 
@@ -798,6 +785,11 @@ msgstr "未知"
 msgid "chinese"
 msgstr "中文"
 
+# ptools.py
+#: backend/app_paper/ptools.py:380
+msgid "paper_reading"
+msgstr "论文阅读"
+
 #: backend/app_paper/ptools.py:390
 #, python-brace-format
 msgid "english_title_colon__{title}"
@@ -893,20 +885,25 @@ msgid "conclusion_colon_"
 msgstr "结论:"
 
 #: backend/app_paper/ptools.py:579 backend/app_paper/ptools.py:596
-#: backend/app_paper/ptools.py:623
+#: backend/app_paper/ptools.py:625
 msgid "empty_contents"
 msgstr "内容为空"
 
-#: backend/app_paper/ptools.py:628
+#: backend/app_paper/ptools.py:606 backend/app_paper/ptools.py:630
 msgid "original_text"
 msgstr "原文"
 
-#: backend/app_paper/ptools.py:632
+# ptools.py
+#: backend/app_paper/ptools.py:607
+msgid "polished_text"
+msgstr "润色后的文本"
+
+#: backend/app_paper/ptools.py:634
 msgid "translate_text"
 msgstr "翻译后的文本"
 
-#: backend/app_paper/views.py:43 backend/backend/common/user/views.py:49
-#: backend/backend/common/user/views.py:111
+#: backend/app_paper/views.py:43 backend/backend/common/user/views.py:48
+#: backend/backend/common/user/views.py:110
 msgid "method_not_supported_colon_"
 msgstr "不支持方法:"
 
@@ -1006,15 +1003,15 @@ msgstr "总共 {total} 个代币"
 msgid "embedding_costs_about_{cost}_yuan"
 msgstr "嵌入花费约 {cost} 元"
 
-#: backend/backend/common/llm/llm_hub.py:60
+#: backend/backend/common/llm/llm_hub.py:59
 msgid "call_failed"
 msgstr "调用失败"
 
-#: backend/backend/common/llm/llm_tools.py:25
+#: backend/backend/common/llm/llm_tools.py:27
 msgid "the_maximum_number_of_words_called_today_has_been_reached"
 msgstr "今日调用字数已达上限"
 
-#: backend/backend/common/llm/llm_tools.py:191
+#: backend/backend/common/llm/llm_tools.py:218
 msgid "gemini_is_temporarily_unavailable"
 msgstr "gemini暂时无法使用"
 
@@ -1232,92 +1229,92 @@ msgstr "总计"
 msgid "{}_usage"
 msgstr "{} 用量"
 
-#: backend/backend/common/user/user.py:19
+#: backend/backend/common/user/user.py:18
 msgid "chat_prompt_default"
 msgstr "请简单回答"
 
-#: backend/backend/common/user/user.py:165
+#: backend/backend/common/user/user.py:164
 msgid "supports_ocr_colon_"
 msgstr "支持OCR:"
 
+#: backend/backend/common/user/user.py:164
 #: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:166
-#: backend/backend/common/user/user.py:168
-#: backend/backend/common/user/user.py:172
+#: backend/backend/common/user/user.py:167
+#: backend/backend/common/user/user.py:171
 msgid "yes"
 msgstr "是"
 
+#: backend/backend/common/user/user.py:164
 #: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:166
-#: backend/backend/common/user/user.py:168
-#: backend/backend/common/user/user.py:172
+#: backend/backend/common/user/user.py:167
+#: backend/backend/common/user/user.py:171
 msgid "denied"
 msgstr "否"
 
-#: backend/backend/common/user/user.py:166
+#: backend/backend/common/user/user.py:165
 msgid "save_data_colon_"
 msgstr "保存数据:"
 
-#: backend/backend/common/user/user.py:168
+#: backend/backend/common/user/user.py:167
 msgid "parsing_the_paper_colon_"
 msgstr "解析论文:"
 
-#: backend/backend/common/user/user.py:171
+#: backend/backend/common/user/user.py:170
 msgid "translation_book_colon_"
 msgstr "翻译书籍:"
 
-#: backend/backend/common/user/user.py:175
+#: backend/backend/common/user/user.py:174
 #, python-brace-format
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
-msgstr "模型限制：{limit_llm_day_formatted} 个token/天"
+msgstr "默认模型限制：{limit_llm_day_formatted} 个token/天"
 
-#: backend/backend/common/user/user.py:180
+#: backend/backend/common/user/user.py:179
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
 msgstr "语音合成限制：{limit_tts_day} 个token/天"
 
-#: backend/backend/common/user/user.py:185
+#: backend/backend/common/user/user.py:184
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
 msgstr "语音合成限制：每次尝试 {tokens} 个token"
 
-#: backend/backend/common/user/user.py:190
+#: backend/backend/common/user/user.py:189
 #, python-brace-format
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
 msgstr "记录导出范围：{limit_export_record_day} 天"
 
-#: backend/backend/common/user/user.py:209
+#: backend/backend/common/user/user.py:208
 msgid "te_ac_settings"
 msgstr "临时用户"
 
-#: backend/backend/common/user/user.py:211
+#: backend/backend/common/user/user.py:210
 msgid "normal"
 msgstr "普通用户"
 
-#: backend/backend/common/user/user.py:213
+#: backend/backend/common/user/user.py:212
 msgid "vip_user"
 msgstr "VIP用户"
 
-#: backend/backend/common/user/user.py:215
+#: backend/backend/common/user/user.py:214
 msgid "administrator"
 msgstr "管理员"
 
-#: backend/backend/common/user/user.py:216
+#: backend/backend/common/user/user.py:215
 msgid "unknown_level"
 msgstr "未知级别"
 
-#: backend/backend/common/user/views.py:58
+#: backend/backend/common/user/views.py:57
 msgid "account_created__excl_"
 msgstr "注册成功"
 
-#: backend/backend/common/user/views.py:119
+#: backend/backend/common/user/views.py:118
 #, fuzzy, python-brace-format
 #| msgid "user_level: {level}"
 msgid "user_level: {level}\n"
 msgstr "用户等级：{level}"
 
-#: backend/backend/common/user/views.py:170
-#: backend/backend/common/user/views.py:175
+#: backend/backend/common/user/views.py:173
+#: backend/backend/common/user/views.py:178
 msgid "settings_were_applied_successfully"
 msgstr "设置成功"
 
@@ -1387,15 +1384,3 @@ msgstr "修改密码：xieyan, 2314"
 #: backend/tests/test_app_user_manager.py:72
 msgid "when_to_use_a_beaker_and_when_to_use_a_test_tube_in_chemistry"
 msgstr "化学什么时候用烧杯，什么时候用试管"
-
-# ptools.py
-msgid "polished_text"
-msgstr "润色后的文本"
-
-# ptools.py
-msgid "paper_reading"
-msgstr "论文阅读"
-
-#: view.py
-msgid "data_already_exists"
-msgstr "数据已存在"

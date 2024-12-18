@@ -5,7 +5,6 @@ from backend.common.speech.tts import (
     tts_get_voice_and_engine,
     tts_set_engine,
 )
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, DEFAULT_TOOL_LLM, get_llm_list
 from backend.common.user.user import *
 from backend.common.user.resource import *
 from app_message.agent.base_agent import BaseAgent, agent_function
@@ -100,7 +99,6 @@ class UserAgent(BaseAgent):
 
 from backend.common.user.user import *
 from backend.common.user.resource import *
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, DEFAULT_TOOL_LLM, get_llm_list
 
 class SettingAgent(BaseAgent):
     def __init__(self):
@@ -125,64 +123,6 @@ class SettingAgent(BaseAgent):
             "content": "\n"
             + ResourceManager.get_instance().get_usage_summary(sdata.user_id),
         }
-
-    @agent_function(_("set_tool_model"))
-    def _afunc_llm_tool_setting(context_variables: dict, content: str = None):
-        """Set tool model"""
-        sdata = context_variables["sdata"]
-        if content is None:
-            content = sdata.current_content        
-        logger.debug(f"msg_llm_tool_setting '{content}'")
-        user = UserManager.get_instance().get_user(sdata.user_id)
-
-        if content == "":
-            llm_setting = user.get("llm_tool_model", DEFAULT_TOOL_LLM)
-            logger.debug(f"llm_setting {llm_setting}")
-            if user.privilege.b_llm:
-                llm_list = get_llm_list()
-                cmd_list = []
-                for item in llm_list:
-                    if item["value"] == llm_setting:
-                        cmd = (f"{item['label']} *", _("set_language_model {value}").format(value=item['value']))
-                    else:
-                        cmd = (f"{item['label']}", _("set_language_model {value}").format(value=item['value']))
-                    cmd_list.append(cmd)
-            logger.debug(f"cmd_list {cmd_list}")
-            return msg_common_select(sdata, cmd_list)
-        else:
-            name = content
-            llm_setting = name.strip()
-            user.set("llm_tool_model", llm_setting)
-            return True, {"type": "text", "content": _("setting_successful")}
-
-    @agent_function(_("set_chat_model"))
-    def _afunc_llm_chat_setting(context_variables: dict, content: str = None):
-        """Set chat model"""
-        sdata = context_variables["sdata"]
-        if content is None:
-            content = sdata.current_content        
-        logger.debug(f"msg_llm_chat_setting '{content}'")
-        user = UserManager.get_instance().get_user(sdata.user_id)
-
-        if content == "":
-            llm_setting = user.get("llm_chat_model", DEFAULT_CHAT_LLM)
-            logger.debug(f"llm_setting {llm_setting}")
-            if user.privilege.b_llm:
-                llm_list = get_llm_list()
-                cmd_list = []
-                for item in llm_list:
-                    if item["value"] == llm_setting:
-                        cmd = (f"{item['label']} *", _("set_language_model {value}").format(value=item['value']))
-                    else:
-                        cmd = (f"{item['label']}", _("set_language_model {value}").format(value=item['value']))
-                    cmd_list.append(cmd)
-            logger.debug(f"cmd_list {cmd_list}")
-            return msg_common_select(sdata, cmd_list)
-        else:
-            name = content
-            llm_setting = name.strip()
-            user.set("llm_chat_model", llm_setting)
-            return True, {"type": "text", "content": _("setting_successful")}
 
     @agent_function(_("set_text_to_speech"))
     def _afunc_tts_setting(context_variables: dict, content: str = None):

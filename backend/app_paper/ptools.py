@@ -377,7 +377,7 @@ def paper_info_to_ob(info):
         ret.append(f"journal: ''")
     ret.append(f"status: {_('unread')}")
     ret.append(f"tags:")
-    ret.append(f"- {_('paper_reading')}")
+    ret.append("- " + _('paper_reading'))
     if "title_zh" in info:
         ret.append(f"title: {info['title_zh']}")
     else:
@@ -603,12 +603,14 @@ def polish(uid, content, debug=False):
         ret, answer, detail = llm_query(
             uid, PAPER_ROLE, text[:4096], "chat", debug=debug
         )
+        original_text = _('original_text')
+        polished_text = _('polished_text')
         return (
             True,
-            f"""{_('original_text')}
+            f"""{original_text}
 {content}
 =====================
-{_('polished_text')}
+{polished_text}
 {answer}""".format(content=content, answer=answer),
         )
     except Exception as e:

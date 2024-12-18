@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-18 06:47+0000\n"
+"POT-Creation-Date: 2024-12-18 11:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: backend/app_bm_syncex/views.py:70
+msgid "data_already_exists"
+msgstr "Data Already Exists"
 
 #: backend/app_dataforge/entry.py:44
 msgid "unknown_type_colon_"
@@ -378,14 +382,9 @@ msgid "please_upload_or_share_a_file_first"
 msgstr "Please upload or share a file first"
 
 #: backend/app_message/agent/data_agent.py:243
+#: backend/app_message/message.py:41
 msgid "file_to_audio"
 msgstr "File to Audio"
-
-#: backend/app_message/agent/other_agent.py:71
-#: backend/app_message/agent/other_agent.py:78
-#: backend/app_message/message.py:41
-msgid "text_to_audio"
-msgstr "Text to Audio"
 
 #: backend/app_message/agent/data_agent.py:253
 #: backend/app_message/message.py:37
@@ -438,6 +437,11 @@ msgstr "Please enter the diet content"
 #: backend/app_message/agent/other_agent.py:68
 msgid "voice_assistant"
 msgstr "Voice Assistant"
+
+#: backend/app_message/agent/other_agent.py:71
+#: backend/app_message/agent/other_agent.py:78
+msgid "text_to_audio"
+msgstr "Text to Audio"
 
 #: backend/app_message/agent/other_agent.py:79
 msgid "please_enter_conversion_content"
@@ -529,140 +533,123 @@ msgstr "Gemini Chat"
 msgid "gemini_call_failed"
 msgstr "Gemini Call Failed"
 
-#: backend/app_message/agent/user_agent.py:16
+#: backend/app_message/agent/user_agent.py:15
 msgid "user_management"
 msgstr "User Management"
 
-#: backend/app_message/agent/user_agent.py:28
-#: backend/backend/common/user/views.py:56
+#: backend/app_message/agent/user_agent.py:27
+#: backend/backend/common/user/views.py:55
 #: backend/tests/test_app_user_manager.py:30
 msgid "username_already_exists"
 msgstr "Username already exists"
 
-#: backend/app_message/agent/user_agent.py:32
-#: backend/app_message/agent/user_agent.py:69
-#: backend/backend/common/user/views.py:60
+#: backend/app_message/agent/user_agent.py:31
+#: backend/app_message/agent/user_agent.py:68
+#: backend/backend/common/user/views.py:59
 msgid "registration_failed"
 msgstr "Registration failed"
 
-#: backend/app_message/agent/user_agent.py:34
-#: backend/backend/common/user/views.py:62
+#: backend/app_message/agent/user_agent.py:33
+#: backend/backend/common/user/views.py:61
 msgid "user_or_password_are_empty_dot_"
 msgstr "User or password are empty."
 
-#: backend/app_message/agent/user_agent.py:39
+#: backend/app_message/agent/user_agent.py:38
 msgid "empty_username"
 msgstr "Empty username"
 
-#: backend/app_message/agent/user_agent.py:41
+#: backend/app_message/agent/user_agent.py:40
 #: backend/tests/test_app_user_manager.py:64
 msgid "old_password_is_empty"
 msgstr "Old password is empty"
 
-#: backend/app_message/agent/user_agent.py:43
-#: backend/backend/common/user/views.py:83
+#: backend/app_message/agent/user_agent.py:42
+#: backend/backend/common/user/views.py:82
 msgid "the_new_password_is_blank"
 msgstr "The new password is blank"
 
-#: backend/app_message/agent/user_agent.py:45
+#: backend/app_message/agent/user_agent.py:44
 msgid "old_and_new_passwords_are_identical_dot_"
 msgstr "Old and new passwords are identical."
 
-#: backend/app_message/agent/user_agent.py:47
-#: backend/backend/common/user/views.py:68
+#: backend/app_message/agent/user_agent.py:46
+#: backend/backend/common/user/views.py:67
 #: backend/tests/test_app_user_manager.py:42
 msgid "user_does_not_exist"
 msgstr "User does not exist"
 
-#: backend/app_message/agent/user_agent.py:49
-#: backend/backend/common/user/views.py:76
+#: backend/app_message/agent/user_agent.py:48
+#: backend/backend/common/user/views.py:75
 #: backend/tests/test_app_user_manager.py:64
 msgid "original_password_error"
 msgstr "original password error"
 
-#: backend/app_message/agent/user_agent.py:51
-#: backend/backend/common/user/views.py:79
+#: backend/app_message/agent/user_agent.py:50
+#: backend/backend/common/user/views.py:78
 #: backend/tests/test_app_user_manager.py:57
 msgid "successfully_set"
 msgstr "successfully set"
 
-#: backend/app_message/agent/user_agent.py:53
-#: backend/backend/common/user/views.py:81
+#: backend/app_message/agent/user_agent.py:52
+#: backend/backend/common/user/views.py:80
 msgid "setup_failed"
 msgstr "Setup failed"
 
-#: backend/app_message/agent/user_agent.py:56
+#: backend/app_message/agent/user_agent.py:55
 msgid "user_registration"
 msgstr "User Registration"
 
-#: backend/app_message/agent/user_agent.py:64
+#: backend/app_message/agent/user_agent.py:63
 msgid "registration_successful"
 msgstr "Registration Successful"
 
-#: backend/app_message/agent/user_agent.py:71
+#: backend/app_message/agent/user_agent.py:70
 msgid "user_login"
 msgstr "User Login"
 
-#: backend/app_message/agent/user_agent.py:80
+#: backend/app_message/agent/user_agent.py:79
 msgid "change_password"
 msgstr "Change password"
 
-#: backend/app_message/agent/user_agent.py:88
+#: backend/app_message/agent/user_agent.py:87
 msgid "change_successful"
 msgstr "Change Successful"
 
-#: backend/app_message/agent/user_agent.py:93
+#: backend/app_message/agent/user_agent.py:92
 msgid "change_failed"
 msgstr "Change Failed"
 
-#: backend/app_message/agent/user_agent.py:95
+#: backend/app_message/agent/user_agent.py:94
 msgid "user_logout"
 msgstr "User Logout"
 
-#: backend/app_message/agent/user_agent.py:108
+#: backend/app_message/agent/user_agent.py:106
 msgid "system_settings"
 msgstr "System Settings"
 
-#: backend/app_message/agent/user_agent.py:111
+#: backend/app_message/agent/user_agent.py:109
 msgid "query_user_privileges"
 msgstr "Query User Privileges"
 
-#: backend/app_message/agent/user_agent.py:116
+#: backend/app_message/agent/user_agent.py:114
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "User level: {level}"
 
-#: backend/app_message/agent/user_agent.py:119
+#: backend/app_message/agent/user_agent.py:117
 msgid "query_resource_usage"
 msgstr "Query Resource Usage"
 
-#: backend/app_message/agent/user_agent.py:129
-msgid "set_tool_model"
-msgstr "Set Tool Model"
-
-#: backend/app_message/agent/user_agent.py:146
-#: backend/app_message/agent/user_agent.py:148
-#: backend/app_message/agent/user_agent.py:175
-#: backend/app_message/agent/user_agent.py:177
-#, python-brace-format
-msgid "set_language_model {value}"
-msgstr "Set Language Model {value}"
-
-#: backend/app_message/agent/user_agent.py:156
-#: backend/app_message/agent/user_agent.py:185
-msgid "setting_successful"
-msgstr "Setting Successful"
-
-#: backend/app_message/agent/user_agent.py:158
-msgid "set_chat_model"
-msgstr "Set Chat Model"
-
-#: backend/app_message/agent/user_agent.py:187
-#: backend/app_message/agent/user_agent.py:195
+#: backend/app_message/agent/user_agent.py:127
+#: backend/app_message/agent/user_agent.py:135
 msgid "set_text_to_speech"
 msgstr "Set Text to Speech"
 
-#: backend/app_message/chat_tools.py:96
+#: backend/app_message/chat_tools.py:78
+msgid "custom"
+msgstr "Custom"
+
+#: backend/app_message/chat_tools.py:95
 msgid "chat_call_failed"
 msgstr "chat call failed"
 
@@ -802,6 +789,11 @@ msgstr "Unknown"
 msgid "chinese"
 msgstr "Chinese"
 
+# ptools.py
+#: backend/app_paper/ptools.py:380
+msgid "paper_reading"
+msgstr "Paper reading"
+
 #: backend/app_paper/ptools.py:390
 #, python-brace-format
 msgid "english_title_colon__{title}"
@@ -897,20 +889,25 @@ msgid "conclusion_colon_"
 msgstr "Conclusion: "
 
 #: backend/app_paper/ptools.py:579 backend/app_paper/ptools.py:596
-#: backend/app_paper/ptools.py:623
+#: backend/app_paper/ptools.py:625
 msgid "empty_contents"
 msgstr "Empty contents"
 
-#: backend/app_paper/ptools.py:628
+#: backend/app_paper/ptools.py:606 backend/app_paper/ptools.py:630
 msgid "original_text"
 msgstr "Original text"
 
-#: backend/app_paper/ptools.py:632
+# ptools.py
+#: backend/app_paper/ptools.py:607
+msgid "polished_text"
+msgstr "Polished text"
+
+#: backend/app_paper/ptools.py:634
 msgid "translate_text"
 msgstr "Translation"
 
-#: backend/app_paper/views.py:43 backend/backend/common/user/views.py:49
-#: backend/backend/common/user/views.py:111
+#: backend/app_paper/views.py:43 backend/backend/common/user/views.py:48
+#: backend/backend/common/user/views.py:110
 msgid "method_not_supported_colon_"
 msgstr "Method not supported:"
 
@@ -1012,15 +1009,15 @@ msgstr "Total {total} tokens"
 msgid "embedding_costs_about_{cost}_yuan"
 msgstr "Embedding costs about {cost} yuan"
 
-#: backend/backend/common/llm/llm_hub.py:60
+#: backend/backend/common/llm/llm_hub.py:59
 msgid "call_failed"
 msgstr "Call failed"
 
-#: backend/backend/common/llm/llm_tools.py:25
+#: backend/backend/common/llm/llm_tools.py:27
 msgid "the_maximum_number_of_words_called_today_has_been_reached"
 msgstr "The maximum number of words called today has been reached"
 
-#: backend/backend/common/llm/llm_tools.py:191
+#: backend/backend/common/llm/llm_tools.py:218
 msgid "gemini_is_temporarily_unavailable"
 msgstr "gemini is temporarily unavailable"
 
@@ -1240,92 +1237,92 @@ msgstr "Total"
 msgid "{}_usage"
 msgstr "{} usage"
 
-#: backend/backend/common/user/user.py:19
+#: backend/backend/common/user/user.py:18
 msgid "chat_prompt_default"
 msgstr "Please answer briefly."
 
-#: backend/backend/common/user/user.py:165
+#: backend/backend/common/user/user.py:164
 msgid "supports_ocr_colon_"
 msgstr "Supports OCR:"
 
+#: backend/backend/common/user/user.py:164
 #: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:166
-#: backend/backend/common/user/user.py:168
-#: backend/backend/common/user/user.py:172
+#: backend/backend/common/user/user.py:167
+#: backend/backend/common/user/user.py:171
 msgid "yes"
 msgstr "Yes"
 
+#: backend/backend/common/user/user.py:164
 #: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:166
-#: backend/backend/common/user/user.py:168
-#: backend/backend/common/user/user.py:172
+#: backend/backend/common/user/user.py:167
+#: backend/backend/common/user/user.py:171
 msgid "denied"
 msgstr "Denied"
 
-#: backend/backend/common/user/user.py:166
+#: backend/backend/common/user/user.py:165
 msgid "save_data_colon_"
 msgstr "Save Data:"
 
-#: backend/backend/common/user/user.py:168
+#: backend/backend/common/user/user.py:167
 msgid "parsing_the_paper_colon_"
 msgstr "Parsing the paper:"
 
-#: backend/backend/common/user/user.py:171
+#: backend/backend/common/user/user.py:170
 msgid "translation_book_colon_"
 msgstr "Translation Book:"
 
-#: backend/backend/common/user/user.py:175
+#: backend/backend/common/user/user.py:174
 #, python-brace-format
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
-msgstr "Model limit: {limit_llm_day_formatted} tokens/day"
+msgstr "Default model limit: {limit_llm_day_formatted} tokens/day"
 
-#: backend/backend/common/user/user.py:180
+#: backend/backend/common/user/user.py:179
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
 msgstr "Speech synthesis limit: {limit_tts_day} tokens/day"
 
-#: backend/backend/common/user/user.py:185
+#: backend/backend/common/user/user.py:184
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
 msgstr "Speech synthesis limit: {tokens} tokens/attempt"
 
-#: backend/backend/common/user/user.py:190
+#: backend/backend/common/user/user.py:189
 #, python-brace-format
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
 msgstr "Recording export range: {limit_export_record_day} days"
 
-#: backend/backend/common/user/user.py:209
+#: backend/backend/common/user/user.py:208
 msgid "te_ac_settings"
 msgstr "Te_ac_Settings"
 
-#: backend/backend/common/user/user.py:211
+#: backend/backend/common/user/user.py:210
 msgid "normal"
 msgstr "Normal"
 
-#: backend/backend/common/user/user.py:213
+#: backend/backend/common/user/user.py:212
 msgid "vip_user"
 msgstr "VIP User"
 
-#: backend/backend/common/user/user.py:215
+#: backend/backend/common/user/user.py:214
 msgid "administrator"
 msgstr "Administrator"
 
-#: backend/backend/common/user/user.py:216
+#: backend/backend/common/user/user.py:215
 msgid "unknown_level"
 msgstr "Unknown level"
 
-#: backend/backend/common/user/views.py:58
+#: backend/backend/common/user/views.py:57
 msgid "account_created__excl_"
 msgstr "Account created !"
 
-#: backend/backend/common/user/views.py:119
+#: backend/backend/common/user/views.py:118
 #, fuzzy, python-brace-format
 #| msgid "user_level: {level}"
 msgid "user_level: {level}\n"
 msgstr "User level: {level}"
 
-#: backend/backend/common/user/views.py:170
-#: backend/backend/common/user/views.py:175
+#: backend/backend/common/user/views.py:173
+#: backend/backend/common/user/views.py:178
 msgid "settings_were_applied_successfully"
 msgstr "Settings were applied successfully"
 
@@ -1396,14 +1393,3 @@ msgstr "Change password: xieyan, 2314"
 msgid "when_to_use_a_beaker_and_when_to_use_a_test_tube_in_chemistry"
 msgstr "When to use a beaker and when to use a test tube in chemistry"
 
-# ptools.py
-msgid "polished_text"
-msgstr "Polished text"
-
-# ptools.py
-msgid "paper_reading"
-msgstr "Paper reading"
-
-#: view.py
-msgid "data_already_exists"
-msgstr "Data Already Exists"

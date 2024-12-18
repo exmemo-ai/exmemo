@@ -4,7 +4,6 @@ from collections import deque
 from loguru import logger
 from django.contrib.auth.models import User as UserSystem
 from django.utils.translation import gettext as _
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM, DEFAULT_TOOL_LLM
 from .models import StoreUser
 
 USER_LEVEL_GUEST = -1
@@ -35,8 +34,8 @@ class UserSettings:
         self.tts_language = "mix"
         self.tts_speed = "1.0"
         self.tts_voice = "caicai"
-        self.llm_chat_model = DEFAULT_CHAT_LLM
-        self.llm_tool_model = DEFAULT_TOOL_LLM
+        self.llm_chat_model = {}
+        self.llm_tool_model = {}
         self.llm_chat_prompt = DEFAULT_CHAT_LLM_PROMPT
         self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
         self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
