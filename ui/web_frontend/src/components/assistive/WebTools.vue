@@ -2,7 +2,7 @@
   <el-container style="display: flex; flex-direction: column;">
     <div gap="5px" class="header-buttons" style="display: flex; align-items: center;">
       <div style="flex-shrink: 1;">
-        <el-label>{{ $t('webAddress') }}</el-label>
+        <el-text>{{ $t('webAddress') }}</el-text>
       </div>
       <div style="flex-grow: 1;">
         <el-input v-model="web_addr" placeholder="http://"></el-input>

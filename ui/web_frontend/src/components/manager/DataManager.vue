@@ -7,7 +7,7 @@
             <div class="header-buttons">
                 <div class="search-container">
                     <div class="label-container">
-                        <el-label>{{ t('search') }}</el-label>
+                        <el-text>{{ t('search') }}</el-text>
                     </div>
                     <div :class="{'mobile-input': isMobile}">
                         <el-input v-model="search_text" :placeholder="t('searchPlaceholder')"></el-input>
@@ -15,10 +15,10 @@
                 </div>
                 <div style="display: flex; flex-grow: 1; align-items: center; gap: 5px;" v-if="!isMobile">
                     <div class="label-container">
-                        <el-label>{{ t('type') }}</el-label>
+                        <el-text>{{ t('type') }}</el-text>
                     </div>
                     <div style="flex-grow: 1;">
-                        <el-select v-if="ctype_options && ctype_options.length > 0" v-model="ctype_value"
+                        <el-select v-if="mounted && ctype_options && ctype_options.length > 0" v-model="ctype_value"
                             :placeholder="t('selectPlaceholder')" popper-class="select-dropdown">
                             <el-option v-for="item in ctype_options" :key="item.value" :label="item.label"
                                 :value="item.value">
@@ -27,10 +27,10 @@
                     </div>
 
                     <div class="label-container">
-                        <el-label>{{ t('data') }}</el-label>
+                        <el-text>{{ t('data') }}</el-text>
                     </div>
                     <div style="flex-grow: 1;">
-                        <el-select v-if="etype_options.length" v-model="etype_value"
+                        <el-select v-if="mounted && etype_options.length" v-model="etype_value"
                             :placeholder="t('selectPlaceholder')">
                             <el-option v-for="item in etype_options" :key="item.value" :label="item.label"
                                 :value="item.value">
@@ -38,10 +38,10 @@
                         </el-select>
                     </div>
                     <div class="label-container">
-                        <el-label>{{ t('status') }}</el-label>
+                        <el-text>{{ t('status') }}</el-text>
                     </div>
                     <div style="flex-grow: 1;">
-                        <el-select v-if="status_options.length" v-model="status_value"
+                        <el-select v-if="mounted && status_options.length" v-model="status_value"
                             :placeholder="t('selectPlaceholder')">
                             <el-option v-for="item in status_options" :key="item.value" :label="item.label"
                                 :value="item.value">
@@ -117,12 +117,13 @@ export default {
         Plus
     },
     setup() {
-        const { t } = useI18n();
-        return { t };
+        const { t, te } = useI18n();
+        return { t, te };
     },
     data() {
         const { t } = useI18n();
         return {
+            mounted: false,
             isMobile: false,
             total: 0,
             currentPage: 1,
@@ -184,9 +185,10 @@ export default {
                 const options = [{ value: this.t('all'), label: this.t('all') }];
 
                 ret.forEach(item => {
+                    const hasTranslation = this.te(item);
                     options.push({
                         value: item,
-                        label: this.t(item) === item ? item : this.t(item)
+                        label: hasTranslation ? this.t(item) : item
                     });
                 });
 
@@ -214,6 +216,7 @@ export default {
         },
     },
     async mounted() {
+        this.mounted = true;
         this.isMobile = window.innerWidth < 768;
         window.addEventListener('resize', this.handleResize);
         this.handleResize();

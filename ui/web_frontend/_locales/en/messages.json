@@ -182,5 +182,6 @@
     "apiUrl": "API URL",
     "model": "Model Name",
     "chatSettings": "Chat Settings",
-    "toolSettings": "Tool Settings"
+    "toolSettings": "Tool Settings",
+    "parseInfoFailed": "Failed to parse info"
 }

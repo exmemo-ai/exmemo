@@ -64,7 +64,7 @@
 
         <div style="display: flex;margin-bottom: 5px;">
             <div style="margin-right: 5px; white-space: nowrap;">
-                <el-label>{{ $t('title') }}</el-label>
+                <el-text>{{ $t('title') }}</el-text>
             </div>
             <div style="flex-grow: 1;">
                 <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? $t('autoExtract') : ''"
@@ -73,7 +73,7 @@
         </div>
         <div style="display: flex;margin-bottom: 5px;">
             <div style="margin-right: 5px; white-space: nowrap; display: flex; align-items: center;">
-                <el-label>{{ $t('type') }}</el-label>
+                <el-text>{{ $t('type') }}</el-text>
             </div>
             <div style="flex-grow: 1">
                 <el-input v-model="form.ctype" :placeholder="$t('autoExtract')"></el-input>
@@ -114,6 +114,7 @@ import { getURL, parseBackendError, parseBlobData } from '@/components/support/c
 export default {
     data() {
         return {
+            dialogWidth: '60%',
             isMobile: false,
             parent_obj: null,
             file_path: null,

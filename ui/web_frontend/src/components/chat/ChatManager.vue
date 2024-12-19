@@ -34,7 +34,7 @@ export default ({
 
     setup() {
         register()
-        const chat = new ChatService(eventBus);  // 传入 eventBus
+        const chat = new ChatService(eventBus);
         const activeRoomId = ref(null);
         return { chat, activeRoomId }
     },

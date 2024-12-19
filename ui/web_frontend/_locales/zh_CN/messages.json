@@ -182,5 +182,6 @@
     "apiUrl": "接口地址",
     "model": "模型名称",
     "chatSettings": "聊天模型设置",
-    "toolSettings": "工具模型设置"
+    "toolSettings": "工具模型设置",
+    "parseInfoFailed": "解析信息失败"
   }

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import FormData from 'form-data';
-import { getURL, setDefaultAuthHeader } from '@/components/support/conn';
+import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn';
 import defaultAvatar from '@/assets/images/chat.png'
 import { useI18n } from 'vue-i18n'
 
@@ -42,13 +42,13 @@ export class ChatService {
             const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
-            if (response.status === 401) {
-                parseBackendError(this.obj, error);
-                throw new Error('Token expired');
-            }
             info = await this.parseInfo(response);
             this.reloadSessions(info);
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                parseBackendError(this.obj, error);
+                throw new Error('Token expired');
+            }
             info = String(error);
             this.addMessage(info, this.botId);
         }
@@ -86,10 +86,6 @@ export class ChatService {
             const func = 'api/message/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
-            if (response.status === 401) {
-                parseBackendError(this.obj, error);
-                throw new Error('Token expired');
-            }
             const [ret, message, sid] = this.parseMessageReturn(response);
             if (ret === true) {
                 info = message;
@@ -100,6 +96,10 @@ export class ChatService {
                 info = message;
             }
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                parseBackendError(this.obj, error);
+                throw new Error('Token expired');
+            }
             info = String(error);
         }
         this.addMessage(info, this.botId);
@@ -132,7 +132,7 @@ export class ChatService {
                 }
             }
         }
-        return [false, this.t('messageSendingFailed'), null]; // later change to i18n
+        return [false, this.t('messageSendingFailed'), null];
     }
 
     async parseInfo(response) {
@@ -146,7 +146,7 @@ export class ChatService {
                 }
             }
         }
-        return 'parseInfo failed'; // later change to i18n
+        return this.t('parseInfoFailed');
     }
 
     async parseMessages(response) {
@@ -202,12 +202,12 @@ export class ChatService {
             const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
-            if (response.status === 401) {
+            await this.parseSessions(response);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
                 parseBackendError(this.obj, error);
                 throw new Error('Token expired');
             }
-            await this.parseSessions(response);
-        } catch (error) {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
@@ -223,12 +223,12 @@ export class ChatService {
             const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
-            if (response.status === 401) {
+            await this.parseMessages(response);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
                 parseBackendError(this.obj, error);
                 throw new Error('Token expired');
             }
-            await this.parseMessages(response);
-        } catch (error) {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
@@ -267,12 +267,12 @@ export class ChatService {
             const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
-            if (response.status === 401) {
+            await this.parseInfo(response);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
                 parseBackendError(this.obj, error);
                 throw new Error('Token expired');
             }
-            await this.parseInfo(response);
-        } catch (error) {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
@@ -289,12 +289,12 @@ export class ChatService {
             const func = 'api/message/session/';
             setDefaultAuthHeader();
             const response = await axios.post(getURL() + func, formData);
-            if (response.status === 401) {
+            await this.parseSessions(response);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
                 parseBackendError(this.obj, error);
                 throw new Error('Token expired');
             }
-            await this.parseSessions(response);
-        } catch (error) {
             const error_str = String(error);
             this.addMessage(error_str, this.botId);
         }
