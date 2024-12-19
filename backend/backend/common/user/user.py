@@ -259,7 +259,7 @@ class UserOperate:
                     UserSystem.objects.create_user(self.user_id, "", password)
                     self.save()
                 except Exception as e:  # Might already exist, such as a test user
-                    logger.error(f"create user error {e}")
+                    logger.warning(f"create user error {e}")
                     self.level = USER_LEVEL_NORMAL
                     self.save()
 
@@ -276,7 +276,7 @@ class UserOperate:
             data.level = self.level
             data.save()
         except Exception as e:
-            logger.error(f"save user error {e}")
+            logger.warning(f"save user error {e}")
 
     @staticmethod
     def check_user_exist(user_id):
@@ -308,7 +308,7 @@ class UserOperate:
             UserOperate(uid, level=level, password=password, create=True)
             return True
         except Exception as e:
-            logger.error(f"create user error {e}")
+            logger.warning(f"create user error {e}")
             return False
 
 
@@ -361,5 +361,5 @@ class UserManager:
             UserSystem.objects.filter(username=user_id).delete()
             return True
         except Exception as e:
-            logger.error(f"delete user error {e}")
+            logger.warning(f"delete user error {e}")
             return False

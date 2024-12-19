@@ -113,7 +113,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     )
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"upload_files failed {e}")
+            logger.warning(f"upload_files failed {e}")
             return HttpResponse(
                 json.dumps({"status": "failed", "info": _("uploading_failed")})
             )
@@ -125,11 +125,11 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         try:
             logger.debug(request)
             instance = self.get_object()
-            logger.warning(f"user_id {instance.user_id}")
+            logger.debug(f"user_id {instance.user_id}")
             delete_entry(instance.user_id, [{"addr": instance.addr}])
             return HttpResponse(json.dumps({"status": "success"}))
         except Exception as e:
-            logger.error(f"destroy failed {e}")
+            logger.warning(f"destroy failed {e}")
             traceback.print_exc()
             return HttpResponse(json.dumps({"status": "failed"}))
 

@@ -8,14 +8,14 @@ from backend.common.utils.file_tools import (
     get_file_content,
     get_file_abstract,
 )
-from app_message.function import regular_title, msg_run_tts
+from backend.common.speech.tts import run_tts
 from app_message.agent.base_agent import BaseAgent, agent_function
 from app_message.command import msg_common_select
 
 import pandas as pd
 import os
 from app_record.record import get_export_file
-from app_message.function import search_data
+from app_message.function import search_data, regular_title
 from app_dataforge.entry import add_data
 from app_dataforge.misc_tools import add_url
 
@@ -153,7 +153,8 @@ class WebAgent(BaseAgent):
         title = regular_title(title)
         if title is not None:
             title = f"{_('web_page')}_{title[:10]}"
-            return msg_run_tts(title, content, sdata)
+            sdata.set_cache("tts_file_title", title)
+            return run_tts(title, content, sdata.user_id)
         else:
             return True, {"type": "text", "content": _("page_not_found")}
 
@@ -247,7 +248,8 @@ class FileAgent(BaseAgent):
         data = sdata.get_cache("file")
         ret, path, title, content = get_file_content(data)
         if ret:
-            return msg_run_tts(title, content, sdata)
+            sdata.set_cache("tts_file_title", title)
+            return run_tts(title, content, sdata.user_id)
         return True, {"type": "text", "content": _("please_upload_or_share_a_file_first")}
 
     @agent_function(_("collect_file"))
@@ -266,10 +268,9 @@ class FileAgent(BaseAgent):
         return ret, info
 
 def msg_add_url(url, sdata, status):
-    # 暂时不处理 pdf 的情况, later add file support
     ret, base_path, info = add_url(url, sdata.args, status)
-    # if ret and info == "pdf":
-    if False:
+    if ret and info == "pdf":
+        from app_message.message import msg_recv_file
         return msg_recv_file(base_path, None, sdata)
     else:
         return ret, info

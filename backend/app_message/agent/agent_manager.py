@@ -37,7 +37,7 @@ class BaseAgentManager:
 
     def triage_instructions(self, context_variables):
         is_logged_in = context_variables['sdata'].is_logged_in()    
-        logger.error(f"is_logged_in: {is_logged_in}")
+        logger.info(f"is_logged_in: {is_logged_in}")
 
         return f"""You are to triage a users request, and call a tool to transfer to the right intent.
         User login status: {is_logged_in}. If not logged in, please transfer to User Agent to handle login,
@@ -61,8 +61,7 @@ class BaseAgentManager:
         if engine_type is None:
             engine_type = user.get("llm_tool_model", {})
         llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
-        # later check api_method is openai/gemini
-        logger.warning(f'llm_info {llm_info}')
+        logger.info(f'llm_info {llm_info}')
         llm = OpenAI(base_url=llm_info.url, api_key=llm_info.api_key)
         client = ExSmarm(llm)
         transfer_functions = []
@@ -79,7 +78,7 @@ class BaseAgentManager:
                 func_name = f"transfer_to_{cls_name.lower().replace(' ', '_')}"
                 def transfer_func():
                     from loguru import logger
-                    logger.error(f"transfer to {target_agent.name}")
+                    logger.info(f"transfer to {target_agent.name}")
                     return target_agent
                 
                 transfer_func.__name__ = func_name
@@ -122,7 +121,7 @@ class BaseAgentManager:
                 ret = ret + "\n" + DEFAULT_TEXT
         else:
             ret = response.messages[-1]["content"]
-        logger.error(f'response {response.context_variables}')
+        logger.info(f'response {response.context_variables}')
 
         if 'total_count' in response.context_variables:
             total_count = response.context_variables['total_count']

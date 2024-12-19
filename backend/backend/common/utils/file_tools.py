@@ -131,10 +131,10 @@ def get_file_abstract(data, uid):
     Summary of file content, retrieved from cache, mainly used for file summary in WeChat
     """
     ret, path, title, content = get_file_content(data)
-    logger.warning(f"get_file_abstract: {ret}, {path}, {title}")
+    logger.info(f"get_file_abstract: {ret}, {path}, {title}")
     if ret:
         info = filecache.TmpFileManager.get_instance().get_file_info(path)
-        logger.warning(f"info: {info}")
+        logger.info(f"info: {info}")
         if info is not None and "abstract" in info and info["abstract"] is not None:
             return True, info["abstract"]
         detail = get_text_extract(uid, content)

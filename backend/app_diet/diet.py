@@ -392,7 +392,6 @@ def get_date(content):
     year = now.year
     month = now.month
     day = now.day
-    # later parse date by llm
     pattern = re.compile(
         _("{month}_month_{day}_day").format(month=r"(\d{1,2})", day=r"(\d{1,2})")
     )

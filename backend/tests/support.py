@@ -37,7 +37,7 @@ class BaseTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content.decode("utf-8"))
         self.assertEqual(data["status"], "success")
-        logger.warning(f"return {data}")
+        logger.info(f"return {data}")
         if "info" in data:
             return data["info"]
         elif "type" in data and data["type"] == "json" and "content" in data:
@@ -47,7 +47,7 @@ class BaseTestCase(APITestCase):
     def parse_return_file(self, response, format, path):
         self.assertEqual(response.status_code, 200)
         content_type = response.headers["Content-Type"]
-        logger.warning(f"recv content_type {content_type}")
+        logger.info(f"recv content_type {content_type}")
         if format is None or format in content_type:
             with open(path, "wb") as f:
                 if response.streaming:
@@ -55,7 +55,7 @@ class BaseTestCase(APITestCase):
                         f.write(chunk)
                 else:
                     f.write(response.content)
-                logger.warning(f"recv {format} file {path}, size {f.tell()}")
+                logger.info(f"recv {format} file {path}, size {f.tell()}")
                 return True
         else:
             self.parse_return_info(response)

@@ -6,7 +6,7 @@ def get_user_id(request):
     try:
         return request.user.username
     except Exception as e:
-        logger.error(f"get_user_id failed {e}")
+        logger.warning(f"get_user_id failed {e}")
     return DEFAULT_USER
 
 
@@ -14,6 +14,7 @@ def parse_common_args(request):
     """
     Parse public parameters
     """
+    source = request.GET.get("source", request.POST.get("source", "wechat"))
     user_id = get_user_id(request)
     rtype = request.GET.get("rtype", request.POST.get("rtype", "html"))
     content = request.GET.get("content", request.POST.get("content", None))
@@ -30,5 +31,6 @@ def parse_common_args(request):
         "raw": raw,
         "user_id": user_id,
         "is_group": is_group,
+        "source": source,
     }
     return args

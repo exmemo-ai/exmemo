@@ -628,6 +628,7 @@ msgid "query_user_privileges"
 msgstr "查询用户权限"
 
 #: backend/app_message/agent/user_agent.py:114
+#: backend/backend/common/user/views.py:118
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "用户等级：{level}"
@@ -1306,12 +1307,6 @@ msgstr "未知级别"
 #: backend/backend/common/user/views.py:57
 msgid "account_created__excl_"
 msgstr "注册成功"
-
-#: backend/backend/common/user/views.py:118
-#, fuzzy, python-brace-format
-#| msgid "user_level: {level}"
-msgid "user_level: {level}\n"
-msgstr "用户等级：{level}"
 
 #: backend/backend/common/user/views.py:173
 #: backend/backend/common/user/views.py:178

@@ -20,7 +20,7 @@ msgstr ""
 
 #: backend/app_bm_syncex/views.py:70
 msgid "data_already_exists"
-msgstr "Data Already Exists"
+msgstr "Data already exists"
 
 #: backend/app_dataforge/entry.py:44
 msgid "unknown_type_colon_"
@@ -32,20 +32,20 @@ msgstr "Save file failed!"
 
 #: backend/app_dataforge/entry.py:141
 msgid "add_success"
-msgstr "add success"
+msgstr "Add success"
 
 #: backend/app_dataforge/entry.py:146
 msgid "add_failed"
-msgstr "add failed"
+msgstr "Add failed"
 
 #: backend/app_dataforge/entry.py:165
 msgid "record_successful_comma__type_colon_"
-msgstr "Record successful, Type:"
+msgstr "Record successful, type:"
 
 #: backend/app_dataforge/entry.py:174
 #, python-brace-format
 msgid "set_to_pending_comma__type_colon__{ctype}"
-msgstr "Set to Pending, Type: {ctype}"
+msgstr "Set to pending, type: {ctype}"
 
 #: backend/app_dataforge/entry.py:176
 #, python-brace-format
@@ -64,7 +64,7 @@ msgstr "Run failed"
 
 #: backend/app_dataforge/feature.py:16
 msgid "unclassified"
-msgstr "unclassified"
+msgstr "Unclassified"
 
 #: backend/app_dataforge/feature.py:148
 msgid "to_be_organized"
@@ -72,11 +72,11 @@ msgstr "To be organized"
 
 #: backend/app_dataforge/feature.py:148
 msgid "to-do_list"
-msgstr "To-do List"
+msgstr "To-do list"
 
 #: backend/app_dataforge/misc_tools.py:51
 msgid "unsupported_document_type"
-msgstr "Unsupported Document Type"
+msgstr "Unsupported document type"
 
 #: backend/app_dataforge/views.py:112
 msgid "no_update_needed"
@@ -197,7 +197,7 @@ msgstr "Morning"
 #: backend/app_diet/diet.py:416 backend/app_diet/diet.py:435
 #: backend/app_diet/diet.py:451
 msgid "morning_extra_meal"
-msgstr "Morning Extra Meal"
+msgstr "Morning extra meal"
 
 #: backend/app_diet/diet.py:416
 msgid "am"
@@ -237,7 +237,7 @@ msgstr "Night"
 #: backend/app_diet/diet.py:420 backend/app_diet/diet.py:443
 #: backend/app_diet/diet.py:455
 msgid "evening_extra_meals"
-msgstr "Evening Extra Meals"
+msgstr "Evening extra meals"
 
 #: backend/app_diet/diet.py:420
 msgid "midnight"
@@ -245,7 +245,7 @@ msgstr "Midnight"
 
 #: backend/app_diet/diet.py:420
 msgid "midnight_snack"
-msgstr "Midnight Snack"
+msgstr "Midnight snack"
 
 #: backend/app_message/agent/agent_manager.py:24
 msgid "please_register_or_log_in_first_comma___enter_formatted_as_colon__register_username_xxx_comma__password_xxx__enter_or_log_in_username_xxx_comma__password_xxx"
@@ -256,12 +256,12 @@ msgstr ""
 
 #: backend/app_message/agent/data_agent.py:25
 msgid "record_agent"
-msgstr "Record Agent"
+msgstr "Record agent"
 
 #: backend/app_message/agent/data_agent.py:28
 #: backend/app_message/agent/data_agent.py:35
 msgid "search_records"
-msgstr "Search Records"
+msgstr "Search records"
 
 #: backend/app_message/agent/data_agent.py:38
 #: backend/app_message/agent/data_agent.py:176
@@ -279,19 +279,19 @@ msgstr "Please enter the record content"
 
 #: backend/app_message/agent/data_agent.py:64
 msgid "export_records"
-msgstr "Export Records"
+msgstr "Export records"
 
 #: backend/app_message/agent/data_agent.py:84
 msgid "web_processing_agent"
-msgstr "Web Processing Agent"
+msgstr "Web processing agent"
 
 #: backend/app_message/agent/data_agent.py:87
 msgid "web_functions_list"
-msgstr "Web Functions List"
+msgstr "Web functions list"
 
 #: backend/app_message/agent/data_agent.py:94
 msgid "collect_webpage"
-msgstr "Collect Webpage"
+msgstr "Collect webpage"
 
 #: backend/app_message/agent/data_agent.py:107
 #: backend/app_message/agent/data_agent.py:122
@@ -300,11 +300,11 @@ msgstr "No URLs."
 
 #: backend/app_message/agent/data_agent.py:109
 msgid "set_webpage_todo"
-msgstr "Set Webpage Todo"
+msgstr "Set webpage todo"
 
 #: backend/app_message/agent/data_agent.py:124
 msgid "summarize_webpage_content"
-msgstr "Summarize Webpage Content"
+msgstr "Summarize webpage content"
 
 #: backend/app_message/agent/data_agent.py:135
 msgid "failed_to_fetch_webpages"
@@ -312,7 +312,7 @@ msgstr "Failed to fetch webpages"
 
 #: backend/app_message/agent/data_agent.py:137
 msgid "get_text_content"
-msgstr "Get Text Content"
+msgstr "Get text content"
 
 #: backend/app_message/agent/data_agent.py:145
 #: backend/app_message/agent/other_agent.py:85
@@ -322,7 +322,7 @@ msgstr "No content found"
 
 #: backend/app_message/agent/data_agent.py:147
 msgid "webpage_to_audio"
-msgstr "Webpage to Audio"
+msgstr "Webpage to audio"
 
 #: backend/app_message/agent/data_agent.py:158
 msgid "page_not_found"
@@ -330,17 +330,17 @@ msgstr "Page not found"
 
 #: backend/app_message/agent/data_agent.py:165
 msgid "data_management_agent"
-msgstr "Data Management Agent"
+msgstr "Data management agent"
 
 #: backend/app_message/agent/data_agent.py:168
 #: backend/app_message/agent/data_agent.py:175
 msgid "search_data"
-msgstr "Search Data"
+msgstr "Search data"
 
 #: backend/app_message/agent/data_agent.py:180
 #: backend/app_message/agent/data_agent.py:187
 msgid "search_files"
-msgstr "Search Files"
+msgstr "Search files"
 
 #: backend/app_message/agent/data_agent.py:190
 msgid "please_enter_what_you're_looking_for"
@@ -348,19 +348,19 @@ msgstr "Please enter what you're looking for"
 
 #: backend/app_message/agent/data_agent.py:195
 msgid "search_todo_webpages"
-msgstr "Search Todo Webpages"
+msgstr "Search todo webpages"
 
 #: backend/app_message/agent/data_agent.py:203
 msgid "search_collected_webpages"
-msgstr "Search Collected Webpages"
+msgstr "Search collected webpages"
 
 #: backend/app_message/agent/data_agent.py:211
 msgid "search_webpages"
-msgstr "Search Webpages"
+msgstr "Search webpages"
 
 #: backend/app_message/agent/data_agent.py:219
 msgid "manage_data"
-msgstr "Manage Data"
+msgstr "Manage data"
 
 #: backend/app_message/agent/data_agent.py:223
 msgid "please_open_following_link"
@@ -368,11 +368,11 @@ msgstr "Please open following link:"
 
 #: backend/app_message/agent/data_agent.py:229
 msgid "file_processing_agent"
-msgstr "File Processing Agent"
+msgstr "File processing agent"
 
 #: backend/app_message/agent/data_agent.py:232
 msgid "extract_file_content"
-msgstr "Extract File Content"
+msgstr "Extract file content"
 
 #: backend/app_message/agent/data_agent.py:241
 #: backend/app_message/agent/data_agent.py:251
@@ -384,12 +384,12 @@ msgstr "Please upload or share a file first"
 #: backend/app_message/agent/data_agent.py:243
 #: backend/app_message/message.py:41
 msgid "file_to_audio"
-msgstr "File to Audio"
+msgstr "File to audio"
 
 #: backend/app_message/agent/data_agent.py:253
 #: backend/app_message/message.py:37
 msgid "collect_file"
-msgstr "Collect File"
+msgstr "Collect file"
 
 #: backend/app_message/agent/data_agent.py:259
 msgid "file_collection_failed_colon__file_not_found"
@@ -409,12 +409,12 @@ msgstr "Please enter the URL or share the page with me"
 
 #: backend/app_message/agent/other_agent.py:19
 msgid "diet_management"
-msgstr "Diet Management"
+msgstr "Diet management"
 
 #: backend/app_message/agent/other_agent.py:22
 #: backend/tests/test_app_diet.py:27
 msgid "diet_statistics"
-msgstr "Diet Statistics"
+msgstr "Diet statistics"
 
 #: backend/app_message/agent/other_agent.py:33
 #: backend/app_message/agent/other_agent.py:40
@@ -436,12 +436,12 @@ msgstr "Please enter the diet content"
 
 #: backend/app_message/agent/other_agent.py:68
 msgid "voice_assistant"
-msgstr "Voice Assistant"
+msgstr "Voice assistant"
 
 #: backend/app_message/agent/other_agent.py:71
 #: backend/app_message/agent/other_agent.py:78
 msgid "text_to_audio"
-msgstr "Text to Audio"
+msgstr "Text to audio"
 
 #: backend/app_message/agent/other_agent.py:79
 msgid "please_enter_conversion_content"
@@ -457,7 +457,7 @@ msgstr "stop"
 
 #: backend/app_message/agent/other_agent.py:94
 msgid "get_audio"
-msgstr "get audio"
+msgstr "Get audio"
 
 #: backend/app_message/agent/other_agent.py:101
 msgid "converted_audio"
@@ -474,7 +474,7 @@ msgstr "Files larger than 50MB are currently not supported for recognition"
 
 #: backend/app_message/agent/other_agent.py:146
 msgid "translate_assistant"
-msgstr "Translation Assistant"
+msgstr "Translation assistant"
 
 #: backend/app_message/agent/other_agent.py:149
 msgid "translate"
@@ -486,16 +486,16 @@ msgstr "Translation failed"
 
 #: backend/app_message/agent/other_agent.py:168
 msgid "help_assistant"
-msgstr "Help Assistant"
+msgstr "Help assistant"
 
 #: backend/app_message/agent/other_agent.py:171
 msgid "help_list"
-msgstr "Help List"
+msgstr "Help list"
 
 #: backend/app_message/agent/other_agent.py:184
 #: backend/app_message/agent/other_agent.py:189
 msgid "find_command"
-msgstr "Find Command"
+msgstr "Find command"
 
 #: backend/app_message/agent/other_agent.py:190
 msgid "please_enter_command_keyword"
@@ -503,39 +503,39 @@ msgstr "Please enter command keyword"
 
 #: backend/app_message/agent/other_agent.py:200
 msgid "match_failed"
-msgstr "Match Failed"
+msgstr "Match failed"
 
 #: backend/app_message/agent/other_agent.py:208
 msgid "intelligent_chat_assistant"
-msgstr "Intelligent Chat Assistant"
+msgstr "Intelligent chat assistant"
 
 #: backend/app_message/agent/other_agent.py:211
 msgid "kimi_chat"
-msgstr "Kimi Chat"
+msgstr "Kimi chat"
 
 #: backend/app_message/agent/other_agent.py:223
 msgid "kimi_call_failed"
-msgstr "Kimi Call Failed"
+msgstr "Kimi call failed"
 
 #: backend/app_message/agent/other_agent.py:226
 msgid "gpt4_chat"
-msgstr "GPT-4 Chat"
+msgstr "GPT-4 chat"
 
 #: backend/app_message/agent/other_agent.py:240
 msgid "gpt4o_call_failed"
-msgstr "GPT-4o Call Failed"
+msgstr "GPT-4o call failed"
 
 #: backend/app_message/agent/other_agent.py:242
 msgid "gemini_chat"
-msgstr "Gemini Chat"
+msgstr "Gemini chat"
 
 #: backend/app_message/agent/other_agent.py:254
 msgid "gemini_call_failed"
-msgstr "Gemini Call Failed"
+msgstr "Gemini call failed"
 
 #: backend/app_message/agent/user_agent.py:15
 msgid "user_management"
-msgstr "User Management"
+msgstr "User management"
 
 #: backend/app_message/agent/user_agent.py:27
 #: backend/backend/common/user/views.py:55
@@ -582,13 +582,13 @@ msgstr "User does not exist"
 #: backend/backend/common/user/views.py:75
 #: backend/tests/test_app_user_manager.py:64
 msgid "original_password_error"
-msgstr "original password error"
+msgstr "Original password error"
 
 #: backend/app_message/agent/user_agent.py:50
 #: backend/backend/common/user/views.py:78
 #: backend/tests/test_app_user_manager.py:57
 msgid "successfully_set"
-msgstr "successfully set"
+msgstr "Successfully set"
 
 #: backend/app_message/agent/user_agent.py:52
 #: backend/backend/common/user/views.py:80
@@ -597,15 +597,15 @@ msgstr "Setup failed"
 
 #: backend/app_message/agent/user_agent.py:55
 msgid "user_registration"
-msgstr "User Registration"
+msgstr "User registration"
 
 #: backend/app_message/agent/user_agent.py:63
 msgid "registration_successful"
-msgstr "Registration Successful"
+msgstr "Registration successful"
 
 #: backend/app_message/agent/user_agent.py:70
 msgid "user_login"
-msgstr "User Login"
+msgstr "User login"
 
 #: backend/app_message/agent/user_agent.py:79
 msgid "change_password"
@@ -613,37 +613,38 @@ msgstr "Change password"
 
 #: backend/app_message/agent/user_agent.py:87
 msgid "change_successful"
-msgstr "Change Successful"
+msgstr "Change successful"
 
 #: backend/app_message/agent/user_agent.py:92
 msgid "change_failed"
-msgstr "Change Failed"
+msgstr "Change failed"
 
 #: backend/app_message/agent/user_agent.py:94
 msgid "user_logout"
-msgstr "User Logout"
+msgstr "User logout"
 
 #: backend/app_message/agent/user_agent.py:106
 msgid "system_settings"
-msgstr "System Settings"
+msgstr "System settings"
 
 #: backend/app_message/agent/user_agent.py:109
 msgid "query_user_privileges"
-msgstr "Query User Privileges"
+msgstr "Query user privileges"
 
 #: backend/app_message/agent/user_agent.py:114
+#: backend/backend/common/user/views.py:118
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "User level: {level}"
 
 #: backend/app_message/agent/user_agent.py:117
 msgid "query_resource_usage"
-msgstr "Query Resource Usage"
+msgstr "Query resource usage"
 
 #: backend/app_message/agent/user_agent.py:127
 #: backend/app_message/agent/user_agent.py:135
 msgid "set_text_to_speech"
-msgstr "Set Text to Speech"
+msgstr "Set text to speech"
 
 #: backend/app_message/chat_tools.py:78
 msgid "custom"
@@ -651,7 +652,7 @@ msgstr "Custom"
 
 #: backend/app_message/chat_tools.py:95
 msgid "chat_call_failed"
-msgstr "chat call failed"
+msgstr "Chat call failed"
 
 #: backend/app_message/command.py:102 backend/app_message/command.py:136
 msgid "command_not_found"
@@ -679,7 +680,7 @@ msgstr "Failed to fetch files"
 
 #: backend/app_message/message.py:85
 msgid "nothing_entered"
-msgstr "Nothing Entered"
+msgstr "Nothing entered"
 
 #: backend/app_message/message.py:87
 msgid "unrecognized_command"
@@ -695,7 +696,7 @@ msgstr "No optional commands"
 
 #: backend/app_message/message.py:135
 msgid "not_a_number"
-msgstr "not a number"
+msgstr "Not a number"
 
 #: backend/app_message/message.py:154
 msgid "the_file_type_is_not_valid_or_not_supported"
@@ -714,7 +715,7 @@ msgstr "Please sign up or log in first"
 #: backend/backend/common/parser/block.py:120
 #: backend/backend/common/parser/block.py:127
 msgid "table_of_contents"
-msgstr "Table of Contents"
+msgstr "Table of contents"
 
 #: backend/app_paper/paper_info.py:32 backend/app_paper/ptools.py:344
 #: backend/app_paper/ptools.py:431
@@ -723,7 +724,7 @@ msgstr "Abstract"
 
 #: backend/app_paper/ptools.py:58
 msgid "natural_language_processing"
-msgstr "Natural Language Processing"
+msgstr "Natural language processing"
 
 #: backend/app_paper/ptools.py:59
 msgid "medicine"
@@ -743,11 +744,11 @@ msgstr "Video"
 
 #: backend/app_paper/ptools.py:63
 msgid "reinforcement_learning_(rl)"
-msgstr "reinforcement learning (RL)"
+msgstr "Reinforcement learning (RL)"
 
 #: backend/app_paper/ptools.py:64
 msgid "knowledge_map"
-msgstr "Knowledge Map"
+msgstr "Knowledge map"
 
 #: backend/app_paper/ptools.py:65
 msgid "machine_learning"
@@ -797,20 +798,20 @@ msgstr "Paper reading"
 #: backend/app_paper/ptools.py:390
 #, python-brace-format
 msgid "english_title_colon__{title}"
-msgstr "English Title: {title}"
+msgstr "English title: {title}"
 
 #: backend/app_paper/ptools.py:392
 msgid "english_name_colon_"
-msgstr "English Name:"
+msgstr "English name:"
 
 #: backend/app_paper/ptools.py:395
 #, python-brace-format
 msgid "chinese_name_colon__{title_zh}"
-msgstr "Chinese Name: {title_zh}"
+msgstr "Chinese name: {title_zh}"
 
 #: backend/app_paper/ptools.py:398
 msgid "chinese_name_colon_"
-msgstr "Chinese Name:"
+msgstr "Chinese name:"
 
 #: backend/app_paper/ptools.py:400
 #, python-brace-format
@@ -945,11 +946,11 @@ msgstr "Viewpoint"
 
 #: backend/app_record/record.py:51
 msgid "content_category_colon_"
-msgstr "Content Category:"
+msgstr "Content category:"
 
 #: backend/app_record/record.py:52
 msgid "data_type"
-msgstr "data type"
+msgstr "Data type"
 
 #: backend/app_record/record.py:53
 msgid "status"
@@ -957,7 +958,7 @@ msgstr "Status"
 
 #: backend/app_record/record.py:54
 msgid "creation_date"
-msgstr "Creation Date"
+msgstr "Creation date"
 
 #: backend/app_record/record.py:62
 msgid "no_record_found"
@@ -992,7 +993,7 @@ msgstr "Please enter questions or content to be translated"
 
 #: backend/app_translate/views.py:109
 msgid "internal_processing_error"
-msgstr "Internal Processing Error"
+msgstr "Internal processing error"
 
 #: backend/backend/common/files/utils_file.py:193
 #, python-brace-format
@@ -1019,7 +1020,7 @@ msgstr "The maximum number of words called today has been reached"
 
 #: backend/backend/common/llm/llm_tools.py:218
 msgid "gemini_is_temporarily_unavailable"
-msgstr "gemini is temporarily unavailable"
+msgstr "Gemini is temporarily unavailable"
 
 #: backend/backend/common/parser/block.py:176
 msgid "appendices"
@@ -1047,7 +1048,7 @@ msgstr "(No text)"
 
 #: backend/backend/common/parser/block.py:186
 msgid "signing_page"
-msgstr "Signing Page"
+msgstr "Signing page"
 
 #: backend/backend/common/parser/block.py:186
 msgid "page_for_signing"
@@ -1132,7 +1133,7 @@ msgstr "Book review master"
 
 #: backend/backend/common/speech/tts.py:164
 msgid "ghost_story_expert"
-msgstr "Ghost Story Expert"
+msgstr "Ghost story expert"
 
 #: backend/backend/common/speech/tts.py:165
 msgid "romance_novel"
@@ -1144,7 +1145,7 @@ msgstr "Documentary commentary"
 
 #: backend/backend/common/speech/tts.py:167
 msgid "clear_female_voice"
-msgstr "Clear Female Voice"
+msgstr "Clear female voice"
 
 #: backend/backend/common/speech/tts.py:168
 msgid "deep_male_voice"
@@ -1211,7 +1212,7 @@ msgstr "No synthesized audio found"
 
 #: backend/backend/common/user/resource.py:69
 msgid "speech_synthesis"
-msgstr "speech synthesis"
+msgstr "Speech synthesis"
 
 #: backend/backend/common/user/resource.py:69
 msgid "language_model"
@@ -1219,11 +1220,11 @@ msgstr "Language model"
 
 #: backend/backend/common/user/resource.py:71
 msgid "current_day"
-msgstr "Current Day"
+msgstr "Current day"
 
 #: backend/backend/common/user/resource.py:72
 msgid "current_week"
-msgstr "Current Week"
+msgstr "Current week"
 
 #: backend/backend/common/user/resource.py:73
 msgid "this_month"
@@ -1261,7 +1262,7 @@ msgstr "Denied"
 
 #: backend/backend/common/user/user.py:165
 msgid "save_data_colon_"
-msgstr "Save Data:"
+msgstr "Save data:"
 
 #: backend/backend/common/user/user.py:167
 msgid "parsing_the_paper_colon_"
@@ -1269,7 +1270,7 @@ msgstr "Parsing the paper:"
 
 #: backend/backend/common/user/user.py:170
 msgid "translation_book_colon_"
-msgstr "Translation Book:"
+msgstr "Translation book:"
 
 #: backend/backend/common/user/user.py:174
 #, python-brace-format
@@ -1301,7 +1302,7 @@ msgstr "Normal"
 
 #: backend/backend/common/user/user.py:212
 msgid "vip_user"
-msgstr "VIP User"
+msgstr "VIP user"
 
 #: backend/backend/common/user/user.py:214
 msgid "administrator"
@@ -1315,12 +1316,6 @@ msgstr "Unknown level"
 msgid "account_created__excl_"
 msgstr "Account created !"
 
-#: backend/backend/common/user/views.py:118
-#, fuzzy, python-brace-format
-#| msgid "user_level: {level}"
-msgid "user_level: {level}\n"
-msgstr "User level: {level}"
-
 #: backend/backend/common/user/views.py:173
 #: backend/backend/common/user/views.py:178
 msgid "settings_were_applied_successfully"
@@ -1332,7 +1327,7 @@ msgstr "Content not found"
 
 #: backend/backend/common/utils/web_tools.py:17
 msgid "unknown_title"
-msgstr "Unknown Title"
+msgstr "Unknown title"
 
 #: backend/backend/common/utils/web_tools.py:34
 msgid "empty_file_content"
@@ -1352,7 +1347,7 @@ msgstr "Body"
 
 #: backend/tests/test_app_diet.py:11
 msgid "diet_log_colon__apple_100g_comma__milk_100g"
-msgstr "Diet Log: Apple 100g, Milk 100g"
+msgstr "Diet log: Apple 100g, Milk 100g"
 
 #: backend/tests/test_app_diet.py:13 backend/tests/test_app_diet.py:29
 msgid "total_calories"

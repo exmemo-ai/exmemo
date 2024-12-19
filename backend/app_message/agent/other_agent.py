@@ -5,12 +5,9 @@ from app_message.command import CommandManager, LEVEL_TOP, msg_common_select
 from backend.common.speech.tts import (
     stop_tts,
     get_tts_result,
-    run_tts,
-    tts_get_voice_and_engine,
-    tts_set_engine,
+    run_tts
 )
 from app_diet.diet import calc_diet, edit_diet, del_diet
-from app_message.function import msg_run_tts
 from app_message.agent.base_agent import BaseAgent, agent_function
 
 class DietAgent(BaseAgent):
@@ -80,7 +77,9 @@ class AudioAgent(BaseAgent):
         else:
             content = sdata.current_content.strip()
             if len(content) > 0:
-                return msg_run_tts(_("text_{}").format(content[:5]), content, sdata)
+                title = _("text_{}").format(content[:5])
+                sdata.set_cache("tts_file_title", title)
+                return run_tts(title, content, sdata.user_id)
             else:
                 return True, {"type": "text", "content": _("no_content_found")}
 

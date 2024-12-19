@@ -61,7 +61,6 @@ class TtsMine(TtsEngine):
         }
         if voice is not None:
             data["model_name"] = voice
-        # logger.warning(f"tts_mine {data}")
         try:
             url = get_url()
             r = requests.post(url, json=data)

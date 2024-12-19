@@ -37,9 +37,6 @@ class Message:
 
 
 class Session:
-    """
-    The current session is dynamic and not stored in a database. maybe store it later.
-    """
     def __init__(self, sid, user_id, is_group, source, sname = None):
         self.cache = {}
         self.messages = []
@@ -95,7 +92,6 @@ class Session:
     def save_to_db(self):
         if self.is_logged_in() == False:
             return
-        logger.warning('save_to_db')
         if len(self.messages) == 0:
             return
         obj = self.get_item_from_db()
@@ -405,7 +401,7 @@ class SessionManager:
         show_count = user.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT)
         if isinstance(show_count, str):
             show_count = int(show_count)
-        logger.warning(f'check send_message {len(sdata.messages)} {show_count}')
+        logger.info(f'check send_message {len(sdata.messages)} {show_count}')
 
         if len(sdata.messages) > show_count:
             need_create_new = True
@@ -418,7 +414,7 @@ class SessionManager:
         if sdata.sid in self.sessions:
             self.sessions.move_to_end(sdata.sid)
 
-        logger.warning(f'add_message ret {sdata.sid}')
+        logger.info(f'add_message ret {sdata.sid}')
         return {"type": "json", "content": {"info": msg2, "sid": sdata.sid}}
     
     def clear_session(self, sdata: Session):
@@ -434,14 +430,13 @@ def get_session_by_req(request):
     """
     args = parse_common_args(request)
     sid = request.GET.get("sid", request.POST.get("sid", ''))
-    source = request.GET.get("source", request.POST.get("source", "wechat")) # later move to parse_common_args
     create = request.GET.get("create", request.POST.get("create", False))
     if create == 'true':
         create = True
     else:
         create = False
     sdata = SessionManager.get_instance().get_session(sid, args['user_id'], args['is_group'], 
-                                                        source, force_create=create)
+                                                        args['source'], force_create=create)
     sdata.current_content = args['content']
     sdata.is_group = args['is_group']
     sdata.args = args

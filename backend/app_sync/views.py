@@ -97,7 +97,7 @@ class SyncAPIView(APIView):
         for addr in addrs:
             if regerate_embedding(uid, addr, emb_model) is False:
                 emb_status = "failed"
-                logger.error(f"regerate embedding failed {addr}")
+                logger.warning(f"regerate embedding failed {addr}")
                 break
         return HttpResponse(json.dumps({"status": "success", "emb_status": emb_status}))
 

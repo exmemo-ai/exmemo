@@ -312,14 +312,14 @@ def get_paper(dir_path, addr, save=True, debug=False):
                     with open(pdf_path, "wb") as f:
                         f.write(r.content)
                 else:
-                    logger.error(
+                    logger.warning(
                         f"download: {url} failed: {r.status_code} {content_type}"
                     )
     if save and not os.path.exists(md_path) and os.path.exists(pdf_path):
         ret, detail = converter.convert(pdf_path, md_path, keywords=PAPER_KEYWORDS)
         filecache.TmpFileManager.get_instance().add_file(md_path)
         if not ret:
-            logger.error(f"convert: {md_path} failed: {detail}")
+            logger.warning(f"convert: {md_path} failed: {detail}")
     """
     parser = md_parser.MarkdownParser(md_path)
     if parser.fm is not None:

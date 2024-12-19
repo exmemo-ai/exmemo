@@ -79,8 +79,6 @@ def add_file(dic, path, use_llm=True):
     if ret_convert:
         parser = MarkdownParser(md_path)
         meta_data = convert_dic_to_json(parser.fm)
-        # logger.warning(f'parse {md_path} {parser.fm}')
-        # meta_data = parser.fm # xieyan 240903
         content = parser.content
     if content is None and is_plain_text(path):
         content = open(path, "r").read()
@@ -106,8 +104,6 @@ def save_entry(dic, abstract, content, debug=False):
     use_embedding = EmbeddingTools.use_embedding()
     ret_emb = True
     try:
-        # later merge update logic
-        # args was originally an instance of StoreEntry, here it is converted to a dictionary
         if "addr" in dic and dic["addr"] is not None:
             StoreEntry.objects.filter(user_id=dic["user_id"], addr=dic["addr"]).delete()
         dic["block_id"] = 0
@@ -139,10 +135,9 @@ def save_entry(dic, abstract, content, debug=False):
                     dic.pop("embeddings")
                 StoreEntry.objects.create(**dic)
         return True, ret_emb, _("add_success")
-        # return True, f"Record successful, type: {dic['ctype']}" # later adjust
     except Exception as e:
         traceback.print_exc()
-        logger.error(f"save to db failed {e}")
+        logger.warning(f"save to db failed {e}")
         return False, ret_emb, _("add_failed")
 
 
@@ -302,7 +297,7 @@ def delete_entry(uid, filelist):
     """
     Delete the file permanently
     """
-    logger.warning(f"real delete total {len(filelist)}")
+    logger.debug(f"real delete total {len(filelist)}")
     for item in filelist:
         addr = item["addr"]
         entrys = StoreEntry.objects.filter(user_id=uid, addr=addr)
@@ -359,7 +354,6 @@ def get_entry(idx):
 
 
 def get_entry_list(keywords, query_args, max_count, fields = None):
-    logger.warning(f"query_args {query_args}")
     query_args["block_id"] = 0
     query_args["is_deleted"] = False
     if fields is None:

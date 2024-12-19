@@ -30,14 +30,13 @@ class ChatEngine:
             messages = [{"role": "user", "content": input}]
             formatted_msgs = [{"role": m.sender, "content": m.content} for m in self.sdata.get_recent_messages()]
             messages = formatted_msgs + messages
-            logger.warning(f"messages: {messages}")
             answer = self.get_llm_response(messages) 
             #self.sdata.add_message("assistant", answer)
             count = len(input + answer) // 4 # Rough token estimate
             return ret, answer, count
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"ChatEngine predict error: {e}")
+            logger.warning(f"ChatEngine predict error: {e}")
             return False, str(e), 0
 
     def get_llm_response(self, messages) -> str:
@@ -75,7 +74,7 @@ def do_chat(sdata, debug=False):
         engine_type = user.get("llm_chat_model", {})
         llm_info = LLMInfo.get_info(engine_type, 'llm_chat_model')
         if llm_info.engine_type == LLM_CUSTOM:
-            pre = "[{" + _('custom') + "}] "
+            pre = "[" + _('custom') + "] "
         else:
             pre = ""
         ret, answer, token_count = (

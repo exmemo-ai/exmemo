@@ -69,7 +69,7 @@ def regular_speed(context, in_path, out_path, speed=1.0):
     if speed == 1.0:
         return
     if speed > 1.0:
-        logger.warning(f"adjust speed {speed} by tts service")
+        logger.info(f"adjust speed {speed} by tts service")
         adj_speed(in_path, out_path, speed)
     return
     y, sr = librosa.load(in_path)

@@ -114,8 +114,8 @@ class SettingAPIView(APIView):
         logger.debug(f"setting {setting}")
         engine_list = tts_get_engine_list(uid)
         privilege = (
-            _("user_level: {level}\n").format(level=user.get_level_desc())
-            + user.privilege.get_descript()
+            _("user_level: {level}").format(level=user.get_level_desc())
+            + "\n" + user.privilege.get_descript()
         )
         info = {
             "setting": setting,
@@ -182,7 +182,6 @@ class LoginView(KnoxLoginView):
     permission_classes = []
 
     def post(self, request, format=None):
-        logger.warning("now LoginView")
         LoginView.create_user_default()
         LoginView.create_user_admin()
         serializer = AuthTokenSerializer(data=request.data)

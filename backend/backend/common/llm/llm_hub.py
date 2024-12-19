@@ -162,7 +162,6 @@ class EmbeddingTools:
 
     @staticmethod
     def load_embedding_setting():
-        # later maybe read from settings
         embedding_type = os.getenv("EMBEDDING_TYPE", "none")
         ollama_url = os.getenv("EMBEDDING_OLLAMA_URL", None)
         ollama_model = os.getenv("EMBEDDING_OLLAMA_MODEL", None)
@@ -187,6 +186,6 @@ class EmbeddingTools:
                 else:
                     embeddings = [None for split in all_splits]
         except Exception as e:
-            logger.error(f"failed {e}")
+            logger.warning(f"failed {e}")
             embeddings = [None for split in all_splits]
         return ret, embeddings

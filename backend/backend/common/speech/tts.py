@@ -297,7 +297,7 @@ class TTSResource:
                     self.dic[name] = round(group["wps"].median(), 2)
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"calc_wps error {e}")
+            logger.warning(f"calc_wps error {e}")
         logger.info(f"real calc_wps {self.dic}")
 
     def get_wps(self, workers):

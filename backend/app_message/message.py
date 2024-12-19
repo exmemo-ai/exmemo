@@ -27,7 +27,7 @@ from .chat_tools import do_chat
 from app_message.agent import agent_manager
 from app_message.agent import data_agent
 
-agent_manager.AllAgentManager.get_instance() # Initialize the agent manager first
+#agent_manager.AllAgentManager.get_instance() # Initialize the agent manager first
 
 ####################
 
@@ -79,6 +79,8 @@ def do_message(sdata:Session):
     """
     Handling WeChat Chat Entry
     """
+
+    agent = agent_manager.AllAgentManager.get_instance()
     try:
         content = sdata.current_content
         if pd.isnull(content) or content == "":
@@ -100,7 +102,7 @@ def do_message(sdata:Session):
             if content.startswith('/'):
                 ret, detail = CommandManager.get_instance().msg_do_command(sdata)
                 if not ret:
-                    ret, detail = agent_manager.AllAgentManager.get_instance().do_command(sdata)
+                    ret, detail = agent.do_command(sdata)
                     detail = {"type": "text", "content": detail}
         logger.info(f"content:{content} ret:{ret} detail:{detail}")
         if not ret:
@@ -110,14 +112,14 @@ def do_message(sdata:Session):
                 detail = SessionManager.get_instance().send_message(content, detail, sdata)
             else:
                 detail = {"type": "text", "content": detail}
-        if "type" in detail and detail["type"] == "text": # tmp, later adjust
+        if "type" in detail and detail["type"] == "text":
             detail["type"] = "json"
             detail["content"] = {"info": detail["content"], "sid": sdata.sid}
         return True, detail
     except Exception as e:
         traceback.print_exc()
         logger.warning(f"do_message error {e}")
-        return True, {"type": "text", "content": _("failed_to_process_information")}
+        return True, {"type": "json", "content": {"info": _("failed_to_process_information"), "sid": sdata.sid}}
 
 
 def parse_select_number(sdata):
