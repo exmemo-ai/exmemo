@@ -161,7 +161,7 @@ def parse_log_info(uid, info):
         if 'logout' in dic:
             return real_logout(uid)
     except Exception as e:
-        logger.error(f'login {e}')
+        logger.warning(f'login {e}')
         return False, str(e)
     return False, None
 
@@ -199,7 +199,8 @@ def parse_result(response, data, **kwargs):
                                 user = UserManager.get_instance().get_user(uid)
                             user.set_sid(data['local_sid'], ret_info['content']['sid'])
                         return True, False, {'type':'text', 'content':ret_info['content']['info']}
-                    elif 'info' in ret_info: # later remove
+                    """ now only return json
+                    elif 'info' in ret_info:
                         ret, info = parse_log_info(uid, ret_info['info'])
                         if ret:
                             return True, False, {'type':'text', 'content':info}
@@ -211,6 +212,7 @@ def parse_result(response, data, **kwargs):
                                 g_timer = threading.Timer(delay, handle_message, kwargs=kwargs)
                                 g_timer.start()
                         return True, False, {'type':'text', 'content':ret_info['info']}
+                    """
                     return True, False, {'type':'text', 'content':'操作成功'}
                 else:
                     return True, False, {'type':'text', 'content':ret_info['info']}

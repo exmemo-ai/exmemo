@@ -7,10 +7,10 @@
         </div>
 
         <div style="display: flex; flex-direction: column;">
-            <el-label style="margin: 10px 0;">{{ $t('editArea') }}</el-label>
+            <el-text style="margin: 10px 0;">{{ $t('editArea') }}</el-text>
             <textarea v-model="inputText" @input="handleInput"
                 style="width: 100%; height: 20vh; margin-bottom: 10px;"></textarea>
-            <el-label style="margin: 10px 0;">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</el-label>
+            <el-text style="margin: 10px 0;">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</el-text>
             <div
                 style="width: 100%; height: 33vh; overflow: auto; text-align: left; white-space: pre-line; margin-top: 10px;">
                 <span v-for="word in words" :key="word" @mousedown="handleMouseDown"
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { getURL, parseBackendError } from '@/components/support/conn';
+import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import ChatDialog from './ChatDialog.vue';
@@ -76,19 +76,16 @@ export default {
                 return;
             }
             let func = 'api/translate/article/'
+            setDefaultAuthHeader();
             const formData = new FormData();
             let title = this.inputText.split('\n')[0].substring(0, 20);
             formData.append('title', title);
-            formData.append('user_id', localStorage.getItem('username')); // later user token
+            formData.append('user_id', localStorage.getItem('username'));
             formData.append('content', this.inputText);
             let created_time = new Date().toISOString();
             formData.append('created_time', created_time);
             axios.post(getURL() + func, formData).then((res) => {
                 console.log(res.data);
-                /*
-                if (res.data.status == 'success') {
-                    alert(this.$t('saveSuccessAlert'));
-                }*/
                 this.$message({
                     type: 'success',
                     message: this.$t('saveSuccess'),

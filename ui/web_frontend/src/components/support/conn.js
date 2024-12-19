@@ -40,7 +40,7 @@ export function parseBackendError(obj, err) {
   }
 }
 
-export function realExportRecord(obj) { // later move to record ui
+export function realExportRecord(obj) {
   let func = 'api/record/'
   let params = { rtype: 'export' }
   axios.get(getURL() + func, {

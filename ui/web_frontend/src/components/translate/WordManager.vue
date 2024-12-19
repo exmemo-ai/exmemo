@@ -4,7 +4,7 @@
             <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;"
                 v-if="!isMobile">
                 <div style="display: flex; align-items: center; flex: 1; min-width: 300px; gap: 10px;">
-                    <el-label style="white-space: nowrap;">{{ $t('search') }}</el-label>
+                    <el-text style="white-space: nowrap;">{{ $t('search') }}</el-text>
                     <div class="search-container">
                         <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"/>
                     </div>
@@ -25,7 +25,7 @@
                 <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
                 <el-table-column :label="$t('operation')" :width=100>
                     <template v-slot="scope">
-                        <el-button type="text" @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
+                        <el-button link @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
                     </template>
                 </el-table-column>
             </el-table>
