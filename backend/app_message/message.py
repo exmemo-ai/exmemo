@@ -27,9 +27,6 @@ from .chat_tools import do_chat
 from app_message.agent import agent_manager
 from app_message.agent import data_agent
 
-#agent_manager.AllAgentManager.get_instance() # Initialize the agent manager first
-
-####################
 
 def msg_upload_main(sdata):
     (path, filename) = sdata.get_cache("file")
@@ -96,9 +93,11 @@ def do_message(sdata:Session):
             sdata.current_content = prev_cmd + " " + sdata.current_content
             prev_cmd = sdata.set_cache("prev_cmd", None)
             ret, detail = CommandManager.get_instance().msg_do_command(sdata)
-        if not ret:  # Enter a numerical value
+        if not ret: # Enter a numerical value
             ret, detail = parse_select_number(sdata)
-        if not ret:  # Enter Command
+        if not ret: # Enter Command
+            ret, detail = CommandManager.get_instance().msg_do_command(sdata)
+        if not ret: # Enter /xxx
             if content.startswith('/'):
                 ret, detail = CommandManager.get_instance().msg_do_command(sdata)
                 if not ret:
@@ -115,6 +114,8 @@ def do_message(sdata:Session):
         if "type" in detail and detail["type"] == "text":
             detail["type"] = "json"
             detail["content"] = {"info": detail["content"], "sid": sdata.sid}
+        elif isinstance(detail, str):
+            detail = {"type": "json", "content": {"info": detail, "sid": sdata.sid}}
         return True, detail
     except Exception as e:
         traceback.print_exc()
@@ -130,8 +131,10 @@ def parse_select_number(sdata):
         idx = int(content)
         next_cmd = sdata.get_cache("next_cmd")
         logger.info(f"next_cmd {next_cmd} idx {idx} sid {sdata.sid}")
-        if next_cmd is None or len(next_cmd) < idx:
+        if next_cmd is None:
             return False, _("no_optional_commands")
+        elif len(next_cmd) < idx:
+            return True, _("no_optional_commands") + f": {idx}"
         sdata.current_content = next_cmd[idx - 1][1]  # cmd value
         return CommandManager.get_instance().msg_do_command(sdata)
     return False, _("not_a_number")

@@ -1,6 +1,7 @@
 import copy
 import json
 from typing import List
+from loguru import logger
 import threading
 from swarm.util import debug_print
 from swarm import Swarm
@@ -65,7 +66,7 @@ class ExSmarm(Swarm):
             )
             message = completion.choices[0].message
             total_count += completion.usage.total_tokens
-            debug_print('@@@ response', completion.usage.total_tokens)
+            debug_print(debug, '@@@ response', completion.usage.total_tokens)
             debug_print(debug, "Received completion:", message)
             message.sender = active_agent.name
             history.append(
@@ -77,14 +78,23 @@ class ExSmarm(Swarm):
                 break
 
             # handle function calls, updating context_variables, and switching agents
+            logger.debug(f"message.tool_calls: {message.tool_calls}")
+            if len(message.tool_calls) == 1:
+                tool_calls = message.tool_calls
+            else:
+                tool_calls = message.tool_calls[:1]
+                logger.debug('only call the first tool')
             partial_response = self.handle_tool_calls(
-                message.tool_calls, active_agent.functions, context_variables, debug
+                tool_calls, 
+                active_agent.functions, 
+                context_variables, debug
             )
+            logger.debug(f'message.tool_calls finished {partial_response}, check {len(history) - init_len} < {max_turns}')
             history.extend(partial_response.messages)
             context_variables.update(partial_response.context_variables)
             if partial_response.agent:
                 active_agent = partial_response.agent
-
+ 
         context_variables['total_count'] = total_count
         return Response(
             messages=history[init_len:],

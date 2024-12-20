@@ -8,13 +8,13 @@ from backend.common.speech.tts import (
     run_tts
 )
 from app_diet.diet import calc_diet, edit_diet, del_diet
-from app_message.agent.base_agent import BaseAgent, agent_function
+from app_message.agent.base_agent import BaseAgent, agent_function, DEFAULT_INSTRUCTIONS
 
 class DietAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("diet_management")
-        self.instructions = "Handle diet records, diet deletion, and diet statistics"
+        self.instructions = "Handle diet records, diet deletion, and diet statistics. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("diet_statistics"))
     def _afunc_diet_analysis(context_variables: dict, content: str = None):
@@ -63,7 +63,7 @@ class AudioAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("voice_assistant")
-        self.instructions = "Audio recognition and text-to-speech conversion"
+        self.instructions = "Audio recognition and text-to-speech conversion. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("text_to_audio"))
     def _afunc_tts_convert(context_variables: dict, content: str = None):
@@ -143,7 +143,7 @@ class TranslateAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("translate_assistant")
-        self.instructions = "Support translation functions"
+        self.instructions = "Support translation functions. " + DEFAULT_INSTRUCTIONS
  
     @agent_function(_("translate"))
     def _afunc_translate(context_variables: dict, content: str = None):
@@ -161,11 +161,21 @@ class TranslateAgent(BaseAgent):
 
 from app_message.command import CommandManager, LEVEL_TOP
 
+def filter_result(data): # for test
+    """
+    if isinstance(data, tuple):
+        if len(data) == 2:
+            if isinstance(data[1], dict):
+                if 'content' in data[1]:
+                    return data[1]['content']
+    """
+    return data
+
 class HelpAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("help_assistant")
-        self.instructions = "Provide help list and find command functions"
+        self.instructions = "Provide help list and find command functions." + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("help_list"))
     def _afunc_help(context_variables: dict):
@@ -177,7 +187,7 @@ class HelpAgent(BaseAgent):
             if cmd.level == LEVEL_TOP:
                 name = cmd.cmd_list[0]
                 cmd_list.append((name, name))
-        return msg_common_select(sdata, cmd_list)
+        return filter_result(msg_common_select(sdata, cmd_list))
 
 
     @agent_function(_("find_command"))
@@ -186,7 +196,7 @@ class HelpAgent(BaseAgent):
         sdata = context_variables["sdata"]
         if content is None and sdata.current_content == "":
             sdata.set_cache("prev_cmd", _("find_command"))
-            return True, {"type": "text", "content": _("please_enter_command_keyword")}
+            return filter_result(True, {"type": "text", "content": _("please_enter_command_keyword")})
         else:
             if content is not None:
                 logger.debug(f"find_cmd {content}")
@@ -194,9 +204,9 @@ class HelpAgent(BaseAgent):
             else:
                 ret = CommandManager.get_instance().find_cmd(sdata.user_id, sdata.current_content)
             ret = [(x, x) for x in ret]
-            return msg_common_select(sdata, ret)
             if len(ret) == 0:
-                return True, {"type": "text", "content": _("match_failed")}
+                return filter_result(True, {"type": "text", "content": _("match_failed")})
+            return filter_result(msg_common_select(sdata, ret))
 
 from backend.common.llm.llm_hub import llm_query
 MSG_ROLE = "You're a smart assistant"
@@ -205,7 +215,7 @@ class LLMAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("intelligent_chat_assistant")
-        self.instructions = "Invoke specific language models for conversation"
+        self.instructions = "Invoke specific language models for conversation. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("kimi_chat"))
     def _afunc_kimi(context_variables: dict, content: str = None):

@@ -4,6 +4,10 @@ from django.utils.translation import gettext as _
 
 from app_message.command import CommandManager, Command, LEVEL_NORMAL, LEVEL_TOP, msg_common_select
 from backend.common.user.resource import *
+from backend.common.utils.text_tools import get_language_name
+from backend.settings import LANGUAGE_CODE
+
+DEFAULT_INSTRUCTIONS = f"Determine the single most suitable tool to call based on the user's input, and respond in {get_language_name(LANGUAGE_CODE.lower())}."
 
 def agent_function(description):
     def decorator(func):
@@ -15,7 +19,7 @@ def agent_function(description):
 class BaseAgent:
     def __init__(self):
         self.agent_name = "BaseAgent"
-        self.instructions = "Determine which function to call based on the user's input."
+        self.instructions = DEFAULT_INSTRUCTIONS
 
     def get_functions(self) -> List[Callable]:
         ret = []

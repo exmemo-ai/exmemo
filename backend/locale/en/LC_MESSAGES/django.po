@@ -486,7 +486,7 @@ msgstr "Translation failed"
 
 #: backend/app_message/agent/other_agent.py:168
 msgid "help_assistant"
-msgstr "Help assistant"
+msgstr "Assistant"
 
 #: backend/app_message/agent/other_agent.py:171
 msgid "help_list"
@@ -507,7 +507,7 @@ msgstr "Match failed"
 
 #: backend/app_message/agent/other_agent.py:208
 msgid "intelligent_chat_assistant"
-msgstr "Intelligent chat assistant"
+msgstr "Chat assistant"
 
 #: backend/app_message/agent/other_agent.py:211
 msgid "kimi_chat"

@@ -38,11 +38,13 @@ class BaseAgentManager:
     def triage_instructions(self, context_variables):
         is_logged_in = context_variables['sdata'].is_logged_in()    
         logger.info(f"is_logged_in: {is_logged_in}")
+        default_tool = _('help_list')
 
         return f"""You are to triage a users request, and call a tool to transfer to the right intent.
         User login status: {is_logged_in}. If not logged in, please transfer to User Agent to handle login,
         or prompt the user to login first, do not answer other questions.
         If logged in, please call the appropriate tool to transfer to the correct intent based on user's question.
+        If user's question can't match any tool, please call the '{default_tool}' tool.
         """
 
     def do_command(self, sdata: Session, engine_type: str = None, debug = False):
@@ -142,23 +144,25 @@ class AllAgentManager(BaseAgentManager):
     
     def __init__(self):
         super().__init__()
-        self.add_agent(WebAgent())
-        self.add_agent(DataAgent())  
-        self.add_agent(AudioAgent())
-        self.add_agent(SettingAgent())
-        self.add_agent(FileAgent())
-        self.add_agent(HelpAgent())
-        self.add_agent(UserAgent())
-        self.add_agent(LLMAgent()) # tmp
-        
+
         if is_app_installed("app_record"):
             self.add_agent(RecordAgent())
-            
+
+        self.add_agent(DataAgent())  
+        self.add_agent(FileAgent())
+        self.add_agent(WebAgent())
+        self.add_agent(AudioAgent())
+        
         if is_app_installed("app_diet"):
             self.add_agent(DietAgent())
             
         if is_app_installed("app_translate"):
             self.add_agent(TranslateAgent())
+
+        self.add_agent(SettingAgent())
+        self.add_agent(UserAgent())
+        self.add_agent(HelpAgent())
+        #self.add_agent(LLMAgent()) # This agent is not used in the current version
 
 
 class UserAgentManager(BaseAgentManager):

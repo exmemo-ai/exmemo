@@ -356,7 +356,7 @@ msgstr "搜索网页"
 
 #: backend/app_message/agent/data_agent.py:219
 msgid "manage_data"
-msgstr "管理数据"
+msgstr "管理工具"
 
 #: backend/app_message/agent/data_agent.py:223
 msgid "please_open_following_link"
@@ -482,7 +482,7 @@ msgstr "翻译失败"
 
 #: backend/app_message/agent/other_agent.py:168
 msgid "help_assistant"
-msgstr "帮助助手"
+msgstr "使用指南"
 
 #: backend/app_message/agent/other_agent.py:171
 msgid "help_list"
@@ -531,7 +531,7 @@ msgstr "Gemini调用失败"
 
 #: backend/app_message/agent/user_agent.py:15
 msgid "user_management"
-msgstr "用户管理"
+msgstr "用户操作"
 
 #: backend/app_message/agent/user_agent.py:27
 #: backend/backend/common/user/views.py:55

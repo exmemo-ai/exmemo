@@ -9,7 +9,7 @@ from backend.common.utils.file_tools import (
     get_file_abstract,
 )
 from backend.common.speech.tts import run_tts
-from app_message.agent.base_agent import BaseAgent, agent_function
+from app_message.agent.base_agent import BaseAgent, agent_function, DEFAULT_INSTRUCTIONS
 from app_message.command import msg_common_select
 
 import pandas as pd
@@ -23,7 +23,7 @@ class RecordAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("record_agent")
-        self.instructions = "This agent provides functions for recording, searching records, and exporting records. "
+        self.instructions = "Provides functions for recording, searching records, and exporting records. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("search_records"))
     def _afunc_record_search(context_variables: dict, content: str = None):
@@ -82,7 +82,7 @@ class WebAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("web_processing_agent")
-        self.instructions = "This agent provides functions for collecting web pages, setting web pages to-do, summarizing web content, getting web content, converting web pages to audio, and listing web functions."
+        self.instructions = "Provides functions for collecting web pages, setting web pages to-do, summarizing web content, getting web content, converting web pages to audio, and listing web functions. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("web_functions_list"))
     def _afunc_web_op(context_variables: dict, web_addr: str = None):
@@ -164,7 +164,7 @@ class DataAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("data_management_agent")
-        self.instructions = "This agent provides functions for managing data, searching data, searching files, searching to-do web pages, searching collected web pages, and searching web pages."
+        self.instructions = "Provides functions for managing data, searching data, searching files, searching to-do web pages, searching collected web pages, and searching web pages. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("search_data"))
     def _afunc_data_search(context_variables: dict, content: str = None):
@@ -221,14 +221,15 @@ class DataAgent(BaseAgent):
     def _afunc_data_manage(context_variables: dict):
         """Manage data"""
         url = f"{WEB_URL}"
-        return True, {"type": "sharing", "content": _("please_open_following_link") + f":\n{url}"}
+        #return True, {"type": "sharing", "content": _("please_open_following_link") + f":\n{url}"}
+        return True, {"type": "text", "content": _("please_open_following_link") + f":\n{url}"}
 
 
 class FileAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("file_processing_agent")
-        self.instructions = "This agent provides functions for extracting file content, converting text to audio, and collecting files."
+        self.instructions = "Provides functions for extracting file content, converting text to audio, and collecting files. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("extract_file_content"))
     def _afunc_file_extract(context_variables: dict):
@@ -294,8 +295,14 @@ def msg_web_main(sdata):
 
             length = len(content)
             cmd_list = []
-            for func in WebAgent().get_functions():
-                cmd_list.append((func.__doc__, func.__doc__))
+            webAgent = WebAgent()
+            for func in webAgent.get_functions():
+                real_func = func.__get__(None, type(webAgent))
+                if hasattr(real_func, 'description'):
+                    desc = real_func.description
+                else:
+                    desc = func.__doc__ or func.__name__
+                cmd_list.append((desc, desc))
             return msg_common_select(
                 sdata,
                 cmd_list=cmd_list,

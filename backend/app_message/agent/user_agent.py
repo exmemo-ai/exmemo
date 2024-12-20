@@ -7,13 +7,13 @@ from backend.common.speech.tts import (
 )
 from backend.common.user.user import *
 from backend.common.user.resource import *
-from app_message.agent.base_agent import BaseAgent, agent_function
+from app_message.agent.base_agent import BaseAgent, agent_function, DEFAULT_INSTRUCTIONS
 
 class UserAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("user_management")
-        self.instructions = "This agent can register, login, change passwords, and logout."
+        self.instructions = "Provides register, login, change passwords, and logout." + DEFAULT_INSTRUCTIONS
 
     @staticmethod
     def register(user_id: str, password: str) -> dict:
@@ -104,7 +104,7 @@ class SettingAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("system_settings")
-        self.instructions = "This agent can query user privileges, resource usage, and set models for tools, chat, and text-to-speech."
+        self.instructions = "Provides user privileges, resource usage, and set models for tools, chat, and text-to-speech. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("query_user_privileges"))
     def _afunc_user_privilege(context_variables: dict):
