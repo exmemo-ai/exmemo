@@ -250,6 +250,14 @@ msgstr ""
 "形如：注册 用户名xxx, 密码xxx \n"
 "或 登录 用户名xxx, 密码xxx"
 
+#: backend/app_message/agent/agent_manager.py:114
+msgid "agent_llm_error"
+msgstr "调用模型工具出错。请重试，或在设置中选择更好的工具模型。"
+
+#: backend/app_message/agent/agent_manager.py:171
+msgid "system_tools"
+msgstr "系统提供以下工具. "
+
 #: backend/app_message/agent/data_agent.py:25
 msgid "record_agent"
 msgstr "随手记"
@@ -487,6 +495,10 @@ msgstr "使用指南"
 #: backend/app_message/agent/other_agent.py:171
 msgid "help_list"
 msgstr "帮助列表"
+
+#: backend/app_message/agent/other_agent.py:176
+msgid "provides {func_str} functions_please_select"
+msgstr "提供 {func_str} 工具，请调用其中最匹配的一个工具，并以中文返回结果"
 
 #: backend/app_message/agent/other_agent.py:184
 #: backend/app_message/agent/other_agent.py:189

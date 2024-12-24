@@ -99,7 +99,7 @@ otherwise reply 'not a command', do not reply with other content."""
         # Split x by punctuation, spaces, etc.
         arr = re.split(r"[,，。!！?？\s]+", content)
         if len(arr) == 0:
-            return False, {"type": "text", "content": _("command_not_found")}
+            return False, _("command_not_found")
         x = arr[0]
         method = None
         for command in self.commands:  # Exact match
@@ -132,8 +132,9 @@ otherwise reply 'not a command', do not reply with other content."""
             sdata.current_content = content_adj
             for command in self.commands:
                 if cmd in command.cmd_list:
-                    return command.function({'sdata':sdata})
-        return False, {"type": "text", "content": _("command_not_found")}
+                    detail = command.function({'sdata':sdata, 'from': 'command'})
+                    return True, detail
+        return False, _("command_not_found")
 
     def check_conflict(self):
         """
@@ -164,4 +165,4 @@ def msg_common_select(sdata, cmd_list, detail=None):
         content = _("please_choose_colon_\n")
     for idx, (label, value) in enumerate(cmd_list):
         content += f"\n{idx+1}.{label}"
-    return True, {"type": "text", "content": content}
+    return content

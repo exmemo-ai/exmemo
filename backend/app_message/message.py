@@ -28,25 +28,6 @@ from app_message.agent import agent_manager
 from app_message.agent import data_agent
 
 
-def msg_upload_main(sdata):
-    (path, filename) = sdata.get_cache("file")
-    if path is not None:
-        cmd_list = [(_("collect_file"), _("collect_file"))]
-        if is_doc_file(path):
-            cmd_list += [
-                (_("summarize_file_content"), _("summarize_file_content")), 
-                (_("file_to_audio"), _("file_to_audio"))
-            ]
-        elif is_audio_file(path):
-            cmd_list += [(_("speech_recognition"), _("speech_recognition"))]
-        return msg_common_select(sdata, cmd_list, detail=_("file_received"))
-    else:
-        return True, {
-            "type": "text",
-            "content": _("please_upload_or_share_a_file_first"),
-        }
-
-
 def msg_search_detail(dic):
     sdata = dic['sdata']
     uid = sdata.user_id
@@ -58,13 +39,13 @@ def msg_search_detail(dic):
             ext = get_ext(filename)
             path = filecache.get_tmpfile(ext)
             if utils_filemanager.get_file_manager().get_file(uid, obj.path, path):
-                return True, {"type": "file", "content": path, "filename": filename}
+                return {"type": "file", "path": path, "filename": filename}
         elif obj.etype == "web":
-            return True, {"type": "text", "content": obj.addr}
+            return obj.addr
         else:
             detail = f"\n主题:\n{obj.title}\n\n内容:\n{obj.raw}"
-            return True, {"type": "text", "content": detail}
-    return True, {"type": "text", "content": _("failed_to_fetch_files")}
+            return detail
+    return _("failed_to_fetch_files")
 
 
 CommandManager.get_instance().register(
@@ -81,9 +62,9 @@ def do_message(sdata:Session):
     try:
         content = sdata.current_content
         if pd.isnull(content) or content == "":
-            return False, {"type": "text", "content": _("nothing_entered")}
+            return False, _("nothing_entered")
         ret = False
-        detail = {"type": "text", "content": _("unrecognized_command")}
+        detail = _("unrecognized_command")
         prev_cmd = sdata.get_cache("prev_cmd")
 
         if is_valid_url(content):  # Enter Website
@@ -97,30 +78,27 @@ def do_message(sdata:Session):
             ret, detail = parse_select_number(sdata)
         if not ret: # Enter Command
             ret, detail = CommandManager.get_instance().msg_do_command(sdata)
-        if not ret: # Enter /xxx
+        if not ret: 
             if content.startswith('/'):
                 ret, detail = CommandManager.get_instance().msg_do_command(sdata)
                 if not ret:
                     ret, detail = agent.do_command(sdata)
-                    detail = {"type": "text", "content": detail}
-        logger.info(f"content:{content} ret:{ret} detail:{detail}")
-        if not ret:
-            ret = True
-            ret, detail = do_chat(sdata)
-            if ret:
-                detail = SessionManager.get_instance().send_message(content, detail, sdata)
             else:
-                detail = {"type": "text", "content": detail}
-        if "type" in detail and detail["type"] == "text":
-            detail["type"] = "json"
-            detail["content"] = {"info": detail["content"], "sid": sdata.sid}
-        elif isinstance(detail, str):
-            detail = {"type": "json", "content": {"info": detail, "sid": sdata.sid}}
+                ret = True
+                ret, detail = do_chat(sdata)
+                if ret:
+                    sid = SessionManager.get_instance().send_message(content, detail, sdata)
+                    detail = {"type": "text", "info": detail, "sid": sid}
+            logger.info(f"content:{content} ret:{ret} detail:{detail}")
+        if isinstance(detail, str):
+            detail = {"type": "text", "sid": sdata.sid, "info": detail}
+        elif isinstance(detail, dict) and "sid" not in detail:
+            detail["sid"] = sdata.sid
         return True, detail
     except Exception as e:
         traceback.print_exc()
         logger.warning(f"do_message error {e}")
-        return True, {"type": "json", "content": {"info": _("failed_to_process_information"), "sid": sdata.sid}}
+        return False, {"sid": sdata.sid, "info":_("failed_to_process_information")}
 
 
 def parse_select_number(sdata):
@@ -139,6 +117,20 @@ def parse_select_number(sdata):
         return CommandManager.get_instance().msg_do_command(sdata)
     return False, _("not_a_number")
 
+def msg_upload_main(sdata):
+    (path, filename) = sdata.get_cache("file")
+    if path is not None:
+        cmd_list = [(_("collect_file"), _("collect_file"))]
+        if is_doc_file(path):
+            cmd_list += [
+                (_("summarize_file_content"), _("summarize_file_content")), 
+                (_("file_to_audio"), _("file_to_audio"))
+            ]
+        elif is_audio_file(path):
+            cmd_list += [(_("speech_recognition"), _("speech_recognition"))]
+        return True, msg_common_select(sdata, cmd_list, detail=_("file_received"))
+    else:
+        return False, _("please_upload_or_share_a_file_first")
 
 def msg_recv_file(base_path, filename, sdata):
     """
@@ -147,16 +139,11 @@ def msg_recv_file(base_path, filename, sdata):
     logger.debug(f"parse_file: {base_path}")
     sdata.set_cache("file", (base_path, filename))
     ret = False
-    dic = {}
+    detail = None
     if support_file(base_path):
-        ret, dic = msg_upload_main(sdata)
-    if ret:
-        return True, dic["content"]
-    else:
-        if "content" in dic:
-            return True, dic["content"]
-        else:
-            return False, _("the_file_type_is_not_valid_or_not_supported")
+        ret, detail = msg_upload_main(sdata)
+    return ret, {"type": "text", "sid": sdata.sid, "info": detail}
+
 
 
 CommandManager.get_instance().check_conflict()

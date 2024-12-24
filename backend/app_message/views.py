@@ -38,18 +38,13 @@ class SessionAPIView(APIView):
                 return SessionManager.get_instance().get_sessions(sdata.user_id)
             elif rtype == "save_session":
                 sdata.save_to_db()
-                return do_result(True, {"type": "text", "content": "session saved"})
+                return do_result(True, "session saved")
             elif rtype == "get_current_session":
-                detail = {"type": "text", "content": sdata.sid}
-                return do_result(True, detail)
+                return do_result(True, sdata.sid)
         except Exception as e:
             logger.warning(f"message failed {e}")
             traceback.print_exc()
-        return HttpResponse(
-            json.dumps(
-                {"status": "failed", "info": _("backend_processing_failed")}
-            )
-        )
+        return do_result(False, _("backend_processing_failed"))
 
 
 class MessageAPIView(APIView):
@@ -83,11 +78,7 @@ class MessageAPIView(APIView):
             except Exception as e:
                 logger.warning(f"message failed {e}")
                 traceback.print_exc()
-            return HttpResponse(
-                json.dumps(
-                    {"status": "failed", "info": _("backend_processing_failed")}
-                )
-            )
+            return do_result(False, _("backend_processing_failed"))
         elif sdata.is_group: # only in wechat group
             if sdata.args["user_id"] == DEFAULT_USER:
                 LoginView.create_user_default()
@@ -100,35 +91,22 @@ class MessageAPIView(APIView):
             except Exception as e:
                 logger.warning(f"message failed {e}")
                 traceback.print_exc()
-            return HttpResponse(
-                json.dumps(
-                    {"status": "failed", "info": _("backend_processing_failed")}
-                )
-            )
+            return do_result(False, _("backend_processing_failed"))
         else:
             content = request.POST.get("content", None)
             if content is None:
-                return HttpResponse(
-                    json.dumps(
-                        {
-                            "status": "failed",
-                            "info": _("please_sign_up_or_log_in_first"),
-                        }
-                    )
-                )
+                return do_result(False, _("please_sign_up_or_log_in_first"))
             ret, detail = agent_manager.UserAgentManager.get_instance().do_command(sdata)
-            return HttpResponse(json.dumps({"status": "success", "type":"json", "content":{"info": detail, "sid": sdata.sid}}))
+            return do_result(True, {"type": "text", "info": detail, "sid": sdata.sid})
 
     def upload_file(self, sdata, request):
         ret, path, filename = real_upload_file(request)
         if ret:
             ret, detail = msg_recv_file(
                 path, filename, sdata
-            )  # May return files or text
-            return do_result(True, detail)  # return True to show info
-        return HttpResponse(
-            json.dumps({"status": "failed", "info": _("backend_processing_failed")})
-        )
+            )
+            return do_result(True, detail)
+        return do_result(False, _("backend_processing_failed"))  
 
 
 def real_upload_file(request):

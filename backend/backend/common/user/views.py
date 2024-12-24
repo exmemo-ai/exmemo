@@ -1,6 +1,6 @@
 import json
 from loguru import logger
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model, login
 from django.utils.translation import gettext as _
 from rest_framework.views import APIView
@@ -45,7 +45,7 @@ class UserAPIView(APIView):
         elif rtype == "register":
             return self.register_user(request)
         else:
-            return JsonResponse({"status": _("method_not_supported_colon_") + rtype})
+            return do_result(False, _("method_not_supported_colon_") + rtype)
 
     def register_user(self, request):
         user_id = request.GET.get("user_id", request.POST.get("user_id", None))
@@ -111,18 +111,18 @@ class SettingAPIView(APIView):
 
     def get_setting(self, uid, user):
         setting = user.settings.get_json()
-        logger.debug(f"setting {setting}")
         engine_list = tts_get_engine_list(uid)
         privilege = (
             _("user_level: {level}").format(level=user.get_level_desc())
             + "\n" + user.privilege.get_descript()
         )
-        info = {
+        detail = {
             "setting": setting,
             "engine_list": engine_list,
             "privilege": privilege,
         }
-        return HttpResponse(json.dumps({"status": "success", "info": info}))
+        logger.debug(f"setting {detail}")
+        return do_result(True, detail)
 
     def get_voice(self, request, user):
         engine_name = request.GET.get(
@@ -131,7 +131,7 @@ class SettingAPIView(APIView):
         logger.debug(f"engine_name {engine_name}")
         voice_list = tts_get_voice_list(engine_name)
         info = {"voice_list": voice_list, "voice_settings": user.settings.tts_voice}
-        return HttpResponse(json.dumps({"status": "success", "info": info}))
+        return do_result(True, info)
 
     def save_settings(self, request, user):
         engine_name = request.GET.get(

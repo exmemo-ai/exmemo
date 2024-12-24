@@ -301,6 +301,12 @@ class EntryFeatureTool:
             if "atype" in dic and dic["atype"] is not None:
                 if dic["atype"] not in auth_list:
                     del dic["atype"]
+            if 'ctype' not in dic:
+                dic['ctype'] = DEFAULT_CATEGORY
+            if 'status' not in dic:
+                dic['status'] = DEFAULT_STATUS
+            if 'atype' not in dic:
+                dic['atype'] = None
             return dic
         except Exception as e:
             traceback.print_exc()

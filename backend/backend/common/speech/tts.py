@@ -100,7 +100,7 @@ def start_tts(title, content, uid, force_fg=False, debug=True):
                 return (
                     ret,
                     0,
-                    {"type": "audio", "content": info, "filename": f"{title}.mp3"},
+                    {"type": "audio", "path": info, "filename": f"{title}.mp3"},
                 )
             else:
                 return ret, 0, info
@@ -242,9 +242,9 @@ def run_tts(title, content, uid, fg=False, debug=True):
             if delay > 0:
                 dic["request_delay"] = delay
             dic["content"] = detail
-        return True, dic
+        return dic
     else:
-        return True, {"type": "text", "content": detail}
+        return detail
 
 
 class TTSResource:

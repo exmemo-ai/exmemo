@@ -38,10 +38,12 @@ def search_data(sdata, dic={}):
         arr.append((label, value))
 
     if len(arr) == 0:
-        return True, {"type": "text", "content": _("no_content_found_1727252424")}
+        return _("no_content_found_1727252424")
     elif len(arr) == 1:
         sdata.current_content = arr[0][1]
-        return CommandManager.get_instance().msg_do_command(sdata)
+        ret, detail = CommandManager.get_instance().msg_do_command(sdata)
+        logger.error(f'detail {detail}')
+        return detail
     else:
         return msg_common_select(sdata, arr)
 

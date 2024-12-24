@@ -1,16 +1,13 @@
 import os
-import json
 from loguru import logger
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import gettext as _
 from knox.auth import TokenAuthentication
 import shutil
 
 from backend.common.speech.tts import start_tts
-from backend.settings import MEDIA_ROOT, MEDIA_FILE_DIR
 from backend.common.user.utils import parse_common_args
 from backend.common.utils.net_tools import do_result
 from backend.common.files import filecache
@@ -67,9 +64,7 @@ class PaperAPIView(APIView):
                 os.makedirs(mp3_dir)
             shutil.copy(detail["content"], mp3_path)
             filecache.TmpFileManager.get_instance().add_file(mp3_path)
-            return HttpResponse(
-                json.dumps({"status": "success", "audio_url": "/" + rel_path})
-            )
+            return do_result(True, {"audio_url": "/" + rel_path})
         else:
             return do_result(False, str(detail))
 

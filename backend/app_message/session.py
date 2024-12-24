@@ -202,8 +202,7 @@ class Session:
         if len(self.messages) == 0 or force:
             self.load_from_db()
         messages = [item.to_dict() for item in self.messages]
-        detail = {"type": "text", "content": messages}
-        return do_result(True, detail)
+        return do_result(True, {"messages": messages})
 
     def send_message(self, msg1, msg2):
         self.add_message("user", msg1)
@@ -244,7 +243,8 @@ class Session:
 
 class SessionManager:
     __instance = None
-    TIMER_INTERVAL = 30 * 60 # 30 minutes
+    #TIMER_INTERVAL = 30 * 60 # 30 minutes
+    TIMER_INTERVAL = 10 * 60 # 30 minutes
 
     @staticmethod
     def get_instance():
@@ -390,9 +390,9 @@ class SessionManager:
                 "sid": sid,
                 "sname": sname
             })
-        detail = {"type": "text", "content": slist}
+        detail = {"type": "text", "sessions": slist}
         logger.debug(f'get_sessions {detail}')
-        return do_result(True, detail)        
+        return do_result(True, detail)
     
     def send_message(self, msg1:str, msg2:str, sdata: Session):
         need_create_new = False
@@ -415,14 +415,13 @@ class SessionManager:
             self.sessions.move_to_end(sdata.sid)
 
         logger.info(f'add_message ret {sdata.sid}')
-        return {"type": "json", "content": {"info": msg2, "sid": sdata.sid}}
+        return sdata.sid
     
     def clear_session(self, sdata: Session):
         self.remove_session(sdata.sid)
         if sdata is not None:
             sdata.clear_session()
-        detail = {"type": "text", "content": 'session cleared'}
-        return do_result(True, detail)
+        return do_result(True, 'session cleared')
 
 def get_session_by_req(request):
     """

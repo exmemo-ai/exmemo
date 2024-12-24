@@ -37,7 +37,10 @@ class ChatEngine:
         except Exception as e:
             traceback.print_exc()
             logger.warning(f"ChatEngine predict error: {e}")
-            return False, str(e), 0
+            error_str = str(e)
+            if len(error_str) > 100:
+                error_str = error_str[:100] + "..."
+            return False, "Error:\n" + error_str, 0
 
     def get_llm_response(self, messages) -> str:
         if self.llm_info.api_method == "gemini":
