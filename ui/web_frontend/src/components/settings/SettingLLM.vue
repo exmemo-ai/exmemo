@@ -25,8 +25,8 @@
                 </el-form-item>
                 <el-form-item :label="$t('modelType')">
                     <el-radio-group v-model="llm_chat_type">
-                        <el-radio :label="'default'">{{ $t('defaultModel') }}</el-radio>
-                        <el-radio :label="'custom'">{{ $t('customModel') }}</el-radio>
+                        <el-radio value="default">{{ $t('defaultModel') }}</el-radio>
+                        <el-radio value="custom">{{ $t('customModel') }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
 
@@ -65,8 +65,8 @@
             <div class="section-content">
                 <el-form-item :label="$t('modelType')">
                     <el-radio-group v-model="llm_tool_type">
-                        <el-radio :label="'default'">{{ $t('defaultModel') }}</el-radio>
-                        <el-radio :label="'custom'">{{ $t('customModel') }}</el-radio>
+                        <el-radio value="default">{{ $t('defaultModel') }}</el-radio>
+                        <el-radio value="custom">{{ $t('customModel') }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
 
@@ -141,6 +141,7 @@ export default {
             this.llm_tool_type = tool_info.type || 'default';
             this.llm_tool_apikey = tool_info.apikey || '';
             this.llm_tool_url = tool_info.url || '';
+            this.llm_tool_model = tool_info.model || '';
         },
         getSettings() {
             return {

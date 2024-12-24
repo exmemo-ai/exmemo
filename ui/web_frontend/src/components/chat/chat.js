@@ -125,10 +125,13 @@ export class ChatService {
     parseMessageReturn(response) {
         if (response.status === 200) {
             const result = response.data;
-            console.log('@@@@@', result)
+//            console.log('aaaaa', result.type);
+//           if (result.type === 'audio' || result.type === 'file') {
+//               return [false, this.t('暂时不处理文件'), null];
+//            }
             if (result.status === 'success') {
-                if (result.type === 'json') {
-                    return [true, result.content.info, result.content.sid];
+                if (result.info !== null && result.sid !== null) {
+                    return [true, result.info, result.sid];
                 }
             }
         }
@@ -153,13 +156,13 @@ export class ChatService {
         if (response.status === 200) {
             const result = response.data;
             if (result.status === 'success') {
-                if (result.info === null) {
+                if (result.messages === null) {
                     return;
-                } else if (typeof result.info === 'string') {
-                    console.log('parseMessages return info', result.info);
-                } else if (Array.isArray(result.info)) {
+                } else if (typeof result.messages === 'string') {
+                    console.log('parseMessages return info', result.messages);
+                } else if (Array.isArray(result.messages)) {
                     this.messages = [];
-                    for (const item of result.info) {
+                    for (const item of result.messages) {
                         console.log('item', item);
                         this.addMessage(item.content, item.sender, item.created_time);
                     }
@@ -177,8 +180,8 @@ export class ChatService {
             const result = response.data;
             if (result.status === 'success') {
                 this.sessions = [];
-                if (Array.isArray(result.info)) {
-                    for (const item of result.info) {
+                if (Array.isArray(result.sessions)) {
+                    for (const item of result.sessions) {
                         this.pushSession(item.sid, item.sname);
                     }
                 }

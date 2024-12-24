@@ -187,23 +187,16 @@ def parse_result(response, data, **kwargs):
             logger.info(f'backend, ret {ret_info}')
             if 'status' in ret_info:
                 if ret_info['status'] == 'success':
-                    if 'type' in ret_info and ret_info['type'] == 'json' and 'content' in ret_info:
-                        if 'info' in ret_info['content']:
-                            ret, info = parse_log_info(uid, ret_info['content']['info']) # login/logout
-                            if ret:
-                                return True, False, {'type':'text', 'content':info}
-                        if 'sid' in ret_info['content']:
+                    if 'info' in ret_info:
+                        ret, info = parse_log_info(uid, ret_info['info'])
+                        if ret:
+                            return True, False, {'type':'text', 'content':info}
+                        if 'sid' in ret_info:
                             user = UserManager.get_instance().get_user(uid)
                             if user is None:
                                 UserManager.get_instance().set(uid, None, None, None)
                                 user = UserManager.get_instance().get_user(uid)
-                            user.set_sid(data['local_sid'], ret_info['content']['sid'])
-                        return True, False, {'type':'text', 'content':ret_info['content']['info']}
-                    """ now only return json
-                    elif 'info' in ret_info:
-                        ret, info = parse_log_info(uid, ret_info['info'])
-                        if ret:
-                            return True, False, {'type':'text', 'content':info}
+                            user.set_sid(data['local_sid'], ret_info['sid'])
                         if 'request_delay' in ret_info:
                             delay = ret_info['request_delay']
                             logger.info(f'1. delay {delay} handle message')
@@ -212,7 +205,6 @@ def parse_result(response, data, **kwargs):
                                 g_timer = threading.Timer(delay, handle_message, kwargs=kwargs)
                                 g_timer.start()
                         return True, False, {'type':'text', 'content':ret_info['info']}
-                    """
                     return True, False, {'type':'text', 'content':'操作成功'}
                 else:
                     return True, False, {'type':'text', 'content':ret_info['info']}

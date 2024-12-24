@@ -75,8 +75,8 @@ export default {
             axios.post(getURL() + 'api/setting/', formData).then((res) => {
                 if (res.data.status == "success") {
                     this.voice_options = []
-                    this.voice_settings = res.data.info.voice_settings
-                    res.data.info.voice_list.forEach((item) => {
+                    this.voice_settings = res.data.voice_settings
+                    res.data.voice_list.forEach((item) => {
                         this.voice_options.push({ label: item['label'], value: item['value'] });
                     });
                     this.resetVoice();

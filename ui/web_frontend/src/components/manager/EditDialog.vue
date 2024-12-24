@@ -86,9 +86,9 @@
             </div>
             <div style="flex-grow: 1; display: flex; align-items: flex-start;">
                 <el-radio-group v-model="form.atype">
-                    <el-radio :label="'subjective'">{{ $t('subjective') }}</el-radio>
-                    <el-radio :label="'objective'">{{ $t('objective') }}</el-radio>
-                    <el-radio :label="'third_party'">{{ $t('thirdParty') }}</el-radio>
+                    <el-radio value="subjective">{{ $t('subjective') }}</el-radio>
+                    <el-radio value="objective">{{ $t('objective') }}</el-radio>
+                    <el-radio value="third_party">{{ $t('thirdParty') }}</el-radio>
                 </el-radio-group>
             </div>
         </div>
@@ -98,8 +98,8 @@
             </div>
             <div style="flex-grow: 1; display: flex; align-items: flex-start;">
                 <el-radio-group v-model="form.status">
-                    <el-radio :label="'todo'">{{ $t('toDo') }}</el-radio>
-                    <el-radio :label="'collect'">{{ $t('collect') }}</el-radio>
+                    <el-radio value="todo">{{ $t('toDo') }}</el-radio>
+                    <el-radio value="collect">{{ $t('collect') }}</el-radio>
                 </el-radio-group>
             </div>
         </div>

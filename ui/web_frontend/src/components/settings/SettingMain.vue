@@ -83,12 +83,12 @@ export default {
                 console.log(res);
                 console.log(res.data);
                 if (res.data.status == "success") {
-                    this.info_privilege = res.data.info.privilege;
+                    this.info_privilege = res.data.privilege;
                     this.$refs.ttsSettings.updateSettings({
-                        ...res.data.info.setting,
-                        engine_list: res.data.info.engine_list
+                        ...res.data.setting,
+                        engine_list: res.data.engine_list
                     });
-                    this.$refs.llmSettings.updateSettings(res.data.info);
+                    this.$refs.llmSettings.updateSettings(res.data);
                 }
             }).catch((err) => {
                 parseBackendError(this, err);
