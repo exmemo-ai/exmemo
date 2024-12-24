@@ -19,7 +19,17 @@ def agent_function(description):
 class BaseAgent:
     def __init__(self):
         self.agent_name = "BaseAgent"
-        self.instructions = DEFAULT_INSTRUCTIONS
+
+    def get_instructions(self):
+        funcs = self.get_functions()
+        if len(funcs) > 0:
+            func_list = []
+            for func in funcs:
+                desc = BaseAgent.get_func_desc(self, func)
+                func_list.append(f"'{desc}'")
+            return _("provides {func_str} functions_please_select").format(func_str=", ".join(func_list))    
+        else:
+            return DEFAULT_INSTRUCTIONS
 
     def get_functions(self) -> List[Callable]:
         ret = []
@@ -33,11 +43,7 @@ class BaseAgent:
         funcs = self.get_functions()
         cmd_list = []
         for func in funcs:
-            real_func = func.__get__(None, type(self))
-            if hasattr(real_func, 'description'):
-                desc = real_func.description
-            else:
-                desc = func.__doc__ or func.__name__
+            desc = BaseAgent.get_func_desc(self, func)
             logger.debug(f'add_commands {desc}')
             CommandManager.get_instance().register(
                 Command(func, [desc], level=LEVEL_NORMAL)
@@ -52,3 +58,11 @@ class BaseAgent:
             Command(msg_main, [self.agent_name], level=LEVEL_TOP)
         )
 
+    @staticmethod
+    def get_func_desc(agent, func):
+        real_func = func.__get__(None, type(agent))
+        if hasattr(real_func, 'description'):
+            desc = real_func.description
+        else:
+            desc = func.__doc__ or func.__name__
+        return desc

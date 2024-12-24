@@ -38,13 +38,11 @@ class BaseAgentManager:
     def triage_instructions(self, context_variables):
         is_logged_in = context_variables['sdata'].is_logged_in()    
         logger.info(f"is_logged_in: {is_logged_in}")
-        default_tool = _('help_list')
 
         return f"""You are to triage a users request, and call a tool to transfer to the right intent.
         User login status: {is_logged_in}. If not logged in, please transfer to User Agent to handle login,
         or prompt the user to login first, do not answer other questions.
         If logged in, please call the appropriate tool to transfer to the correct intent based on user's question.
-        If user's question can't match any tool, please call the '{default_tool}' tool.
         """
 
     def do_command(self, sdata: Session, engine_type: str = None, debug = False):
@@ -71,7 +69,7 @@ class BaseAgentManager:
             agent = Agent(
                     name=a.agent_name,
                     model=llm_info.model_name,
-                    instructions=a.instructions,
+                    instructions=a.get_instructions(),
                     functions=a.get_functions()
                 )
             
@@ -79,7 +77,6 @@ class BaseAgentManager:
             def make_transfer(target_agent):
                 func_name = f"transfer_to_{cls_name.lower().replace(' ', '_')}"
                 def transfer_func():
-                    from loguru import logger
                     logger.info(f"transfer to {target_agent.name}")
                     return target_agent
                 
@@ -96,7 +93,7 @@ class BaseAgentManager:
             functions=transfer_functions
         )
 
-        context_variables = {"sdata": sdata}
+        context_variables = {"sdata": sdata, "from": "agent_manager"}
         if not sdata.is_logged_in():
             sdata.set_cache('user_id', "")
             sdata.set_cache('password', "")
@@ -104,26 +101,20 @@ class BaseAgentManager:
         messages = []
         messages.append({"role": "user", "content": content})
 
-        response = client.run(
-            agent=triage_agent,
-            messages=messages,
-            context_variables=context_variables,
-            max_turns=10,
-            debug=True
-        )
-
-        if not sdata.is_logged_in():
-            if response.context_variables['sdata'].get_cache('user_id') != "" and response.context_variables['sdata'].get_cache('password') != "":
-                logger.debug('Returning json, can login')
-                ret = {"user_id": response.context_variables['sdata'].get_cache('user_id'), 
-                    "password": response.context_variables['sdata'].get_cache('password')}
-            else:
-                logger.debug('Returning prompt')
-                ret = response.messages[-1]["content"]
-                ret = ret + "\n" + DEFAULT_TEXT
-        else:
-            ret = response.messages[-1]["content"]
-        logger.info(f'response {response.context_variables}')
+        try:
+            response = client.run(
+                agent=triage_agent,
+                messages=messages,
+                context_variables=context_variables,
+                max_turns=10,
+                debug=True
+            )
+        except Exception as e:
+            logger.warning(f"Error: {e}")
+            err_str = str(e)
+            if len(err_str) > 100:
+                err_str = err_str[:100] + "..."
+            return False, _("agent_llm_error") + "\nError:\n" + err_str
 
         if 'total_count' in response.context_variables:
             total_count = response.context_variables['total_count']
@@ -131,8 +122,12 @@ class BaseAgentManager:
                 duration = round(time.time() - start_time, 3)    
                 llm_tools.save_llm_usage(user, "agent", llm_info.get_desc(), duration, total_count)
         sdata.cache = response.context_variables['sdata'].cache
-        return True, ret
-
+        logger.info(f'response {response.context_variables}')
+        return self.post_process(response, sdata)
+    
+    def post_process(self, response, sdata):
+        return True, response.messages[-1]["content"]
+ 
 class AllAgentManager(BaseAgentManager):
     _instance = None
 
@@ -164,6 +159,16 @@ class AllAgentManager(BaseAgentManager):
         self.add_agent(HelpAgent())
         #self.add_agent(LLMAgent()) # This agent is not used in the current version
 
+    def post_process(self, response, sdata):
+        call_tools = False
+        for msg in response.messages:
+            if 'tool_name' in msg and msg['tool_name'].startswith("_afunc_"):
+                call_tools = True
+                break
+        if call_tools:
+            return True, response.messages[-1]["content"]
+        else:
+            return True, _('system_tools') + "\n" + HelpAgent._afunc_help({"sdata": sdata})
 
 class UserAgentManager(BaseAgentManager):
     _instance = None
@@ -177,3 +182,17 @@ class UserAgentManager(BaseAgentManager):
     def __init__(self):
         super().__init__()
         self.add_agent(UserAgent())
+
+    def post_process(self, response, sdata):
+        if not sdata.is_logged_in():
+            if response.context_variables['sdata'].get_cache('user_id') != "" and response.context_variables['sdata'].get_cache('password') != "":
+                logger.debug('Returning json, can login')
+                ret = {"user_id": response.context_variables['sdata'].get_cache('user_id'), 
+                    "password": response.context_variables['sdata'].get_cache('password')}
+            else:
+                logger.debug('Returning prompt')
+                ret = response.messages[-1]["content"]
+                ret = ret + "\n" + DEFAULT_TEXT
+        else:
+            ret = response.messages[-1]["content"]
+        return True, ret

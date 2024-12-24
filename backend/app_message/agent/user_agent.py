@@ -13,7 +13,6 @@ class UserAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("user_management")
-        self.instructions = "Provides register, login, change passwords, and logout." + DEFAULT_INSTRUCTIONS
 
     @staticmethod
     def register(user_id: str, password: str) -> dict:
@@ -24,48 +23,43 @@ class UserAgent(BaseAgent):
             and len(password) > 0
         ):
             if UserManager.get_instance().check_user_exist(user_id):
-                return {"status": False, "info": _("username_already_exists")}
+                return False, _("username_already_exists")
             if UserManager.get_instance().create_user(user_id, password):
-                return {"status": True, "user_id": user_id, "password": password}
+                return True, _("registration_successful")
             else:
-                return {"status": False, "info": _("registration_failed")}
+                return False, _("registration_failed")
         else:
-            return {"status": False, "info": _("user_or_password_are_empty_dot_")}
+            return False, _("user_or_password_are_empty_dot_")
 
     @staticmethod
     def change_password(user_id: str, password_old: str, password_new: str) -> dict:
         if user_id is None or user_id == "":
-            return {"status": False, "info": _("empty_username")}
+            return False, _("empty_username")
         if password_old is None or password_old == "":
-            return {"status": False, "info": _("old_password_is_empty")}
+            return False, _("old_password_is_empty")
         if password_new is None or password_new == "":
-            return {"status": False, "info": _("the_new_password_is_blank")}
+            return False, _("the_new_password_is_blank")
         if password_old == password_new:
-            return {"status": False, "info": _("old_and_new_passwords_are_identical_dot_")}
+            return False, _("old_and_new_passwords_are_identical_dot_")
         if not UserManager.get_instance().check_user_exist(user_id):
-            return {"status": False, "info": _("user_does_not_exist")}
+            return False, _("user_does_not_exist")
         if not UserManager.get_instance().check_user_password(user_id, password_old):
-            return {"status": False, "info": _("original_password_error")}
+            return False, _("original_password_error")
         if UserManager.get_instance().change_user_password(user_id, password_new):
-            return {"status": True, "info": _("successfully_set")}
+            return True, _("change_successful")
         else:
-            return {"status": False, "info": _("setup_failed")}
+            return False, _("setup_failed")
 
 
     @agent_function(_("user_registration"))
     def _afunc_register(context_variables: dict, user_id: str, password: str) -> dict:
         """User registration tool: if a username or password is entered, set it to the string '', cannot fabricate or guess the password."""
-        dic = UserAgent.register(user_id, password)
-        if dic is not None and 'status' in dic and dic['status']:
+        ret, info = UserAgent.register(user_id, password)
+        if ret:
             if context_variables is not None and 'sdata' in context_variables:
                 context_variables['sdata'].set_cache('user_id', user_id)
                 context_variables['sdata'].set_cache('password', password)
-            return True, _("registration_successful")
-        else:
-            if dic is not None and 'info' in dic:
-                return False, dic['info']
-            else:
-                return False, _("registration_failed")
+        return info
 
     @agent_function(_("user_login"))
     def _afunc_login(context_variables: dict, user_id: str, password: str) -> dict:
@@ -74,27 +68,22 @@ class UserAgent(BaseAgent):
             context_variables['sdata'].set_cache('user_id', user_id)
             context_variables['sdata'].set_cache('password', password)
         ret = {"user_id": user_id, "password": password}
-        return True, ret
+        return ret
 
     @agent_function(_("change_password"))
     def _afunc_change_password(context_variables: dict, user_id: str, password_old: str, password_new: str) -> dict:
         """User password change tool: if no username, old password, or new password is provided, set them as the string ''; if only one password is provided, set the old password as ''"""
-        dic = UserAgent.change_password(user_id, password_old, password_new)
-        if dic is not None and 'status' in dic and dic['status']:
+        ret, info = UserAgent.change_password(user_id, password_old, password_new)
+        if ret:
             if context_variables is not None and 'sdata' in context_variables:
                 context_variables['sdata'].set_cache('user_id', user_id)
                 context_variables['sdata'].set_cache('password', password_new)
-            return True, _("change_successful")
-        else:
-            if dic is not None and 'info' in dic:
-                return False, dic['info']
-            else:
-                return False, _("change_failed")
+        return info
 
     @agent_function(_("user_logout"))
     def _afunc_logout(context_variables: dict):
         """User logout tool"""
-        return True, {"type": "text", "content": json.dumps({"logout": True})}
+        return json.dumps({"logout": True})
 
 
 from backend.common.user.user import *
@@ -104,7 +93,6 @@ class SettingAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.agent_name = _("system_settings")
-        self.instructions = "Provides user privileges, resource usage, and set models for tools, chat, and text-to-speech. " + DEFAULT_INSTRUCTIONS
 
     @agent_function(_("query_user_privileges"))
     def _afunc_user_privilege(context_variables: dict):
@@ -112,17 +100,13 @@ class SettingAgent(BaseAgent):
         sdata = context_variables["sdata"]
         user = UserManager.get_instance().get_user(sdata.user_id)
         privilege = _("user_level: {level}").format(level=user.get_level_desc()) + "\n" + user.privilege.get_descript()
-        return True, {"type": "text", "content": privilege}
+        return privilege
 
     @agent_function(_("query_resource_usage"))
     def _afunc_resource_usage(context_variables: dict):
         """Query resource usage"""
         sdata = context_variables["sdata"]
-        return True, {
-            "type": "text",
-            "content": "\n"
-            + ResourceManager.get_instance().get_usage_summary(sdata.user_id),
-        }
+        return "\n" + ResourceManager.get_instance().get_usage_summary(sdata.user_id)
 
     @agent_function(_("set_text_to_speech"))
     def _afunc_tts_setting(context_variables: dict, content: str = None):
@@ -138,4 +122,4 @@ class SettingAgent(BaseAgent):
             name = content
             engine_setting = name.strip()
             ret, detail = tts_set_engine(engine_setting, sdata.user_id)
-            return True, {"type": "text", "content": detail}
+            return detail
