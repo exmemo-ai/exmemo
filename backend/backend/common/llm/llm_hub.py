@@ -25,7 +25,7 @@ def llm_query(uid, role, question, app, engine_type=None, debug=False):
         return ret, desc, {}
         
     if engine_type is None:
-        engine_type = user.get("llm_tool_model", {})
+        engine_type = user.get("llm_tool_model", None)
     try:
         llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
         if debug:

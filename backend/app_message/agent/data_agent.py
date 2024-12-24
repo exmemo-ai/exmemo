@@ -82,7 +82,8 @@ class WebAgent(BaseAgent):
         """Web functions list"""
         sdata = context_variables["sdata"]
         sdata.current_content = web_addr
-        return msg_web_main(sdata)
+        ret, detail = msg_web_main(sdata)
+        return detail
 
     @agent_function(_("collect_webpage"))
     def _afunc_web_collect(context_variables: dict, web_addr: str = None):
@@ -280,7 +281,7 @@ def msg_web_main(sdata):
             sdata.set_cache("url", url)
             title, content = get_url_content(url)
             if content is None:
-                return _("no_webpage_content_found")
+                return False, _("no_webpage_content_found")
 
             length = len(content)
             cmd_list = []
@@ -288,9 +289,9 @@ def msg_web_main(sdata):
             for func in webAgent.get_functions():
                 desc = BaseAgent.get_func_desc(webAgent, func)
                 cmd_list.append((desc, desc))
-            return msg_common_select(
+            return True, msg_common_select(
                 sdata,
                 cmd_list=cmd_list,
                 detail=_("received_webpage_with_characters").format(length=length),
             )
-    return _("please_enter_the_url_or_share_the_page_with_me")
+    return False, _("please_enter_the_url_or_share_the_page_with_me")

@@ -59,49 +59,51 @@ class BaseAgentManager:
             return check_ret, desc
 
         if engine_type is None:
-            engine_type = user.get("llm_tool_model", {})
+            engine_type = user.get("llm_tool_model", None)
         llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
         logger.info(f'llm_info {llm_info}')
-        llm = OpenAI(base_url=llm_info.url, api_key=llm_info.api_key)
-        client = ExSmarm(llm)
-        transfer_functions = []
-        for a in alist:
-            agent = Agent(
-                    name=a.agent_name,
-                    model=llm_info.model_name,
-                    instructions=a.get_instructions(),
-                    functions=a.get_functions()
-                )
-            
-            cls_name = a.__class__.__name__
-            def make_transfer(target_agent):
-                func_name = f"transfer_to_{cls_name.lower().replace(' ', '_')}"
-                def transfer_func():
-                    logger.info(f"transfer to {target_agent.name}")
-                    return target_agent
-                
-                transfer_func.__name__ = func_name
-                transfer_func.__doc__ = target_agent.instructions
-                return transfer_func
-            
-            transfer_functions.append(make_transfer(agent))
-
-        triage_agent = Agent(
-            name="Triage Agent", 
-            model=llm_info.model_name,
-            instructions=self.triage_instructions,
-            functions=transfer_functions
-        )
-
-        context_variables = {"sdata": sdata, "from": "agent_manager"}
-        if not sdata.is_logged_in():
-            sdata.set_cache('user_id', "")
-            sdata.set_cache('password', "")
-
-        messages = []
-        messages.append({"role": "user", "content": content})
-
+        
         try:
+            llm = OpenAI(base_url=llm_info.url, api_key=llm_info.api_key)
+            client = ExSmarm(llm)
+            transfer_functions = []
+            for a in alist:
+                agent = Agent(
+                        name=a.agent_name,
+                        model=llm_info.model_name,
+                        instructions=a.get_instructions(),
+                        functions=a.get_functions()
+                    )
+                
+                cls_name = a.__class__.__name__
+                def make_transfer(target_agent):
+                    func_name = f"transfer_to_{cls_name.lower().replace(' ', '_')}"
+                    def transfer_func():
+                        logger.info(f"transfer to {target_agent.name}")
+                        return target_agent
+                    
+                    transfer_func.__name__ = func_name
+                    transfer_func.__doc__ = target_agent.instructions
+                    return transfer_func
+                
+                transfer_functions.append(make_transfer(agent))
+
+            triage_agent = Agent(
+                name="Triage Agent", 
+                model=llm_info.model_name,
+                instructions=self.triage_instructions,
+                functions=transfer_functions
+            )
+
+            context_variables = {"sdata": sdata, "from": "agent_manager"}
+            if not sdata.is_logged_in():
+                sdata.set_cache('user_id', "")
+                sdata.set_cache('password', "")
+
+            messages = []
+            messages.append({"role": "user", "content": content})
+
+        
             response = client.run(
                 agent=triage_agent,
                 messages=messages,

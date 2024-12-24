@@ -125,10 +125,12 @@ export class ChatService {
     parseMessageReturn(response) {
         if (response.status === 200) {
             const result = response.data;
-//            console.log('aaaaa', result.type);
-//           if (result.type === 'audio' || result.type === 'file') {
-//               return [false, this.t('暂时不处理文件'), null];
-//            }
+            const contentType = response.headers['content-type'];
+            console.log('parseMessageReturn', contentType);
+            if (contentType==='application/octet-stream') {
+                return [false, '该不支持的文件类型', null];
+            }
+            console.log('result', result)
             if (result.status === 'success') {
                 if (result.info !== null && result.sid !== null) {
                     return [true, result.info, result.sid];

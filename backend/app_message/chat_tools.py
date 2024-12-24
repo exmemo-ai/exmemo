@@ -74,7 +74,7 @@ def do_chat(sdata, debug=False):
         return ret, desc        
 
     try:
-        engine_type = user.get("llm_chat_model", {})
+        engine_type = user.get("llm_chat_model", None)
         llm_info = LLMInfo.get_info(engine_type, 'llm_chat_model')
         if llm_info.engine_type == LLM_CUSTOM:
             pre = "[" + _('custom') + "] "
