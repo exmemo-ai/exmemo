@@ -85,6 +85,9 @@ services:
       - K_BACKEND_ADDR=http://${BACKEND_ADDR_OUTER}:${BACKEND_PORT_OUTER}
       - SINGLE_CHAT_PREFIX=[""]
       - GROUP_NAME_WHITE_LIST=["ALL_GROUP"]
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
     entrypoint: ["/bin/bash", "-c"]
     user: root
     command:
