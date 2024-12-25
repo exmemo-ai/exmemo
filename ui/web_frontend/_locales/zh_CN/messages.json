@@ -208,5 +208,6 @@
     "confirmDeleteFolder": "确定要删除此文件夹及其包含的所有书签吗？",
     "deleteFolderSuccess": "文件夹删除成功",
     "bookmarkTitle": "标题",
-    "selectFolder": "选择文件夹"
+    "selectFolder": "选择文件夹",
+    "customOrder": "用户指定"
 }

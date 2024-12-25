@@ -208,5 +208,6 @@
     "tags": "Tags",
     "enterTags": "Enter or select tags",
     "bookmarkTitle": "Title",
-    "selectFolder": "Select Folder"
+    "selectFolder": "Select Folder",
+    "customOrder": "Custom Order"
 }

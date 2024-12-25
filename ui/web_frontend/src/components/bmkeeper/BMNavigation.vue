@@ -19,8 +19,8 @@
           </template>
           <el-option v-for="n in [3,6,9,12]" :key="n" :label="n" :value="n" />
         </el-select>
-        <el-button v-if="bookmarkSort === 'random'" @click="refreshBookmarks" size="small">
-          <el-icon><Refresh /></el-icon>
+        <el-button size="small" @click="showCustomizeDialog">
+          {{ $t('customize') }}
         </el-button>
       </div>
     </div>
@@ -42,8 +42,9 @@
                 target="_blank" 
                 @click="incrementClickCount(bookmark.id)"
                 class="bookmark-title"
+                :title="bookmark.title"
               >
-                {{ bookmark.title }}
+                {{ bookmark.title.length > 20 ? bookmark.title.substring(0, 20) + '...' : bookmark.title }}
               </a>
             </div>
             <div class="click-count-container">
@@ -60,17 +61,86 @@
         </div>
       </div>
     </div>
+
+    <!-- 自定义书签对话框 -->
+    <el-dialog
+      :title="$t('customizeBookmarks')"
+      v-model="customizeDialogVisible"
+      width="800px"
+      class="customize-dialog"
+    >
+      <div class="customize-container">
+        <!-- 左侧搜索面板 -->
+        <div class="search-panel">
+          <el-input
+            v-model="searchKeyword"
+            :placeholder="$t('searchBookmarks')"
+            prefix-icon="Search"
+            clearable
+            @keyup.enter="handleSearchSubmit"
+          >
+            <template #append>
+              <el-button 
+                @click="handleSearchSubmit"
+                :disabled="searchKeyword.length < 2"
+                type="primary"
+              >
+                <el-icon><Search /></el-icon>
+              </el-button>
+            </template>
+          </el-input>
+          <div class="search-results">
+            <div v-for="bookmark in filteredBookmarks" 
+                 :key="bookmark.id" 
+                 class="search-item"
+                 @click="addToSelected(bookmark)">
+              <span class="bookmark-title">{{ bookmark.title }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧已选列表 -->
+        <div class="selected-panel">
+          <h4>{{ $t('selectedBookmarks') }}</h4>
+          <div class="selected-list">
+            <div v-for="bookmark in selectedBookmarks" 
+                 :key="bookmark.id"
+                 class="selected-item">
+              <span class="bookmark-title">{{ bookmark.title }}</span>
+              <el-button 
+                type="danger" 
+                size="small" 
+                @click="removeFromSelected(bookmark)"
+                icon="Delete"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelCustomization">{{ $t('cancel') }}</el-button>
+          <el-button type="primary" @click="saveCustomization">{{ $t('confirm') }}</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { Histogram, Refresh } from '@element-plus/icons-vue'
+// 增加 Search 图标导入
+import { Histogram, Search } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
+// 移除 draggable 导入
 
 export default {
   name: 'NavigationManager',
-  components: { Histogram, Refresh },
+  components: { 
+    Histogram,
+    Search // 注册 Search 组件
+  },
   data() {
     return {
       bookmarkSort: 'clicks',
@@ -80,11 +150,17 @@ export default {
         'clicks': 'mostClicked',
         'recent': 'recentlyAdded',
         'weight': 'importance',
-        'random': 'random'
+        'custom': 'customOrder' // 添加自定义排序选项
       },
       faviconCache: new Map(),
       faviconQueue: [],
-      faviconLoading: new Set()
+      faviconLoading: new Set(),
+      customizeDialogVisible: false,
+      selectedBookmarks: [], // 已选中的书签ID列表
+      availableBookmarks: [], // 可选择的书签列表
+      isCustomMode: false, // 是否使用自定义模式
+      searchKeyword: '',
+      filteredBookmarks: [],
     }
   },
   methods: {
@@ -93,7 +169,8 @@ export default {
         const params = { 
           type: 'navigation',
           param: this.bookmarkLimit.toString(),
-          sort: this.bookmarkSort
+          sort: this.bookmarkSort,
+          custom_ids: this.bookmarkSort === 'custom' ? this.selectedBookmarks.join(',') : undefined
         }
         
         const response = await axios.get(getURL() + 'api/keeper/', { params })
@@ -200,10 +277,165 @@ export default {
     },
     getSortLabel(value) {
       return this.$t(this.sortOptions[value] || 'mostClicked')
-    }
-  },
+    },
 
+    async showCustomizeDialog() {
+      // 重置所有状态
+      this.customizeDialogVisible = true
+      this.availableBookmarks = []
+      this.filteredBookmarks = []
+      this.selectedBookmarks = [] // 清空已选列表
+      
+      // 只有存在已保存的自定义书签时才加载它们
+      const savedBookmarks = localStorage.getItem('customBookmarks')
+      if (savedBookmarks && savedBookmarks !== '[]') {
+        try {
+          const savedIds = JSON.parse(savedBookmarks)
+          if (savedIds && savedIds.length > 0) {
+            // 获取已保存的书签数据
+            const response = await axios.get(getURL() + 'api/keeper/', { 
+              params: { 
+                type: 'navigation',
+                sort: 'custom',
+                custom_ids: savedIds.join(',')
+              } 
+            })
+            
+            if (response.data.code === 200) {
+              // 确保返回的数据不为空
+              const bookmarks = response.data.data || []
+              this.selectedBookmarks = bookmarks.map(bookmark => ({
+                ...bookmark,
+                title: bookmark.title.length > 20 ? 
+                  bookmark.title.substring(0, 20) + '...' : 
+                  bookmark.title
+              }))
+            }
+          }
+        } catch (error) {
+          parseBackendError(this, error)
+          this.selectedBookmarks = [] // 出错时确保列表为空
+        }
+      }
+    },
+
+    cancelCustomization() {
+      this.customizeDialogVisible = false
+      // 恢复之前保存的选择
+      const savedBookmarks = localStorage.getItem('customBookmarks')
+      if (savedBookmarks) {
+        this.selectedBookmarks = JSON.parse(savedBookmarks)
+      }
+    },
+
+    async saveCustomization() {
+      try {
+        // 修改API路径从 'custom' 改为 'custom-order'
+        const bookmarkIds = this.selectedBookmarks.map(b => b.id)
+        
+        await axios.post(getURL() + 'api/keeper/custom-order', {
+          bookmarkIds: bookmarkIds
+        })
+
+        // 保存到本地存储
+        localStorage.setItem('customBookmarks', JSON.stringify(bookmarkIds))
+        
+        this.customizeDialogVisible = false
+        this.bookmarkSort = 'custom'
+        await this.refreshBookmarks()
+        
+      } catch (error) {
+        parseBackendError(this, error)
+      }
+    },
+
+    handleSearch(value) {
+      if (!value || value.length < 2) {
+        this.filteredBookmarks = []
+      }
+    },
+
+    handleSearchSubmit() {
+      if (!this.searchKeyword || this.searchKeyword.length < 2) {
+        return
+      }
+      this.searchBookmarks(this.searchKeyword)
+    },
+
+    async searchBookmarks(keyword) {
+      try {
+        const response = await axios.get(getURL() + 'api/keeper/', {
+          params: {
+            type: 'search',
+            param: keyword
+          }
+        })
+        
+        if(response.data.code === 200) {
+          this.filteredBookmarks = response.data.data.map(bookmark => ({
+            ...bookmark,
+            // 限制标题长度为30个字符
+            title: bookmark.title.length > 20 ? 
+              bookmark.title.substring(0, 20) + '...' : 
+              bookmark.title
+          }))
+          // 过滤掉已经选中的书签
+          this.filteredBookmarks = this.filteredBookmarks.filter(
+            bookmark => !this.selectedBookmarks.find(b => b.id === bookmark.id)
+          )
+        }
+      } catch (error) {
+        parseBackendError(this, error)
+      }
+    },
+
+    async addToSelected(bookmark) {
+      if (!this.selectedBookmarks.find(b => b.id === bookmark.id)) {
+        // 添加书签到右侧列表
+        this.selectedBookmarks.push({
+          ...bookmark,
+          title: bookmark.title.length > 20 ? 
+            bookmark.title.substring(0, 20) + '...' : 
+            bookmark.title
+        })
+        
+        // 立即更新后端
+        try {
+          await axios.post(getURL() + 'api/keeper/custom-order', {
+            bookmarkIds: this.selectedBookmarks.map(b => b.id)
+          })
+        } catch (error) {
+          parseBackendError(this, error)
+        }
+      }
+    },
+
+    async removeFromSelected(bookmark) {
+      const index = this.selectedBookmarks.findIndex(b => b.id === bookmark.id)
+      if (index > -1) {
+        this.selectedBookmarks.splice(index, 1)
+        
+        // 立即更新后端
+        try {
+          await axios.post(getURL() + 'api/keeper/custom-order', {
+            bookmarkIds: this.selectedBookmarks.map(b => b.id)
+          })
+        } catch (error) {
+          parseBackendError(this, error)
+        }
+      }
+    },
+
+    // 移除 handleDragEnd 方法
+  },
+  
   async mounted() {
+    // 从本地存储恢复自定义选择
+    const savedBookmarks = localStorage.getItem('customBookmarks')
+    if (savedBookmarks) {
+      this.selectedBookmarks = JSON.parse(savedBookmarks)
+      this.isCustomMode = this.selectedBookmarks.length > 0
+    }
     await this.fetchBookmarks()
   }
 }
@@ -227,5 +459,133 @@ export default {
   margin-right: 8px;
   color: #606266;
   font-size: 14px;
+}
+
+.dialog-footer {
+  padding-top: 20px;
+  text-align: right;
+}
+
+.customize-container {
+  display: flex;
+  gap: 20px;
+  height: 500px;
+}
+
+.left-panel, .right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.bookmark-search-list, .selected-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.search-item, .selected-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-item:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+.bookmark-title {
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookmark-url {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-left: 8px;
+}
+
+.selected-item {
+  background-color: var(--el-fill-color-lighter);
+}
+
+/* 自定义对话框样式 */
+.customize-dialog :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.customize-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  height: 500px;
+}
+
+.search-panel,
+.selected-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.search-panel .el-input {
+  margin-bottom: 15px;
+}
+
+.search-results,
+.selected-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.search-item,
+.selected-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 4px;
+  background-color: var(--el-fill-color-light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-item:hover {
+  background-color: var(--el-fill-color);
+}
+
+.bookmark-title {
+  flex: 1;
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-panel h4 {
+  margin: 0 0 15px 0;
+  color: var(--el-text-color-primary);
+}
+
+.dialog-footer {
+  padding-top: 20px;
+  text-align: right;
 }
 </style>

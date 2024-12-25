@@ -16,12 +16,38 @@ from backend.common.llm.llm_hub import llm_query
 
 DEFAULT_TITLE = _("unknown_title")
 
+def truncate_content(content, title=None, method="title_content"):
+    """Truncate content based on different methods 
+    """
+    if not content:
+        return content
+        
+    paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
+    
+    if method == "title_content":
+        if title:
+            return f"title: {title}\ncontent: {content}"
+        return content
+        
+    elif method == "first_para":
+        if paragraphs:
+            return paragraphs[0]
+        return content
+            
+    elif method == "first_last":
+        if len(paragraphs) >= 2:
+            return f"{paragraphs[0]}\n...\n{paragraphs[-1]}"
+        return content
+    
+    return content
 
-def get_text_extract(uid, content, limit=2000, engine_type=None, debug=False):
+def get_text_extract(uid, content, is_truncate=False, limit=2000, truncate_mode='title_content', engine_type=None, debug=False):
     """
     Extract the main content from the text
     """
     try:
+        if is_truncate:
+            content = truncate_content(content, method=truncate_mode)
         if len(content) > limit:
             lang = utils_file.check_language(content)
             if lang == "en":
