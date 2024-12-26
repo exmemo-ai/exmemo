@@ -87,13 +87,18 @@ def do_message(sdata:Session):
                 ret = True
                 ret, detail = do_chat(sdata)
                 if ret:
-                    sid = SessionManager.get_instance().send_message(content, detail, sdata)
-                    detail = {"type": "text", "info": detail, "sid": sid}
+                    #sid = SessionManager.get_instance().send_message(content, detail, sdata)
+                    #detail = {"type": "text", "info": detail, "sid": sid}
+                    detail = {"type": "text", "info": detail}
             logger.info(f"content:{content} ret:{ret} detail:{detail}")
-        if isinstance(detail, str):
-            detail = {"type": "text", "sid": sdata.sid, "info": detail}
-        elif isinstance(detail, dict) and "sid" not in detail:
-            detail["sid"] = sdata.sid
+        if not isinstance(detail, dict):
+            detail = {"type": "text", "info": detail}
+        if "info" in detail:
+            response = detail["info"]
+        else:
+            response = None
+        sid = SessionManager.get_instance().send_message(content, response, sdata)
+        detail["sid"] = sid
         return True, detail
     except Exception as e:
         traceback.print_exc()

@@ -235,9 +235,9 @@ def run_tts(title, content, uid, fg=False, debug=True):
         dic = {"type": "text"}
         if isinstance(detail, dict):
             dic["type"] = detail["type"]
-            dic["content"] = detail["content"]
+            dic["path"] = detail["path"]
             dic["filename"] = detail["filename"]
-            return True, dic
+            return dic
         else:
             if delay > 0:
                 dic["request_delay"] = delay

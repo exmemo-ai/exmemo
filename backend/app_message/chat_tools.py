@@ -26,13 +26,10 @@ class ChatEngine:
     def predict(self, input):
         ret = True
         try:
-            #self.sdata.add_message("user", input)
             messages = [{"role": "user", "content": input}]
-            formatted_msgs = [{"role": m.sender, "content": m.content} for m in self.sdata.get_recent_messages()]
+            formatted_msgs = [{"role": m.sender, "content": m.content} for m in self.sdata.get_context_messages()]
             messages = formatted_msgs + messages
-            answer = self.get_llm_response(messages) 
-            #self.sdata.add_message("assistant", answer)
-            count = len(input + answer) // 4 # Rough token estimate
+            answer, count = self.get_llm_response(messages) 
             return ret, answer, count
         except Exception as e:
             traceback.print_exc()
@@ -42,16 +39,18 @@ class ChatEngine:
                 error_str = error_str[:100] + "..."
             return False, "Error:\n" + error_str, 0
 
-    def get_llm_response(self, messages) -> str:
+    def get_llm_response(self, messages) -> tuple[str, int]:
         if self.llm_info.api_method == "gemini":
             response = self.llm.generate_content(messages)
-            return response.text
+            question = "\n".join([m["content"] for m in messages])
+            token_count = self.llm.count_tokens(response.text + question).total_tokens
+            return response.text, token_count
         else:
             response = self.llm.chat.completions.create(
                 messages=messages,
                 model=self.llm_info.model_name
             )
-            return response.choices[0].message.content
+            return response.choices[0].message.content, response.usage.total_tokens
 
 def do_chat(sdata, debug=False):
     """
@@ -75,7 +74,7 @@ def do_chat(sdata, debug=False):
 
     try:
         engine_type = user.get("llm_chat_model", None)
-        llm_info = LLMInfo.get_info(engine_type, 'llm_chat_model')
+        llm_info = LLMInfo.get_info(engine_type, "llm_chat_model")
         if llm_info.engine_type == LLM_CUSTOM:
             pre = "[" + _('custom') + "] "
         else:

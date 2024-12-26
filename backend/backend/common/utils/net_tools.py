@@ -29,7 +29,7 @@ def do_result(ret, detail):
                 for key in detail:
                     dic[key] = detail[key]
         elif detail is not None:
-            logger.warning(f"do_result: unknown type {type(detail)}")
+            logger.warning(f"do_result: unknown type {type(detail)}, detail: {detail}")
         return HttpResponse(json.dumps(dic))
     else:
         if isinstance(detail, str):

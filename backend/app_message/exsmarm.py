@@ -15,7 +15,7 @@ class ExSmarm(Swarm):
         for k, v in d.items():
             current_path = f"{path}.{k}" if path else k
             if isinstance(v, threading._RLock):
-                print(f"Found lock at {current_path}: {v}")
+                logger.debug(f"Found lock at {current_path}: {v}")
             elif isinstance(v, dict):
                 self._check_locks(v, current_path)
             elif isinstance(v, list):
@@ -46,7 +46,6 @@ class ExSmarm(Swarm):
             )
         active_agent = agent
         
-        print("Checking for locks in context_variables:") # debug
         self._check_locks(context_variables)
 
         context_variables = copy.deepcopy(context_variables)
@@ -66,8 +65,7 @@ class ExSmarm(Swarm):
             )
             message = completion.choices[0].message
             total_count += completion.usage.total_tokens
-            debug_print(debug, '@@@ response', completion.usage.total_tokens)
-            debug_print(debug, "Received completion:", message)
+            debug_print(debug, f"Received completion: {completion.usage.total_tokens}, ", message)
             message.sender = active_agent.name
             history.append(
                 json.loads(message.model_dump_json())

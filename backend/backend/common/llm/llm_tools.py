@@ -50,12 +50,19 @@ class LLMInfo:
     @staticmethod
     def get_info(engine_type, rtype='llm_tool_model'):
         api_method = "openai"
+        url = None
+        api_key = None
+        model_name = None
         ltype = LLM_DEFUALT
         if isinstance(engine_type, dict):
-            ltype = engine_type.get("type")
-            url = engine_type.get("url")
-            model_name = engine_type.get("model")
-            api_key = engine_type.get("apikey")
+            if "type" in engine_type:
+                ltype = engine_type.get("type")
+            if "url" in engine_type:
+                url = engine_type.get("url")
+            if "model" in engine_type:
+                model_name = engine_type.get("model")
+            if "apikey" in engine_type:
+                api_key = engine_type.get("apikey")
         if ltype != LLM_CUSTOM:
             if rtype == 'llm_tool_model':
                 url = os.getenv('DEFAULT_TOOL_URL')

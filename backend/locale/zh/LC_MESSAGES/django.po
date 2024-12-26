@@ -1279,7 +1279,7 @@ msgstr "翻译书籍:"
 #: backend/backend/common/user/user.py:174
 #, python-brace-format
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
-msgstr "默认模型限制：{limit_llm_day_formatted} 个token/天"
+msgstr "默认LLM限制：{limit_llm_day_formatted} 个token/天"
 
 #: backend/backend/common/user/user.py:179
 #, python-brace-format
