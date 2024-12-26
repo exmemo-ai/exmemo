@@ -18,6 +18,7 @@ ADMIN_PASSWORD = "admin123456"
 DEFAULT_CHAT_LLM_PROMPT = _("chat_prompt_default")
 DEFAULT_CHAT_LLM_SHOW_COUNT = 50
 DEFAULT_CHAT_LLM_MEMORY_COUNT = 5
+DEFAULT_CHAT_MAX_CONTEXT_COUNT = 1024
 
 def convert_units(num):
     if num >= 10**6:
@@ -39,6 +40,7 @@ class UserSettings:
         self.llm_chat_prompt = DEFAULT_CHAT_LLM_PROMPT
         self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
         self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
+        self.llm_chat_max_context_count = DEFAULT_CHAT_MAX_CONTEXT_COUNT
 
     def get_json(self):
         return {
@@ -51,6 +53,7 @@ class UserSettings:
             "llm_chat_prompt": self.llm_chat_prompt,
             "llm_chat_show_count": self.llm_chat_show_count,
             "llm_chat_memory_count": self.llm_chat_memory_count,
+            "llm_chat_max_context_count": self.llm_chat_max_context_count,
         }
 
     def set_json(self, data):
@@ -69,6 +72,9 @@ class UserSettings:
             )
             self.llm_chat_memory_count = data.get(
                 "llm_chat_memory_count", self.llm_chat_memory_count
+            )
+            self.llm_chat_max_context_count = data.get(
+                "llm_chat_max_context_count", self.llm_chat_max_context_count
             )
 
     def set(self, name, value):

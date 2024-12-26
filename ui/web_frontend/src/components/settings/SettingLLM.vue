@@ -23,26 +23,19 @@
                         <el-option label="20" value="20"></el-option>
                     </el-select>
                 </el-form-item>
+                <el-form-item :label="$t('maxTokens')">
+                    <el-select v-model="llm_chat_max_context_count" style="width: 300px;">
+                        <el-option label="512" value="512"></el-option>
+                        <el-option label="1024" value="1024"></el-option>
+                        <el-option :label="$t('unlimited')" value="-1"></el-option>
+                    </el-select>
+                </el-form-item>
                 <el-form-item :label="$t('modelType')">
                     <el-radio-group v-model="llm_chat_type">
                         <el-radio value="default">{{ $t('defaultModel') }}</el-radio>
                         <el-radio value="custom">{{ $t('customModel') }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
-
-                <!--
-                <template v-if="llm_chat_type === 'default'">
-                    <el-form-item :label="$t('chatModel')">
-                        <el-select v-model="llm_chat_value" style="width: 300px;">
-                            <el-option v-for="item in llm_chat_options" 
-                                      :key="item.value" 
-                                      :label="item.label"
-                                      :value="item.value">
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                </template>
-                -->
 
                 <template v-if="llm_chat_type !== 'default'">
                     <el-form-item :label="$t('apiKey')">
@@ -70,20 +63,6 @@
                     </el-radio-group>
                 </el-form-item>
 
-                <!--
-                <template v-if="llm_tool_type === 'default'">
-                    <el-form-item :label="$t('toolModel')">
-                        <el-select v-model="llm_tool_value" style="width: 300px;">
-                            <el-option v-for="item in llm_tool_options" 
-                                      :key="item.value" 
-                                      :label="item.label"
-                                      :value="item.value">
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                </template>
-                -->
-
                 <template v-if="llm_tool_type !== 'default'">
                     <el-form-item :label="$t('apiKey')">
                         <el-input v-model="llm_tool_apikey" style="width: 300px;"></el-input>
@@ -109,14 +88,12 @@ export default {
         return { t };
     },
     data() {
+        const { t } = useI18n();
         return {
-            /*llm_chat_value: 'default',
-            llm_tool_value: 'default',
-            llm_chat_options: [{ label: this.$t('default'), value: 'default' }],
-            llm_tool_options: [{ label: this.$t('default'), value: 'default' }],*/
-            llm_chat_prompt: '请简单回答问题',
+            llm_chat_prompt: t('defaultChatPrompt'),
             llm_chat_show_count: 50,
             llm_chat_memory_count: 5,
+            llm_chat_max_context_count: '1024',
             llm_chat_type: 'default',
             llm_chat_apikey: '',
             llm_chat_url: '',
@@ -132,6 +109,7 @@ export default {
             this.llm_chat_prompt = settings.setting.llm_chat_prompt;
             this.llm_chat_show_count = settings.setting.llm_chat_show_count;
             this.llm_chat_memory_count = settings.setting.llm_chat_memory_count;
+            this.llm_chat_max_context_count = settings.setting.llm_chat_max_context_count || '1024';
             let chat_info = settings.setting.llm_chat_model;
             this.llm_chat_type = chat_info.type || 'default';
             this.llm_chat_apikey = chat_info.apikey || '';
@@ -160,6 +138,7 @@ export default {
                 llm_chat_prompt: this.llm_chat_prompt,
                 llm_chat_show_count: this.llm_chat_show_count,
                 llm_chat_memory_count: this.llm_chat_memory_count,
+                llm_chat_max_context_count: this.llm_chat_max_context_count,
             }
         }
     }

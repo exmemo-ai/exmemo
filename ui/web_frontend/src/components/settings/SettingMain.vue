@@ -144,6 +144,7 @@ export default {
             formData.append('llm_tool_model', llmSettings.llm_tool_model);
             formData.append('llm_chat_prompt', llmSettings.llm_chat_prompt);
             formData.append('llm_chat_show_count', llmSettings.llm_chat_show_count);
+            formData.append('llm_chat_max_context_count', llmSettings.llm_chat_max_context_count);
             formData.append('llm_chat_memory_count', llmSettings.llm_chat_memory_count);
             axios.post(getURL() + 'api/setting/', formData).then((res) => {
                 console.log(res);

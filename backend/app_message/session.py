@@ -6,11 +6,12 @@ from threading import Timer
 
 from django.utils import timezone
 from backend.common.utils.net_tools import do_result
-from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, DEFAULT_CHAT_LLM_MEMORY_COUNT, DEFAULT_USER
+from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, DEFAULT_CHAT_LLM_MEMORY_COUNT, DEFAULT_USER, DEFAULT_CHAT_MAX_CONTEXT_COUNT
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
 from app_dataforge.models import StoreEntry
 from app_dataforge.feature import TITLE_LENGTH, EntryFeatureTool
+from backend.common.files.utils_file import count_tokens
 
 MAX_SESSIONS = 1000
 
@@ -205,8 +206,10 @@ class Session:
         return do_result(True, {"messages": messages})
 
     def send_message(self, msg1, msg2):
-        self.add_message("user", msg1)
-        self.add_message("assistant", msg2)
+        if msg1 is not None and msg1 != "":
+            self.add_message("user", msg1)
+        if msg2 is not None and msg2 != "":
+            self.add_message("assistant", msg2)
 
     def add_message(self, sender, content):
         created_time = timezone.now().astimezone(pytz.UTC)
@@ -232,14 +235,33 @@ class Session:
                     break
         return string
 
-    def get_recent_messages(self):
+    def get_context_messages(self):
         user = UserManager.get_instance().get_user(self.user_id)
         count = user.get("llm_chat_memory_count", DEFAULT_CHAT_LLM_MEMORY_COUNT)
         if isinstance(count, str):
             count = int(count)
         if count == 0:
             return []
-        return self.messages[-count:]
+        
+        max_tokens = user.get("llm_chat_max_context_count", DEFAULT_CHAT_MAX_CONTEXT_COUNT)
+        if isinstance(max_tokens, str):
+            max_tokens = int(max_tokens)
+
+        recent_messages = self.messages[-count:]
+        if max_tokens > 0:
+            result_messages = []
+            total_tokens = 0
+            
+            for msg in reversed(recent_messages):
+                current_tokens = count_tokens(msg.sender + msg.content)
+                if total_tokens + current_tokens > max_tokens:
+                    break
+                total_tokens += current_tokens
+                result_messages.insert(0, msg)
+        else:
+            result_messages = recent_messages
+        logger.info(f"max_tokens {max_tokens}, {len(self.messages)} -> {len(recent_messages)} -> {len(result_messages)}")
+        return result_messages
 
 class SessionManager:
     __instance = None

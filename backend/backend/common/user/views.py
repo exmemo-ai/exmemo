@@ -22,6 +22,7 @@ from backend.common.user.user import (
     DEFAULT_CHAT_LLM_MEMORY_COUNT,
     DEFAULT_CHAT_LLM_PROMPT, 
     DEFAULT_CHAT_LLM_SHOW_COUNT,
+    DEFAULT_CHAT_MAX_CONTEXT_COUNT,
 )
 from .utils import parse_common_args
 
@@ -157,6 +158,7 @@ class SettingAPIView(APIView):
             llm_tool_model = json.loads(llm_tool_model)
         llm_chat_prompt = request.GET.get("llm_chat_prompt", request.POST.get("llm_chat_prompt", DEFAULT_CHAT_LLM_PROMPT))
         llm_chat_show_count = request.GET.get("llm_chat_show_count", request.POST.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT))
+        llm_chat_max_context_count = request.GET.get("llm_chat_max_context_count", request.POST.get("llm_chat_max_context_count", DEFAULT_CHAT_MAX_CONTEXT_COUNT))
         llm_chat_memory_count = request.GET.get("llm_chat_memory_count", request.POST.get("llm_chat_memory_count", DEFAULT_CHAT_LLM_MEMORY_COUNT))
         user.set("tts_engine", engine_name, save=False)
         user.set("tts_voice", voice_name, save=False)
@@ -166,6 +168,7 @@ class SettingAPIView(APIView):
         user.set("llm_tool_model", llm_tool_model, save=False)
         user.set("llm_chat_prompt", llm_chat_prompt, save=False)
         user.set("llm_chat_show_count", llm_chat_show_count, save=False)
+        user.set("llm_chat_max_context_count", llm_chat_max_context_count, save=False)
         user.set("llm_chat_memory_count", llm_chat_memory_count, save=False)
         user.save()
         info = _("settings_were_applied_successfully")

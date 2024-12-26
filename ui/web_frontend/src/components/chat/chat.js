@@ -128,7 +128,7 @@ export class ChatService {
             const contentType = response.headers['content-type'];
             console.log('parseMessageReturn', contentType);
             if (contentType==='application/octet-stream') {
-                return [false, '该不支持的文件类型', null];
+                return [false, this.t('unsupportedFileType'), null];
             }
             console.log('result', result)
             if (result.status === 'success') {

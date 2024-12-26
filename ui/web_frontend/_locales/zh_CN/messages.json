@@ -183,5 +183,9 @@
     "model": "模型名称",
     "chatSettings": "聊天模型设置",
     "toolSettings": "工具模型设置",
-    "parseInfoFailed": "解析信息失败"
+    "parseInfoFailed": "解析信息失败",
+    "unsupportedFileType": "不支持该文件类型",
+    "defaultChatPrompt": "请简单回答问题",
+    "maxTokens": "上下文最大长度",
+    "unlimited": "无限制"
   }

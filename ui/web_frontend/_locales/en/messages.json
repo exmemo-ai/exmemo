@@ -183,5 +183,9 @@
     "model": "Model Name",
     "chatSettings": "Chat Settings",
     "toolSettings": "Tool Settings",
-    "parseInfoFailed": "Failed to parse info"
+    "parseInfoFailed": "Failed to parse info",
+    "unsupportedFileType": "Unsupported file type",
+    "defaultChatPrompt": "Please answer questions concisely",
+    "maxTokens": "Max Context Length",
+    "unlimited": "Unlimited"
 }
