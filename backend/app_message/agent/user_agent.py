@@ -86,9 +86,6 @@ class UserAgent(BaseAgent):
         return json.dumps({"logout": True})
 
 
-from backend.common.user.user import *
-from backend.common.user.resource import *
-
 class SettingAgent(BaseAgent):
     def __init__(self):
         super().__init__()

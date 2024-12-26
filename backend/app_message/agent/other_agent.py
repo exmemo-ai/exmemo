@@ -1,4 +1,5 @@
 import os
+import re
 from loguru import logger
 from django.utils.translation import gettext as _
 from app_message.command import CommandManager, LEVEL_TOP, msg_common_select
@@ -8,7 +9,14 @@ from backend.common.speech.tts import (
     run_tts
 )
 from app_diet.diet import calc_diet, edit_diet, del_diet
-from app_message.agent.base_agent import BaseAgent, agent_function, DEFAULT_INSTRUCTIONS
+from app_message.agent.base_agent import BaseAgent, agent_function
+from app_translate.translate import translate_word
+from app_message.command import CommandManager, LEVEL_TOP
+from backend.common.files import filecache
+from backend.common.speech.asr_tools import do_asr
+from backend.common.llm.llm_hub import llm_query
+
+MSG_ROLE = "You're a smart assistant"
 
 class DietAgent(BaseAgent):
     def __init__(self):
@@ -51,9 +59,6 @@ class DietAgent(BaseAgent):
             ret, detail = edit_diet(content, sdata.user_id)
             return detail
 
-import re
-from backend.common.files import filecache
-from backend.common.speech.asr_tools import do_asr
 
 class AudioAgent(BaseAgent):
     def __init__(self):
@@ -125,7 +130,6 @@ class AudioAgent(BaseAgent):
                     return text
         return _("please_upload_or_share_a_file_first")
 
-from app_translate.translate import translate_word
 
 class TranslateAgent(BaseAgent):
     def __init__(self):
@@ -145,8 +149,6 @@ class TranslateAgent(BaseAgent):
         else:
             return _("translation_failed")
 
-
-from app_message.command import CommandManager, LEVEL_TOP
 
 class HelpAgent(BaseAgent):
     def __init__(self):
@@ -184,8 +186,6 @@ class HelpAgent(BaseAgent):
                 return _("match_failed")
             return msg_common_select(sdata, ret)
 
-from backend.common.llm.llm_hub import llm_query
-MSG_ROLE = "You're a smart assistant"
 
 class LLMAgent(BaseAgent):
     def __init__(self):
@@ -236,4 +236,3 @@ class LLMAgent(BaseAgent):
             return f"[Gemini] {answer}"
         else:
             return _("gemini_call_failed")
-

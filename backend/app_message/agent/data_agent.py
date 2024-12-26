@@ -1,3 +1,5 @@
+import os
+import pandas as pd
 from loguru import logger
 from django.utils.translation import gettext as _
 from backend.common.utils.web_tools import (
@@ -9,15 +11,15 @@ from backend.common.utils.file_tools import (
     get_file_abstract,
 )
 from backend.common.speech.tts import run_tts
-from app_message.agent.base_agent import BaseAgent, agent_function, DEFAULT_INSTRUCTIONS
+from backend.common.utils.web_tools import regular_url
+from app_message.agent.base_agent import BaseAgent, agent_function
 from app_message.command import msg_common_select
-
-import pandas as pd
-import os
 from app_record.record import get_export_file
 from app_message.function import search_data, regular_title
 from app_dataforge.entry import add_data
 from app_dataforge.misc_tools import add_url
+
+WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
 class RecordAgent(BaseAgent):
     def __init__(self):
@@ -69,7 +71,6 @@ class RecordAgent(BaseAgent):
                 "filename": f"{filename}",
             }
         return info
-
 
 
 class WebAgent(BaseAgent):
@@ -152,7 +153,6 @@ class WebAgent(BaseAgent):
         else:
             return _("page_not_found")
 
-WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
 class DataAgent(BaseAgent):
     def __init__(self):
@@ -266,7 +266,6 @@ def msg_add_url(url, sdata, status):
     else:
         return info
 
-from backend.common.utils.web_tools import regular_url
 
 def msg_web_main(sdata):
     """
