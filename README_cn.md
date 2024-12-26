@@ -41,9 +41,9 @@ $ vi backend/.env
 ```
 
 * 至少需要设置以下几个参数：IP 地址、LANGUAGE_CODE 和 PGSQL_PASSWORD。
-* 建议使用 OpenAI 作为后端模型：
-	* 如果可以连接 OpenAI，请设置 OPENAI_API_KEY。
-	* 如果无法连接 OpenAI，例如在中国使用，可以将 DEFAULT_CHAT_* 和 DEFAULT_TOOL_* 设置为 deepseek，并配置 DEEPSEEK 部分。
+* **建议使用 OpenAI 作为后端模型：**
+	* 如果可以连接 OpenAI，推荐将 DEFAULT_CHAT_MODEL 设为 gpt-4o，将 DEFAULT_TOOL_MODEL 设为 gpt-4o-mini
+	* 如果无法连接 OpenAI，例如在中国使用，推荐将 DEFAULT_CHAT_* 设置为 deepseek，DEFAULT_TOOL_* 设置为千问或豆包模型。
 
 ### 2.2 制作镜像
 
@@ -131,17 +131,19 @@ $ docker logs kwechat
 
 ### 2.4 升级
 
-项目升级后，需要重新打包 Docker 镜像，并重新运行 Docker Compose。请注意，在重启时需删除旧容器，以避免出现不可预料的问题。操作如下：
+项目升级后，需要重新打包 Docker 镜像，并重新运行 Docker Compose。在重启时需删除旧容器，以避免出现不可预料的问题。具体方法请参见 shell/update.sh。
 
-```shell
-$ docker-compose --env-file backend/.env down --volumes --remove-orphans
-```
+*请同时升级：前端、后端、插件、配置文件.env，否则可能因为接口升级导致部分功能无法正常使用。*
 
 ### 2.5 注意
 
 * 打包时比较占内存。当云服务器资源较少时，最好释放一些资源。
 * Docker-compose 中设置的数据库密码仅在建库时生效。如果之后需要修改密码，除了在 env 文件中进行更改外，还需要连接数据库并使用 SQL 语句进行修改。
 
-## 3 License
+## 3 更新日志
+
+查看完整更新历史：[CHANGELOG](./CHANGELOG_cn.md)
+
+## 4 License
 
 本项目根据 GNU Lesser General Public License v3.0 授权。详情请参阅 [LICENSE](./LICENSE) 文件。

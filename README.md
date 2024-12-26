@@ -127,11 +127,9 @@ Debugging: When running the program, check if the ExMemo plugin is loaded and in
 
 ### 2.4 Upgrade
 
-After the project is upgraded, you need to repackage the Docker image and rerun Docker Compose. Note that old containers need to be removed before restarting to avoid unpredictable issues. Follow these steps:
+After upgrading, rebuild the Docker image and rerun Docker Compose. Remove old containers during restart to avoid unexpected issues. Refer to shell/update.sh for details.
 
-```shell
-$ docker-compose --env-file backend/.env down --volumes --remove-orphans
-```
+*Please upgrade the following simultaneously: Frontend, Backend, Plugins, and the .env file to avoid feature issues from API changes.*
 
 ### 2.5 Notes
 
@@ -139,11 +137,15 @@ Packaging can consume a lot of memory. If cloud server resources are limited, it
 
 The database password set in Docker Compose takes effect only when the database is created. If you need to change the password later, you will need to update it not only in the .env file but also by connecting to the database and using SQL commands to change it.
 
-## 3 License
+## 3 Changelog
+
+View the complete update history: [CHANGELOG](./CHANGELOG.md)
+
+## 4 License
 
 This project is licensed under the terms of the GNU Lesser General Public License v3.0. See the [LICENSE](./LICENSE) file for details.
 
-## 4 Contributors
+## 5 Contributors
 
 <a href="https://github.com/Exmemo/exmemo/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=Exmemo/exmemo" />
