@@ -40,8 +40,6 @@ class BaseTestCase(APITestCase):
         logger.info(f"return {data}")
         if "info" in data:
             return data["info"]
-        elif "type" in data and data["type"] == "json" and "content" in data:
-            return data["content"]["info"]
         return data
 
     def parse_return_file(self, response, format, path):

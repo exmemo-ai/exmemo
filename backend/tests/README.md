@@ -12,6 +12,7 @@ python manage.py test tests  # Run all test cases
 python manage.py test tests.test_common_audio  # Run tests for the specified file
 python manage.py test tests.test_common_audio.AudioTestCase  # Run tests for the specified class
 python manage.py test tests.test_common_audio.AudioTestCase.test_1_tts_xunfei  # Run tests for the specified function
+python manage.py test tests.test_app_record.RecordTestCase.inner_add # test msg
 ```
 
 ## Notes
