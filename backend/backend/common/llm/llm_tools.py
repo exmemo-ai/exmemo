@@ -67,46 +67,6 @@ class LLMInfo:
                 model_name = os.getenv('DEFAULT_CHAT_MODEL')
         if model_name is not None and model_name.find('gemini') >= 0:
             api_method = "gemini"
-        """
-        api_method = "openai"
-        if engine_type.startswith("ollama"):
-            api_key = os.getenv("OLLAMA_LLM_API_KEY")
-            url = os.getenv("OLLAMA_LLM_URL")
-            model_name = os.getenv("OLLAMA_LLM_MODEL")
-        elif engine_type.startswith("deepseek"):
-            api_key = os.getenv("DEEPSEEK_API_KEY")
-            url = os.getenv("DEEPSEEK_URL")
-            model_name = os.getenv("DEEPSEEK_MODEL")
-        elif engine_type.startswith("xunfei"):
-            api_key = os.getenv("XUNFEI_LLM_API_KEY")
-            url = os.getenv("XUNFEI_LLM_URL")
-            model_name = os.getenv("XUNFEI_LLM_MODEL")
-        elif engine_type.startswith("kimi"):
-            api_key = os.getenv("KIMI_API_KEY")
-            url = os.getenv("KIMI_URL")
-            model_name = os.getenv("KIMI_MODEL")
-        elif engine_type.startswith("qwen"):
-            api_key = os.getenv("QWEN_API_KEY")
-            url = os.getenv("QWEN_URL")
-            model_name = os.getenv("QWEN_MODEL")
-        elif engine_type.startswith("userdefine"):
-            api_key = os.getenv("USER_DEFINE_API_KEY")
-            url = os.getenv("USER_DEFINE_URL")
-            model_name = os.getenv("USER_DEFINE_MODEL")
-        elif engine_type.startswith("gemini"):
-            api_method = "gemini"
-            url = None
-            api_key = os.getenv("GEMINI_API_KEY")
-            model_name = os.getenv("GEMINI_MODEL")
-        elif engine_type == "gpt4o" or engine_type == "gpt-4o":
-            url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-            api_key = os.getenv("OPENAI_API_KEY")
-            model_name = "gpt-4o"
-        else:
-            url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-            api_key = os.getenv("OPENAI_API_KEY")
-            model_name = "gpt-3.5-turbo"
-        """
         return LLMInfo(ltype, api_method, url, api_key, model_name)
     
 
