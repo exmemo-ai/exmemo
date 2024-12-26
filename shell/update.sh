@@ -3,12 +3,10 @@
 DATE_STR=`date +%y%m%d`
 PROXY_ADDR=http://192.168.10.168:12346
 
-echo $DATE_STR
-
 cd /exports/exmemo/code/exmemo/
 git pull
 cd backend
-docker build -t exmemo:$DATE_STR .
+docker build -t exmemo:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR
 docker tag exmemo:$DATE_STR exmemo:latest
 cd ../ui/web_frontend/
 docker build -t node_efrontend:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR
