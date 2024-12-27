@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-18 11:48+0000\n"
+"POT-Creation-Date: 2024-12-27 08:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,103 +18,103 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: backend/app_bm_syncex/views.py:70
+#: app_bm_syncex/views.py:70
 msgid "data_already_exists"
 msgstr "Data already exists"
 
-#: backend/app_dataforge/entry.py:44
+#: app_dataforge/entry.py:44
 msgid "unknown_type_colon_"
 msgstr "Unknown type: "
 
-#: backend/app_dataforge/entry.py:96
+#: app_dataforge/entry.py:94
 msgid "save_file_failed_excl_"
 msgstr "Save file failed!"
 
-#: backend/app_dataforge/entry.py:141
+#: app_dataforge/entry.py:137
 msgid "add_success"
 msgstr "Add success"
 
-#: backend/app_dataforge/entry.py:146
+#: app_dataforge/entry.py:141
 msgid "add_failed"
 msgstr "Add failed"
 
-#: backend/app_dataforge/entry.py:165
+#: app_dataforge/entry.py:160
 msgid "record_successful_comma__type_colon_"
 msgstr "Record successful, type:"
 
-#: backend/app_dataforge/entry.py:174
+#: app_dataforge/entry.py:169
 #, python-brace-format
 msgid "set_to_pending_comma__type_colon__{ctype}"
 msgstr "Set to pending, type: {ctype}"
 
-#: backend/app_dataforge/entry.py:176
+#: app_dataforge/entry.py:171
 #, python-brace-format
 msgid "collection_successful_comma__type_colon__{ctype}"
 msgstr "Collection successful, type: {ctype}"
 
-#: backend/app_dataforge/entry.py:180
+#: app_dataforge/entry.py:175
 #, python-brace-format
 msgid "storage_successful_comma__found_url_exception_error_colon__{error}"
 msgstr "Storage successful, found url exception error: {error}"
 
-#: backend/app_dataforge/entry.py:250 backend/app_dataforge/entry.py:258
-#: backend/app_dataforge/entry.py:259
+#: app_dataforge/entry.py:245 app_dataforge/entry.py:253
+#: app_dataforge/entry.py:254
 msgid "run_failed"
 msgstr "Run failed"
 
-#: backend/app_dataforge/feature.py:16
+#: app_dataforge/feature.py:16
 msgid "unclassified"
 msgstr "Unclassified"
 
-#: backend/app_dataforge/feature.py:148
+#: app_dataforge/feature.py:148
 msgid "to_be_organized"
 msgstr "To be organized"
 
-#: backend/app_dataforge/feature.py:148
+#: app_dataforge/feature.py:148
 msgid "to-do_list"
 msgstr "To-do list"
 
-#: backend/app_dataforge/misc_tools.py:51
+#: app_dataforge/misc_tools.py:51
 msgid "unsupported_document_type"
 msgstr "Unsupported document type"
 
-#: backend/app_dataforge/views.py:112
+#: app_dataforge/views.py:103
 msgid "no_update_needed"
 msgstr "No update needed"
 
-#: backend/app_dataforge/views.py:118
+#: app_dataforge/views.py:107
 msgid "uploading_failed"
 msgstr "Uploading failed"
 
-#: backend/app_dataforge/views.py:212 backend/app_dataforge/views.py:223
+#: app_dataforge/views.py:200 app_dataforge/views.py:211
 msgid "upgrade_successfully"
 msgstr "Upgrade successfully"
 
-#: backend/app_dataforge/views.py:214
+#: app_dataforge/views.py:202
 msgid "update_failed"
 msgstr "Update failed"
 
-#: backend/app_dataforge/views.py:288
+#: app_dataforge/views.py:276
 msgid "unknown_action"
 msgstr "Unknown action"
 
-#: backend/app_diet/diet.py:17
+#: app_diet/diet.py:17
 msgid "you_are_a_clinical_nutritionist"
 msgstr "You are a clinical nutritionist"
 
-#: backend/app_diet/diet.py:42
+#: app_diet/diet.py:42
 #, python-brace-format
 msgid "no_diet_record_found_for_{time_of_day}_on_{date}"
 msgstr "No diet record found for {time_of_day} on {date}"
 
-#: backend/app_diet/diet.py:58
+#: app_diet/diet.py:58
 #, python-brace-format
 msgid ""
 "no_dietary_records_found_for_keywords_related_to_{time_of_day}_on_{date}"
 msgstr ""
 "No dietary records found for keywords related to {time_of_day} on {date}"
 
-#: backend/app_diet/diet.py:62
+#: app_diet/diet.py:62
 #, python-brace-format
 msgid ""
 "successfully_deleted_the_diet_record_for_{time_of_day}_on_{date}"
@@ -123,808 +123,779 @@ msgstr ""
 "Successfully deleted the diet record for {time_of_day} on {date} with "
 "keywords {keywords}"
 
-#: backend/app_diet/diet.py:131 backend/app_diet/diet.py:146
+#: app_diet/diet.py:131 app_diet/diet.py:146
 msgid "no_valid_records_founds_dot_"
 msgstr "No valid records found."
 
-#: backend/app_diet/diet.py:141
+#: app_diet/diet.py:141
 #, python-brace-format
 msgid "total_calories_colon__{kc}kc"
 msgstr "Total calories: {kc}kc"
 
-#: backend/app_diet/diet.py:264
+#: app_diet/diet.py:176 app_message/message.py:106
+msgid "failed_to_process_information"
+msgstr "Failed to process information"
+
+#: app_diet/diet.py:271
 #, python-brace-format
 msgid "already_exists_{name}"
 msgstr "Already exists {name}"
 
-#: backend/app_diet/diet.py:275
+#: app_diet/diet.py:282
 #, python-brace-format
 msgid "add_successful_{name}_{calorie}"
 msgstr "Add successful {name} {calorie}"
 
-#: backend/app_diet/diet.py:332
+#: app_diet/diet.py:339
 msgid "fuzzy_query_failed"
 msgstr "Fuzzy query failed"
 
-#: backend/app_diet/diet.py:346
+#: app_diet/diet.py:353
 #, python-brace-format
 msgid "no_food_found_with_the_name_{name}"
 msgstr "No food found with the name {name}"
 
-#: backend/app_diet/diet.py:383
+#: app_diet/diet.py:390
 msgid "today"
 msgstr "Today"
 
-#: backend/app_diet/diet.py:384
+#: app_diet/diet.py:391
 msgid "yesterday"
 msgstr "Yesterday"
 
-#: backend/app_diet/diet.py:385
+#: app_diet/diet.py:392
 msgid "the_day_before_yesterday"
 msgstr "The day before yesterday"
 
-#: backend/app_diet/diet.py:386
+#: app_diet/diet.py:393
 msgid "big_day_before_yesterday"
 msgstr "Big day before yesterday"
 
-#: backend/app_diet/diet.py:397
+#: app_diet/diet.py:403
 #, python-brace-format
 msgid "{month}_month_{day}_day"
 msgstr "{month} month {day} day"
 
-#: backend/app_diet/diet.py:408
+#: app_diet/diet.py:414
 msgid "spam"
 msgstr "Spam"
 
-#: backend/app_diet/diet.py:414 backend/app_diet/diet.py:431
-#: backend/app_diet/diet.py:449
+#: app_diet/diet.py:420 app_diet/diet.py:437 app_diet/diet.py:455
 msgid "extra_meal_in_the_morning"
 msgstr "Extra meal in the morning"
 
-#: backend/app_diet/diet.py:414
+#: app_diet/diet.py:420
 msgid "early_morning"
 msgstr "Early morning"
 
-#: backend/app_diet/diet.py:415 backend/app_diet/diet.py:433
-#: backend/app_diet/diet.py:450
+#: app_diet/diet.py:421 app_diet/diet.py:439 app_diet/diet.py:456
 msgid "breakfast"
 msgstr "Breakfast"
 
-#: backend/app_diet/diet.py:415
+#: app_diet/diet.py:421
 msgid "morning"
 msgstr "Morning"
 
-#: backend/app_diet/diet.py:416 backend/app_diet/diet.py:435
-#: backend/app_diet/diet.py:451
+#: app_diet/diet.py:422 app_diet/diet.py:441 app_diet/diet.py:457
 msgid "morning_extra_meal"
 msgstr "Morning extra meal"
 
-#: backend/app_diet/diet.py:416
+#: app_diet/diet.py:422
 msgid "am"
 msgstr "AM"
 
-#: backend/app_diet/diet.py:417 backend/app_diet/diet.py:437
-#: backend/app_diet/diet.py:452
+#: app_diet/diet.py:423 app_diet/diet.py:443 app_diet/diet.py:458
 msgid "lunch"
 msgstr "Lunch"
 
-#: backend/app_diet/diet.py:417
+#: app_diet/diet.py:423
 msgid "noon"
 msgstr "Noon"
 
-#: backend/app_diet/diet.py:418 backend/app_diet/diet.py:439
-#: backend/app_diet/diet.py:453
+#: app_diet/diet.py:424 app_diet/diet.py:445 app_diet/diet.py:459
 msgid "extra_meal_in_the_afternoon"
 msgstr "Extra meal in the afternoon"
 
-#: backend/app_diet/diet.py:418
+#: app_diet/diet.py:424
 msgid "pm"
 msgstr "PM"
 
-#: backend/app_diet/diet.py:419 backend/app_diet/diet.py:441
-#: backend/app_diet/diet.py:454
+#: app_diet/diet.py:425 app_diet/diet.py:447 app_diet/diet.py:460
 msgid "dinner"
 msgstr "Dinner"
 
-#: backend/app_diet/diet.py:419
+#: app_diet/diet.py:425
 msgid "dinner2"
 msgstr "Dinner2"
 
-#: backend/app_diet/diet.py:419 backend/app_diet/diet.py:420
+#: app_diet/diet.py:425 app_diet/diet.py:426
 msgid "night"
 msgstr "Night"
 
-#: backend/app_diet/diet.py:420 backend/app_diet/diet.py:443
-#: backend/app_diet/diet.py:455
+#: app_diet/diet.py:426 app_diet/diet.py:449 app_diet/diet.py:461
 msgid "evening_extra_meals"
 msgstr "Evening extra meals"
 
-#: backend/app_diet/diet.py:420
+#: app_diet/diet.py:426
 msgid "midnight"
 msgstr "Midnight"
 
-#: backend/app_diet/diet.py:420
+#: app_diet/diet.py:426
 msgid "midnight_snack"
 msgstr "Midnight snack"
 
-#: backend/app_message/agent/agent_manager.py:24
+#: app_message/agent/agent_manager.py:23
 msgid "please_register_or_log_in_first_comma___enter_formatted_as_colon__register_username_xxx_comma__password_xxx__enter_or_log_in_username_xxx_comma__password_xxx"
 msgstr ""
 "Please register or log in first, \n"
 "formatted as: Register Username xxx, Password xxx \n"
 "or Log in Username xxx, Password xxx"
 
-#: backend/app_message/agent/agent_manager.py:114
+#: app_message/agent/agent_manager.py:118
 msgid "agent_llm_error"
-msgstr "Error calling tool with model. Try again or choose a better tool model in settings."
+msgstr ""
+"Error calling tool with model. Try again or choose a better tool model in "
+"settings."
 
-#: backend/app_message/agent/agent_manager.py:171
+#: app_message/agent/agent_manager.py:183
 msgid "system_tools"
 msgstr "System provides the following tools. "
 
-#: backend/app_message/agent/data_agent.py:25
+#: app_message/agent/base_agent.py:31
+#, python-brace-format
+msgid "provides {func_str} functions_please_select"
+msgstr ""
+"Provide the {func_str} tool, please call the most suitable one and return "
+"the result in English."
+
+#: app_message/agent/data_agent.py:27
 msgid "record_agent"
 msgstr "Record agent"
 
-#: backend/app_message/agent/data_agent.py:28
-#: backend/app_message/agent/data_agent.py:35
+#: app_message/agent/data_agent.py:29 app_message/agent/data_agent.py:38
 msgid "search_records"
 msgstr "Search records"
 
-#: backend/app_message/agent/data_agent.py:38
-#: backend/app_message/agent/data_agent.py:176
+#: app_message/agent/data_agent.py:33 app_message/agent/data_agent.py:47
+#: app_message/agent/data_agent.py:68 app_message/agent/data_agent.py:91
+#: app_message/agent/data_agent.py:101 app_message/agent/data_agent.py:118
+#: app_message/agent/data_agent.py:135 app_message/agent/data_agent.py:150
+#: app_message/agent/data_agent.py:162 app_message/agent/data_agent.py:184
+#: app_message/agent/data_agent.py:198 app_message/agent/data_agent.py:212
+#: app_message/agent/data_agent.py:222 app_message/agent/data_agent.py:232
+#: app_message/agent/data_agent.py:254 app_message/agent/data_agent.py:266
+#: app_message/agent/data_agent.py:279 app_message/agent/other_agent.py:30
+#: app_message/agent/other_agent.py:40 app_message/agent/other_agent.py:56
+#: app_message/agent/other_agent.py:78 app_message/agent/other_agent.py:98
+#: app_message/agent/other_agent.py:107 app_message/agent/other_agent.py:124
+#: app_message/agent/other_agent.py:157 app_message/agent/other_agent.py:178
+#: app_message/agent/other_agent.py:193 app_message/agent/other_agent.py:219
+#: app_message/agent/other_agent.py:236 app_message/agent/other_agent.py:254
+#: app_message/agent/user_agent.py:58 app_message/agent/user_agent.py:69
+#: app_message/agent/user_agent.py:79 app_message/agent/user_agent.py:101
+#: app_message/agent/user_agent.py:112 app_message/agent/user_agent.py:120
+msgid "params_error"
+msgstr "params_error"
+
+#: app_message/agent/data_agent.py:39 app_message/agent/data_agent.py:190
 msgid "please_enter_search_content"
 msgstr "Please enter the search content"
 
-#: backend/app_message/agent/data_agent.py:45
-#: backend/app_message/agent/data_agent.py:52
+#: app_message/agent/data_agent.py:43 app_message/agent/data_agent.py:52
 msgid "record"
 msgstr "Record"
 
-#: backend/app_message/agent/data_agent.py:53
+#: app_message/agent/data_agent.py:53
 msgid "please_enter_the_record_content"
 msgstr "Please enter the record content"
 
-#: backend/app_message/agent/data_agent.py:64
+#: app_message/agent/data_agent.py:64
 msgid "export_records"
 msgstr "Export records"
 
-#: backend/app_message/agent/data_agent.py:84
+#: app_message/agent/data_agent.py:85
 msgid "web_processing_agent"
 msgstr "Web processing agent"
 
-#: backend/app_message/agent/data_agent.py:87
+#: app_message/agent/data_agent.py:87
 msgid "web_functions_list"
 msgstr "Web functions list"
 
-#: backend/app_message/agent/data_agent.py:94
+#: app_message/agent/data_agent.py:97
 msgid "collect_webpage"
 msgstr "Collect webpage"
 
-#: backend/app_message/agent/data_agent.py:107
-#: backend/app_message/agent/data_agent.py:122
+#: app_message/agent/data_agent.py:112 app_message/agent/data_agent.py:129
 msgid "no_urls_dot_"
 msgstr "No URLs."
 
-#: backend/app_message/agent/data_agent.py:109
+#: app_message/agent/data_agent.py:114
 msgid "set_webpage_todo"
-msgstr "Set webpage todo"
+msgstr "Set webpage as unread"
 
-#: backend/app_message/agent/data_agent.py:124
+#: app_message/agent/data_agent.py:131
 msgid "summarize_webpage_content"
 msgstr "Summarize webpage content"
 
-#: backend/app_message/agent/data_agent.py:135
+#: app_message/agent/data_agent.py:144
 msgid "failed_to_fetch_webpages"
 msgstr "Failed to fetch webpages"
 
-#: backend/app_message/agent/data_agent.py:137
+#: app_message/agent/data_agent.py:146
 msgid "get_text_content"
 msgstr "Get text content"
 
-#: backend/app_message/agent/data_agent.py:145
-#: backend/app_message/agent/other_agent.py:85
-#: backend/backend/common/speech/tts.py:107
+#: app_message/agent/data_agent.py:156 app_message/agent/other_agent.py:92
+#: backend/common/speech/tts.py:108
 msgid "no_content_found"
 msgstr "No content found"
 
-#: backend/app_message/agent/data_agent.py:147
+#: app_message/agent/data_agent.py:158
 msgid "webpage_to_audio"
 msgstr "Webpage to audio"
 
-#: backend/app_message/agent/data_agent.py:158
+#: app_message/agent/data_agent.py:172
 msgid "page_not_found"
 msgstr "Page not found"
 
-#: backend/app_message/agent/data_agent.py:165
+#: app_message/agent/data_agent.py:178
 msgid "data_management_agent"
 msgstr "Data management agent"
 
-#: backend/app_message/agent/data_agent.py:168
-#: backend/app_message/agent/data_agent.py:175
+#: app_message/agent/data_agent.py:180 app_message/agent/data_agent.py:189
 msgid "search_data"
 msgstr "Search data"
 
-#: backend/app_message/agent/data_agent.py:180
-#: backend/app_message/agent/data_agent.py:187
+#: app_message/agent/data_agent.py:194 app_message/agent/data_agent.py:203
 msgid "search_files"
 msgstr "Search files"
 
-#: backend/app_message/agent/data_agent.py:190
+#: app_message/agent/data_agent.py:204
 msgid "please_enter_what_you're_looking_for"
 msgstr "Please enter what you're looking for"
 
-#: backend/app_message/agent/data_agent.py:195
+#: app_message/agent/data_agent.py:208
 msgid "search_todo_webpages"
 msgstr "Search todo webpages"
 
-#: backend/app_message/agent/data_agent.py:203
+#: app_message/agent/data_agent.py:218
 msgid "search_collected_webpages"
 msgstr "Search collected webpages"
 
-#: backend/app_message/agent/data_agent.py:211
+#: app_message/agent/data_agent.py:228
 msgid "search_webpages"
 msgstr "Search webpages"
 
-#: backend/app_message/agent/data_agent.py:219
+#: app_message/agent/data_agent.py:238
 msgid "manage_data"
 msgstr "Manage data"
 
-#: backend/app_message/agent/data_agent.py:223
+#: app_message/agent/data_agent.py:242
 msgid "please_open_following_link"
 msgstr "Please open following link:"
 
-#: backend/app_message/agent/data_agent.py:229
+#: app_message/agent/data_agent.py:248
 msgid "file_processing_agent"
 msgstr "File processing agent"
 
-#: backend/app_message/agent/data_agent.py:232
+#: app_message/agent/data_agent.py:250
 msgid "extract_file_content"
 msgstr "Extract file content"
 
-#: backend/app_message/agent/data_agent.py:241
-#: backend/app_message/agent/data_agent.py:251
-#: backend/app_message/agent/other_agent.py:139
-#: backend/app_message/message.py:49
+#: app_message/agent/data_agent.py:260 app_message/agent/data_agent.py:273
+#: app_message/agent/other_agent.py:145 app_message/message.py:138
 msgid "please_upload_or_share_a_file_first"
 msgstr "Please upload or share a file first"
 
-#: backend/app_message/agent/data_agent.py:243
-#: backend/app_message/message.py:41
+#: app_message/agent/data_agent.py:262 app_message/message.py:132
 msgid "file_to_audio"
 msgstr "File to audio"
 
-#: backend/app_message/agent/data_agent.py:253
-#: backend/app_message/message.py:37
+#: app_message/agent/data_agent.py:275 app_message/message.py:128
 msgid "collect_file"
 msgstr "Collect file"
 
-#: backend/app_message/agent/data_agent.py:259
+#: app_message/agent/data_agent.py:284
 msgid "file_collection_failed_colon__file_not_found"
 msgstr "File collection failed: File not found"
 
-#: backend/app_message/agent/data_agent.py:292
+#: app_message/agent/data_agent.py:316
 msgid "no_webpage_content_found"
 msgstr "No webpage content found"
 
-#: backend/app_message/agent/data_agent.py:301
+#: app_message/agent/data_agent.py:327
 msgid "received_webpage_with_characters"
 msgstr "Received webpage with {length} characters"
 
-#: backend/app_message/agent/data_agent.py:303
+#: app_message/agent/data_agent.py:329
 msgid "please_enter_the_url_or_share_the_page_with_me"
 msgstr "Please enter the URL or share the page with me"
 
-#: backend/app_message/agent/other_agent.py:19
+#: app_message/agent/other_agent.py:24
 msgid "diet_management"
 msgstr "Diet management"
 
-#: backend/app_message/agent/other_agent.py:22
-#: backend/tests/test_app_diet.py:27
+#: app_message/agent/other_agent.py:26
 msgid "diet_statistics"
 msgstr "Diet statistics"
 
-#: backend/app_message/agent/other_agent.py:33
-#: backend/app_message/agent/other_agent.py:40
+#: app_message/agent/other_agent.py:36 app_message/agent/other_agent.py:45
 msgid "delete_diet"
 msgstr "Delete diet"
 
-#: backend/app_message/agent/other_agent.py:41
+#: app_message/agent/other_agent.py:46
 msgid "please_enter_diet_name"
 msgstr "Please enter the diet name"
 
-#: backend/app_message/agent/other_agent.py:47
-#: backend/app_message/agent/other_agent.py:55
+#: app_message/agent/other_agent.py:52 app_message/agent/other_agent.py:62
 msgid "record_diet"
 msgstr "Record diet"
 
-#: backend/app_message/agent/other_agent.py:56
+#: app_message/agent/other_agent.py:63
 msgid "please_enter_diet_content"
 msgstr "Please enter the diet content"
 
-#: backend/app_message/agent/other_agent.py:68
+#: app_message/agent/other_agent.py:72
 msgid "voice_assistant"
 msgstr "Voice assistant"
 
-#: backend/app_message/agent/other_agent.py:71
-#: backend/app_message/agent/other_agent.py:78
+#: app_message/agent/other_agent.py:74 app_message/agent/other_agent.py:83
 msgid "text_to_audio"
 msgstr "Text to audio"
 
-#: backend/app_message/agent/other_agent.py:79
+#: app_message/agent/other_agent.py:84
 msgid "please_enter_conversion_content"
 msgstr "Please enter conversion content"
 
-#: backend/app_message/agent/other_agent.py:83
+#: app_message/agent/other_agent.py:88
 msgid "text_{}"
 msgstr "text_{}"
 
-#: backend/app_message/agent/other_agent.py:87
+#: app_message/agent/other_agent.py:94
 msgid "stop_speech_synthesis"
 msgstr "stop"
 
-#: backend/app_message/agent/other_agent.py:94
+#: app_message/agent/other_agent.py:103
 msgid "get_audio"
 msgstr "Get audio"
 
-#: backend/app_message/agent/other_agent.py:101
+#: app_message/agent/other_agent.py:112
 msgid "converted_audio"
 msgstr "Convert to audio"
 
-#: backend/app_message/agent/other_agent.py:109
-#: backend/app_message/message.py:44
+#: app_message/agent/other_agent.py:120 app_message/message.py:135
 msgid "speech_recognition"
 msgstr "Speech recognition"
 
-#: backend/app_message/agent/other_agent.py:123
+#: app_message/agent/other_agent.py:134
 msgid "files_larger_than_50mb_are_currently_not_supported_for_recognition"
 msgstr "Files larger than 50MB are currently not supported for recognition"
 
-#: backend/app_message/agent/other_agent.py:146
+#: app_message/agent/other_agent.py:151
 msgid "translate_assistant"
 msgstr "Translation assistant"
 
-#: backend/app_message/agent/other_agent.py:149
+#: app_message/agent/other_agent.py:153
 msgid "translate"
 msgstr "Translate"
 
-#: backend/app_message/agent/other_agent.py:160
+#: app_message/agent/other_agent.py:166
 msgid "translation_failed"
 msgstr "Translation failed"
 
-#: backend/app_message/agent/other_agent.py:168
+#: app_message/agent/other_agent.py:172
 msgid "help_assistant"
 msgstr "Assistant"
 
-#: backend/app_message/agent/other_agent.py:171
+#: app_message/agent/other_agent.py:174
 msgid "help_list"
 msgstr "Help list"
 
-#: backend/app_message/agent/other_agent.py:176
-msgid "provides {func_str} functions_please_select"
-msgstr "Provide the {func_str} tool, please call the most suitable one and return the result in English."
-
-#: backend/app_message/agent/other_agent.py:184
-#: backend/app_message/agent/other_agent.py:189
+#: app_message/agent/other_agent.py:189 app_message/agent/other_agent.py:196
 msgid "find_command"
 msgstr "Find command"
 
-#: backend/app_message/agent/other_agent.py:190
+#: app_message/agent/other_agent.py:197
 msgid "please_enter_command_keyword"
 msgstr "Please enter command keyword"
 
-#: backend/app_message/agent/other_agent.py:200
+#: app_message/agent/other_agent.py:206
 msgid "match_failed"
 msgstr "Match failed"
 
-#: backend/app_message/agent/other_agent.py:208
+#: app_message/agent/other_agent.py:213
 msgid "intelligent_chat_assistant"
 msgstr "Chat assistant"
 
-#: backend/app_message/agent/other_agent.py:211
+#: app_message/agent/other_agent.py:215
 msgid "kimi_chat"
 msgstr "Kimi chat"
 
-#: backend/app_message/agent/other_agent.py:223
+#: app_message/agent/other_agent.py:229
 msgid "kimi_call_failed"
 msgstr "Kimi call failed"
 
-#: backend/app_message/agent/other_agent.py:226
+#: app_message/agent/other_agent.py:232
 msgid "gpt4_chat"
 msgstr "GPT-4 chat"
 
-#: backend/app_message/agent/other_agent.py:240
+#: app_message/agent/other_agent.py:248
 msgid "gpt4o_call_failed"
 msgstr "GPT-4o call failed"
 
-#: backend/app_message/agent/other_agent.py:242
+#: app_message/agent/other_agent.py:250
 msgid "gemini_chat"
 msgstr "Gemini chat"
 
-#: backend/app_message/agent/other_agent.py:254
+#: app_message/agent/other_agent.py:264
 msgid "gemini_call_failed"
 msgstr "Gemini call failed"
 
-#: backend/app_message/agent/user_agent.py:15
+#: app_message/agent/user_agent.py:15
 msgid "user_management"
 msgstr "User management"
 
-#: backend/app_message/agent/user_agent.py:27
-#: backend/backend/common/user/views.py:55
-#: backend/tests/test_app_user_manager.py:30
+#: app_message/agent/user_agent.py:26 backend/common/user/views.py:56
 msgid "username_already_exists"
 msgstr "Username already exists"
 
-#: backend/app_message/agent/user_agent.py:31
-#: backend/app_message/agent/user_agent.py:68
-#: backend/backend/common/user/views.py:59
-msgid "registration_failed"
-msgstr "Registration failed"
-
-#: backend/app_message/agent/user_agent.py:33
-#: backend/backend/common/user/views.py:61
-msgid "user_or_password_are_empty_dot_"
-msgstr "User or password are empty."
-
-#: backend/app_message/agent/user_agent.py:38
-msgid "empty_username"
-msgstr "Empty username"
-
-#: backend/app_message/agent/user_agent.py:40
-#: backend/tests/test_app_user_manager.py:64
-msgid "old_password_is_empty"
-msgstr "Old password is empty"
-
-#: backend/app_message/agent/user_agent.py:42
-#: backend/backend/common/user/views.py:82
-msgid "the_new_password_is_blank"
-msgstr "The new password is blank"
-
-#: backend/app_message/agent/user_agent.py:44
-msgid "old_and_new_passwords_are_identical_dot_"
-msgstr "Old and new passwords are identical."
-
-#: backend/app_message/agent/user_agent.py:46
-#: backend/backend/common/user/views.py:67
-#: backend/tests/test_app_user_manager.py:42
-msgid "user_does_not_exist"
-msgstr "User does not exist"
-
-#: backend/app_message/agent/user_agent.py:48
-#: backend/backend/common/user/views.py:75
-#: backend/tests/test_app_user_manager.py:64
-msgid "original_password_error"
-msgstr "Original password error"
-
-#: backend/app_message/agent/user_agent.py:50
-#: backend/backend/common/user/views.py:78
-#: backend/tests/test_app_user_manager.py:57
-msgid "successfully_set"
-msgstr "Successfully set"
-
-#: backend/app_message/agent/user_agent.py:52
-#: backend/backend/common/user/views.py:80
-msgid "setup_failed"
-msgstr "Setup failed"
-
-#: backend/app_message/agent/user_agent.py:55
-msgid "user_registration"
-msgstr "User registration"
-
-#: backend/app_message/agent/user_agent.py:63
+#: app_message/agent/user_agent.py:28
 msgid "registration_successful"
 msgstr "Registration successful"
 
-#: backend/app_message/agent/user_agent.py:70
-msgid "user_login"
-msgstr "User login"
+#: app_message/agent/user_agent.py:30 backend/common/user/views.py:60
+msgid "registration_failed"
+msgstr "Registration failed"
 
-#: backend/app_message/agent/user_agent.py:79
-msgid "change_password"
-msgstr "Change password"
+#: app_message/agent/user_agent.py:32 backend/common/user/views.py:62
+msgid "user_or_password_are_empty_dot_"
+msgstr "User or password are empty."
 
-#: backend/app_message/agent/user_agent.py:87
+#: app_message/agent/user_agent.py:37
+msgid "empty_username"
+msgstr "Empty username"
+
+#: app_message/agent/user_agent.py:39
+msgid "old_password_is_empty"
+msgstr "Old password is empty"
+
+#: app_message/agent/user_agent.py:41 backend/common/user/views.py:83
+msgid "the_new_password_is_blank"
+msgstr "The new password is blank"
+
+#: app_message/agent/user_agent.py:43
+msgid "old_and_new_passwords_are_identical_dot_"
+msgstr "Old and new passwords are identical."
+
+#: app_message/agent/user_agent.py:45 backend/common/user/views.py:68
+msgid "user_does_not_exist"
+msgstr "User does not exist"
+
+#: app_message/agent/user_agent.py:47 backend/common/user/views.py:76
+msgid "original_password_error"
+msgstr "Original password error"
+
+#: app_message/agent/user_agent.py:49
 msgid "change_successful"
 msgstr "Change successful"
 
-#: backend/app_message/agent/user_agent.py:92
-msgid "change_failed"
-msgstr "Change failed"
+#: app_message/agent/user_agent.py:51 backend/common/user/views.py:81
+msgid "setup_failed"
+msgstr "Setup failed"
 
-#: backend/app_message/agent/user_agent.py:94
+#: app_message/agent/user_agent.py:54
+msgid "user_registration"
+msgstr "User registration"
+
+#: app_message/agent/user_agent.py:65
+msgid "user_login"
+msgstr "User login"
+
+#: app_message/agent/user_agent.py:75
+msgid "change_password"
+msgstr "Change password"
+
+#: app_message/agent/user_agent.py:86
 msgid "user_logout"
 msgstr "User logout"
 
-#: backend/app_message/agent/user_agent.py:106
+#: app_message/agent/user_agent.py:95
 msgid "system_settings"
 msgstr "System settings"
 
-#: backend/app_message/agent/user_agent.py:109
+#: app_message/agent/user_agent.py:97
 msgid "query_user_privileges"
 msgstr "Query user privileges"
 
-#: backend/app_message/agent/user_agent.py:114
-#: backend/backend/common/user/views.py:118
+#: app_message/agent/user_agent.py:104 backend/common/user/views.py:117
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "User level: {level}"
 
-#: backend/app_message/agent/user_agent.py:117
+#: app_message/agent/user_agent.py:108
 msgid "query_resource_usage"
 msgstr "Query resource usage"
 
-#: backend/app_message/agent/user_agent.py:127
-#: backend/app_message/agent/user_agent.py:135
+#: app_message/agent/user_agent.py:116 app_message/agent/user_agent.py:126
 msgid "set_text_to_speech"
 msgstr "Set text to speech"
 
-#: backend/app_message/chat_tools.py:78
+#: app_message/chat_tools.py:79
 msgid "custom"
 msgstr "Custom"
 
-#: backend/app_message/chat_tools.py:95
+#: app_message/chat_tools.py:96
 msgid "chat_call_failed"
 msgstr "Chat call failed"
 
-#: backend/app_message/command.py:102 backend/app_message/command.py:136
+#: app_message/command.py:102 app_message/command.py:137
 msgid "command_not_found"
 msgstr "Command not found"
 
-#: backend/app_message/command.py:164
+#: app_message/command.py:165
 msgid "please_choose_colon_\n"
 msgstr "Please choose:\n"
 
-#: backend/app_message/function.py:44
+#: app_message/function.py:41
 msgid "no_content_found_1727252424"
 msgstr "No content found_1727252424"
 
-#: backend/app_message/message.py:40
-msgid "summarize_file_content"
-msgstr "Summarize file content"
-
-#: backend/app_message/message.py:45
-msgid "file_received"
-msgstr "File received"
-
-#: backend/app_message/message.py:70
+#: app_message/message.py:48
 msgid "failed_to_fetch_files"
 msgstr "Failed to fetch files"
 
-#: backend/app_message/message.py:85
+#: app_message/message.py:65
 msgid "nothing_entered"
 msgstr "Nothing entered"
 
-#: backend/app_message/message.py:87
+#: app_message/message.py:67
 msgid "unrecognized_command"
 msgstr "Unrecognized command"
 
-#: backend/app_message/message.py:120
-msgid "failed_to_process_information"
-msgstr "Failed to process information"
-
-#: backend/app_message/message.py:132
+#: app_message/message.py:118 app_message/message.py:120
 msgid "no_optional_commands"
 msgstr "No optional commands"
 
-#: backend/app_message/message.py:135
+#: app_message/message.py:123
 msgid "not_a_number"
 msgstr "Not a number"
 
-#: backend/app_message/message.py:154
-msgid "the_file_type_is_not_valid_or_not_supported"
-msgstr "The file type is not valid or not supported"
+#: app_message/message.py:131
+msgid "summarize_file_content"
+msgstr "Summarize file content"
 
-#: backend/app_message/views.py:50 backend/app_message/views.py:88
-#: backend/app_message/views.py:105 backend/app_message/views.py:130
+#: app_message/message.py:136
+msgid "file_received"
+msgstr "File received"
+
+#: app_message/views.py:47 app_message/views.py:81 app_message/views.py:94
+#: app_message/views.py:109
 msgid "backend_processing_failed"
 msgstr "Backend processing failed"
 
-#: backend/app_message/views.py:115
+#: app_message/views.py:98
 msgid "please_sign_up_or_log_in_first"
 msgstr "Please sign up or log in first"
 
-#: backend/app_paper/paper_info.py:25
-#: backend/backend/common/parser/block.py:120
-#: backend/backend/common/parser/block.py:127
+#: app_paper/paper_info.py:25 backend/common/parser/block.py:120
+#: backend/common/parser/block.py:127
 msgid "table_of_contents"
 msgstr "Table of contents"
 
-#: backend/app_paper/paper_info.py:32 backend/app_paper/ptools.py:344
-#: backend/app_paper/ptools.py:431
+#: app_paper/paper_info.py:32 app_paper/ptools.py:344 app_paper/ptools.py:431
 msgid "abstract"
 msgstr "Abstract"
 
-#: backend/app_paper/ptools.py:58
+#: app_paper/ptools.py:58
 msgid "natural_language_processing"
 msgstr "Natural language processing"
 
-#: backend/app_paper/ptools.py:59
+#: app_paper/ptools.py:59
 msgid "medicine"
 msgstr "Medicine"
 
-#: backend/app_paper/ptools.py:60
+#: app_paper/ptools.py:60
 msgid "computer_vision"
 msgstr "Computer vision"
 
-#: backend/app_paper/ptools.py:61
+#: app_paper/ptools.py:61
 msgid "audio"
 msgstr "Audio"
 
-#: backend/app_paper/ptools.py:62
+#: app_paper/ptools.py:62
 msgid "video"
 msgstr "Video"
 
-#: backend/app_paper/ptools.py:63
+#: app_paper/ptools.py:63
 msgid "reinforcement_learning_(rl)"
 msgstr "Reinforcement learning (RL)"
 
-#: backend/app_paper/ptools.py:64
+#: app_paper/ptools.py:64
 msgid "knowledge_map"
 msgstr "Knowledge map"
 
-#: backend/app_paper/ptools.py:65
+#: app_paper/ptools.py:65
 msgid "machine_learning"
 msgstr "Machine learning"
 
-#: backend/app_paper/ptools.py:108
+#: app_paper/ptools.py:108
 msgid "have_read"
 msgstr "Have read"
 
-#: backend/app_paper/ptools.py:109 backend/app_paper/ptools.py:111
+#: app_paper/ptools.py:109 app_paper/ptools.py:111
 msgid "unread"
 msgstr "Unread"
 
-#: backend/app_paper/ptools.py:109
+#: app_paper/ptools.py:109
 msgid "to_read"
 msgstr "To read"
 
-#: backend/app_paper/ptools.py:109
+#: app_paper/ptools.py:109
 msgid "unseen"
 msgstr "Unseen"
 
-#: backend/app_paper/ptools.py:110 backend/app_paper/ptools.py:114
+#: app_paper/ptools.py:110 app_paper/ptools.py:114
 msgid "reading_section"
 msgstr "Reading section"
 
-#: backend/app_paper/ptools.py:112
+#: app_paper/ptools.py:112
 msgid "watching"
 msgstr "Watching"
 
-#: backend/app_paper/ptools.py:113
+#: app_paper/ptools.py:113
 msgid "watch_a_little"
 msgstr "Watch a little"
 
-#: backend/app_paper/ptools.py:118 backend/app_paper/ptools.py:123
+#: app_paper/ptools.py:118 app_paper/ptools.py:123
 msgid "unknown"
 msgstr "Unknown"
 
-#: backend/app_paper/ptools.py:134
+#: app_paper/ptools.py:134
 msgid "chinese"
 msgstr "Chinese"
 
 # ptools.py
-#: backend/app_paper/ptools.py:380
+#: app_paper/ptools.py:380
 msgid "paper_reading"
 msgstr "Paper reading"
 
-#: backend/app_paper/ptools.py:390
+#: app_paper/ptools.py:390
 #, python-brace-format
 msgid "english_title_colon__{title}"
 msgstr "English title: {title}"
 
-#: backend/app_paper/ptools.py:392
+#: app_paper/ptools.py:392
 msgid "english_name_colon_"
 msgstr "English name:"
 
-#: backend/app_paper/ptools.py:395
+#: app_paper/ptools.py:395
 #, python-brace-format
 msgid "chinese_name_colon__{title_zh}"
 msgstr "Chinese name: {title_zh}"
 
-#: backend/app_paper/ptools.py:398
+#: app_paper/ptools.py:398
 msgid "chinese_name_colon_"
 msgstr "Chinese name:"
 
-#: backend/app_paper/ptools.py:400
+#: app_paper/ptools.py:400
 #, python-brace-format
 msgid "link_colon__{url}"
 msgstr "Link: {url}"
 
-#: backend/app_paper/ptools.py:402
+#: app_paper/ptools.py:402
 msgid "link_colon_"
 msgstr "Link:"
 
-#: backend/app_paper/ptools.py:403
+#: app_paper/ptools.py:403
 msgid "code_colon_"
 msgstr "Code:"
 
-#: backend/app_paper/ptools.py:405
+#: app_paper/ptools.py:405
 #, python-brace-format
 msgid "author_colon__{author}"
 msgstr "Author: {author}"
 
-#: backend/app_paper/ptools.py:407
+#: app_paper/ptools.py:407
 msgid "author_colon_"
 msgstr "Author:"
 
-#: backend/app_paper/ptools.py:410
+#: app_paper/ptools.py:410
 #, python-brace-format
 msgid "institution_colon__{institution}"
 msgstr "Institution: {institution}"
 
-#: backend/app_paper/ptools.py:415
+#: app_paper/ptools.py:415
 msgid "institution_colon_"
 msgstr "Institution:"
 
-#: backend/app_paper/ptools.py:418
+#: app_paper/ptools.py:418
 #, python-brace-format
 msgid "date_colon__{published_date}"
 msgstr "Date: {published_date}"
 
-#: backend/app_paper/ptools.py:423
+#: app_paper/ptools.py:423
 msgid "date_colon_"
 msgstr "Date:"
 
-#: backend/app_paper/ptools.py:426
+#: app_paper/ptools.py:426
 #, python-brace-format
 msgid "citations_colon__{citations}"
 msgstr "Citations: {citations}"
 
-#: backend/app_paper/ptools.py:429
+#: app_paper/ptools.py:429
 msgid "number_of_citations_colon_"
 msgstr "Number of citations:"
 
-#: backend/app_paper/ptools.py:433
+#: app_paper/ptools.py:433
 #, python-brace-format
 msgid "objective_colon__{purpose}"
 msgstr "Objective: {purpose}"
 
-#: backend/app_paper/ptools.py:435
+#: app_paper/ptools.py:435
 msgid "target_colon_"
 msgstr "Target:"
 
-#: backend/app_paper/ptools.py:437
+#: app_paper/ptools.py:437
 #, python-brace-format
 msgid "method_colon__{method}"
 msgstr "Method: {method}"
 
-#: backend/app_paper/ptools.py:439
+#: app_paper/ptools.py:439
 msgid "method_colon_"
 msgstr "Method:"
 
-#: backend/app_paper/ptools.py:441
+#: app_paper/ptools.py:441
 #, python-brace-format
 msgid "conclusion_colon__{result}"
 msgstr "Conclusion: {result}"
 
-#: backend/app_paper/ptools.py:443
+#: app_paper/ptools.py:443
 msgid "conclusion_colon_"
 msgstr "Conclusion: "
 
-#: backend/app_paper/ptools.py:579 backend/app_paper/ptools.py:596
-#: backend/app_paper/ptools.py:625
+#: app_paper/ptools.py:579 app_paper/ptools.py:596 app_paper/ptools.py:625
 msgid "empty_contents"
 msgstr "Empty contents"
 
-#: backend/app_paper/ptools.py:606 backend/app_paper/ptools.py:630
+#: app_paper/ptools.py:606 app_paper/ptools.py:630
 msgid "original_text"
 msgstr "Original text"
 
 # ptools.py
-#: backend/app_paper/ptools.py:607
+#: app_paper/ptools.py:607
 msgid "polished_text"
 msgstr "Polished text"
 
-#: backend/app_paper/ptools.py:634
+#: app_paper/ptools.py:634
 msgid "translate_text"
 msgstr "Translation"
 
-#: backend/app_paper/views.py:43 backend/backend/common/user/views.py:48
-#: backend/backend/common/user/views.py:110
+#: app_paper/views.py:40 backend/common/user/views.py:49
+#: backend/common/user/views.py:111
 msgid "method_not_supported_colon_"
 msgstr "Method not supported:"
 
-#: backend/app_record/record.py:16
+#: app_record/record.py:16
 #, python-brace-format
 msgid "title_colon__enter_{title}_enter__enter_content_enter_{content}"
 msgstr ""
@@ -934,61 +905,61 @@ msgstr ""
 "Content\n"
 "{content}"
 
-#: backend/app_record/record.py:38
+#: app_record/record.py:38
 msgid "your_account_currently_does_not_have_export_permissions_dot__please_contact_the_administrator_to_upgrade_your_account_dot_"
 msgstr ""
 "Your account currently does not have export permissions. Please contact the "
 "administrator to upgrade your account."
 
-#: backend/app_record/record.py:47
+#: app_record/record.py:47
 msgid "website"
 msgstr "Website"
 
-#: backend/app_record/record.py:48
+#: app_record/record.py:48
 msgid "title"
 msgstr "Title"
 
-#: backend/app_record/record.py:49
+#: app_record/record.py:49
 msgid "content"
 msgstr "Content"
 
-#: backend/app_record/record.py:50
+#: app_record/record.py:50
 msgid "viewpoint"
 msgstr "Viewpoint"
 
-#: backend/app_record/record.py:51
+#: app_record/record.py:51
 msgid "content_category_colon_"
 msgstr "Content category:"
 
-#: backend/app_record/record.py:52
+#: app_record/record.py:52
 msgid "data_type"
 msgstr "Data type"
 
-#: backend/app_record/record.py:53
+#: app_record/record.py:53
 msgid "status"
 msgstr "Status"
 
-#: backend/app_record/record.py:54
+#: app_record/record.py:54
 msgid "creation_date"
 msgstr "Creation date"
 
-#: backend/app_record/record.py:62
+#: app_record/record.py:62
 msgid "no_record_found"
 msgstr "No record found"
 
-#: backend/app_record/views.py:39
+#: app_record/views.py:39
 msgid "interface_is_deprecated"
 msgstr "Interface is deprecated"
 
-#: backend/app_sync/views.py:319
+#: app_sync/views.py:315
 msgid "comparison_complete"
 msgstr "Comparison complete"
 
-#: backend/app_translate/translate.py:18
+#: app_translate/translate.py:18
 msgid "you_are_a_middle_school_english_teacher"
 msgstr "You are a middle school English teacher"
 
-#: backend/app_translate/translate.py:162
+#: app_translate/translate.py:162
 #, python-brace-format
 msgid ""
 "word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}"
@@ -999,93 +970,93 @@ msgstr ""
 "Freq: {freq}\n"
 "Count: {times}"
 
-#: backend/app_translate/views.py:106
+#: app_translate/views.py:106
 msgid "please_enter_questions_or_content_to_be_translated"
 msgstr "Please enter questions or content to be translated"
 
-#: backend/app_translate/views.py:109
+#: app_translate/views.py:109
 msgid "internal_processing_error"
 msgstr "Internal processing error"
 
-#: backend/backend/common/files/utils_file.py:193
+#: backend/common/files/utils_file.py:193
 #, python-brace-format
 msgid "total_{len_files}_files"
 msgstr "Total {len_files} files"
 
-#: backend/backend/common/files/utils_file.py:194
+#: backend/common/files/utils_file.py:194
 #, python-brace-format
 msgid "total_{total}_tokens"
 msgstr "Total {total} tokens"
 
-#: backend/backend/common/files/utils_file.py:196
+#: backend/common/files/utils_file.py:196
 #, python-brace-format
 msgid "embedding_costs_about_{cost}_yuan"
 msgstr "Embedding costs about {cost} yuan"
 
-#: backend/backend/common/llm/llm_hub.py:59
+#: backend/common/llm/llm_hub.py:59
 msgid "call_failed"
 msgstr "Call failed"
 
-#: backend/backend/common/llm/llm_tools.py:27
+#: backend/common/llm/llm_tools.py:25
 msgid "the_maximum_number_of_words_called_today_has_been_reached"
 msgstr "The maximum number of words called today has been reached"
 
-#: backend/backend/common/llm/llm_tools.py:218
+#: backend/common/llm/llm_tools.py:183
 msgid "gemini_is_temporarily_unavailable"
 msgstr "Gemini is temporarily unavailable"
 
-#: backend/backend/common/parser/block.py:176
+#: backend/common/parser/block.py:176
 msgid "appendices"
 msgstr "Appendices"
 
-#: backend/backend/common/parser/block.py:177
+#: backend/common/parser/block.py:177
 msgid "attachment"
 msgstr "Attachment"
 
-#: backend/backend/common/parser/block.py:178
+#: backend/common/parser/block.py:178
 msgid "foreword"
 msgstr "Foreword"
 
-#: backend/backend/common/parser/block.py:179
+#: backend/common/parser/block.py:179
 msgid "given_that_colon_"
 msgstr "Given that:"
 
-#: backend/backend/common/parser/block.py:180
+#: backend/common/parser/block.py:180
 msgid "in_view_of_the_terms_colon_"
 msgstr "In view of the terms:"
 
-#: backend/backend/common/parser/block.py:186
+#: backend/common/parser/block.py:186
 msgid "(no_text)"
 msgstr "(No text)"
 
-#: backend/backend/common/parser/block.py:186
+#: backend/common/parser/block.py:186
 msgid "signing_page"
 msgstr "Signing page"
 
-#: backend/backend/common/parser/block.py:186
+#: backend/common/parser/block.py:186
 msgid "page_for_signing"
 msgstr "Page for signing"
 
-#: backend/backend/common/parser/doc_parser.py:13
+#: backend/common/parser/doc_parser.py:13
 #, python-brace-format
 msgid "successfully_converted_{path_in}_to_{path_out}"
 msgstr "Successfully converted {path_in} to {path_out}"
 
-#: backend/backend/common/speech/asr_tools.py:52
+#: backend/common/speech/asr_tools.py:41 backend/common/speech/asr_tools.py:55
 msgid "recognition_failure"
 msgstr "Recognition failure"
 
-#: backend/backend/common/speech/asr_tools.py:75
+#: backend/common/speech/asr_tools.py:78
 msgid "asr_successful"
 msgstr "ASR successful"
 
-#: backend/backend/common/speech/tts.py:66
+#: backend/common/speech/tts.py:67
 #, python-brace-format
 msgid "the_daily_limit_of_synthesized_characters_has_been_reached_{limit_tts_day}"
 msgstr ""
 "The daily limit of synthesized characters has been reached {limit_tts_day}"
 
-#: backend/backend/common/speech/tts.py:91
+#: backend/common/speech/tts.py:92
 #, python-brace-format
 msgid ""
 "the_content_is_relatively_long_{length}"
@@ -1096,307 +1067,269 @@ msgstr ""
 "{time} minutes to synthesize. If you do not wish to continue converting, "
 "please reply: stop"
 
-#: backend/backend/common/speech/tts.py:130
+#: backend/common/speech/tts.py:131
 #, python-brace-format
 msgid "set_the_engine_to_colon__{base_engine_setting}"
 msgstr "Set the engine to: {base_engine_setting}"
 
-#: backend/backend/common/speech/tts.py:138
+#: backend/common/speech/tts.py:139
 #, python-brace-format
 msgid "set_engine_to_custom_colon__{base_engine_setting}"
 msgstr "Set engine to Custom: {base_engine_setting}"
 
-#: backend/backend/common/speech/tts.py:141
+#: backend/common/speech/tts.py:142
 #, python-brace-format
 msgid "engine_not_found_colon__{base_engine_setting}"
 msgstr "Engine not found: {base_engine_setting}"
 
-#: backend/backend/common/speech/tts.py:155
-#: backend/backend/common/speech/tts.py:224
+#: backend/common/speech/tts.py:156 backend/common/speech/tts.py:225
 msgid "microsoft"
 msgstr "Microsoft"
 
-#: backend/backend/common/speech/tts.py:156
-#: backend/backend/common/speech/tts.py:225
+#: backend/common/speech/tts.py:157 backend/common/speech/tts.py:226
 msgid "google"
 msgstr "Google"
 
-#: backend/backend/common/speech/tts.py:157
-#: backend/backend/common/speech/tts.py:223
+#: backend/common/speech/tts.py:158 backend/common/speech/tts.py:224
 msgid "xunfei"
 msgstr "Xunfei"
 
-#: backend/backend/common/speech/tts.py:159
-#: backend/backend/common/speech/tts.py:228
+#: backend/common/speech/tts.py:160 backend/common/speech/tts.py:229
 msgid "customization"
 msgstr "Customization"
 
-#: backend/backend/common/speech/tts.py:160
+#: backend/common/speech/tts.py:161
 msgid "default"
 msgstr "Default"
 
-#: backend/backend/common/speech/tts.py:161
+#: backend/common/speech/tts.py:162
 msgid "storytelling_fairy"
 msgstr "Storytelling fairy"
 
-#: backend/backend/common/speech/tts.py:163
+#: backend/common/speech/tts.py:164
 msgid "book_review_master"
 msgstr "Book review master"
 
-#: backend/backend/common/speech/tts.py:164
+#: backend/common/speech/tts.py:165
 msgid "ghost_story_expert"
 msgstr "Ghost story expert"
 
-#: backend/backend/common/speech/tts.py:165
+#: backend/common/speech/tts.py:166
 msgid "romance_novel"
 msgstr "Romance novel"
 
-#: backend/backend/common/speech/tts.py:166
+#: backend/common/speech/tts.py:167
 msgid "documentary_commentary"
 msgstr "Documentary commentary"
 
-#: backend/backend/common/speech/tts.py:167
+#: backend/common/speech/tts.py:168
 msgid "clear_female_voice"
 msgstr "Clear female voice"
 
-#: backend/backend/common/speech/tts.py:168
+#: backend/common/speech/tts.py:169
 msgid "deep_male_voice"
 msgstr "Deep male voice"
 
-#: backend/backend/common/speech/tts.py:171
+#: backend/common/speech/tts.py:172
 msgid "gentle_male_voice"
 msgstr "Gentle male voice"
 
-#: backend/backend/common/speech/tts_edge.py:47
-#: backend/backend/common/speech/tts_google.py:29
-#: backend/backend/common/speech/tts_mine.py:82
-#: backend/backend/common/speech/tts_openai.py:39
-#: backend/backend/common/speech/tts_xunfei.py:62
+#: backend/common/speech/tts_edge.py:47 backend/common/speech/tts_google.py:29
+#: backend/common/speech/tts_mine.py:83 backend/common/speech/tts_openai.py:39
+#: backend/common/speech/tts_xunfei.py:62
 msgid "synthesis_complete"
 msgstr "Synthesis complete"
 
-#: backend/backend/common/speech/tts_mine.py:81
-#: backend/backend/common/speech/tts_tools.py:285
+#: backend/common/speech/tts_mine.py:56 backend/common/speech/tts_mine.py:82
+#: backend/common/speech/tts_tools.py:285
 msgid "custom_synthesis_failed"
 msgstr "Custom synthesis failed"
 
-#: backend/backend/common/speech/tts_tools.py:282
+#: backend/common/speech/tts_tools.py:282
 msgid "assembled"
 msgstr "Assembled"
 
-#: backend/backend/common/speech/tts_tools.py:287
+#: backend/common/speech/tts_tools.py:287
 msgid "synthesis_failed"
 msgstr "Synthesis failed"
 
-#: backend/backend/common/speech/tts_tools.py:359
+#: backend/common/speech/tts_tools.py:359
 msgid "the_current_user_already_has_a_task_in_progress"
 msgstr "The current user already has a task in progress"
 
-#: backend/backend/common/speech/tts_tools.py:361
+#: backend/common/speech/tts_tools.py:361
 msgid "the_current_task_list_is_full_comma__please_try_again_later"
 msgstr "The current task list is full, please try again later"
 
-#: backend/backend/common/speech/tts_tools.py:368
+#: backend/common/speech/tts_tools.py:368
 msgid "the_task_has_been_added__excl_"
 msgstr "The task has been added !"
 
-#: backend/backend/common/speech/tts_tools.py:376
+#: backend/common/speech/tts_tools.py:376
 msgid "task_removed"
 msgstr "Task removed"
 
-#: backend/backend/common/speech/tts_tools.py:377
-#: backend/backend/common/speech/tts_tools.py:383
+#: backend/common/speech/tts_tools.py:377
+#: backend/common/speech/tts_tools.py:383
 msgid "quest_does_not_exist"
 msgstr "Quest does not exist"
 
-#: backend/backend/common/speech/tts_tools.py:460
+#: backend/common/speech/tts_tools.py:460
 #, python-brace-format
 msgid "in_the_queue_comma__there_are_still_{prev_task_n}_tasks_ahead"
 msgstr "In the queue, there are still {prev_task_n} tasks ahead"
 
-#: backend/backend/common/speech/tts_tools.py:472
+#: backend/common/speech/tts_tools.py:472
 msgid "currently_synthesizing_comma__{_colon__dot_1%}_completed"
 msgstr "Currently synthesizing, {:.1%} completed"
 
-#: backend/backend/common/speech/tts_tools.py:479
+#: backend/common/speech/tts_tools.py:479
 msgid "no_synthesized_audio_found"
 msgstr "No synthesized audio found"
 
-#: backend/backend/common/user/resource.py:69
+#: backend/common/user/resource.py:69
 msgid "speech_synthesis"
 msgstr "Speech synthesis"
 
-#: backend/backend/common/user/resource.py:69
+#: backend/common/user/resource.py:69
 msgid "language_model"
 msgstr "Language model"
 
-#: backend/backend/common/user/resource.py:71
+#: backend/common/user/resource.py:71
 msgid "current_day"
 msgstr "Current day"
 
-#: backend/backend/common/user/resource.py:72
+#: backend/common/user/resource.py:72
 msgid "current_week"
 msgstr "Current week"
 
-#: backend/backend/common/user/resource.py:73
+#: backend/common/user/resource.py:73
 msgid "this_month"
 msgstr "This month"
 
-#: backend/backend/common/user/resource.py:74
+#: backend/common/user/resource.py:74
 msgid "total"
 msgstr "Total"
 
-#: backend/backend/common/user/resource.py:78
+#: backend/common/user/resource.py:78
 msgid "{}_usage"
 msgstr "{} usage"
 
-#: backend/backend/common/user/user.py:18
+#: backend/common/user/user.py:18
 msgid "chat_prompt_default"
 msgstr "Please answer briefly."
 
-#: backend/backend/common/user/user.py:164
+#: backend/common/user/user.py:170
 msgid "supports_ocr_colon_"
 msgstr "Supports OCR:"
 
-#: backend/backend/common/user/user.py:164
-#: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:167
-#: backend/backend/common/user/user.py:171
+#: backend/common/user/user.py:170 backend/common/user/user.py:171
+#: backend/common/user/user.py:173 backend/common/user/user.py:177
 msgid "yes"
 msgstr "Yes"
 
-#: backend/backend/common/user/user.py:164
-#: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:167
-#: backend/backend/common/user/user.py:171
+#: backend/common/user/user.py:170 backend/common/user/user.py:171
+#: backend/common/user/user.py:173 backend/common/user/user.py:177
 msgid "denied"
 msgstr "Denied"
 
-#: backend/backend/common/user/user.py:165
+#: backend/common/user/user.py:171
 msgid "save_data_colon_"
 msgstr "Save data:"
 
-#: backend/backend/common/user/user.py:167
+#: backend/common/user/user.py:173
 msgid "parsing_the_paper_colon_"
 msgstr "Parsing the paper:"
 
-#: backend/backend/common/user/user.py:170
+#: backend/common/user/user.py:176
 msgid "translation_book_colon_"
 msgstr "Translation book:"
 
-#: backend/backend/common/user/user.py:174
+#: backend/common/user/user.py:180
 #, python-brace-format
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
 msgstr "Default LLM limit: {limit_llm_day_formatted} tokens/day"
 
-#: backend/backend/common/user/user.py:179
+#: backend/common/user/user.py:185
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
 msgstr "Speech synthesis limit: {limit_tts_day} tokens/day"
 
-#: backend/backend/common/user/user.py:184
+#: backend/common/user/user.py:190
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
 msgstr "Speech synthesis limit: {tokens} tokens/attempt"
 
-#: backend/backend/common/user/user.py:189
+#: backend/common/user/user.py:195
 #, python-brace-format
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
 msgstr "Recording export range: {limit_export_record_day} days"
 
-#: backend/backend/common/user/user.py:208
+#: backend/common/user/user.py:214
 msgid "te_ac_settings"
 msgstr "Te_ac_Settings"
 
-#: backend/backend/common/user/user.py:210
+#: backend/common/user/user.py:216
 msgid "normal"
 msgstr "Normal"
 
-#: backend/backend/common/user/user.py:212
+#: backend/common/user/user.py:218
 msgid "vip_user"
 msgstr "VIP user"
 
-#: backend/backend/common/user/user.py:214
+#: backend/common/user/user.py:220
 msgid "administrator"
 msgstr "Administrator"
 
-#: backend/backend/common/user/user.py:215
+#: backend/common/user/user.py:221
 msgid "unknown_level"
 msgstr "Unknown level"
 
-#: backend/backend/common/user/views.py:57
+#: backend/common/user/views.py:58
 msgid "account_created__excl_"
 msgstr "Account created !"
 
-#: backend/backend/common/user/views.py:173
-#: backend/backend/common/user/views.py:178
+#: backend/common/user/views.py:79
+msgid "successfully_set"
+msgstr "Successfully set"
+
+#: backend/common/user/views.py:174 backend/common/user/views.py:179
 msgid "settings_were_applied_successfully"
 msgstr "Settings were applied successfully"
 
-#: backend/backend/common/utils/regular_tools.py:26
+#: backend/common/utils/regular_tools.py:26
 msgid "content_not_found"
 msgstr "Content not found"
 
-#: backend/backend/common/utils/web_tools.py:17
+#: backend/common/utils/web_tools.py:17
 msgid "unknown_title"
 msgstr "Unknown title"
 
-#: backend/backend/common/utils/web_tools.py:34
+#: backend/common/utils/web_tools.py:34
 msgid "empty_file_content"
 msgstr "Empty file content"
 
-#: backend/backend/common/utils/web_tools.py:112
+#: backend/common/utils/web_tools.py:112
 msgid "parsing_content_is_not_supported_at_this_time"
 msgstr "Parsing content is not supported at this time"
 
-#: backend/backend/common/utils/web_tools.py:139
+#: backend/common/utils/web_tools.py:139
 msgid "failure_reading_file"
 msgstr "Failure reading file"
 
-#: backend/backend/common/utils/web_tools.py:247
+#: backend/common/utils/web_tools.py:247
 msgid "body"
 msgstr "Body"
 
-#: backend/tests/test_app_diet.py:11
-msgid "diet_log_colon__apple_100g_comma__milk_100g"
-msgstr "Diet log: Apple 100g, Milk 100g"
-
-#: backend/tests/test_app_diet.py:13 backend/tests/test_app_diet.py:29
+#: tests/test_app_diet.py:13 tests/test_app_diet.py:29
 msgid "total_calories"
 msgstr "Total calories"
 
-#: backend/tests/test_app_diet.py:19
-msgid "delete_diet_apple"
-msgstr "Delete diet Apple"
-
-#: backend/tests/test_app_diet.py:21
+#: tests/test_app_diet.py:21
 msgid "success"
 msgstr "Success"
 
-#: backend/tests/test_app_record.py:12
-msgid "record_exercise_running_5_kilometers"
-msgstr "Record exercise running 5 kilometers"
-
-#: backend/tests/test_app_user_manager.py:13
-msgid "login_colon__xieyan_comma__1234567"
-msgstr "Login: xieyan, 1234567"
-
-#: backend/tests/test_app_user_manager.py:21
-#: backend/tests/test_app_user_manager.py:27
-#: backend/tests/test_app_user_manager.py:45
+#: tests/test_app_user_manager.py:47
 msgid "registration_colon__xieyan_comma__1234567"
 msgstr "Registration: xieyan, 1234567"
-
-#: backend/tests/test_app_user_manager.py:36
-#: backend/tests/test_app_user_manager.py:51
-msgid "change_password_colon__xieyan_comma__old_password_1234567_new_password_123456"
-msgstr "Change password: xieyan, old password 1234567 new password 123456"
-
-#: backend/tests/test_app_user_manager.py:60
-msgid "change_password_colon__xieyan_comma__2314"
-msgstr "Change password: xieyan, 2314"
-
-#: backend/tests/test_app_user_manager.py:72
-msgid "when_to_use_a_beaker_and_when_to_use_a_test_tube_in_chemistry"
-msgstr "When to use a beaker and when to use a test tube in chemistry"
 

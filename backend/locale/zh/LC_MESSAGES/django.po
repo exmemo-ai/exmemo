@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-18 11:48+0000\n"
+"POT-Creation-Date: 2024-12-27 08:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,910 +17,877 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: backend/app_bm_syncex/views.py:70
+#: app_bm_syncex/views.py:70
 msgid "data_already_exists"
 msgstr "数据已存在"
 
-#: backend/app_dataforge/entry.py:44
+#: app_dataforge/entry.py:44
 msgid "unknown_type_colon_"
 msgstr "未知类型: "
 
-#: backend/app_dataforge/entry.py:96
+#: app_dataforge/entry.py:94
 msgid "save_file_failed_excl_"
 msgstr "文件保存失败"
 
-#: backend/app_dataforge/entry.py:141
+#: app_dataforge/entry.py:137
 msgid "add_success"
 msgstr "添加成功"
 
-#: backend/app_dataforge/entry.py:146
+#: app_dataforge/entry.py:141
 msgid "add_failed"
 msgstr "添加失败"
 
-#: backend/app_dataforge/entry.py:165
+#: app_dataforge/entry.py:160
 msgid "record_successful_comma__type_colon_"
 msgstr "记录成功，类型："
 
-#: backend/app_dataforge/entry.py:174
+#: app_dataforge/entry.py:169
 #, python-brace-format
 msgid "set_to_pending_comma__type_colon__{ctype}"
 msgstr "设为待处理，类型：{ctype}"
 
-#: backend/app_dataforge/entry.py:176
+#: app_dataforge/entry.py:171
 #, python-brace-format
 msgid "collection_successful_comma__type_colon__{ctype}"
 msgstr "采集成功，类型：{ctype}"
 
-#: backend/app_dataforge/entry.py:180
+#: app_dataforge/entry.py:175
 #, python-brace-format
 msgid "storage_successful_comma__found_url_exception_error_colon__{error}"
 msgstr "保存成功，找到URL异常错误：{error}"
 
-#: backend/app_dataforge/entry.py:250 backend/app_dataforge/entry.py:258
-#: backend/app_dataforge/entry.py:259
+#: app_dataforge/entry.py:245 app_dataforge/entry.py:253
+#: app_dataforge/entry.py:254
 msgid "run_failed"
 msgstr "运行失败"
 
-#: backend/app_dataforge/feature.py:16
+#: app_dataforge/feature.py:16
 msgid "unclassified"
 msgstr "未知类别"
 
-#: backend/app_dataforge/feature.py:148
+#: app_dataforge/feature.py:148
 msgid "to_be_organized"
 msgstr "待整理"
 
-#: backend/app_dataforge/feature.py:148
+#: app_dataforge/feature.py:148
 msgid "to-do_list"
 msgstr "待办"
 
-#: backend/app_dataforge/misc_tools.py:51
+#: app_dataforge/misc_tools.py:51
 msgid "unsupported_document_type"
 msgstr "不支持的文件类型"
 
-#: backend/app_dataforge/views.py:112
+#: app_dataforge/views.py:103
 msgid "no_update_needed"
 msgstr "无需更新"
 
-#: backend/app_dataforge/views.py:118
+#: app_dataforge/views.py:107
 msgid "uploading_failed"
 msgstr "上传失败"
 
-#: backend/app_dataforge/views.py:212 backend/app_dataforge/views.py:223
+#: app_dataforge/views.py:200 app_dataforge/views.py:211
 msgid "upgrade_successfully"
 msgstr "更新成功"
 
-#: backend/app_dataforge/views.py:214
+#: app_dataforge/views.py:202
 msgid "update_failed"
 msgstr "更新失败"
 
-#: backend/app_dataforge/views.py:288
+#: app_dataforge/views.py:276
 msgid "unknown_action"
 msgstr "未知操作"
 
-#: backend/app_diet/diet.py:17
+#: app_diet/diet.py:17
 msgid "you_are_a_clinical_nutritionist"
 msgstr "你是一位临床营养师"
 
-#: backend/app_diet/diet.py:42
+#: app_diet/diet.py:42
 #, python-brace-format
 msgid "no_diet_record_found_for_{time_of_day}_on_{date}"
 msgstr "没有找到{date}{time_of_day}的饮食记录"
 
-#: backend/app_diet/diet.py:58
+#: app_diet/diet.py:58
 #, python-brace-format
 msgid ""
 "no_dietary_records_found_for_keywords_related_to_{time_of_day}_on_{date}"
-msgstr "找不到与{time_of_day}有关的{date}的饮食记录"
+msgstr "找不到与 {date} {time_of_day} 有关的的饮食记录"
 
-#: backend/app_diet/diet.py:62
+#: app_diet/diet.py:62
 #, python-brace-format
 msgid ""
 "successfully_deleted_the_diet_record_for_{time_of_day}_on_{date}"
 "_with_keywords_{keywords}"
 msgstr "成功删除了{date}{time_of_day}的饮食记录，关键字为{keywords}"
 
-#: backend/app_diet/diet.py:131 backend/app_diet/diet.py:146
+#: app_diet/diet.py:131 app_diet/diet.py:146
 msgid "no_valid_records_founds_dot_"
 msgstr "未找到有效记录"
 
-#: backend/app_diet/diet.py:141
+#: app_diet/diet.py:141
 #, python-brace-format
 msgid "total_calories_colon__{kc}kc"
 msgstr "总热量：{kc}千卡"
 
-#: backend/app_diet/diet.py:264
+#: app_diet/diet.py:176 app_message/message.py:106
+msgid "failed_to_process_information"
+msgstr "处理信息失败"
+
+#: app_diet/diet.py:271
 #, python-brace-format
 msgid "already_exists_{name}"
 msgstr "{name} 已经存在"
 
-#: backend/app_diet/diet.py:275
+#: app_diet/diet.py:282
 #, python-brace-format
 msgid "add_successful_{name}_{calorie}"
 msgstr "添加成功 {name} {calorie}"
 
-#: backend/app_diet/diet.py:332
+#: app_diet/diet.py:339
 msgid "fuzzy_query_failed"
 msgstr "模糊查询失败"
 
-#: backend/app_diet/diet.py:346
+#: app_diet/diet.py:353
 #, python-brace-format
 msgid "no_food_found_with_the_name_{name}"
 msgstr "未找到名称为 {name} 的食物"
 
-#: backend/app_diet/diet.py:383
+#: app_diet/diet.py:390
 msgid "today"
 msgstr "今天"
 
-#: backend/app_diet/diet.py:384
+#: app_diet/diet.py:391
 msgid "yesterday"
 msgstr "昨天"
 
-#: backend/app_diet/diet.py:385
+#: app_diet/diet.py:392
 msgid "the_day_before_yesterday"
 msgstr "前天"
 
-#: backend/app_diet/diet.py:386
+#: app_diet/diet.py:393
 msgid "big_day_before_yesterday"
 msgstr "大前天"
 
-#: backend/app_diet/diet.py:397
+#: app_diet/diet.py:403
 #, python-brace-format
 msgid "{month}_month_{day}_day"
 msgstr "{month}月{day}日"
 
-#: backend/app_diet/diet.py:408
+#: app_diet/diet.py:414
 msgid "spam"
 msgstr "午餐肉"
 
-#: backend/app_diet/diet.py:414 backend/app_diet/diet.py:431
-#: backend/app_diet/diet.py:449
+#: app_diet/diet.py:420 app_diet/diet.py:437 app_diet/diet.py:455
 msgid "extra_meal_in_the_morning"
 msgstr "凌晨加餐"
 
-#: backend/app_diet/diet.py:414
+#: app_diet/diet.py:420
 msgid "early_morning"
 msgstr "凌晨"
 
-#: backend/app_diet/diet.py:415 backend/app_diet/diet.py:433
-#: backend/app_diet/diet.py:450
+#: app_diet/diet.py:421 app_diet/diet.py:439 app_diet/diet.py:456
 msgid "breakfast"
 msgstr "早餐"
 
-#: backend/app_diet/diet.py:415
+#: app_diet/diet.py:421
 msgid "morning"
 msgstr "早上"
 
-#: backend/app_diet/diet.py:416 backend/app_diet/diet.py:435
-#: backend/app_diet/diet.py:451
+#: app_diet/diet.py:422 app_diet/diet.py:441 app_diet/diet.py:457
 msgid "morning_extra_meal"
 msgstr "上午加餐"
 
-#: backend/app_diet/diet.py:416
+#: app_diet/diet.py:422
 msgid "am"
 msgstr "上午"
 
-#: backend/app_diet/diet.py:417 backend/app_diet/diet.py:437
-#: backend/app_diet/diet.py:452
+#: app_diet/diet.py:423 app_diet/diet.py:443 app_diet/diet.py:458
 msgid "lunch"
 msgstr "午餐"
 
-#: backend/app_diet/diet.py:417
+#: app_diet/diet.py:423
 msgid "noon"
 msgstr "中午"
 
-#: backend/app_diet/diet.py:418 backend/app_diet/diet.py:439
-#: backend/app_diet/diet.py:453
+#: app_diet/diet.py:424 app_diet/diet.py:445 app_diet/diet.py:459
 msgid "extra_meal_in_the_afternoon"
 msgstr "下午加餐"
 
-#: backend/app_diet/diet.py:418
+#: app_diet/diet.py:424
 msgid "pm"
 msgstr "下午"
 
-#: backend/app_diet/diet.py:419 backend/app_diet/diet.py:441
-#: backend/app_diet/diet.py:454
+#: app_diet/diet.py:425 app_diet/diet.py:447 app_diet/diet.py:460
 msgid "dinner"
 msgstr "晚餐"
 
-#: backend/app_diet/diet.py:419
+#: app_diet/diet.py:425
 msgid "dinner2"
 msgstr "晚饭"
 
-#: backend/app_diet/diet.py:419 backend/app_diet/diet.py:420
+#: app_diet/diet.py:425 app_diet/diet.py:426
 msgid "night"
 msgstr "晚上"
 
-#: backend/app_diet/diet.py:420 backend/app_diet/diet.py:443
-#: backend/app_diet/diet.py:455
+#: app_diet/diet.py:426 app_diet/diet.py:449 app_diet/diet.py:461
 msgid "evening_extra_meals"
 msgstr "晚上加餐"
 
-#: backend/app_diet/diet.py:420
+#: app_diet/diet.py:426
 msgid "midnight"
 msgstr "半夜"
 
-#: backend/app_diet/diet.py:420
+#: app_diet/diet.py:426
 msgid "midnight_snack"
 msgstr "夜宵"
 
-#: backend/app_message/agent/agent_manager.py:24
+#: app_message/agent/agent_manager.py:23
 msgid "please_register_or_log_in_first_comma___enter_formatted_as_colon__register_username_xxx_comma__password_xxx__enter_or_log_in_username_xxx_comma__password_xxx"
 msgstr ""
 "请先注册或登录，\n"
 "形如：注册 用户名xxx, 密码xxx \n"
 "或 登录 用户名xxx, 密码xxx"
 
-#: backend/app_message/agent/agent_manager.py:114
+#: app_message/agent/agent_manager.py:118
 msgid "agent_llm_error"
 msgstr "调用模型工具出错。请重试，或在设置中选择更好的工具模型。"
 
-#: backend/app_message/agent/agent_manager.py:171
+#: app_message/agent/agent_manager.py:183
 msgid "system_tools"
 msgstr "系统提供以下工具. "
 
-#: backend/app_message/agent/data_agent.py:25
-msgid "record_agent"
-msgstr "随手记"
-
-#: backend/app_message/agent/data_agent.py:28
-#: backend/app_message/agent/data_agent.py:35
-msgid "search_records"
-msgstr "搜索记录"
-
-#: backend/app_message/agent/data_agent.py:38
-#: backend/app_message/agent/data_agent.py:176
-msgid "please_enter_search_content"
-msgstr "请输入搜索内容"
-
-#: backend/app_message/agent/data_agent.py:45
-#: backend/app_message/agent/data_agent.py:52
-msgid "record"
-msgstr "记录"
-
-#: backend/app_message/agent/data_agent.py:53
-msgid "please_enter_the_record_content"
-msgstr "请输入记录内容"
-
-#: backend/app_message/agent/data_agent.py:64
-msgid "export_records"
-msgstr "导出记录"
-
-#: backend/app_message/agent/data_agent.py:84
-msgid "web_processing_agent"
-msgstr "网页处理"
-
-#: backend/app_message/agent/data_agent.py:87
-msgid "web_functions_list"
-msgstr "网页功能列表"
-
-#: backend/app_message/agent/data_agent.py:94
-msgid "collect_webpage"
-msgstr "收藏网页"
-
-#: backend/app_message/agent/data_agent.py:107
-#: backend/app_message/agent/data_agent.py:122
-msgid "no_urls_dot_"
-msgstr "没有网址"
-
-#: backend/app_message/agent/data_agent.py:109
-msgid "set_webpage_todo"
-msgstr "设置网页待办"
-
-#: backend/app_message/agent/data_agent.py:124
-msgid "summarize_webpage_content"
-msgstr "总结网页内容"
-
-#: backend/app_message/agent/data_agent.py:135
-msgid "failed_to_fetch_webpages"
-msgstr "提取网页失败"
-
-#: backend/app_message/agent/data_agent.py:137
-msgid "get_text_content"
-msgstr "获取文本内容"
-
-#: backend/app_message/agent/data_agent.py:145
-#: backend/app_message/agent/other_agent.py:85
-#: backend/backend/common/speech/tts.py:107
-msgid "no_content_found"
-msgstr "没有找到相应内容"
-
-#: backend/app_message/agent/data_agent.py:147
-msgid "webpage_to_audio"
-msgstr "网页转音频"
-
-#: backend/app_message/agent/data_agent.py:158
-msgid "page_not_found"
-msgstr "没有找到网页"
-
-#: backend/app_message/agent/data_agent.py:165
-msgid "data_management_agent"
-msgstr "数据管理"
-
-#: backend/app_message/agent/data_agent.py:168
-#: backend/app_message/agent/data_agent.py:175
-msgid "search_data"
-msgstr "搜索数据"
-
-#: backend/app_message/agent/data_agent.py:180
-#: backend/app_message/agent/data_agent.py:187
-msgid "search_files"
-msgstr "搜索文件"
-
-#: backend/app_message/agent/data_agent.py:190
-msgid "please_enter_what_you're_looking_for"
-msgstr "请输入待查找内容"
-
-#: backend/app_message/agent/data_agent.py:195
-msgid "search_todo_webpages"
-msgstr "搜索待办网页"
-
-#: backend/app_message/agent/data_agent.py:203
-msgid "search_collected_webpages"
-msgstr "搜索收藏的网页"
-
-#: backend/app_message/agent/data_agent.py:211
-msgid "search_webpages"
-msgstr "搜索网页"
-
-#: backend/app_message/agent/data_agent.py:219
-msgid "manage_data"
-msgstr "管理工具"
-
-#: backend/app_message/agent/data_agent.py:223
-msgid "please_open_following_link"
-msgstr "请打开链接："
-
-#: backend/app_message/agent/data_agent.py:229
-msgid "file_processing_agent"
-msgstr "文件处理"
-
-#: backend/app_message/agent/data_agent.py:232
-msgid "extract_file_content"
-msgstr "提取文件内容"
-
-#: backend/app_message/agent/data_agent.py:241
-#: backend/app_message/agent/data_agent.py:251
-#: backend/app_message/agent/other_agent.py:139
-#: backend/app_message/message.py:49
-msgid "please_upload_or_share_a_file_first"
-msgstr "请先上传或分享文件"
-
-#: backend/app_message/agent/data_agent.py:243
-#: backend/app_message/message.py:41
-msgid "file_to_audio"
-msgstr "文件转音频"
-
-#: backend/app_message/agent/data_agent.py:253
-#: backend/app_message/message.py:37
-msgid "collect_file"
-msgstr "收藏文件"
-
-#: backend/app_message/agent/data_agent.py:259
-msgid "file_collection_failed_colon__file_not_found"
-msgstr "文件收藏失败：未找到文件"
-
-#: backend/app_message/agent/data_agent.py:292
-msgid "no_webpage_content_found"
-msgstr "没有获取到网页内容"
-
-#: backend/app_message/agent/data_agent.py:301
-msgid "received_webpage_with_characters"
-msgstr "接收到{length}个字符的网页"
-
-#: backend/app_message/agent/data_agent.py:303
-msgid "please_enter_the_url_or_share_the_page_with_me"
-msgstr "请输入网址或者分享网页给我"
-
-#: backend/app_message/agent/other_agent.py:19
-msgid "diet_management"
-msgstr "饮食管理"
-
-#: backend/app_message/agent/other_agent.py:22
-#: backend/tests/test_app_diet.py:27
-msgid "diet_statistics"
-msgstr "饮食统计"
-
-#: backend/app_message/agent/other_agent.py:33
-#: backend/app_message/agent/other_agent.py:40
-msgid "delete_diet"
-msgstr "删除饮食"
-
-#: backend/app_message/agent/other_agent.py:41
-msgid "please_enter_diet_name"
-msgstr "请输入饮食名称"
-
-#: backend/app_message/agent/other_agent.py:47
-#: backend/app_message/agent/other_agent.py:55
-msgid "record_diet"
-msgstr "记饮食"
-
-#: backend/app_message/agent/other_agent.py:56
-msgid "please_enter_diet_content"
-msgstr "请输入饮食内容"
-
-#: backend/app_message/agent/other_agent.py:68
-msgid "voice_assistant"
-msgstr "语音助手"
-
-#: backend/app_message/agent/other_agent.py:71
-#: backend/app_message/agent/other_agent.py:78
-msgid "text_to_audio"
-msgstr "文本转音频"
-
-#: backend/app_message/agent/other_agent.py:79
-msgid "please_enter_conversion_content"
-msgstr "请输入待转换内容"
-
-#: backend/app_message/agent/other_agent.py:83
-msgid "text_{}"
-msgstr "文本_{}"
-
-#: backend/app_message/agent/other_agent.py:87
-msgid "stop_speech_synthesis"
-msgstr "停止语音合成"
-
-#: backend/app_message/agent/other_agent.py:94
-msgid "get_audio"
-msgstr "获取音频"
-
-#: backend/app_message/agent/other_agent.py:101
-msgid "converted_audio"
-msgstr "转换音频"
-
-#: backend/app_message/agent/other_agent.py:109
-#: backend/app_message/message.py:44
-msgid "speech_recognition"
-msgstr "语音识别"
-
-#: backend/app_message/agent/other_agent.py:123
-msgid "files_larger_than_50mb_are_currently_not_supported_for_recognition"
-msgstr "文件大于50M，暂不支持识别"
-
-#: backend/app_message/agent/other_agent.py:146
-msgid "translate_assistant"
-msgstr "英语学习"
-
-#: backend/app_message/agent/other_agent.py:149
-msgid "translate"
-msgstr "翻译"
-
-#: backend/app_message/agent/other_agent.py:160
-msgid "translation_failed"
-msgstr "翻译失败"
-
-#: backend/app_message/agent/other_agent.py:168
-msgid "help_assistant"
-msgstr "使用指南"
-
-#: backend/app_message/agent/other_agent.py:171
-msgid "help_list"
-msgstr "帮助列表"
-
-#: backend/app_message/agent/other_agent.py:176
+#: app_message/agent/base_agent.py:31
+#, python-brace-format
 msgid "provides {func_str} functions_please_select"
 msgstr "提供 {func_str} 工具，请调用其中最匹配的一个工具，并以中文返回结果"
 
-#: backend/app_message/agent/other_agent.py:184
-#: backend/app_message/agent/other_agent.py:189
+#: app_message/agent/data_agent.py:27
+msgid "record_agent"
+msgstr "随手记"
+
+#: app_message/agent/data_agent.py:29 app_message/agent/data_agent.py:38
+msgid "search_records"
+msgstr "搜索记录"
+
+#: app_message/agent/data_agent.py:33 app_message/agent/data_agent.py:47
+#: app_message/agent/data_agent.py:68 app_message/agent/data_agent.py:91
+#: app_message/agent/data_agent.py:101 app_message/agent/data_agent.py:118
+#: app_message/agent/data_agent.py:135 app_message/agent/data_agent.py:150
+#: app_message/agent/data_agent.py:162 app_message/agent/data_agent.py:184
+#: app_message/agent/data_agent.py:198 app_message/agent/data_agent.py:212
+#: app_message/agent/data_agent.py:222 app_message/agent/data_agent.py:232
+#: app_message/agent/data_agent.py:254 app_message/agent/data_agent.py:266
+#: app_message/agent/data_agent.py:279 app_message/agent/other_agent.py:30
+#: app_message/agent/other_agent.py:40 app_message/agent/other_agent.py:56
+#: app_message/agent/other_agent.py:78 app_message/agent/other_agent.py:98
+#: app_message/agent/other_agent.py:107 app_message/agent/other_agent.py:124
+#: app_message/agent/other_agent.py:157 app_message/agent/other_agent.py:178
+#: app_message/agent/other_agent.py:193 app_message/agent/other_agent.py:219
+#: app_message/agent/other_agent.py:236 app_message/agent/other_agent.py:254
+#: app_message/agent/user_agent.py:58 app_message/agent/user_agent.py:69
+#: app_message/agent/user_agent.py:79 app_message/agent/user_agent.py:101
+#: app_message/agent/user_agent.py:112 app_message/agent/user_agent.py:120
+msgid "params_error"
+msgstr "参数错误"
+
+#: app_message/agent/data_agent.py:39 app_message/agent/data_agent.py:190
+msgid "please_enter_search_content"
+msgstr "请输入搜索内容"
+
+#: app_message/agent/data_agent.py:43 app_message/agent/data_agent.py:52
+msgid "record"
+msgstr "记录"
+
+#: app_message/agent/data_agent.py:53
+msgid "please_enter_the_record_content"
+msgstr "请输入记录内容"
+
+#: app_message/agent/data_agent.py:64
+msgid "export_records"
+msgstr "导出记录"
+
+#: app_message/agent/data_agent.py:85
+msgid "web_processing_agent"
+msgstr "网页处理"
+
+#: app_message/agent/data_agent.py:87
+msgid "web_functions_list"
+msgstr "网页功能列表"
+
+#: app_message/agent/data_agent.py:97
+msgid "collect_webpage"
+msgstr "收藏网页"
+
+#: app_message/agent/data_agent.py:112 app_message/agent/data_agent.py:129
+msgid "no_urls_dot_"
+msgstr "没有网址"
+
+#: app_message/agent/data_agent.py:114
+msgid "set_webpage_todo"
+msgstr "设置网页为待读"
+
+#: app_message/agent/data_agent.py:131
+msgid "summarize_webpage_content"
+msgstr "总结网页内容"
+
+#: app_message/agent/data_agent.py:144
+msgid "failed_to_fetch_webpages"
+msgstr "提取网页失败"
+
+#: app_message/agent/data_agent.py:146
+msgid "get_text_content"
+msgstr "获取文本内容"
+
+#: app_message/agent/data_agent.py:156 app_message/agent/other_agent.py:92
+#: backend/common/speech/tts.py:108
+msgid "no_content_found"
+msgstr "没有找到相应内容"
+
+#: app_message/agent/data_agent.py:158
+msgid "webpage_to_audio"
+msgstr "网页转音频"
+
+#: app_message/agent/data_agent.py:172
+msgid "page_not_found"
+msgstr "没有找到网页"
+
+#: app_message/agent/data_agent.py:178
+msgid "data_management_agent"
+msgstr "数据管理"
+
+#: app_message/agent/data_agent.py:180 app_message/agent/data_agent.py:189
+msgid "search_data"
+msgstr "搜索数据"
+
+#: app_message/agent/data_agent.py:194 app_message/agent/data_agent.py:203
+msgid "search_files"
+msgstr "搜索文件"
+
+#: app_message/agent/data_agent.py:204
+msgid "please_enter_what_you're_looking_for"
+msgstr "请输入待查找内容"
+
+#: app_message/agent/data_agent.py:208
+msgid "search_todo_webpages"
+msgstr "搜索待办网页"
+
+#: app_message/agent/data_agent.py:218
+msgid "search_collected_webpages"
+msgstr "搜索收藏的网页"
+
+#: app_message/agent/data_agent.py:228
+msgid "search_webpages"
+msgstr "搜索网页"
+
+#: app_message/agent/data_agent.py:238
+msgid "manage_data"
+msgstr "管理工具"
+
+#: app_message/agent/data_agent.py:242
+msgid "please_open_following_link"
+msgstr "请打开链接："
+
+#: app_message/agent/data_agent.py:248
+msgid "file_processing_agent"
+msgstr "文件处理"
+
+#: app_message/agent/data_agent.py:250
+msgid "extract_file_content"
+msgstr "提取文件内容"
+
+#: app_message/agent/data_agent.py:260 app_message/agent/data_agent.py:273
+#: app_message/agent/other_agent.py:145 app_message/message.py:138
+msgid "please_upload_or_share_a_file_first"
+msgstr "请先上传或分享文件"
+
+#: app_message/agent/data_agent.py:262 app_message/message.py:132
+msgid "file_to_audio"
+msgstr "文件转音频"
+
+#: app_message/agent/data_agent.py:275 app_message/message.py:128
+msgid "collect_file"
+msgstr "收藏文件"
+
+#: app_message/agent/data_agent.py:284
+msgid "file_collection_failed_colon__file_not_found"
+msgstr "文件收藏失败：未找到文件"
+
+#: app_message/agent/data_agent.py:316
+msgid "no_webpage_content_found"
+msgstr "没有获取到网页内容"
+
+#: app_message/agent/data_agent.py:327
+msgid "received_webpage_with_characters"
+msgstr "接收到{length}个字符的网页"
+
+#: app_message/agent/data_agent.py:329
+msgid "please_enter_the_url_or_share_the_page_with_me"
+msgstr "请输入网址或者分享网页给我"
+
+#: app_message/agent/other_agent.py:24
+msgid "diet_management"
+msgstr "饮食管理"
+
+#: app_message/agent/other_agent.py:26
+msgid "diet_statistics"
+msgstr "饮食统计"
+
+#: app_message/agent/other_agent.py:36 app_message/agent/other_agent.py:45
+msgid "delete_diet"
+msgstr "删除饮食"
+
+#: app_message/agent/other_agent.py:46
+msgid "please_enter_diet_name"
+msgstr "请输入饮食名称"
+
+#: app_message/agent/other_agent.py:52 app_message/agent/other_agent.py:62
+msgid "record_diet"
+msgstr "记饮食"
+
+#: app_message/agent/other_agent.py:63
+msgid "please_enter_diet_content"
+msgstr "请输入饮食内容"
+
+#: app_message/agent/other_agent.py:72
+msgid "voice_assistant"
+msgstr "语音助手"
+
+#: app_message/agent/other_agent.py:74 app_message/agent/other_agent.py:83
+msgid "text_to_audio"
+msgstr "文本转音频"
+
+#: app_message/agent/other_agent.py:84
+msgid "please_enter_conversion_content"
+msgstr "请输入待转换内容"
+
+#: app_message/agent/other_agent.py:88
+msgid "text_{}"
+msgstr "文本_{}"
+
+#: app_message/agent/other_agent.py:94
+msgid "stop_speech_synthesis"
+msgstr "停止语音合成"
+
+#: app_message/agent/other_agent.py:103
+msgid "get_audio"
+msgstr "获取音频"
+
+#: app_message/agent/other_agent.py:112
+msgid "converted_audio"
+msgstr "转换音频"
+
+#: app_message/agent/other_agent.py:120 app_message/message.py:135
+msgid "speech_recognition"
+msgstr "语音识别"
+
+#: app_message/agent/other_agent.py:134
+msgid "files_larger_than_50mb_are_currently_not_supported_for_recognition"
+msgstr "文件大于50M，暂不支持识别"
+
+#: app_message/agent/other_agent.py:151
+msgid "translate_assistant"
+msgstr "英语学习"
+
+#: app_message/agent/other_agent.py:153
+msgid "translate"
+msgstr "翻译"
+
+#: app_message/agent/other_agent.py:166
+msgid "translation_failed"
+msgstr "翻译失败"
+
+#: app_message/agent/other_agent.py:172
+msgid "help_assistant"
+msgstr "使用指南"
+
+#: app_message/agent/other_agent.py:174
+msgid "help_list"
+msgstr "帮助列表"
+
+#: app_message/agent/other_agent.py:189 app_message/agent/other_agent.py:196
 msgid "find_command"
 msgstr "查找命令"
 
-#: backend/app_message/agent/other_agent.py:190
+#: app_message/agent/other_agent.py:197
 msgid "please_enter_command_keyword"
 msgstr "请输入命令关键字"
 
-#: backend/app_message/agent/other_agent.py:200
+#: app_message/agent/other_agent.py:206
 msgid "match_failed"
 msgstr "匹配失败"
 
-#: backend/app_message/agent/other_agent.py:208
+#: app_message/agent/other_agent.py:213
 msgid "intelligent_chat_assistant"
 msgstr "智能聊天"
 
-#: backend/app_message/agent/other_agent.py:211
+#: app_message/agent/other_agent.py:215
 msgid "kimi_chat"
 msgstr "Kimi聊天"
 
-#: backend/app_message/agent/other_agent.py:223
+#: app_message/agent/other_agent.py:229
 msgid "kimi_call_failed"
 msgstr "Kimi调用失败"
 
-#: backend/app_message/agent/other_agent.py:226
+#: app_message/agent/other_agent.py:232
 msgid "gpt4_chat"
 msgstr "GPT-4聊天"
 
-#: backend/app_message/agent/other_agent.py:240
+#: app_message/agent/other_agent.py:248
 msgid "gpt4o_call_failed"
 msgstr "GPT-4调用失败"
 
-#: backend/app_message/agent/other_agent.py:242
+#: app_message/agent/other_agent.py:250
 msgid "gemini_chat"
 msgstr "Gemini聊天"
 
-#: backend/app_message/agent/other_agent.py:254
+#: app_message/agent/other_agent.py:264
 msgid "gemini_call_failed"
 msgstr "Gemini调用失败"
 
-#: backend/app_message/agent/user_agent.py:15
+#: app_message/agent/user_agent.py:15
 msgid "user_management"
 msgstr "用户操作"
 
-#: backend/app_message/agent/user_agent.py:27
-#: backend/backend/common/user/views.py:55
-#: backend/tests/test_app_user_manager.py:30
+#: app_message/agent/user_agent.py:26 backend/common/user/views.py:56
 msgid "username_already_exists"
 msgstr "用户已存在"
 
-#: backend/app_message/agent/user_agent.py:31
-#: backend/app_message/agent/user_agent.py:68
-#: backend/backend/common/user/views.py:59
-msgid "registration_failed"
-msgstr "注册失败"
-
-#: backend/app_message/agent/user_agent.py:33
-#: backend/backend/common/user/views.py:61
-msgid "user_or_password_are_empty_dot_"
-msgstr "用户名或密码为空"
-
-#: backend/app_message/agent/user_agent.py:38
-msgid "empty_username"
-msgstr "用户名为空"
-
-#: backend/app_message/agent/user_agent.py:40
-#: backend/tests/test_app_user_manager.py:64
-msgid "old_password_is_empty"
-msgstr "原密码为空"
-
-#: backend/app_message/agent/user_agent.py:42
-#: backend/backend/common/user/views.py:82
-msgid "the_new_password_is_blank"
-msgstr "新密码为空"
-
-#: backend/app_message/agent/user_agent.py:44
-msgid "old_and_new_passwords_are_identical_dot_"
-msgstr "新旧密码相同"
-
-#: backend/app_message/agent/user_agent.py:46
-#: backend/backend/common/user/views.py:67
-#: backend/tests/test_app_user_manager.py:42
-msgid "user_does_not_exist"
-msgstr "用户不存在"
-
-#: backend/app_message/agent/user_agent.py:48
-#: backend/backend/common/user/views.py:75
-#: backend/tests/test_app_user_manager.py:64
-msgid "original_password_error"
-msgstr "原密码错误"
-
-#: backend/app_message/agent/user_agent.py:50
-#: backend/backend/common/user/views.py:78
-#: backend/tests/test_app_user_manager.py:57
-msgid "successfully_set"
-msgstr "设置成功"
-
-#: backend/app_message/agent/user_agent.py:52
-#: backend/backend/common/user/views.py:80
-msgid "setup_failed"
-msgstr "设置失败"
-
-#: backend/app_message/agent/user_agent.py:55
-msgid "user_registration"
-msgstr "用户注册"
-
-#: backend/app_message/agent/user_agent.py:63
+#: app_message/agent/user_agent.py:28
 msgid "registration_successful"
 msgstr "注册成功"
 
-#: backend/app_message/agent/user_agent.py:70
-msgid "user_login"
-msgstr "用户登录"
+#: app_message/agent/user_agent.py:30 backend/common/user/views.py:60
+msgid "registration_failed"
+msgstr "注册失败"
 
-#: backend/app_message/agent/user_agent.py:79
-msgid "change_password"
-msgstr "修改密码"
+#: app_message/agent/user_agent.py:32 backend/common/user/views.py:62
+msgid "user_or_password_are_empty_dot_"
+msgstr "用户名或密码为空"
 
-#: backend/app_message/agent/user_agent.py:87
+#: app_message/agent/user_agent.py:37
+msgid "empty_username"
+msgstr "用户名为空"
+
+#: app_message/agent/user_agent.py:39
+msgid "old_password_is_empty"
+msgstr "原密码为空"
+
+#: app_message/agent/user_agent.py:41 backend/common/user/views.py:83
+msgid "the_new_password_is_blank"
+msgstr "新密码为空"
+
+#: app_message/agent/user_agent.py:43
+msgid "old_and_new_passwords_are_identical_dot_"
+msgstr "新旧密码相同"
+
+#: app_message/agent/user_agent.py:45 backend/common/user/views.py:68
+msgid "user_does_not_exist"
+msgstr "用户不存在"
+
+#: app_message/agent/user_agent.py:47 backend/common/user/views.py:76
+msgid "original_password_error"
+msgstr "原密码错误"
+
+#: app_message/agent/user_agent.py:49
 msgid "change_successful"
 msgstr "修改成功"
 
-#: backend/app_message/agent/user_agent.py:92
-msgid "change_failed"
-msgstr "修改失败"
+#: app_message/agent/user_agent.py:51 backend/common/user/views.py:81
+msgid "setup_failed"
+msgstr "设置失败"
 
-#: backend/app_message/agent/user_agent.py:94
+#: app_message/agent/user_agent.py:54
+msgid "user_registration"
+msgstr "用户注册"
+
+#: app_message/agent/user_agent.py:65
+msgid "user_login"
+msgstr "用户登录"
+
+#: app_message/agent/user_agent.py:75
+msgid "change_password"
+msgstr "修改密码"
+
+#: app_message/agent/user_agent.py:86
 msgid "user_logout"
 msgstr "用户登出"
 
-#: backend/app_message/agent/user_agent.py:106
+#: app_message/agent/user_agent.py:95
 msgid "system_settings"
 msgstr "系统设置"
 
-#: backend/app_message/agent/user_agent.py:109
+#: app_message/agent/user_agent.py:97
 msgid "query_user_privileges"
 msgstr "查询用户权限"
 
-#: backend/app_message/agent/user_agent.py:114
-#: backend/backend/common/user/views.py:118
+#: app_message/agent/user_agent.py:104 backend/common/user/views.py:117
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "用户等级：{level}"
 
-#: backend/app_message/agent/user_agent.py:117
+#: app_message/agent/user_agent.py:108
 msgid "query_resource_usage"
 msgstr "查询资源使用情况"
 
-#: backend/app_message/agent/user_agent.py:127
-#: backend/app_message/agent/user_agent.py:135
+#: app_message/agent/user_agent.py:116 app_message/agent/user_agent.py:126
 msgid "set_text_to_speech"
 msgstr "设置语音合成"
 
-#: backend/app_message/chat_tools.py:78
+#: app_message/chat_tools.py:79
 msgid "custom"
 msgstr "自定义"
 
-#: backend/app_message/chat_tools.py:95
+#: app_message/chat_tools.py:96
 msgid "chat_call_failed"
 msgstr "chat调用失败"
 
-#: backend/app_message/command.py:102 backend/app_message/command.py:136
+#: app_message/command.py:102 app_message/command.py:137
 msgid "command_not_found"
 msgstr "找不到命令"
 
-#: backend/app_message/command.py:164
+#: app_message/command.py:165
 msgid "please_choose_colon_\n"
 msgstr "请选择：\n"
 
-#: backend/app_message/function.py:44
+#: app_message/function.py:41
 msgid "no_content_found_1727252424"
 msgstr "未找到相应内容"
 
-#: backend/app_message/message.py:40
-msgid "summarize_file_content"
-msgstr "总结文件内容"
-
-#: backend/app_message/message.py:45
-msgid "file_received"
-msgstr "收到文件"
-
-#: backend/app_message/message.py:70
+#: app_message/message.py:48
 msgid "failed_to_fetch_files"
 msgstr "获取文件失败"
 
-#: backend/app_message/message.py:85
+#: app_message/message.py:65
 msgid "nothing_entered"
 msgstr "没有输入"
 
-#: backend/app_message/message.py:87
+#: app_message/message.py:67
 msgid "unrecognized_command"
 msgstr "不识别的命令"
 
-#: backend/app_message/message.py:120
-msgid "failed_to_process_information"
-msgstr "处理信息失败"
-
-#: backend/app_message/message.py:132
+#: app_message/message.py:118 app_message/message.py:120
 msgid "no_optional_commands"
 msgstr "没有可选命令"
 
-#: backend/app_message/message.py:135
+#: app_message/message.py:123
 msgid "not_a_number"
 msgstr "不是数字"
 
-#: backend/app_message/message.py:154
-msgid "the_file_type_is_not_valid_or_not_supported"
-msgstr "文件类型无效或不支持"
+#: app_message/message.py:131
+msgid "summarize_file_content"
+msgstr "总结文件内容"
 
-#: backend/app_message/views.py:50 backend/app_message/views.py:88
-#: backend/app_message/views.py:105 backend/app_message/views.py:130
+#: app_message/message.py:136
+msgid "file_received"
+msgstr "收到文件"
+
+#: app_message/views.py:47 app_message/views.py:81 app_message/views.py:94
+#: app_message/views.py:109
 msgid "backend_processing_failed"
 msgstr "后端处理失败"
 
-#: backend/app_message/views.py:115
+#: app_message/views.py:98
 msgid "please_sign_up_or_log_in_first"
 msgstr "请先注册或登录"
 
-#: backend/app_paper/paper_info.py:25
-#: backend/backend/common/parser/block.py:120
-#: backend/backend/common/parser/block.py:127
+#: app_paper/paper_info.py:25 backend/common/parser/block.py:120
+#: backend/common/parser/block.py:127
 msgid "table_of_contents"
 msgstr "目录"
 
-#: backend/app_paper/paper_info.py:32 backend/app_paper/ptools.py:344
-#: backend/app_paper/ptools.py:431
+#: app_paper/paper_info.py:32 app_paper/ptools.py:344 app_paper/ptools.py:431
 msgid "abstract"
 msgstr "摘要"
 
-#: backend/app_paper/ptools.py:58
+#: app_paper/ptools.py:58
 msgid "natural_language_processing"
 msgstr "自然语言处理"
 
-#: backend/app_paper/ptools.py:59
+#: app_paper/ptools.py:59
 msgid "medicine"
 msgstr "医学"
 
-#: backend/app_paper/ptools.py:60
+#: app_paper/ptools.py:60
 msgid "computer_vision"
 msgstr "计算机视觉"
 
-#: backend/app_paper/ptools.py:61
+#: app_paper/ptools.py:61
 msgid "audio"
 msgstr "音频"
 
-#: backend/app_paper/ptools.py:62
+#: app_paper/ptools.py:62
 msgid "video"
 msgstr "视频"
 
-#: backend/app_paper/ptools.py:63
+#: app_paper/ptools.py:63
 msgid "reinforcement_learning_(rl)"
 msgstr "强化学习"
 
-#: backend/app_paper/ptools.py:64
+#: app_paper/ptools.py:64
 msgid "knowledge_map"
 msgstr "知识图谱"
 
-#: backend/app_paper/ptools.py:65
+#: app_paper/ptools.py:65
 msgid "machine_learning"
 msgstr "机器学习"
 
-#: backend/app_paper/ptools.py:108
+#: app_paper/ptools.py:108
 msgid "have_read"
 msgstr "已读"
 
-#: backend/app_paper/ptools.py:109 backend/app_paper/ptools.py:111
+#: app_paper/ptools.py:109 app_paper/ptools.py:111
 msgid "unread"
 msgstr "未读"
 
-#: backend/app_paper/ptools.py:109
+#: app_paper/ptools.py:109
 msgid "to_read"
 msgstr "待读"
 
-#: backend/app_paper/ptools.py:109
+#: app_paper/ptools.py:109
 msgid "unseen"
 msgstr "未看"
 
-#: backend/app_paper/ptools.py:110 backend/app_paper/ptools.py:114
+#: app_paper/ptools.py:110 app_paper/ptools.py:114
 msgid "reading_section"
 msgstr "读部分"
 
-#: backend/app_paper/ptools.py:112
+#: app_paper/ptools.py:112
 msgid "watching"
 msgstr "正在看"
 
-#: backend/app_paper/ptools.py:113
+#: app_paper/ptools.py:113
 msgid "watch_a_little"
 msgstr "看一点"
 
-#: backend/app_paper/ptools.py:118 backend/app_paper/ptools.py:123
+#: app_paper/ptools.py:118 app_paper/ptools.py:123
 msgid "unknown"
 msgstr "未知"
 
-#: backend/app_paper/ptools.py:134
+#: app_paper/ptools.py:134
 msgid "chinese"
 msgstr "中文"
 
 # ptools.py
-#: backend/app_paper/ptools.py:380
+#: app_paper/ptools.py:380
 msgid "paper_reading"
 msgstr "论文阅读"
 
-#: backend/app_paper/ptools.py:390
+#: app_paper/ptools.py:390
 #, python-brace-format
 msgid "english_title_colon__{title}"
 msgstr "英文名称：{title}"
 
-#: backend/app_paper/ptools.py:392
+#: app_paper/ptools.py:392
 msgid "english_name_colon_"
 msgstr "英文名称: "
 
-#: backend/app_paper/ptools.py:395
+#: app_paper/ptools.py:395
 #, python-brace-format
 msgid "chinese_name_colon__{title_zh}"
 msgstr "中文名称：{title_zh}"
 
-#: backend/app_paper/ptools.py:398
+#: app_paper/ptools.py:398
 msgid "chinese_name_colon_"
 msgstr "中文名称:"
 
-#: backend/app_paper/ptools.py:400
+#: app_paper/ptools.py:400
 #, python-brace-format
 msgid "link_colon__{url}"
 msgstr "链接: {url}"
 
-#: backend/app_paper/ptools.py:402
+#: app_paper/ptools.py:402
 msgid "link_colon_"
 msgstr "链接:"
 
-#: backend/app_paper/ptools.py:403
+#: app_paper/ptools.py:403
 msgid "code_colon_"
 msgstr "代码:"
 
-#: backend/app_paper/ptools.py:405
+#: app_paper/ptools.py:405
 #, python-brace-format
 msgid "author_colon__{author}"
 msgstr "作者: {author}"
 
-#: backend/app_paper/ptools.py:407
+#: app_paper/ptools.py:407
 msgid "author_colon_"
 msgstr "作者: "
 
-#: backend/app_paper/ptools.py:410
+#: app_paper/ptools.py:410
 #, python-brace-format
 msgid "institution_colon__{institution}"
 msgstr "机构：{institution}"
 
-#: backend/app_paper/ptools.py:415
+#: app_paper/ptools.py:415
 msgid "institution_colon_"
 msgstr "机构: "
 
-#: backend/app_paper/ptools.py:418
+#: app_paper/ptools.py:418
 #, python-brace-format
 msgid "date_colon__{published_date}"
 msgstr "日期：{published_date}"
 
-#: backend/app_paper/ptools.py:423
+#: app_paper/ptools.py:423
 msgid "date_colon_"
 msgstr "日期: "
 
-#: backend/app_paper/ptools.py:426
+#: app_paper/ptools.py:426
 #, python-brace-format
 msgid "citations_colon__{citations}"
 msgstr "引文数量：{citations}"
 
-#: backend/app_paper/ptools.py:429
+#: app_paper/ptools.py:429
 msgid "number_of_citations_colon_"
 msgstr "引用次数: "
 
-#: backend/app_paper/ptools.py:433
+#: app_paper/ptools.py:433
 #, python-brace-format
 msgid "objective_colon__{purpose}"
 msgstr "目标：{purpose}"
 
-#: backend/app_paper/ptools.py:435
+#: app_paper/ptools.py:435
 msgid "target_colon_"
 msgstr "目标: "
 
-#: backend/app_paper/ptools.py:437
+#: app_paper/ptools.py:437
 #, python-brace-format
 msgid "method_colon__{method}"
 msgstr "方法：{method}"
 
-#: backend/app_paper/ptools.py:439
+#: app_paper/ptools.py:439
 msgid "method_colon_"
 msgstr "方法: "
 
-#: backend/app_paper/ptools.py:441
+#: app_paper/ptools.py:441
 #, python-brace-format
 msgid "conclusion_colon__{result}"
 msgstr "结论：{result}"
 
-#: backend/app_paper/ptools.py:443
+#: app_paper/ptools.py:443
 msgid "conclusion_colon_"
 msgstr "结论:"
 
-#: backend/app_paper/ptools.py:579 backend/app_paper/ptools.py:596
-#: backend/app_paper/ptools.py:625
+#: app_paper/ptools.py:579 app_paper/ptools.py:596 app_paper/ptools.py:625
 msgid "empty_contents"
 msgstr "内容为空"
 
-#: backend/app_paper/ptools.py:606 backend/app_paper/ptools.py:630
+#: app_paper/ptools.py:606 app_paper/ptools.py:630
 msgid "original_text"
 msgstr "原文"
 
 # ptools.py
-#: backend/app_paper/ptools.py:607
+#: app_paper/ptools.py:607
 msgid "polished_text"
 msgstr "润色后的文本"
 
-#: backend/app_paper/ptools.py:634
+#: app_paper/ptools.py:634
 msgid "translate_text"
 msgstr "翻译后的文本"
 
-#: backend/app_paper/views.py:43 backend/backend/common/user/views.py:48
-#: backend/backend/common/user/views.py:110
+#: app_paper/views.py:40 backend/common/user/views.py:49
+#: backend/common/user/views.py:111
 msgid "method_not_supported_colon_"
 msgstr "不支持方法:"
 
-#: backend/app_record/record.py:16
+#: app_record/record.py:16
 #, python-brace-format
 msgid "title_colon__enter_{title}_enter__enter_content_enter_{content}"
 msgstr ""
@@ -930,59 +897,59 @@ msgstr ""
 "内容\n"
 "{content}"
 
-#: backend/app_record/record.py:38
+#: app_record/record.py:38
 msgid "your_account_currently_does_not_have_export_permissions_dot__please_contact_the_administrator_to_upgrade_your_account_dot_"
 msgstr "您的账户暂无导出权限，请联系管理员升级账户"
 
-#: backend/app_record/record.py:47
+#: app_record/record.py:47
 msgid "website"
 msgstr "网址"
 
-#: backend/app_record/record.py:48
+#: app_record/record.py:48
 msgid "title"
 msgstr "标题"
 
-#: backend/app_record/record.py:49
+#: app_record/record.py:49
 msgid "content"
 msgstr "内容"
 
-#: backend/app_record/record.py:50
+#: app_record/record.py:50
 msgid "viewpoint"
 msgstr "观点"
 
-#: backend/app_record/record.py:51
+#: app_record/record.py:51
 msgid "content_category_colon_"
 msgstr "内容类别"
 
-#: backend/app_record/record.py:52
+#: app_record/record.py:52
 msgid "data_type"
 msgstr "数据类型"
 
-#: backend/app_record/record.py:53
+#: app_record/record.py:53
 msgid "status"
 msgstr "状态"
 
-#: backend/app_record/record.py:54
+#: app_record/record.py:54
 msgid "creation_date"
 msgstr "创建日期"
 
-#: backend/app_record/record.py:62
+#: app_record/record.py:62
 msgid "no_record_found"
 msgstr "暂无记录"
 
-#: backend/app_record/views.py:39
+#: app_record/views.py:39
 msgid "interface_is_deprecated"
 msgstr "接口已被弃用"
 
-#: backend/app_sync/views.py:319
+#: app_sync/views.py:315
 msgid "comparison_complete"
 msgstr "对比完成"
 
-#: backend/app_translate/translate.py:18
+#: app_translate/translate.py:18
 msgid "you_are_a_middle_school_english_teacher"
 msgstr "你是一位中学英语老师"
 
-#: backend/app_translate/translate.py:162
+#: app_translate/translate.py:162
 #, python-brace-format
 msgid ""
 "word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}"
@@ -993,92 +960,92 @@ msgstr ""
 "频率：{freq}\n"
 "次数：{times}"
 
-#: backend/app_translate/views.py:106
+#: app_translate/views.py:106
 msgid "please_enter_questions_or_content_to_be_translated"
 msgstr "请输入问题或者待翻译内容"
 
-#: backend/app_translate/views.py:109
+#: app_translate/views.py:109
 msgid "internal_processing_error"
 msgstr "内部处理错误"
 
-#: backend/backend/common/files/utils_file.py:193
+#: backend/common/files/utils_file.py:193
 #, python-brace-format
 msgid "total_{len_files}_files"
 msgstr "总计 {len_files} 个文件"
 
-#: backend/backend/common/files/utils_file.py:194
+#: backend/common/files/utils_file.py:194
 #, python-brace-format
 msgid "total_{total}_tokens"
 msgstr "总共 {total} 个代币"
 
-#: backend/backend/common/files/utils_file.py:196
+#: backend/common/files/utils_file.py:196
 #, python-brace-format
 msgid "embedding_costs_about_{cost}_yuan"
 msgstr "嵌入花费约 {cost} 元"
 
-#: backend/backend/common/llm/llm_hub.py:59
+#: backend/common/llm/llm_hub.py:59
 msgid "call_failed"
 msgstr "调用失败"
 
-#: backend/backend/common/llm/llm_tools.py:27
+#: backend/common/llm/llm_tools.py:25
 msgid "the_maximum_number_of_words_called_today_has_been_reached"
 msgstr "今日调用字数已达上限"
 
-#: backend/backend/common/llm/llm_tools.py:218
+#: backend/common/llm/llm_tools.py:183
 msgid "gemini_is_temporarily_unavailable"
 msgstr "gemini暂时无法使用"
 
-#: backend/backend/common/parser/block.py:176
+#: backend/common/parser/block.py:176
 msgid "appendices"
 msgstr "附录"
 
-#: backend/backend/common/parser/block.py:177
+#: backend/common/parser/block.py:177
 msgid "attachment"
 msgstr "附件"
 
-#: backend/backend/common/parser/block.py:178
+#: backend/common/parser/block.py:178
 msgid "foreword"
 msgstr "序言"
 
-#: backend/backend/common/parser/block.py:179
+#: backend/common/parser/block.py:179
 msgid "given_that_colon_"
 msgstr "鉴于:"
 
-#: backend/backend/common/parser/block.py:180
+#: backend/common/parser/block.py:180
 msgid "in_view_of_the_terms_colon_"
 msgstr "鉴于条款："
 
-#: backend/backend/common/parser/block.py:186
+#: backend/common/parser/block.py:186
 msgid "(no_text)"
 msgstr "无正文"
 
-#: backend/backend/common/parser/block.py:186
+#: backend/common/parser/block.py:186
 msgid "signing_page"
 msgstr "签字页"
 
-#: backend/backend/common/parser/block.py:186
+#: backend/common/parser/block.py:186
 msgid "page_for_signing"
 msgstr "签署页"
 
-#: backend/backend/common/parser/doc_parser.py:13
+#: backend/common/parser/doc_parser.py:13
 #, python-brace-format
 msgid "successfully_converted_{path_in}_to_{path_out}"
 msgstr "成功将 {path_in} 转换为 {path_out}"
 
-#: backend/backend/common/speech/asr_tools.py:52
+#: backend/common/speech/asr_tools.py:41 backend/common/speech/asr_tools.py:55
 msgid "recognition_failure"
 msgstr "识别失败"
 
-#: backend/backend/common/speech/asr_tools.py:75
+#: backend/common/speech/asr_tools.py:78
 msgid "asr_successful"
 msgstr "识别成功"
 
-#: backend/backend/common/speech/tts.py:66
+#: backend/common/speech/tts.py:67
 #, python-brace-format
 msgid "the_daily_limit_of_synthesized_characters_has_been_reached_{limit_tts_day}"
 msgstr "已达到每日合成字符限制 {limit_tts_day}"
 
-#: backend/backend/common/speech/tts.py:91
+#: backend/common/speech/tts.py:92
 #, python-brace-format
 msgid ""
 "the_content_is_relatively_long_{length}"
@@ -1088,306 +1055,269 @@ msgstr ""
 "内容相对较长，有 {length} 个字符，预计需要 {time} 分钟来合成。如果你不想继续"
 "转换，请回复: 停止语音合成"
 
-#: backend/backend/common/speech/tts.py:130
+#: backend/common/speech/tts.py:131
 #, python-brace-format
 msgid "set_the_engine_to_colon__{base_engine_setting}"
 msgstr "将引擎设置为：{base_engine_setting}"
 
-#: backend/backend/common/speech/tts.py:138
+#: backend/common/speech/tts.py:139
 #, python-brace-format
 msgid "set_engine_to_custom_colon__{base_engine_setting}"
 msgstr "设置引擎为自定义: {base_engine_setting}"
 
-#: backend/backend/common/speech/tts.py:141
+#: backend/common/speech/tts.py:142
 #, python-brace-format
 msgid "engine_not_found_colon__{base_engine_setting}"
 msgstr "未找到引擎：{base_engine_setting}"
 
-#: backend/backend/common/speech/tts.py:155
-#: backend/backend/common/speech/tts.py:224
+#: backend/common/speech/tts.py:156 backend/common/speech/tts.py:225
 msgid "microsoft"
 msgstr "微软"
 
-#: backend/backend/common/speech/tts.py:156
-#: backend/backend/common/speech/tts.py:225
+#: backend/common/speech/tts.py:157 backend/common/speech/tts.py:226
 msgid "google"
 msgstr "谷歌"
 
-#: backend/backend/common/speech/tts.py:157
-#: backend/backend/common/speech/tts.py:223
+#: backend/common/speech/tts.py:158 backend/common/speech/tts.py:224
 msgid "xunfei"
 msgstr "讯飞"
 
-#: backend/backend/common/speech/tts.py:159
-#: backend/backend/common/speech/tts.py:228
+#: backend/common/speech/tts.py:160 backend/common/speech/tts.py:229
 msgid "customization"
 msgstr "定制"
 
-#: backend/backend/common/speech/tts.py:160
+#: backend/common/speech/tts.py:161
 msgid "default"
 msgstr "默认"
 
-#: backend/backend/common/speech/tts.py:161
+#: backend/common/speech/tts.py:162
 msgid "storytelling_fairy"
 msgstr "讲故事的小仙女"
 
-#: backend/backend/common/speech/tts.py:163
+#: backend/common/speech/tts.py:164
 msgid "book_review_master"
 msgstr "评书大师"
 
-#: backend/backend/common/speech/tts.py:164
+#: backend/common/speech/tts.py:165
 msgid "ghost_story_expert"
 msgstr "鬼故事专家"
 
-#: backend/backend/common/speech/tts.py:165
+#: backend/common/speech/tts.py:166
 msgid "romance_novel"
 msgstr "言情小说"
 
-#: backend/backend/common/speech/tts.py:166
+#: backend/common/speech/tts.py:167
 msgid "documentary_commentary"
 msgstr "记录片解说"
 
-#: backend/backend/common/speech/tts.py:167
+#: backend/common/speech/tts.py:168
 msgid "clear_female_voice"
 msgstr "清澈女声"
 
-#: backend/backend/common/speech/tts.py:168
+#: backend/common/speech/tts.py:169
 msgid "deep_male_voice"
 msgstr "深沉男声"
 
-#: backend/backend/common/speech/tts.py:171
+#: backend/common/speech/tts.py:172
 msgid "gentle_male_voice"
 msgstr "温和男声"
 
-#: backend/backend/common/speech/tts_edge.py:47
-#: backend/backend/common/speech/tts_google.py:29
-#: backend/backend/common/speech/tts_mine.py:82
-#: backend/backend/common/speech/tts_openai.py:39
-#: backend/backend/common/speech/tts_xunfei.py:62
+#: backend/common/speech/tts_edge.py:47 backend/common/speech/tts_google.py:29
+#: backend/common/speech/tts_mine.py:83 backend/common/speech/tts_openai.py:39
+#: backend/common/speech/tts_xunfei.py:62
 msgid "synthesis_complete"
 msgstr "合成完成"
 
-#: backend/backend/common/speech/tts_mine.py:81
-#: backend/backend/common/speech/tts_tools.py:285
+#: backend/common/speech/tts_mine.py:56 backend/common/speech/tts_mine.py:82
+#: backend/common/speech/tts_tools.py:285
 msgid "custom_synthesis_failed"
 msgstr "定制合成失败"
 
-#: backend/backend/common/speech/tts_tools.py:282
+#: backend/common/speech/tts_tools.py:282
 msgid "assembled"
 msgstr "合成成功"
 
-#: backend/backend/common/speech/tts_tools.py:287
+#: backend/common/speech/tts_tools.py:287
 msgid "synthesis_failed"
 msgstr "合成失败"
 
-#: backend/backend/common/speech/tts_tools.py:359
+#: backend/common/speech/tts_tools.py:359
 msgid "the_current_user_already_has_a_task_in_progress"
 msgstr "当前用户已有任务在执行"
 
-#: backend/backend/common/speech/tts_tools.py:361
+#: backend/common/speech/tts_tools.py:361
 msgid "the_current_task_list_is_full_comma__please_try_again_later"
 msgstr "当前任务列表已满，请稍后再试"
 
-#: backend/backend/common/speech/tts_tools.py:368
+#: backend/common/speech/tts_tools.py:368
 msgid "the_task_has_been_added__excl_"
 msgstr "任务已添加"
 
-#: backend/backend/common/speech/tts_tools.py:376
+#: backend/common/speech/tts_tools.py:376
 msgid "task_removed"
 msgstr "任务已移除"
 
-#: backend/backend/common/speech/tts_tools.py:377
-#: backend/backend/common/speech/tts_tools.py:383
+#: backend/common/speech/tts_tools.py:377
+#: backend/common/speech/tts_tools.py:383
 msgid "quest_does_not_exist"
 msgstr "任务不存在"
 
-#: backend/backend/common/speech/tts_tools.py:460
+#: backend/common/speech/tts_tools.py:460
 #, python-brace-format
 msgid "in_the_queue_comma__there_are_still_{prev_task_n}_tasks_ahead"
 msgstr "队列中仍有 {prev_task_n} 个任务在前"
 
-#: backend/backend/common/speech/tts_tools.py:472
+#: backend/common/speech/tts_tools.py:472
 msgid "currently_synthesizing_comma__{_colon__dot_1%}_completed"
 msgstr "正在合成中，已完成 {:.1%}"
 
-#: backend/backend/common/speech/tts_tools.py:479
+#: backend/common/speech/tts_tools.py:479
 msgid "no_synthesized_audio_found"
 msgstr "没有找到合成音频"
 
-#: backend/backend/common/user/resource.py:69
+#: backend/common/user/resource.py:69
 msgid "speech_synthesis"
 msgstr "语音合成"
 
-#: backend/backend/common/user/resource.py:69
+#: backend/common/user/resource.py:69
 msgid "language_model"
 msgstr "语言模型"
 
-#: backend/backend/common/user/resource.py:71
+#: backend/common/user/resource.py:71
 msgid "current_day"
 msgstr "本日"
 
-#: backend/backend/common/user/resource.py:72
+#: backend/common/user/resource.py:72
 msgid "current_week"
 msgstr "本周"
 
-#: backend/backend/common/user/resource.py:73
+#: backend/common/user/resource.py:73
 msgid "this_month"
 msgstr "本月"
 
-#: backend/backend/common/user/resource.py:74
+#: backend/common/user/resource.py:74
 msgid "total"
 msgstr "总计"
 
-#: backend/backend/common/user/resource.py:78
+#: backend/common/user/resource.py:78
 msgid "{}_usage"
 msgstr "{} 用量"
 
-#: backend/backend/common/user/user.py:18
+#: backend/common/user/user.py:18
 msgid "chat_prompt_default"
 msgstr "请简单回答"
 
-#: backend/backend/common/user/user.py:164
+#: backend/common/user/user.py:170
 msgid "supports_ocr_colon_"
 msgstr "支持OCR:"
 
-#: backend/backend/common/user/user.py:164
-#: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:167
-#: backend/backend/common/user/user.py:171
+#: backend/common/user/user.py:170 backend/common/user/user.py:171
+#: backend/common/user/user.py:173 backend/common/user/user.py:177
 msgid "yes"
 msgstr "是"
 
-#: backend/backend/common/user/user.py:164
-#: backend/backend/common/user/user.py:165
-#: backend/backend/common/user/user.py:167
-#: backend/backend/common/user/user.py:171
+#: backend/common/user/user.py:170 backend/common/user/user.py:171
+#: backend/common/user/user.py:173 backend/common/user/user.py:177
 msgid "denied"
 msgstr "否"
 
-#: backend/backend/common/user/user.py:165
+#: backend/common/user/user.py:171
 msgid "save_data_colon_"
 msgstr "保存数据:"
 
-#: backend/backend/common/user/user.py:167
+#: backend/common/user/user.py:173
 msgid "parsing_the_paper_colon_"
 msgstr "解析论文:"
 
-#: backend/backend/common/user/user.py:170
+#: backend/common/user/user.py:176
 msgid "translation_book_colon_"
 msgstr "翻译书籍:"
 
-#: backend/backend/common/user/user.py:174
+#: backend/common/user/user.py:180
 #, python-brace-format
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
 msgstr "默认LLM限制：{limit_llm_day_formatted} 个token/天"
 
-#: backend/backend/common/user/user.py:179
+#: backend/common/user/user.py:185
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{limit_tts_day}_tokens/day"
 msgstr "语音合成限制：{limit_tts_day} 个token/天"
 
-#: backend/backend/common/user/user.py:184
+#: backend/common/user/user.py:190
 #, python-brace-format
 msgid "speech_synthesis_rate_limit_colon__{tokens}_tokens/attempt"
 msgstr "语音合成限制：每次尝试 {tokens} 个token"
 
-#: backend/backend/common/user/user.py:189
+#: backend/common/user/user.py:195
 #, python-brace-format
 msgid "recording_export_range_colon__{limit_export_record_day}_days"
 msgstr "记录导出范围：{limit_export_record_day} 天"
 
-#: backend/backend/common/user/user.py:208
+#: backend/common/user/user.py:214
 msgid "te_ac_settings"
 msgstr "临时用户"
 
-#: backend/backend/common/user/user.py:210
+#: backend/common/user/user.py:216
 msgid "normal"
 msgstr "普通用户"
 
-#: backend/backend/common/user/user.py:212
+#: backend/common/user/user.py:218
 msgid "vip_user"
 msgstr "VIP用户"
 
-#: backend/backend/common/user/user.py:214
+#: backend/common/user/user.py:220
 msgid "administrator"
 msgstr "管理员"
 
-#: backend/backend/common/user/user.py:215
+#: backend/common/user/user.py:221
 msgid "unknown_level"
 msgstr "未知级别"
 
-#: backend/backend/common/user/views.py:57
+#: backend/common/user/views.py:58
 msgid "account_created__excl_"
 msgstr "注册成功"
 
-#: backend/backend/common/user/views.py:173
-#: backend/backend/common/user/views.py:178
+#: backend/common/user/views.py:79
+msgid "successfully_set"
+msgstr "设置成功"
+
+#: backend/common/user/views.py:174 backend/common/user/views.py:179
 msgid "settings_were_applied_successfully"
 msgstr "设置成功"
 
-#: backend/backend/common/utils/regular_tools.py:26
+#: backend/common/utils/regular_tools.py:26
 msgid "content_not_found"
 msgstr "无内容"
 
-#: backend/backend/common/utils/web_tools.py:17
+#: backend/common/utils/web_tools.py:17
 msgid "unknown_title"
 msgstr "未知标题"
 
-#: backend/backend/common/utils/web_tools.py:34
+#: backend/common/utils/web_tools.py:34
 msgid "empty_file_content"
 msgstr "文件内容为空"
 
-#: backend/backend/common/utils/web_tools.py:112
+#: backend/common/utils/web_tools.py:112
 msgid "parsing_content_is_not_supported_at_this_time"
 msgstr "暂不支持解析内容"
 
-#: backend/backend/common/utils/web_tools.py:139
+#: backend/common/utils/web_tools.py:139
 msgid "failure_reading_file"
 msgstr "读取文件失败"
 
-#: backend/backend/common/utils/web_tools.py:247
+#: backend/common/utils/web_tools.py:247
 msgid "body"
 msgstr "正文"
 
-#: backend/tests/test_app_diet.py:11
-msgid "diet_log_colon__apple_100g_comma__milk_100g"
-msgstr "饮食记录 苹果100克，牛奶100克"
-
-#: backend/tests/test_app_diet.py:13 backend/tests/test_app_diet.py:29
+#: tests/test_app_diet.py:13 tests/test_app_diet.py:29
 msgid "total_calories"
 msgstr "总热量"
 
-#: backend/tests/test_app_diet.py:19
-msgid "delete_diet_apple"
-msgstr "删除饮食苹果"
-
-#: backend/tests/test_app_diet.py:21
+#: tests/test_app_diet.py:21
 msgid "success"
 msgstr "成功"
 
-#: backend/tests/test_app_record.py:12
-msgid "record_exercise_running_5_kilometers"
-msgstr "记录 锻炼 跑步5公里"
-
-#: backend/tests/test_app_user_manager.py:13
-msgid "login_colon__xieyan_comma__1234567"
-msgstr "登录：xieyan, 1234567"
-
-#: backend/tests/test_app_user_manager.py:21
-#: backend/tests/test_app_user_manager.py:27
-#: backend/tests/test_app_user_manager.py:45
+#: tests/test_app_user_manager.py:47
 msgid "registration_colon__xieyan_comma__1234567"
 msgstr "注册：xieyan, 1234567"
 
-#: backend/tests/test_app_user_manager.py:36
-#: backend/tests/test_app_user_manager.py:51
-msgid "change_password_colon__xieyan_comma__old_password_1234567_new_password_123456"
-msgstr "修改密码：xieyan, 原密码 1234567 新密码 123456"
-
-#: backend/tests/test_app_user_manager.py:60
-msgid "change_password_colon__xieyan_comma__2314"
-msgstr "修改密码：xieyan, 2314"
-
-#: backend/tests/test_app_user_manager.py:72
-msgid "when_to_use_a_beaker_and_when_to_use_a_test_tube_in_chemistry"
-msgstr "化学什么时候用烧杯，什么时候用试管"
