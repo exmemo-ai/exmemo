@@ -1,4 +1,3 @@
-import os
 from collections import OrderedDict
 from loguru import logger
 import pytz
@@ -362,9 +361,9 @@ class SessionManager:
         
     def get_session(self, sid, user_id, is_group, source, force_create=False):
         if force_create:
-            return Session.create_session(user_id, is_group, source)
+            session = Session.create_session(user_id, is_group, source)
         elif sid == "" or sid is None or sid == 'null':
-            return self.get_session_by_user(user_id, is_group, source)
+            session = self.get_session_by_user(user_id, is_group, source)
         elif sid in self.sessions:
             session = self.sessions[sid]
         else: # session in db
