@@ -51,37 +51,40 @@ class UserAgent(BaseAgent):
             return False, _("setup_failed")
 
 
-    @agent_function(_("user_registration"))
-    def _afunc_register(context_variables: dict, user_id: str, password: str) -> dict:
+    @agent_function(_("user_registration"), is_command=False)
+    def _afunc_register(context_variables: dict = None, user_id: str = None, password: str = None) -> dict:
         """User registration tool: if a username or password is entered, set it to the string '', cannot fabricate or guess the password."""
+        if context_variables is None or 'sdata' not in context_variables or user_id is None or password is None:
+            return _("params_error")
         ret, info = UserAgent.register(user_id, password)
         if ret:
-            if context_variables is not None and 'sdata' in context_variables:
-                context_variables['sdata'].set_cache('user_id', user_id)
-                context_variables['sdata'].set_cache('password', password)
-        return info
-
-    @agent_function(_("user_login"))
-    def _afunc_login(context_variables: dict, user_id: str, password: str) -> dict:
-        """User login tool: if a username or password is entered, set it to the string '', cannot fabricate or guess the password. """
-        if context_variables is not None and 'sdata' in context_variables:
             context_variables['sdata'].set_cache('user_id', user_id)
             context_variables['sdata'].set_cache('password', password)
+        return info
+
+    @agent_function(_("user_login"), is_command=False)
+    def _afunc_login(context_variables: dict = None, user_id: str = None, password: str = None) -> dict:
+        """User login tool: if a username or password is entered, set it to the string '', cannot fabricate or guess the password. """
+        if context_variables is None or 'sdata' not in context_variables or user_id is None or password is None:
+            return _("params_error")
+        context_variables['sdata'].set_cache('user_id', user_id)
+        context_variables['sdata'].set_cache('password', password)
         ret = {"user_id": user_id, "password": password}
         return ret
 
-    @agent_function(_("change_password"))
-    def _afunc_change_password(context_variables: dict, user_id: str, password_old: str, password_new: str) -> dict:
+    @agent_function(_("change_password"), is_command=False)
+    def _afunc_change_password(context_variables: dict = None, user_id: str = None, password_old: str = None, password_new: str = None) -> dict:
         """User password change tool: if no username, old password, or new password is provided, set them as the string ''; if only one password is provided, set the old password as ''"""
+        if context_variables is None or 'sdata' not in context_variables or user_id is None or password_old is None or password_new is None:
+            return _("params_error")
         ret, info = UserAgent.change_password(user_id, password_old, password_new)
         if ret:
-            if context_variables is not None and 'sdata' in context_variables:
-                context_variables['sdata'].set_cache('user_id', user_id)
-                context_variables['sdata'].set_cache('password', password_new)
+            context_variables['sdata'].set_cache('user_id', user_id)
+            context_variables['sdata'].set_cache('password', password_new)
         return info
 
     @agent_function(_("user_logout"))
-    def _afunc_logout(context_variables: dict):
+    def _afunc_logout(context_variables: dict = None):
         """User logout tool"""
         return json.dumps({"logout": True})
 
@@ -92,22 +95,29 @@ class SettingAgent(BaseAgent):
         self.agent_name = _("system_settings")
 
     @agent_function(_("query_user_privileges"))
-    def _afunc_user_privilege(context_variables: dict):
+    def _afunc_user_privilege(context_variables: dict = None):
         """Query user privileges"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         user = UserManager.get_instance().get_user(sdata.user_id)
         privilege = _("user_level: {level}").format(level=user.get_level_desc()) + "\n" + user.privilege.get_descript()
         return privilege
+            
 
     @agent_function(_("query_resource_usage"))
-    def _afunc_resource_usage(context_variables: dict):
+    def _afunc_resource_usage(context_variables: dict = None):
         """Query resource usage"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         return "\n" + ResourceManager.get_instance().get_usage_summary(sdata.user_id)
 
     @agent_function(_("set_text_to_speech"))
-    def _afunc_tts_setting(context_variables: dict, content: str = None):
+    def _afunc_tts_setting(context_variables: dict = None, content: str = None):
         """Set text-to-speech"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content           

@@ -9,10 +9,11 @@ from backend.settings import LANGUAGE_CODE
 
 DEFAULT_INSTRUCTIONS = f"Determine the single most suitable tool to call based on the user's input, and respond in {get_language_name(LANGUAGE_CODE.lower())}."
 
-def agent_function(description):
+def agent_function(description, is_command=True):
     def decorator(func):
         static_func = staticmethod(func)
         static_func.__func__.description = description
+        static_func.__func__.is_command = is_command
         return static_func
     return decorator
 
@@ -45,18 +46,21 @@ class BaseAgent:
         for func in funcs:
             desc = BaseAgent.get_func_desc(self, func)
             logger.debug(f'add_commands {desc}')
-            CommandManager.get_instance().register(
-                Command(func, [desc], level=LEVEL_NORMAL)
-            )
-            cmd_list.append((desc, desc))
+            real_func = func.__get__(None, type(self))
+            if hasattr(real_func, 'is_command') and real_func.is_command:
+                CommandManager.get_instance().register(
+                    Command(func, [desc], level=LEVEL_NORMAL)
+                )
+                cmd_list.append((desc, desc))
 
         def msg_main(context_variables: dict):
             sdata = context_variables['sdata']
             return msg_common_select(sdata, cmd_list)
 
-        CommandManager.get_instance().register(
-            Command(msg_main, [self.agent_name], level=LEVEL_TOP)
-        )
+        if len(cmd_list) > 0:
+            CommandManager.get_instance().register(
+                Command(msg_main, [self.agent_name], level=LEVEL_TOP)
+            )
 
     @staticmethod
     def get_func_desc(agent, func):

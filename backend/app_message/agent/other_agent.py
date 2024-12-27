@@ -24,16 +24,20 @@ class DietAgent(BaseAgent):
         self.agent_name = _("diet_management")
 
     @agent_function(_("diet_statistics"))
-    def _afunc_diet_analysis(context_variables: dict, content: str = None):
+    def _afunc_diet_analysis(context_variables: dict = None, content: str = None):
         """Diet analysis"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
         return calc_diet(content, sdata.user_id)
 
     @agent_function(_("delete_diet"))
-    def _afunc_diet_del(context_variables: dict, content: str = None):
+    def _afunc_diet_del(context_variables: dict = None, content: str = None):
         """Delete diet"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
@@ -46,8 +50,10 @@ class DietAgent(BaseAgent):
 
 
     @agent_function(_("record_diet"))
-    def _afunc_diet_edit(context_variables: dict, content: str = None):
+    def _afunc_diet_edit(context_variables: dict = None, content: str = None):
         """Record diet"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
@@ -66,8 +72,10 @@ class AudioAgent(BaseAgent):
         self.agent_name = _("voice_assistant")
 
     @agent_function(_("text_to_audio"))
-    def _afunc_tts_convert(context_variables: dict, content: str = None):
+    def _afunc_tts_convert(context_variables: dict = None, content: str = None):
         """Text to speech"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is not None:
             sdata.current_content = content
@@ -84,15 +92,19 @@ class AudioAgent(BaseAgent):
                 return _("no_content_found")
 
     @agent_function(_("stop_speech_synthesis"))
-    def _afunc_tts_stop(context_variables: dict):
+    def _afunc_tts_stop(context_variables: dict = None):
         """Stop text to speech"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         ret, info = stop_tts(sdata.user_id)
         return {"type": "text", "request_delay": -1, "info": info}
 
     @agent_function(_("get_audio"))
-    def _afunc_tts_result(context_variables: dict):
+    def _afunc_tts_result(context_variables: dict = None):
         """Get audio"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         ret, delay, info = get_tts_result(sdata.user_id)
 
@@ -106,8 +118,10 @@ class AudioAgent(BaseAgent):
                 return info
 
     @agent_function(_("speech_recognition"))
-    def _afunc_audio_asr(context_variables: dict):
+    def _afunc_audio_asr(context_variables: dict = None):
         """Audio recognition"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         ret = sdata.get_cache("file")
         if isinstance(ret, tuple):
@@ -137,8 +151,10 @@ class TranslateAgent(BaseAgent):
         self.agent_name = _("translate_assistant")
  
     @agent_function(_("translate"))
-    def _afunc_translate(context_variables: dict, content: str = None):
+    def _afunc_translate(context_variables: dict = None, content: str = None):
         """Translate"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is not None:
             ret, en_regular, tranlation = translate_word(content, sdata.user_id)
@@ -156,8 +172,10 @@ class HelpAgent(BaseAgent):
         self.agent_name = _("help_assistant")
 
     @agent_function(_("help_list"))
-    def _afunc_help(context_variables: dict):
+    def _afunc_help(context_variables: dict = None):
         """Help list"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         commands = CommandManager.get_instance().commands
         cmd_list = []
@@ -169,8 +187,10 @@ class HelpAgent(BaseAgent):
 
 
     @agent_function(_("find_command"))
-    def _afunc_find_cmd(context_variables: dict, content: str = None):
+    def _afunc_find_cmd(context_variables: dict = None, content: str = None):
         """Find command"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is None and sdata.current_content == "":
             sdata.set_cache("prev_cmd", _("find_command"))
@@ -193,8 +213,10 @@ class LLMAgent(BaseAgent):
         self.agent_name = _("intelligent_chat_assistant")
 
     @agent_function(_("kimi_chat"))
-    def _afunc_kimi(context_variables: dict, content: str = None):
+    def _afunc_kimi(context_variables: dict = None, content: str = None):
         """Kimi chat"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
@@ -208,8 +230,10 @@ class LLMAgent(BaseAgent):
 
 
     @agent_function(_("gpt4_chat"))
-    def _afunc_gpt4(context_variables: dict, content: str = None):
+    def _afunc_gpt4(context_variables: dict = None, content: str = None):
         """GPT-4 chat"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
@@ -224,8 +248,10 @@ class LLMAgent(BaseAgent):
             return _("gpt4o_call_failed")
 
     @agent_function(_("gemini_chat"))
-    def _afunc_gemini(context_variables: dict, content: str = None):
+    def _afunc_gemini(context_variables: dict = None, content: str = None):
         """Gemini chat"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")        
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content

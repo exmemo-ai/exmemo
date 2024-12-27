@@ -7,7 +7,6 @@ from django.utils.translation import gettext as _
 from app_message.agent.other_agent import (
     AudioAgent,
     HelpAgent,
-    LLMAgent,
     DietAgent,
     TranslateAgent,
 )
@@ -78,7 +77,7 @@ class BaseAgentManager:
                 cls_name = a.__class__.__name__
                 def make_transfer(target_agent):
                     func_name = f"transfer_to_{cls_name.lower().replace(' ', '_')}"
-                    def transfer_func():
+                    def transfer_func(parameters: dict = None, action: str = None, context_variables: dict = None):
                         logger.info(f"transfer to {target_agent.name}")
                         return target_agent
                     
@@ -163,12 +162,23 @@ class AllAgentManager(BaseAgentManager):
 
     def post_process(self, response, sdata):
         call_tools = False
-        for msg in response.messages:
+        tool_result = None
+        for msg in reversed(response.messages):
             if 'tool_name' in msg and msg['tool_name'].startswith("_afunc_"):
                 call_tools = True
-                break
+                if 'content' in msg:
+                    tool_result = msg['content']
+                    if isinstance(tool_result, str):
+                        try:
+                            tool_result = eval(tool_result)
+                        except:
+                            pass
+                    break
         if call_tools:
-            return True, response.messages[-1]["content"]
+            if tool_result is not None:
+                return True, tool_result
+            else:
+                return True, response.messages[-1]["content"]
         else:
             return True, _('system_tools') + "\n" + HelpAgent._afunc_help({"sdata": sdata})
 
@@ -194,6 +204,10 @@ class UserAgentManager(BaseAgentManager):
             else:
                 logger.debug('Returning prompt')
                 ret = response.messages[-1]["content"]
+                if len(ret) == 0:
+                    ret = DEFAULT_TEXT
+                if len(ret) > 100:
+                    ret = ret[:100] + "..."
                 ret = ret + "\n" + DEFAULT_TEXT
         else:
             ret = response.messages[-1]["content"]

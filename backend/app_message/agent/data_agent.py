@@ -27,8 +27,10 @@ class RecordAgent(BaseAgent):
         self.agent_name = _("record_agent")
 
     @agent_function(_("search_records"))
-    def _afunc_record_search(context_variables: dict, content: str = None):
+    def _afunc_record_search(context_variables: dict = None, content: str = None):
         """Search records"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
@@ -39,8 +41,10 @@ class RecordAgent(BaseAgent):
             return search_data(sdata, dic={"etype": "record"})
 
     @agent_function(_("record"))
-    def _afunc_record_input(context_variables: dict, content: str = None):
+    def _afunc_record_input(context_variables: dict = None, content: str = None):
         """Input record"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is None:
             content = sdata.current_content
@@ -58,8 +62,10 @@ class RecordAgent(BaseAgent):
             return info
 
     @agent_function(_("export_records"))
-    def _afunc_record_export(context_variables: dict):
+    def _afunc_record_export(context_variables: dict = None):
         """Export records"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         ret, info = get_export_file(sdata.user_id)
         if ret:
@@ -78,17 +84,21 @@ class WebAgent(BaseAgent):
         super().__init__()
         self.agent_name = _("web_processing_agent")
 
-    @agent_function(_("web_functions_list"))
-    def _afunc_web_op(context_variables: dict, web_addr: str = None):
+    @agent_function(_("web_functions_list"), is_command=False)
+    def _afunc_web_op(context_variables: dict = None, web_addr: str = None):
         """Web functions list"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         sdata.current_content = web_addr
         ret, detail = msg_web_main(sdata)
         return detail
 
     @agent_function(_("collect_webpage"))
-    def _afunc_web_collect(context_variables: dict, web_addr: str = None):
+    def _afunc_web_collect(context_variables: dict = None, web_addr: str = None):
         """Collect web page"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if web_addr is None:
             web_addr = sdata.current_content
@@ -102,8 +112,10 @@ class WebAgent(BaseAgent):
         return _("no_urls_dot_")
 
     @agent_function(_("set_webpage_todo"))
-    def _afunc_web_todo(context_variables: dict, web_addr: str = None):
+    def _afunc_web_todo(context_variables: dict = None, web_addr: str = None):
         """Set web page to-do"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if web_addr is None:
             web_addr = sdata.current_content
@@ -117,8 +129,10 @@ class WebAgent(BaseAgent):
         return _("no_urls_dot_")
 
     @agent_function(_("summarize_webpage_content"))
-    def _afunc_web_extract(context_variables: dict):
+    def _afunc_web_extract(context_variables: dict = None):
         """Extract web content"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         url = sdata.get_cache("url")
         logger.debug(f"msg_web_extract {url}")
@@ -130,8 +144,10 @@ class WebAgent(BaseAgent):
         return _("failed_to_fetch_webpages")
 
     @agent_function(_("get_text_content"))
-    def _afunc_web_content(context_variables: dict):
+    def _afunc_web_content(context_variables: dict = None):
         """Get web content"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         url = sdata.get_cache("url")
         title, content = get_url_content(url)
@@ -140,8 +156,10 @@ class WebAgent(BaseAgent):
         return _("no_content_found")
 
     @agent_function(_("webpage_to_audio"))
-    def _afunc_web_audio(context_variables: dict):
+    def _afunc_web_audio(context_variables: dict = None):
         """Web page to audio"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         url = sdata.get_cache("url")
         title, content = get_url_content(url)
@@ -160,8 +178,10 @@ class DataAgent(BaseAgent):
         self.agent_name = _("data_management_agent")
 
     @agent_function(_("search_data"))
-    def _afunc_data_search(context_variables: dict, content: str = None):
+    def _afunc_data_search(context_variables: dict = None, content: str = None):
         """Search data"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is not None:
             sdata.current_content = content
@@ -172,8 +192,10 @@ class DataAgent(BaseAgent):
             return search_data(sdata)
 
     @agent_function(_("search_files"))
-    def _afunc_file_search(context_variables: dict, content: str = None):
+    def _afunc_file_search(context_variables: dict = None, content: str = None):
         """Search files"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is not None:
             sdata.current_content = content
@@ -184,31 +206,37 @@ class DataAgent(BaseAgent):
             return search_data(sdata, dic={"etype": "file"})
         
     @agent_function(_("search_todo_webpages"))
-    def _afunc_web_my_todo(context_variables: dict, content: str = None):
+    def _afunc_web_my_todo(context_variables: dict = None, content: str = None):
         """Search to-do web pages"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is not None:
             sdata.current_content = content
         return search_data(sdata, dic={"status": "todo", "etype": "web"})
 
     @agent_function(_("search_collected_webpages"))
-    def _afunc_web_my_collect(context_variables: dict, content: str = None):
+    def _afunc_web_my_collect(context_variables: dict = None, content: str = None):
         """Search collected web pages"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is not None:
             sdata.current_content = content
         return search_data(sdata, dic={"status": "collect", "etype": "web"})
 
     @agent_function(_("search_webpages"))
-    def _afunc_web_search(context_variables: dict, content: str = None):
+    def _afunc_web_search(context_variables: dict = None, content: str = None):
         """Search web pages"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         if content is not None:
             sdata.current_content = content
         return search_data(sdata, dic={"etype": "web"})
 
     @agent_function(_("manage_data"))
-    def _afunc_data_manage(context_variables: dict):
+    def _afunc_data_manage(context_variables: dict = None):
         """Manage data"""
         url = f"{WEB_URL}"
         return _("please_open_following_link") + f":\n{url}"
@@ -220,9 +248,10 @@ class FileAgent(BaseAgent):
         self.agent_name = _("file_processing_agent")
 
     @agent_function(_("extract_file_content"))
-    def _afunc_file_extract(context_variables: dict):
+    def _afunc_file_extract(context_variables: dict = None):
         """Extract file content"""
-        logger.debug("in msg_extract_file")
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         data = sdata.get_cache("file")
         ret, detail = get_file_abstract(data, sdata.user_id)
@@ -231,8 +260,10 @@ class FileAgent(BaseAgent):
         return _("please_upload_or_share_a_file_first")
 
     @agent_function(_("file_to_audio"))
-    def _afunc_file_tts(context_variables: dict):
+    def _afunc_file_tts(context_variables: dict = None):
         """File to speech"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         data = sdata.get_cache("file")
         ret, path, title, content = get_file_content(data)
@@ -242,8 +273,10 @@ class FileAgent(BaseAgent):
         return _("please_upload_or_share_a_file_first")
 
     @agent_function(_("collect_file"))
-    def _afunc_file_save(context_variables: dict):
+    def _afunc_file_save(context_variables: dict = None):
         """Save file"""
+        if context_variables is None or 'sdata' not in context_variables:
+            return _("params_error")
         sdata = context_variables["sdata"]
         (base_path, addr) = sdata.get_cache("file")
         if base_path is None:
