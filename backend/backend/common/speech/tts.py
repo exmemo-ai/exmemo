@@ -19,6 +19,7 @@ import backend.common.speech.tts_mine as tts_mine
 from backend.common.user.user import *
 from backend.common.user.resource import ResourceManager
 from backend.common.user.models import StoreResourceUsage
+from backend.common.speech.tts_base import get_my_speech_url
 
 
 def tts_finished(dic):
@@ -180,7 +181,7 @@ def tts_get_voice_and_engine(uid, keyword):
         ret.append((VOICE_MAP["xunfei"], f"{keyword} {VOICE_MAP['xunfei']}"))
         ret.append((VOICE_MAP["google"], f"{keyword} {VOICE_MAP['google']}"))
         ret.append((VOICE_MAP["openai"], f"{keyword} {VOICE_MAP['openai']}"))
-        if privilege.b_tts_mine:
+        if privilege.b_tts_mine and get_my_speech_url() is not None:
             mytts_voice = tts_get_voice_list("mytts")
             for voice in mytts_voice:
                 ret.append(
@@ -224,7 +225,7 @@ def tts_get_engine_list(uid):
         ret.append({"label": _("microsoft"), "value": "edge"})
         ret.append({"label": _("google"), "value": "google"})
         ret.append({"label": "OpenAI", "value": "openai"})
-        if privilege.b_tts_mine:
+        if privilege.b_tts_mine and get_my_speech_url() is not None:
             ret.append({"label": _("customization"), "value": "mytts"})
     return ret
 
