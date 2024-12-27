@@ -9,7 +9,7 @@ class RecordTestCase(BaseTestCase):
         Record Exercise
         """
         response = self.do_message(
-            {"content": _("record_exercise_running_5_kilometers")}
+            {"content": "记录 锻炼 跑步5公里"}
         )
         self.parse_return_info(response)
 

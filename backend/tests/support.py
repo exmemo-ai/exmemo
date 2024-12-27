@@ -42,6 +42,14 @@ class BaseTestCase(APITestCase):
             return data["info"]
         return data
 
+    def parse_return_sid(self, response):
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content.decode("utf-8"))
+        self.assertEqual(data["status"], "success")
+        if "sid" in data:
+            return data["sid"]
+        return None
+
     def parse_return_file(self, response, format, path):
         self.assertEqual(response.status_code, 200)
         content_type = response.headers["Content-Type"]

@@ -8,7 +8,7 @@ class DietTestCase(BaseTestCase):
         """
         Record Diet
         """
-        response = self.do_message({"content": _("diet_log_colon__apple_100g_comma__milk_100g")})
+        response = self.do_message({"content": "/饮食记录 苹果100克，牛奶100克"})
         info = self.parse_return_info(response)
         self.assertEqual(info.find(_("total_calories")) != -1, True)
 
@@ -16,7 +16,7 @@ class DietTestCase(BaseTestCase):
         """
         Delete Diet
         """
-        response = self.do_message({"content": _("delete_diet_apple")})
+        response = self.do_message({"content": "/删除饮食苹果"})
         info = self.parse_return_info(response)
         self.assertEqual(info.find(_("success")) != -1, True)
 
@@ -24,7 +24,7 @@ class DietTestCase(BaseTestCase):
         """
         Statistics of Diet
         """
-        response = self.do_message({"content": _("diet_statistics")})
+        response = self.do_message({"content": "/饮食统计"})
         info = self.parse_return_info(response)
         self.assertEqual(info.find(_("total_calories")) != -1, True)
 
