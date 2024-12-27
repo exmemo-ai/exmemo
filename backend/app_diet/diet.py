@@ -10,7 +10,7 @@ from django.utils.translation import gettext as _
 from loguru import logger
 
 from backend.common.user.user import *
-from backend.common.llm.llm_hub import llm_query
+from backend.common.llm.llm_hub import llm_query, llm_query_json
 
 from .models import StoreDiet, StoreFood
 
@@ -150,27 +150,33 @@ def parse_content(content, uid):
     """
     Parse the dietary content described in the text
     """
-    ret, info = parse_inner(content, use_gpt4=False, uid=uid)
-    if ret is not None:
-        return ret, info
-    ret, info = parse_inner(content, use_gpt4=True, uid=uid)
+    ret, info = parse_inner(content, uid=uid)
     return ret, info
 
 
-def parse_inner(content, use_gpt4, uid, debug=True):
+def parse_inner(content, uid, debug=True):
     """
     Internal implementation for parsing textual descriptions of dietary content
     """
-    demo = '[{"food":"Croissant","weight":"200","kc":240}]"'
+    demo = '[{"food":"Croissant","weight":200,"kc":240}]"'
     question = "User input is as follows: '{content}',\nPlease identify the food based on the user input, calculate the calories, and if the weight is not specified, use the general case.\nReturn the food name, weight, and calories as a JSON array, in the format of: {demo}. Note: return only the JSON string, no other content.".format(
         content=content, demo=demo
     )
-    if use_gpt4:
-        ret, answer, detail = llm_query(
-            uid, ROLE_DIET, question, "diet", engine_type="gpt4", debug=debug
-        )
-    else:
-        ret, answer, detail = llm_query(uid, ROLE_DIET, question, "diet", debug=debug)
+    ret, dic, detail = llm_query_json(uid, ROLE_DIET, question, "diet", debug=debug)
+    if ret:
+        try:
+            if type(dic) == dict:
+                dic = [dic]
+            df = pd.DataFrame(dic)
+            df = adjust_df(df, uid)
+            return df, None
+        except Exception as e:
+            logger.warning(f"add_diet failed {e}")
+            traceback.print_exc()
+    return None, _("failed_to_process_information")
+
+    """
+    ret, answer, detail = llm_query(
 
     if ret:
         try:
@@ -191,6 +197,7 @@ def parse_inner(content, use_gpt4, uid, debug=True):
             logger.warning(f"add_diet failed {answer} {e}")
             traceback.print_exc()
     return None, answer
+    """
 
 
 def adjust_df(df, uid):
