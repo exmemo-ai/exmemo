@@ -127,7 +127,7 @@ export class ChatService {
             const result = response.data;
             const contentType = response.headers['content-type'];
             console.log('parseMessageReturn', contentType);
-            if (contentType==='application/octet-stream') {
+            if (contentType==='application/octet-stream' || contentType==='audio/mpeg') {
                 return [false, this.t('unsupportedFileType'), null];
             }
             console.log('result', result)
