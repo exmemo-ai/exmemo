@@ -16,9 +16,8 @@ from app_dataforge.models import StoreEntry
 from django.core.validators import ValidationError
 import re
 from app_bm_syncex.weight_utils import BookmarkWeightCalculator
+from app_bm_syncex.views import SOURCE
 # from app_bm_syncex.cache_manager import BookmarkCacheManager
-
-SOURCE = "bookmark"
 
 class BMKeeperAPIView(APIView):
     """
@@ -29,7 +28,7 @@ class BMKeeperAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def _get_base_query(self, user_id):
-        """获取基础查询集"""
+        """get base query for bookmarks"""
         return StoreEntry.objects.filter(
             user_id=user_id, 
             source=SOURCE,
@@ -55,25 +54,34 @@ class BMKeeperAPIView(APIView):
         """get data for navigation view"""
         results = query.filter(status='collect', is_deleted='f')
         
-        if sort == 'custom' and custom_ids:
+        if custom_ids:
+            # 如果提供了自定义ID列表，使用该列表顺序
             id_list = [int(id) for id in custom_ids.split(',') if id.isdigit()]
             if id_list:
                 results = results.filter(
                     idx__in=id_list,
-                    meta__custom_order=1
+                    meta__contains={'custom_order': True}
                 )
                 from django.db.models import Case, When
                 preserved = Case(*[When(idx=pk, then=pos) for pos, pk in enumerate(id_list)])
-                results = results.order_by(preserved)
-                
-        elif sort == 'clicks':
-            results = results.order_by('-meta__clicks')
-        elif sort == 'weight':
-            results = results.order_by('-meta__weight')
-        else:  # recent
-            results = results.order_by('-created_time')
+                return results.order_by(preserved)[:limit]
         
-        results = results[:limit]
+        # 获取所有自定义顺序的书签
+        custom_bookmarks = results.filter(meta__contains={'custom_order': True})
+        
+        # 获取剩余的书签并按权重排序
+        remaining_limit = limit - custom_bookmarks.count()
+        if remaining_limit > 0:
+            other_bookmarks = results.exclude(
+                meta__contains={'custom_order': True}
+            ).order_by('-meta__weight')[:remaining_limit]
+            
+            # 合并结果
+            from itertools import chain
+            results = list(chain(custom_bookmarks, other_bookmarks))
+        else:
+            results = custom_bookmarks[:limit]
+            
         return results
 
     def _get_readlater_bookmarks(self, user_id, page=1, page_size=10):
@@ -143,7 +151,7 @@ class BMKeeperAPIView(APIView):
         elif req_type == 'search' and param:
             results = base_query.filter(
                 Q(title__icontains=param) | Q(addr=param)
-            ).order_by('-created_time')[:6]
+            ).order_by('-created_time')
 
         elif req_type == 'readlater':
             page = int(request.GET.get('page', 1))
@@ -179,7 +187,8 @@ class BMKeeperAPIView(APIView):
             'id': entry.idx,
             'title': entry.title,
             'url': entry.addr,
-            'created_at': entry.created_time
+            'created_at': entry.created_time,
+            'meta': entry.meta,
         } for entry in results]
 
         return Response({
@@ -233,7 +242,6 @@ class BMKeeperAPIView(APIView):
                 bookmark.status = 'done' 
                 bookmark.folder = folder 
                 bookmark.save()
-
             return Response({"code": 200, "msg": "success"})
 
         except StoreEntry.DoesNotExist:
@@ -413,40 +421,28 @@ class BMKeeperAPIView(APIView):
         })
 
     def delete(self, request):
-        """delete bookmark, support soft delete and real delete"""
+        """delete bookmark"""
         args = parse_common_args(request)
         bookmark_id = request.GET.get('id')
-        real_delete = request.GET.get('real_delete', 'false').lower() == 'true'
-        is_folder = request.GET.get('is_folder', 'false').lower() == 'true'
-
+        
         try:
-            if is_folder:
-                return Response({
-                    "code": 400,
-                    "msg": "Folder deletion is temporarily disabled"
-                })
-                
-            else:
-                # delete bookmark
-                bookmark = StoreEntry.objects.get(
-                    idx=bookmark_id,
-                    user_id=args['user_id'],
-                    is_deleted='f'
-                )
-                
-                if real_delete:
-                    bookmark.delete()
-                    detail = "Bookmark permanently deleted"
-                else:
-                    bookmark.is_deleted = 't'
-                    bookmark.save()
-                    detail = "Bookmark deleted successfully"
-                
-                return Response({
-                    "code": 200,
-                    "msg": "success",
-                    "detail": detail
-                })
+            bookmark = StoreEntry.objects.get(
+                idx=bookmark_id,
+                user_id=args['user_id'],
+                is_deleted='f'
+            )
+            
+            delete_entry(args['user_id'], [
+                {
+                    'addr': bookmark.addr,
+                }
+            ])
+            
+            return Response({
+                "code": 200,
+                "msg": "success",
+                "detail": "Bookmark deleted successfully"
+            })
 
         except StoreEntry.DoesNotExist:
             return Response({
@@ -455,7 +451,7 @@ class BMKeeperAPIView(APIView):
             })
         except Exception as e:
             return Response({
-                "code": 500,
+                "code": 500, 
                 "msg": str(e)
             })
 
@@ -518,45 +514,91 @@ class BookmarkCustomOrderAPIView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
-    def post(self, request):
+    def get(self, request):
+        """获取所有自定义排序的书签"""
         args = parse_common_args(request)
-        bookmark_ids = request.data.get('bookmarkIds', [])
-        
         try:
-            bookmarks = StoreEntry.objects.filter(
+            custom_bookmarks = StoreEntry.objects.filter(
                 user_id=args['user_id'],
                 source=SOURCE,
-                is_deleted='f'
-            )
+                is_deleted='f',
+                meta__custom_order=True
+            ).order_by('-created_time')
             
-            for bookmark in bookmarks:
-                if not bookmark.meta:
-                    bookmark.meta = {}
-                bookmark.meta['custom_order'] = 0
-                bookmark.save()
-            
-            if bookmark_ids:
-                selected_bookmarks = StoreEntry.objects.filter(
-                    user_id=args['user_id'],
-                    idx__in=bookmark_ids,
-                    is_deleted='f'
-                )
-                
-                updated_count = 0
-                for bookmark in selected_bookmarks:
-                    if not bookmark.meta:
-                        bookmark.meta = {}
-                    bookmark.meta['custom_order'] = 1
-                    bookmark.save()
-                    updated_count += 1
-                
-                logger.info(f"Updated {updated_count} bookmarks with custom_order=1")
+            results = [{
+                'id': bm.idx,
+                'title': bm.title,
+                'url': bm.addr,
+                'created_at': bm.created_time,
+                'meta': bm.meta
+            } for bm in custom_bookmarks]
             
             return Response({
                 "code": 200,
-                "msg": f"Custom order updated successfully for {len(bookmark_ids)} bookmarks"
+                "msg": "success",
+                "data": results
             })
             
+        except Exception as e:
+            logger.error(f"Error fetching custom bookmarks: {str(e)}")
+            return Response({
+                "code": 500,
+                "msg": str(e)
+            })
+
+    def post(self, request):
+        args = parse_common_args(request)
+        is_single_bookmark = request.data.get('singleBookmark', False)
+        remove_id = request.data.get('removeId')  # 新增: 要删除的书签ID
+        
+        try:
+            if remove_id:
+                # 处理删除操作
+                bookmark = StoreEntry.objects.get(
+                    user_id=args['user_id'],
+                    idx=remove_id,
+                    is_deleted='f'
+                )
+                
+                meta = bookmark.meta if bookmark.meta else {}
+                meta['custom_order'] = False  # 设置为False表示移除自定义顺序
+                bookmark.meta = meta
+                bookmark.save()
+                
+                return Response({
+                    "code": 200,
+                    "msg": f"Removed bookmark {remove_id} from custom order"
+                })
+                
+            elif is_single_bookmark:
+                bookmark_id = request.data.get('bookmarkId')
+                if not bookmark_id:
+                    return Response({
+                        "code": 400,
+                        "msg": "bookmarkId is required for single bookmark update"
+                    })
+                
+                bookmark = StoreEntry.objects.get(
+                    user_id=args['user_id'],
+                    idx=bookmark_id,
+                    is_deleted='f'
+                )
+                
+                meta = bookmark.meta if bookmark.meta else {}
+                meta['custom_order'] = True
+                bookmark.meta = meta
+                bookmark.save()
+                
+                return Response({
+                    "code": 200,                    "msg": f"Custom order updated for bookmark {bookmark_id}"
+                })
+
+
+        except StoreEntry.DoesNotExist:
+            return Response({
+                "code": 404,
+                "msg": "Bookmark not found"
+            })
         except Exception as e:
             logger.error(f"Error updating custom order: {str(e)}")
             return Response({

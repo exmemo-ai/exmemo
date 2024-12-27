@@ -3,16 +3,6 @@
     <div class="section-header">
       <h3>{{ $t('quickNavigation') }}</h3>
       <div class="controls">
-        <el-select v-model="bookmarkSort" size="small" @change="refreshBookmarks">
-          <template #prefix>
-            <span class="selected-text">{{ $t('sortBy') }}{{ getSortLabel(bookmarkSort) }}</span>
-          </template>
-          <el-option 
-            v-for="(label, value) in sortOptions" 
-            :key="value"
-            :label="$t(label)"
-            :value="value" />
-        </el-select>
         <el-select v-model="bookmarkLimit" size="small" @change="refreshBookmarks">
           <template #prefix>
             <span class="selected-text">{{ $t('showLimit') }}</span>
@@ -25,8 +15,8 @@
       </div>
     </div>
     
-    <div class="bookmark-list">
-      <div v-for="bookmark in sortedBookmarks" :key="bookmark.id" class="bookmark-card">
+    <div class="bookmark-list" ref="bookmarkList">
+      <div v-for="bookmark in sortedBookmarks" :key="bookmark.id" class="bookmark-card" :data-id="bookmark.id">
         <div class="bookmark-content">
           <div class="link-container">
             <img 
@@ -49,7 +39,7 @@
             </div>
             <div class="click-count-container">
               <el-tooltip 
-                :content="$t('clicks') + ': ' + (bookmark.clicks || 0)" 
+                :content="`${$t('clicks')}: ${(bookmark.meta && bookmark.meta.clicks) || 0}`"
                 placement="top"
                 effect="light">
                 <span class="click-count">
@@ -90,6 +80,10 @@
             </template>
           </el-input>
           <div class="search-results">
+            <!-- 添加搜索结果计数 -->
+            <div v-if="filteredBookmarks.length > 0" class="search-count">
+              {{ $t('foundResults', { count: filteredBookmarks.length }) }}
+            </div>
             <div v-for="bookmark in filteredBookmarks" 
                  :key="bookmark.id" 
                  class="search-item"
@@ -117,23 +111,15 @@
           </div>
         </div>
       </div>
-
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="cancelCustomization">{{ $t('cancel') }}</el-button>
-          <el-button type="primary" @click="saveCustomization">{{ $t('confirm') }}</el-button>
-        </span>
-      </template>
     </el-dialog>
   </div>
 </template>
 
 <script>
-// 增加 Search 图标导入
+import Sortable from 'sortablejs'
 import { Histogram, Search } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
-// 移除 draggable 导入
 
 export default {
   name: 'NavigationManager',
@@ -143,24 +129,17 @@ export default {
   },
   data() {
     return {
-      bookmarkSort: 'clicks',
       bookmarkLimit: 6,
       sortedBookmarks: [],
-      sortOptions: {
-        'clicks': 'mostClicked',
-        'recent': 'recentlyAdded',
-        'weight': 'importance',
-        'custom': 'customOrder' // 添加自定义排序选项
-      },
       faviconCache: new Map(),
       faviconQueue: [],
       faviconLoading: new Set(),
       customizeDialogVisible: false,
-      selectedBookmarks: [], // 已选中的书签ID列表
-      availableBookmarks: [], // 可选择的书签列表
-      isCustomMode: false, // 是否使用自定义模式
+      selectedBookmarks: [], // 已选中的书签列表 
       searchKeyword: '',
       filteredBookmarks: [],
+      sortable: null,
+      draggedOrder: [], // 存储拖拽后的顺序
     }
   },
   methods: {
@@ -168,18 +147,18 @@ export default {
       try {
         const params = { 
           type: 'navigation',
-          param: this.bookmarkLimit.toString(),
-          sort: this.bookmarkSort,
-          custom_ids: this.bookmarkSort === 'custom' ? this.selectedBookmarks.join(',') : undefined
+          param: this.bookmarkLimit.toString()
+        }
+        
+        // 如果有自定义书签，添加到请求参数
+        const customBookmarks = this.selectedBookmarks.map(b => b.id)
+        if (customBookmarks.length > 0) {
+          params.custom_ids = customBookmarks.join(',')
         }
         
         const response = await axios.get(getURL() + 'api/keeper/', { params })
         if(response.data.code === 200) {
-          this.sortedBookmarks = response.data.data.map(bookmark => ({
-            ...bookmark,
-            clicks: bookmark.clicks || 0,
-            weight: bookmark.weight || 0
-          }))
+          this.sortedBookmarks = this.sortBookmarks(response.data.data)
         }
       } catch (error) {
         parseBackendError(this, error)
@@ -197,16 +176,44 @@ export default {
     },
 
     sortBookmarks(bookmarks) {
-      switch(this.bookmarkSort) {
-        case 'clicks':
-          return bookmarks.sort((a, b) => b.clicks - a.clicks)
-        case 'recent':
-          return bookmarks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        case 'weight':
-          return bookmarks.sort((a, b) => b.weight - a.weight)
-        default:
-          return bookmarks
+      // 如果有保存的顺序,优先使用
+      const savedOrder = localStorage.getItem('bookmarkOrder')
+      if (savedOrder) {
+        const order = JSON.parse(savedOrder)
+        return this.reorderBookmarks(bookmarks, order)
       }
+
+      // 否则使用默认排序逻辑
+      // 首先获取自定义排序的书签ID
+      const customBookmarks = localStorage.getItem('customBookmarks')
+      const customIds = customBookmarks ? JSON.parse(customBookmarks) : []
+      
+      // 分离自定义书签和其他书签
+      const customBookmarksList = []
+      const otherBookmarksList = []
+      
+      bookmarks.forEach(bookmark => {
+        if (customIds.includes(bookmark.id)) {
+          customBookmarksList.push(bookmark)
+        } else {
+          otherBookmarksList.push(bookmark)
+        }
+      })
+
+      // 对其他书签进行综合排序
+      otherBookmarksList.sort((a, b) => {
+        // 计算综合得分: 点击次数(50%) + 最近添加(30%) + 重要程度(20%)
+        const getScore = (item) => {
+          const clickScore = (item.clicks || 0) * 0.5
+          const timeScore = (new Date(item.created_at).getTime() / 1000000) * 0.3
+          const weightScore = (item.weight || 0) * 0.2
+          return clickScore + timeScore + weightScore
+        }
+        return getScore(b) - getScore(a)
+      })
+
+      // 合并自定义书签和排序后的其他书签
+      return [...customBookmarksList, ...otherBookmarksList]
     },
 
     refreshBookmarks() {
@@ -275,75 +282,45 @@ export default {
       this.startPreload()
     
     },
-    getSortLabel(value) {
-      return this.$t(this.sortOptions[value] || 'mostClicked')
-    },
 
     async showCustomizeDialog() {
-      // 重置所有状态
       this.customizeDialogVisible = true
       this.availableBookmarks = []
       this.filteredBookmarks = []
-      this.selectedBookmarks = [] // 清空已选列表
       
-      // 只有存在已保存的自定义书签时才加载它们
-      const savedBookmarks = localStorage.getItem('customBookmarks')
-      if (savedBookmarks && savedBookmarks !== '[]') {
-        try {
-          const savedIds = JSON.parse(savedBookmarks)
-          if (savedIds && savedIds.length > 0) {
-            // 获取已保存的书签数据
-            const response = await axios.get(getURL() + 'api/keeper/', { 
-              params: { 
-                type: 'navigation',
-                sort: 'custom',
-                custom_ids: savedIds.join(',')
-              } 
-            })
-            
-            if (response.data.code === 200) {
-              // 确保返回的数据不为空
-              const bookmarks = response.data.data || []
-              this.selectedBookmarks = bookmarks.map(bookmark => ({
-                ...bookmark,
-                title: bookmark.title.length > 20 ? 
-                  bookmark.title.substring(0, 20) + '...' : 
-                  bookmark.title
-              }))
-            }
-          }
-        } catch (error) {
-          parseBackendError(this, error)
-          this.selectedBookmarks = [] // 出错时确保列表为空
+      try {
+        // 使用新的API端点获取自定义书签
+        const response = await axios.get(getURL() + 'api/keeper/custom-order')
+        if (response.data.code === 200) {
+          this.selectedBookmarks = response.data.data.map(bookmark => ({
+            ...bookmark,
+            title: bookmark.title.length > 20 ? 
+              bookmark.title.substring(0, 20) + '...' : 
+              bookmark.title
+          }))
         }
-      }
-    },
-
-    cancelCustomization() {
-      this.customizeDialogVisible = false
-      // 恢复之前保存的选择
-      const savedBookmarks = localStorage.getItem('customBookmarks')
-      if (savedBookmarks) {
-        this.selectedBookmarks = JSON.parse(savedBookmarks)
+      } catch (error) {
+        parseBackendError(this, error)
       }
     },
 
     async saveCustomization() {
       try {
-        // 修改API路径从 'custom' 改为 'custom-order'
         const bookmarkIds = this.selectedBookmarks.map(b => b.id)
         
-        await axios.post(getURL() + 'api/keeper/custom-order', {
+        const response = await axios.post(getURL() + 'api/keeper/custom-order', {
           bookmarkIds: bookmarkIds
         })
 
-        // 保存到本地存储
-        localStorage.setItem('customBookmarks', JSON.stringify(bookmarkIds))
-        
-        this.customizeDialogVisible = false
-        this.bookmarkSort = 'custom'
-        await this.refreshBookmarks()
-        
+        if (response.data.code === 200) {
+          // 保存到本地存储
+          localStorage.setItem('customBookmarks', JSON.stringify(bookmarkIds))
+          this.customizeDialogVisible = false
+          
+          // 强制重新加载书签列表
+          await this.loadSelectedBookmarks()
+          await this.fetchBookmarks()
+        }
       } catch (error) {
         parseBackendError(this, error)
       }
@@ -372,17 +349,21 @@ export default {
         })
         
         if(response.data.code === 200) {
-          this.filteredBookmarks = response.data.data.map(bookmark => ({
-            ...bookmark,
-            // 限制标题长度为30个字符
-            title: bookmark.title.length > 20 ? 
-              bookmark.title.substring(0, 20) + '...' : 
-              bookmark.title
-          }))
-          // 过滤掉已经选中的书签
-          this.filteredBookmarks = this.filteredBookmarks.filter(
-            bookmark => !this.selectedBookmarks.find(b => b.id === bookmark.id)
-          )
+          // 获取当前已选择的书签ID列表
+          const selectedIds = new Set(this.selectedBookmarks.map(b => b.id))
+          
+          // 过滤并处理所有搜索结果
+          this.filteredBookmarks = response.data.data
+            .filter(bookmark => !selectedIds.has(bookmark.id)) // 排除已选择的书签
+            .map(bookmark => ({
+              ...bookmark,
+              title: bookmark.title.length > 20 ? 
+                bookmark.title.substring(0, 20) + '...' : 
+                bookmark.title
+            }))
+            
+          // 添加日志以便调试
+          console.log(`Found ${this.filteredBookmarks.length} matching bookmarks`)
         }
       } catch (error) {
         parseBackendError(this, error)
@@ -390,22 +371,31 @@ export default {
     },
 
     async addToSelected(bookmark) {
-      if (!this.selectedBookmarks.find(b => b.id === bookmark.id)) {
-        // 添加书签到右侧列表
-        this.selectedBookmarks.push({
-          ...bookmark,
-          title: bookmark.title.length > 20 ? 
-            bookmark.title.substring(0, 20) + '...' : 
-            bookmark.title
-        })
-        
-        // 立即更新后端
-        try {
-          await axios.post(getURL() + 'api/keeper/custom-order', {
-            bookmarkIds: this.selectedBookmarks.map(b => b.id)
-          })
-        } catch (error) {
-          parseBackendError(this, error)
+      // 如果书签已经在选中列表中，则不添加
+      if (this.selectedBookmarks.find(b => b.id === bookmark.id)) {
+        return;
+      }
+
+      // 添加书签到右侧列表
+      this.selectedBookmarks.push({
+        ...bookmark,
+        title: bookmark.title.length > 20 ? 
+          bookmark.title.substring(0, 20) + '...' : 
+          bookmark.title
+      });
+
+      // 只更新当前添加的书签的 custom_order
+      try {
+        await axios.post(getURL() + 'api/keeper/custom-order', {
+          singleBookmark: true, // 新增标记，表示只更新单个书签
+          bookmarkId: bookmark.id
+        });
+      } catch (error) {
+        parseBackendError(this, error);
+        // 发生错误时从选中列表中移除
+        const index = this.selectedBookmarks.findIndex(b => b.id === bookmark.id);
+        if (index > -1) {
+          this.selectedBookmarks.splice(index, 1);
         }
       }
     },
@@ -413,30 +403,116 @@ export default {
     async removeFromSelected(bookmark) {
       const index = this.selectedBookmarks.findIndex(b => b.id === bookmark.id)
       if (index > -1) {
-        this.selectedBookmarks.splice(index, 1)
-        
-        // 立即更新后端
         try {
-          await axios.post(getURL() + 'api/keeper/custom-order', {
-            bookmarkIds: this.selectedBookmarks.map(b => b.id)
+          // 调用后端API移除书签的自定义顺序
+          const response = await axios.post(getURL() + 'api/keeper/custom-order', {
+            removeId: bookmark.id
           })
+          
+          if (response.data.code === 200) {
+            // 从前端列表中移除
+            this.selectedBookmarks.splice(index, 1)
+            
+            // 清除本地存储中的相关数据
+            const savedBookmarks = JSON.parse(localStorage.getItem('customBookmarks') || '[]')
+            const updatedBookmarks = savedBookmarks.filter(id => id !== bookmark.id)
+            localStorage.setItem('customBookmarks', JSON.stringify(updatedBookmarks))
+            
+            // 移除拖拽顺序相关数据
+            localStorage.removeItem('bookmarkOrder')
+            
+            // 重新加载书签列表
+            await this.fetchBookmarks()
+          }
         } catch (error) {
           parseBackendError(this, error)
+          // 发生错误时重新加载已选书签列表
+          await this.loadSelectedBookmarks()
         }
       }
     },
 
-    // 移除 handleDragEnd 方法
+    async loadSelectedBookmarks() {
+      this.selectedBookmarks = []
+      
+      try {
+        const response = await axios.get(getURL() + 'api/keeper/', {
+          params: {
+            type: 'navigation',
+            param: 'all',
+            sort: 'custom'
+          }
+        })
+        
+        if (response.data.code === 200 && response.data.data) {
+          const bookmarks = response.data.data.filter(bm => 
+            bm && bm.id && bm.meta && bm.meta.custom_order === true
+          )
+          
+          this.selectedBookmarks = bookmarks.map(bookmark => ({
+            ...bookmark,
+            title: bookmark.title.length > 20 ? 
+              bookmark.title.substring(0, 20) + '...' : 
+              bookmark.title
+          }))
+          
+          // 更新本地存储
+          const validIds = bookmarks.map(b => b.id)
+          localStorage.setItem('customBookmarks', JSON.stringify(validIds))
+        }
+      } catch (error) {
+        parseBackendError(this, error)
+        this.selectedBookmarks = []
+        localStorage.removeItem('customBookmarks')
+      }
+    },
+
+    initSortable() {
+      if (this.$refs.bookmarkList) {
+        this.sortable = Sortable.create(this.$refs.bookmarkList, {
+          animation: 150,
+          onEnd: this.handleDragEnd
+        })
+      }
+    },
+
+    handleDragEnd(evt) {
+      // 获取拖拽后的顺序
+      const cards = this.$refs.bookmarkList.getElementsByClassName('bookmark-card')
+      const newOrder = Array.from(cards).map(card => card.dataset.id)
+      
+      // 保存新顺序
+      this.draggedOrder = newOrder
+      localStorage.setItem('bookmarkOrder', JSON.stringify(newOrder))
+      
+      // 重新排序书签列表
+      this.sortedBookmarks = this.reorderBookmarks(this.sortedBookmarks, newOrder)
+    },
+
+    reorderBookmarks(bookmarks, order) {
+      // 创建ID到书签的映射
+      const bookmarkMap = new Map(bookmarks.map(b => [b.id, b]))
+      
+      // 按照保存的顺序重新排列
+      return order
+        .filter(id => bookmarkMap.has(id)) // 只保留存在的书签
+        .map(id => bookmarkMap.get(id))
+    },
   },
   
   async mounted() {
-    // 从本地存储恢复自定义选择
-    const savedBookmarks = localStorage.getItem('customBookmarks')
-    if (savedBookmarks) {
-      this.selectedBookmarks = JSON.parse(savedBookmarks)
-      this.isCustomMode = this.selectedBookmarks.length > 0
-    }
+    await this.loadSelectedBookmarks() // 使用新方法加载已选书签
     await this.fetchBookmarks()
+    this.$nextTick(() => {
+      this.initSortable()
+    })
+  },
+  
+  updated() {
+    // 组件更新后重新初始化拖拽
+    this.$nextTick(() => {
+      this.initSortable()
+    })
   }
 }
 </script>
@@ -459,11 +535,6 @@ export default {
   margin-right: 8px;
   color: #606266;
   font-size: 14px;
-}
-
-.dialog-footer {
-  padding-top: 20px;
-  text-align: right;
 }
 
 .customize-container {
@@ -584,8 +655,14 @@ export default {
   color: var(--el-text-color-primary);
 }
 
-.dialog-footer {
-  padding-top: 20px;
-  text-align: right;
+.bookmark-card {
+  cursor: move; /* 添加移动光标样式 */
+}
+
+.search-count {
+  padding: 8px 12px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  border-bottom: 1px solid var(--el-border-color-light);
 }
 </style>

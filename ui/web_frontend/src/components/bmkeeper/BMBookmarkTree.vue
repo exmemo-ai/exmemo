@@ -49,13 +49,6 @@
               </span>
             </el-tooltip>
             <span class="bookmark-count">({{ data.children?.length || 0 }})</span>
-            <div class="bookmark-actions">
-              <el-tooltip :content="$t('deleteFolder')" placement="top">
-                <el-button size="small" type="danger" @click.stop="handleFolderDelete(node, data)">
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-              </el-tooltip>
-            </div>
           </template>
           <template v-else>
             <img :src="getFavicon(data.url)" class="favicon" @error="handleFaviconError">
@@ -761,37 +754,6 @@ export default {
           ElMessage.success(this.$t('updateSuccess'));
           this.fetchBookmarks();
         }
-      } catch (error) {
-        if (error !== 'cancel') {
-          parseBackendError(this, error);
-        }
-      }
-    },
-
-    async handleFolderDelete(node, data) {
-      try {
-        await ElMessageBox.confirm(
-          this.$t('confirmDeleteFolder'),
-          {
-            type: 'warning',
-            confirmButtonText: this.$t('confirm'),
-            cancelButtonText: this.$t('cancel')
-          }
-        );
-
-        const bookmarks = this.getAllBookmarksInFolder(data);
-        const deletePromises = bookmarks.map(bookmark => 
-          axios.delete(getURL() + 'api/keeper/', {
-            params: { 
-              id: bookmark.id,
-              real_delete: true
-            }
-          })
-        );
-
-        await Promise.all(deletePromises);
-        ElMessage.success(this.$t('deleteFolderSuccess'));
-        this.fetchBookmarks();
       } catch (error) {
         if (error !== 'cancel') {
           parseBackendError(this, error);

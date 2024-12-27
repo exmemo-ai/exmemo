@@ -1,16 +1,16 @@
-
 from celery import shared_task
 from django.utils import timezone
 from .weight_utils import BookmarkWeightCalculator
 from app_dataforge.models import StoreEntry, BookmarkClick
 from ..app_bm_keeper.cache_manager import BookmarkCacheManager
+from .views import SOURCE
 
 @shared_task
 def update_all_bookmark_weights():
     """定期更新所有书签权重的Celery任务"""
     current_time = timezone.now()
     bookmarks = StoreEntry.objects.filter(
-        source='web_chrome_bm',
+        source=SOURCE,
         is_deleted=False
     )
     
@@ -44,7 +44,7 @@ def update_all_bookmark_weights():
 def batch_update_weights(batch_size=100):
     """批量更新书签权重"""
     bookmarks = StoreEntry.objects.filter(
-        source='web_chrome_bm',
+        source=SOURCE,
         is_deleted=False
     )
     

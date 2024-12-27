@@ -87,43 +87,46 @@ class BookmarkAPIView(APIView):
                 args["source"] = SOURCE
                 args["error"] = None
                 action = item.get("action")
+                
+                # 将 url 转换为 addr
+                url = item.get("url")
+                if url:
+                    item["addr"] = url
 
-                if action == "delete": #  real delete
-                    queryset = StoreEntry.objects.filter(
-                        user_id=args["user_id"], 
-                        addr=item.get('url'),
-                        is_deleted='f'
-                    )
-                    if queryset.exists():
-                        # delete_entry(args["user_id"], list(queryset.values()))
-                        queryset.delete() # delete entry
-                        results.append({
-                            "url": item.get("url"), 
-                            "status": "success", 
-                            "info": "bookmark_deleted"
-                        })
-                    else:
-                        results.append({
-                            "url": item.get("url"), 
-                            "status": "failed",
-                            "info": "bookmark_not_found"
-                        })
+                if action == "delete":
+                    delete_entry(args["user_id"], [item])
+                    results.append({
+                        "url": url, 
+                        "status": "success", 
+                        "info": "bookmark_deleted"
+                    })
                     continue
-
                 else:
-                    if item.get("url") is not None:
-                        if check_entry_exist(args["user_id"], item.get("url"), args["resource_path"]):
-                            results.append(
-                                {
-                                    "url": item.get("url"),
-                                    "status": "success",
-                                    "info": "data_already_exists",
-                                }
-                            )
+                    if url is not None:
+                        deleted_entry = StoreEntry.objects.filter(
+                            user_id=args["user_id"],
+                            addr=url,
+                            is_deleted=True
+                        ).first()
+                        
+                        if deleted_entry:
+                            deleted_entry.is_deleted = False
+                            deleted_entry.save()
+                            results.append({
+                                "url": url,
+                                "status": "success",
+                                "info": "bookmark_restored"
+                            })
+                        elif check_entry_exist(args["user_id"], url, args["resource_path"]):
+                            results.append({
+                                "url": url,
+                                "status": "success",
+                                "info": "data_already_exists",
+                            })
                         else:
-                            ret, base_path, info = add_url(item.get("url"), args, item.get('status'))
+                            ret, base_path, info = add_url(url, args, item.get('status'))
                             results.append(
-                                {"url": item.get("url"), "status": "success", "info": info}
+                                {"url": url, "status": "success", "info": info}
                             )
             except json.JSONDecodeError as e:
                 results.append(
@@ -182,9 +185,20 @@ class BookmarkClickAPIView(APIView):
                 bookmark.meta['visit_history'] = []
             bookmark.meta['visit_history'].append(visit_record)
             
-            # 更新统计
-            bookmark.meta['clicks'] = len(bookmark.meta['visit_history'])
-            bookmark.meta['weight'] = min(1.0, bookmark.meta['clicks'] / 100.0)
+            if 'visit_history' not in bookmark.meta:
+                bookmark.meta['visit_history'] = []
+            bookmark.meta['visit_history'].append(visit_record)
+
+            clicks = len(bookmark.meta['visit_history'])
+            last_visit_time = datetime.fromisoformat(current_time)
+            age_in_days = (timezone.now() - bookmark.created_at).days
+            
+            frequency_weight = min(1.0, clicks / max(1, age_in_days)) * 0.5
+            recency_weight = min(1.0, 1 / max(1, (timezone.now() - last_visit_time).days)) * 0.3
+            base_weight = float(bookmark.meta.get('base_weight', 0.0)) * 0.2
+            
+            bookmark.meta['clicks'] = clicks
+            bookmark.meta['weight'] = frequency_weight + recency_weight + base_weight
             bookmark.meta['last_visit'] = current_time
             
             bookmark.save()
