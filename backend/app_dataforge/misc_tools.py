@@ -33,12 +33,12 @@ def create_dic(url, args, status):
         dic["path"] = args["resource_path"] # path outer, use edit
         dic["add_date"] = args["add_date"]
         dic["source"] = args["source"]
-        dic["parse_content"] = args["parse_content"]
         dic["error"] = args["error"]
-        dic["is_truncate"] = args["truncate_content"]
-        dic["use_llm"] = args.get("use_llm", False)
-        dic["max_content_length"] = args.get("max_content_length", 2000)
-        dic["truncate_mode"] = args.get("truncate_mode", "title_content")
+        # dic["is_truncate"] = args["truncate_content"]
+        # dic["use_llm"] = args.get("use_llm", False)
+        # dic["max_content_length"] = args.get("max_content_length", 2000)
+        # dic["truncate_mode"] = args.get("truncate_mode", "title_content")
+        # dic["parse_content"] = args["parse_content"]
     return dic
 
 

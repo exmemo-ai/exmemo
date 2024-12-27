@@ -12,8 +12,8 @@ from app_dataforge.entry import check_entry_exist
 from app_dataforge.views import delete_entry
 from app_dataforge.misc_tools import add_url
 from app_dataforge.models import StoreEntry
-from .config_manager import BookmarkConfigManager
-from .config_service import config_service
+# from .config_manager import BookmarkConfigManager
+# from .config_service import config_service
 
 SOURCE = "bookmark"
 
@@ -24,44 +24,44 @@ class BookmarkAPIView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
     
-    def _update_llm_env(self, config):
-        """
-        Update LLM environment variables
-        """
-        if config.get('llm_model'):
-            os.environ['DEFAULT_CHAT_LLM'] = config['llm_model']
-            os.environ['DEFAULT_TOOL_LLM'] = config['llm_model']
+    # def _update_llm_env(self, config):
+    #     """
+    #     Update LLM environment variables
+    #     """
+    #     if config.get('llm_model'):
+    #         os.environ['DEFAULT_CHAT_LLM'] = config['llm_model']
+    #         os.environ['DEFAULT_TOOL_LLM'] = config['llm_model']
             
-        if config.get('llm_api_key'):
-            os.environ['OPENAI_API_KEY'] = config['llm_api_key']
+    #     if config.get('llm_api_key'):
+    #         os.environ['OPENAI_API_KEY'] = config['llm_api_key']
             
-        if config.get('llm_base_url'):
-            os.environ['OPENAI_API_BASE'] = config['llm_base_url']
+    #     if config.get('llm_base_url'):
+    #         os.environ['OPENAI_API_BASE'] = config['llm_base_url']
 
-    def _get_parsing_config(self, username):
-        """
-        Get parsing configuration from user settings
-        """
-        config = config_service.get_config(username)
-        parsing_args = {
-            "parse_content": config['extract_content'],
-            "truncate_content": config['truncate_content'],
-            "max_content_length": config['max_content_length'],
-            "truncate_mode": config['truncate_mode'],
-            "use_llm": False
-        }
+    # def _get_parsing_config(self, username):
+    #     """
+    #     Get parsing configuration from user settings
+    #     """
+    #     config = config_service.get_config(username)
+    #     parsing_args = {
+    #         "parse_content": config['extract_content'],
+    #         "truncate_content": config['truncate_content'],
+    #         "max_content_length": config['max_content_length'],
+    #         "truncate_mode": config['truncate_mode'],
+    #         "use_llm": False
+    #     }
         
-        # check config and update LLM environment
-        if (config['extract_content'] and 
-            config['llm_api_key'] and 
-            config['llm_base_url'] and 
-            config['llm_model']):
-            parsing_args["use_llm"] = True
+    #     # check config and update LLM environment
+    #     if (config['extract_content'] and 
+    #         config['llm_api_key'] and 
+    #         config['llm_base_url'] and 
+    #         config['llm_model']):
+    #         parsing_args["use_llm"] = True
             
-        return parsing_args
+    #     return parsing_args
 
     def post(self, request):
         return self.do_web_bm(request)
@@ -75,9 +75,9 @@ class BookmarkAPIView(APIView):
         post_data_lis = request.data
         results = []
 
-        # get parsing config
-        parsing_config = self._get_parsing_config(request.user.username)
-        args.update(parsing_config)
+        extract_content = request.META.get('HTTP_X_EXTRACT_CONTENT', 'false').lower() == 'true'
+        os.environ['IS_PARSE_CONTENT'] = str(extract_content)
+
         for item in post_data_lis:
             try:
                 args["resource_path"] = f"chrome/{item.get('path')}"
@@ -208,45 +208,46 @@ class BookmarkClickAPIView(APIView):
                 'detail': traceback.format_exc()
             }, status=500)
 
-class BookmarkSettingsView(APIView):
-    """."""
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+# ======= 前端llm&截断配置项接收，暂时注释 =======
+# class BookmarkSettingsView(APIView): 
+#     """."""
+#     authentication_classes = [TokenAuthentication]
+#     permission_classes = [IsAuthenticated]
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config_manager = BookmarkConfigManager()
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.config_manager = BookmarkConfigManager()
 
-    def get(self, request):
-        """获取用户配置"""
-        try:
-            config = config_service.get_config(request.user.username)
-            return Response(config)
-        except Exception as e:
-            logger.error(f"Error loading config: {str(e)}")
-            return Response({'status': 'error', 'message': str(e)}, status=500)
+    # def get(self, request):
+    #     """获取用户配置"""
+    #     try:
+    #         config = config_service.get_config(request.user.username)
+    #         return Response(config)
+    #     except Exception as e:
+    #         logger.error(f"Error loading config: {str(e)}")
+    #         return Response({'status': 'error', 'message': str(e)}, status=500)
 
-    def post(self, request):
-        """更新用户配置"""
-        try:
-            logger.info(f"Received settings data: {request.data}")
+    # def post(self, request):
+    #     """更新用户配置"""
+    #     try:
+    #         logger.info(f"Received settings data: {request.data}")
             
-            config = request.data.get('settings', {})
-            logger.info(f"Parsed config data: {config}")
+    #         config = request.data.get('settings', {})
+    #         logger.info(f"Parsed config data: {config}")
             
-            if 'BOOKMARK_EXTRACT_CONTENT' in config:
-                config['BOOKMARK_EXTRACT_CONTENT'] = config['BOOKMARK_EXTRACT_CONTENT'].lower() == 'true'
-                logger.info(f"Converted extract_content: {config['BOOKMARK_EXTRACT_CONTENT']}")
+    #         if 'BOOKMARK_EXTRACT_CONTENT' in config:
+    #             config['BOOKMARK_EXTRACT_CONTENT'] = config['BOOKMARK_EXTRACT_CONTENT'].lower() == 'true'
+    #             logger.info(f"Converted extract_content: {config['BOOKMARK_EXTRACT_CONTENT']}")
             
-            if 'BOOKMARK_TRUNCATE_CONTENT' in config:
-                config['BOOKMARK_TRUNCATE_CONTENT'] = config['BOOKMARK_TRUNCATE_CONTENT'].lower() == 'true'
-            if 'BOOKMARK_AUTO_TAG' in config:
-                config['BOOKMARK_AUTO_TAG'] = config['BOOKMARK_AUTO_TAG'].lower() == 'true'
+    #         if 'BOOKMARK_TRUNCATE_CONTENT' in config:
+    #             config['BOOKMARK_TRUNCATE_CONTENT'] = config['BOOKMARK_TRUNCATE_CONTENT'].lower() == 'true'
+    #         if 'BOOKMARK_AUTO_TAG' in config:
+    #             config['BOOKMARK_AUTO_TAG'] = config['BOOKMARK_AUTO_TAG'].lower() == 'true'
             
-            save_result = config_service.update_config(request.user.username, config)
-            logger.info(f"Config save result: {save_result}")
+    #         save_result = config_service.update_config(request.user.username, config)
+    #         logger.info(f"Config save result: {save_result}")
             
-            return Response({'status': 'success'})
-        except Exception as e:
-            logger.error(f"Error saving config: {str(e)}")
-            return Response({'status': 'error', 'message': str(e)}, status=500)
+    #         return Response({'status': 'success'})
+    #     except Exception as e:
+    #         logger.error(f"Error saving config: {str(e)}")
+    #         return Response({'status': 'error', 'message': str(e)}, status=500)

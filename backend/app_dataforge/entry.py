@@ -29,17 +29,18 @@ from .feature import EntryFeatureTool
 DESC_LENGTH = 50
 REL_DIR_FILES = "files"
 REL_DIR_NOTES = "notes"
-
-PARSING_CONFIG_FIELDS = ['is_truncate', 'max_content_length', 'truncate_mode']
+# get is_truncate from user settings
+is_truncate  = os.getenv("IS_TRUNCATE", "False").lower() == "true"
+parse_content = os.getenv("IS_PARSE_CONTENT", "True").lower() == "true"
 
 def add_data(dic, path=None, use_llm=True):
+    if not is_truncate:
+        use_llm = False
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
     elif dic["etype"] == "record":
         return add_record(dic, use_llm=use_llm)
     elif dic["etype"] == "web":
-        if 'use_llm' in dic: # add from bookmark ui
-            use_llm = dic['use_llm']
         return add_web(dic, use_llm=use_llm)
     else:
         return False, False, _("unknown_type_colon_") + dic["etype"]
@@ -182,10 +183,6 @@ def process_ret(ret, dic):
 
 def process_metadata(dic):
     """处理元数据,提取解析配置"""
-    parsing_config = {}
-    for field in PARSING_CONFIG_FIELDS:
-        if field in dic.keys():
-            parsing_config[field] = dic.pop(field)
     meta = {"error": dic.pop("error", None)}
     if "resource_path" in dic:
         meta.update({
@@ -199,16 +196,13 @@ def process_metadata(dic):
             "custom_order": dic.pop("custom_order", 0),
         })
         
-    for field in ["parse_content", "use_llm", "auto_tag"]:
-        dic.pop(field, None)
-        
     dic["meta"] = meta
-    return dic, parsing_config
+    return dic
 
 def handle_resource_path(
-    dic, use_llm=True, parse_content=False, debug=False
+    dic, use_llm=True, debug=False
 ):
-    dic, parsing_config = process_metadata(dic)
+    dic = process_metadata(dic)
     
     ret, parsed_dic = EntryFeatureTool.get_instance().parse(
         dic, dic["addr"], use_llm=use_llm
@@ -218,8 +212,7 @@ def handle_resource_path(
         return process_and_save_entry(
             dic, 
             use_llm=use_llm,
-            debug=debug,
-            **parsing_config
+            debug=debug
         )
         
     if ret:
@@ -250,8 +243,7 @@ def process_downloaded_file(dic, debug=False):
                     abstract = None
                 content = read_md_content(md_path) 
                 if abstract is None:
-                    abstract = get_text_extract(dic["user_id"], content, dic["is_truncate"],limit=dic["max_content_length"], \
-                                                debug=debug, truncate_mode=dic["truncate_mode"])
+                    abstract = get_text_extract(dic["user_id"], content, debug=debug)
                 if debug:
                     if abstract is not None:
                         logger.info(f"abstract {len(abstract)}")
@@ -268,17 +260,10 @@ def process_downloaded_file(dic, debug=False):
         return False, True, f"parse_url: failed"
 
 
-def process_and_save_entry(dic, use_llm=True, debug=False, **parsing_config):
+def process_and_save_entry(dic, use_llm=True, debug=False):
     """处理并保存网页数据"""
-    parsing_values = {
-        "is_truncate": False,
-        "max_content_length": 2000,
-        "truncate_mode": "title_content"
-    }
-    parsing_values.update(parsing_config)
     
     temp_dic = dic.copy()
-    temp_dic.update(parsing_values)
     
     info, abstract, content = process_downloaded_file(temp_dic, debug=debug)
     if info == _("run_failed"):
@@ -290,9 +275,6 @@ def process_and_save_entry(dic, use_llm=True, debug=False, **parsing_config):
         dic["meta"].update(info)
         
     ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=use_llm)
-
-    for field in PARSING_CONFIG_FIELDS:
-        dic.pop(field, None)
     
     ret, ret_emb, detail = save_entry(dic, abstract, content)
     if ret:
@@ -300,21 +282,21 @@ def process_and_save_entry(dic, use_llm=True, debug=False, **parsing_config):
     return ret, ret_emb, detail
 
 
-def add_web(dic, use_llm=True, parse_content=True, debug=False):
+def add_web(dic, use_llm=True, debug=False):
     """
     Download the file from the URL, parse the file, and store the data from the file into the database;
     This only handles plain web pages, does not consider files
     """
     if "error" in dic and dic["error"] is not None:
         if "resource_path" in dic:
-            dic, parsing_config = process_metadata(dic)
+            dic = process_metadata(dic)
         ret, ret_emb, detail = save_entry(dic, None, None)
         if ret:
             ret, detail = process_ret(ret, dic)
         return ret, ret_emb, detail
     if "resource_path" in dic:
         return handle_resource_path(
-            dic, parse_content=dic["parse_content"], use_llm=use_llm
+            dic, use_llm=use_llm
         )
     if parse_content:
         return process_and_save_entry(dic, use_llm, debug)

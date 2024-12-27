@@ -77,9 +77,9 @@ MIDDLEWARE = [
 BACKEND_PORT_OUTER = os.getenv("BACKEND_PORT_OUTER", "8005")
 BACKEND_ADDR_OUTER = os.getenv("BACKEND_ADDR_OUTER", "localhost")
 CORS_ALLOWED_ORIGINS = [
-    "chrome-extension://egfnajgieeffieaboibcmmjjbjcifbpn",
     "app://obsidian.md",
     f"http://{BACKEND_ADDR_OUTER}:{BACKEND_PORT_OUTER}",  # Use external ports
+    "chrome-extension://ipmjdopedclallhimhboboaanoibhodj",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -238,3 +238,17 @@ from loguru import logger
 
 logger.remove()
 logger.add(sys.stdout, level="DEBUG")  # xieyan debug
+
+# 允许的请求头
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-extract-content',  # 添加我们自定义的头
+]

@@ -16,6 +16,11 @@ from backend.common.llm.llm_hub import llm_query
 
 DEFAULT_TITLE = _("unknown_title")
 
+# Move environment variables here
+IS_TRUNCATE = os.getenv("IS_TRUNCATE", "False").lower() == "true"
+TRUNCATE_MODE = os.getenv("TRUNCATE_MODE", "title_content")
+MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "2000"))
+
 def truncate_content(content, title=None, method="title_content"):
     """Truncate content based on different methods 
     """
@@ -41,7 +46,7 @@ def truncate_content(content, title=None, method="title_content"):
     
     return content
 
-def get_text_extract(uid, content, is_truncate=False, limit=2000, truncate_mode='title_content', engine_type=None, debug=False):
+def get_text_extract(uid, content, is_truncate=IS_TRUNCATE, limit=MAX_CONTENT_LENGTH, truncate_mode=TRUNCATE_MODE, engine_type=None, debug=False):
     """
     Extract the main content from the text
     """
