@@ -44,6 +44,7 @@
                 <el-tab-pane name="ChatTools" :label="$t('chatTools')"></el-tab-pane>
                 <el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>
                 <el-tab-pane name="ReadingTools" :label="$t('readingTools')"></el-tab-pane>
+                <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane> 
             </el-tabs>
         </div>
     </el-container>
@@ -97,6 +98,9 @@ export default {
         },
         gotoDataManager() {
             this.$router.push('/');
+        },
+        gotoBMManager() {
+            this.$router.push('/bm_manager'); 
         },
         loginFunc() {
             this.$router.push('/login');
@@ -154,6 +158,9 @@ export default {
                     break;
                 case 'SupportTools':
                     this.gotoAssistant();
+                    break;
+                case 'BMManager':
+                    this.gotoBMManager();
                     break;
             }
         },
