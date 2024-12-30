@@ -44,8 +44,8 @@ $ vi backend/.env
 
 * At least the following parameters need to be set: IP address, LANGUAGE_CODE, and PGSQL_PASSWORD.
 * It is recommended to use OpenAI as the backend model:
-    * If you can connect to OpenAI, set the OPENAI_API_KEY.
-    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek and configure the DEEPSEEK section.
+    * If you can connect to OpenAI, set the OpenAI api.
+    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek.
 
 ### 2.2 Configure Plugin
 
@@ -72,16 +72,23 @@ https://github.com/exmemo-ai/obsidian-exmemo-client
 $ docker-compose --env-file backend/.env --profile production up -d
 ```
 
+Please refer to shell/prod.sh.
+
 At this point, open http://ip:8084/ to see the frontend interface. Please register a user before using it.
 
 #### 2.3.2 Start in Development Mode
 (Optional)
 
-If you need to debug the frontend and backend code, start in development mode.
+If you need to debug the frontend and backend code, start in development mode, And manually run the backend Python program.
 
 ```shell
 $ docker-compose --env-file backend/.env --profile development up -d
+$ docker exec -it ebackend_dev bash
+$ cd backend
+$ python manage.py runserver 0.0.0.0:8005
 ```
+
+Please refer to shell/dev.sh and shell/run.sh.
 
 #### 2.3.3 S3 Storage: Minio
 (Optional)
@@ -112,6 +119,8 @@ Debugging: When running the program, check if the ExMemo plugin is loaded and in
 After upgrading, rebuild the Docker image and rerun Docker Compose. Remove old containers during restart to avoid unexpected issues. Refer to shell/update.sh for details.
 
 *Please upgrade the following simultaneously: Frontend, Backend, Plugins, and the .env file to avoid feature issues from API changes.*
+
+Please refer to shell/update.sh.
 
 ### 2.5 Notes
 

@@ -43,7 +43,7 @@ $ vi backend/.env
 * 至少需要设置以下几个参数：IP 地址、LANGUAGE_CODE 和 PGSQL_PASSWORD。
 * **建议使用 OpenAI 作为后端模型：**
 	* 如果可以连接 OpenAI，推荐将 DEFAULT_CHAT_MODEL 设为 gpt-4o，将 DEFAULT_TOOL_MODEL 设为 gpt-4o-mini
-	* 如果无法连接 OpenAI，例如在中国使用，推荐将 DEFAULT_CHAT_* 设置为 deepseek，DEFAULT_TOOL_* 设置为千问或豆包模型。
+	* 如果无法连接 OpenAI，例如在中国使用，推荐将 DEFAULT_CHAT_* 和 DEFAULT_TOOL_* 设置为 deepseek。
 
 ### 2.2 配置插件
 
@@ -73,17 +73,24 @@ https://github.com/exmemo-ai/obsidian-exmemo-client
 $ docker-compose --env-file backend/.env --profile production up -d
 ```
 
+具体方法请参见 shell/prod.sh。
+
 此时打开 http://ip:8084/ 即可看到前端界面，使用时请先注册用户
 
 #### 2.3.2 以开发模式启动
 
 (可选)
 
-如需要调试前后端代码，请以开发模型启动。
+如需要调试前后端代码，请以开发模型启动。此时，需要手动运行后端 Python 程序。
 
 ```shell
 $ docker-compose --env-file backend/.env --profile development up -d
+$ docker exec -it ebackend_dev bash
+$ cd backend
+$ python manage.py runserver 0.0.0.0:8005
 ```
+
+具体方法请参见 shell/dev.sh, shell/run.sh。
 
 #### 2.3.3 S3 存储：minio
 
@@ -113,7 +120,9 @@ $ docker logs kwechat
 
 ### 2.4 升级
 
-项目升级后，需要重新打包 Docker 镜像，并重新运行 Docker Compose。在重启时需删除旧容器，以避免出现不可预料的问题。具体方法请参见 shell/update.sh。
+项目升级后，需要重新打包 Docker 镜像，并重新运行 Docker Compose。在重启时需删除旧容器，以避免出现不可预料的问题。
+
+具体方法请参见 shell/update.sh。
 
 *请同时升级：前端、后端、插件、配置文件.env，否则可能因为接口升级导致部分功能无法正常使用。*
 
