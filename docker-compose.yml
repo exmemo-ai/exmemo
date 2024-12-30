@@ -25,6 +25,11 @@ services:
       - VUE_APP_K_LANGUAGE_CODE=${LANGUAGE_CODE}
     profiles:
       - production
+    build:
+      context: ./ui/web_frontend
+      args:
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTP_PROXY}
   efrontend_dev:
     image: node_efrontend:latest
     container_name: efrontend_dev
@@ -35,6 +40,11 @@ services:
       - VUE_APP_K_LANGUAGE_CODE=${LANGUAGE_CODE}
     profiles:
       - development
+    build:
+      context: ./ui/web_frontend
+      args:
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTP_PROXY}      
     volumes:
       - ${HOST_SRC_DIR}:/opt/
     entrypoint: ["sh", "-c"]
@@ -48,7 +58,11 @@ services:
   ebackend:
     image: exmemo:latest
     restart: always
-    build: .
+    build:
+      context: ./backend
+      args:
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTP_PROXY}
     container_name: ebackend
     env_file:
       - backend/.env
@@ -60,7 +74,11 @@ services:
       - production      
   ebackend_dev:
     image: exmemo:latest
-    build: .
+    build:
+      context: ./backend
+      args:
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTP_PROXY}
     container_name: ebackend_dev
     env_file:
       - backend/.env

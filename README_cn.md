@@ -45,27 +45,9 @@ $ vi backend/.env
 	* 如果可以连接 OpenAI，推荐将 DEFAULT_CHAT_MODEL 设为 gpt-4o，将 DEFAULT_TOOL_MODEL 设为 gpt-4o-mini
 	* 如果无法连接 OpenAI，例如在中国使用，推荐将 DEFAULT_CHAT_* 设置为 deepseek，DEFAULT_TOOL_* 设置为千问或豆包模型。
 
-### 2.2 制作镜像
+### 2.2 配置插件
 
-#### 2.2.1 制作后端镜像
-
-``` shell
-$ cd backend
-$ docker build -t exmemo:240927 .
-$ docker tag exmemo:240927 exmemo:latest
-$ cd ..
-```
-
-#### 2.2.2 制作前端镜像
-
-``` shell
-$ cd ui/web_frontend
-$ docker build -t node_efrontend:240927 .
-$ docker tag node_efrontend:240927 node_efrontend:latest
-$ cd ../../
-```
-
-#### 2.2.3 微信插件
+#### 2.2.1 微信插件
 
 （可选）
 
@@ -75,7 +57,7 @@ $ . install.sh # 复制插件到微信工具中
 $ cd ../../
 ```
 
-#### 2.2.4 Obsidian 插件
+#### 2.2.2 Obsidian 插件
 
 （可选）
 

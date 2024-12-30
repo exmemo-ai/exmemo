@@ -47,27 +47,9 @@ $ vi backend/.env
     * If you can connect to OpenAI, set the OPENAI_API_KEY.
     * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek and configure the DEEPSEEK section.
 
-### 2.2 Build Images
+### 2.2 Configure Plugin
 
-#### 2.2.1 Build Backend Image
-
-```shell
-$ cd backend
-$ docker build -t exmemo:240927 .
-$ docker tag exmemo:240927 exmemo:latest
-$ cd ..
-```
-
-#### 2.2.2 Build Frontend Image
-
-```shell
-$ cd ui/web_frontend
-$ docker build -t node_efrontend:240927 .
-$ docker tag node_efrontend:240927 node_efrontend:latest
-$ cd ../../
-```
-
-#### 2.2.3 WeChat Plugin
+#### 2.2.1 WeChat Plugin
 (Optional)
 
 ```shell
@@ -76,7 +58,7 @@ $ . install.sh # Copy plugin to WeChat tool
 $ cd ../../
 ```
 
-#### 2.2.4 Obsidian Plugin
+#### 2.2.2 Obsidian Plugin
 (Optional)
 
 Compile the Obsidian plugin as needed and install it in Obsidian. For details, see:
