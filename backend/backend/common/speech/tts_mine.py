@@ -51,8 +51,11 @@ class TtsMine(TtsEngine):
     def synthesize(
         self, text, output_path, speed=1.0, language=None, voice=None, debug=False
     ):
+        my_url = get_my_speech_url()
+        if my_url is None:
+            return False, _("custom_synthesis_failed")
         if debug:
-            logger.debug(f"tts {text} to {output_path} at {url}")
+            logger.debug(f"tts {text} to {output_path} at {my_url}")
         data = {
             "prompt_language": "zh",
             "text": text,
@@ -61,10 +64,8 @@ class TtsMine(TtsEngine):
         }
         if voice is not None:
             data["model_name"] = voice
-        # logger.warning(f"tts_mine {data}")
         try:
-            url = get_url()
-            r = requests.post(url, json=data)
+            r = requests.post(my_url, json=data)
             if debug:
                 logger.debug(f"code return {r.status_code}")
             if r.status_code != 200:
@@ -85,6 +86,9 @@ class TtsMine(TtsEngine):
         """
         Get Synthesis Service Status
         """
+        my_url = get_my_speech_url()
+        if my_url is None:
+            return False
         try:
             if (
                 not force and time.time() - self.last_status_time < 60 * 60
@@ -93,7 +97,7 @@ class TtsMine(TtsEngine):
             self.models = []
             self.last_status_time = time.time()
             logger.info("real get_tts_status")
-            url = get_url() + "/get_status"
+            url = my_url + "/get_status"
             r = requests.post(url)
             if r.status_code != 200:
                 logger.warning(f"get_tts_status failed {r.text}")

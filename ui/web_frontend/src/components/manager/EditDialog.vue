@@ -44,7 +44,7 @@
                         style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis; white-space: normal;">{{
                             $t('file') }}: {{file_path}}</span>
                 </div>
-                <div v-if="form.etype === 'record'" width="100%">
+                <div v-if="form.etype === 'record' || form.etype == 'chat'" width="100%">
                     <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
                 </div>
             </div>
@@ -64,7 +64,7 @@
 
         <div style="display: flex;margin-bottom: 5px;">
             <div style="margin-right: 5px; white-space: nowrap;">
-                <el-label>{{ $t('title') }}</el-label>
+                <el-text>{{ $t('title') }}</el-text>
             </div>
             <div style="flex-grow: 1;">
                 <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? $t('autoExtract') : ''"
@@ -73,7 +73,7 @@
         </div>
         <div style="display: flex;margin-bottom: 5px;">
             <div style="margin-right: 5px; white-space: nowrap; display: flex; align-items: center;">
-                <el-label>{{ $t('type') }}</el-label>
+                <el-text>{{ $t('type') }}</el-text>
             </div>
             <div style="flex-grow: 1">
                 <el-input v-model="form.ctype" :placeholder="$t('autoExtract')"></el-input>
@@ -86,9 +86,9 @@
             </div>
             <div style="flex-grow: 1; display: flex; align-items: flex-start;">
                 <el-radio-group v-model="form.atype">
-                    <el-radio :label="'subjective'">{{ $t('subjective') }}</el-radio>
-                    <el-radio :label="'objective'">{{ $t('objective') }}</el-radio>
-                    <el-radio :label="'third_party'">{{ $t('thirdParty') }}</el-radio>
+                    <el-radio value="subjective">{{ $t('subjective') }}</el-radio>
+                    <el-radio value="objective">{{ $t('objective') }}</el-radio>
+                    <el-radio value="third_party">{{ $t('thirdParty') }}</el-radio>
                 </el-radio-group>
             </div>
         </div>
@@ -98,8 +98,8 @@
             </div>
             <div style="flex-grow: 1; display: flex; align-items: flex-start;">
                 <el-radio-group v-model="form.status">
-                    <el-radio :label="'todo'">{{ $t('toDo') }}</el-radio>
-                    <el-radio :label="'collect'">{{ $t('collect') }}</el-radio>
+                    <el-radio value="todo">{{ $t('toDo') }}</el-radio>
+                    <el-radio value="collect">{{ $t('collect') }}</el-radio>
                 </el-radio-group>
             </div>
         </div>
@@ -114,6 +114,7 @@ import { getURL, parseBackendError, parseBlobData } from '@/components/support/c
 export default {
     data() {
         return {
+            dialogWidth: '60%',
             isMobile: false,
             parent_obj: null,
             file_path: null,
@@ -381,7 +382,7 @@ export default {
             const formData = new FormData();
             formData.append('rtype', 'extract');
             formData.append('etype', this.form.etype);
-            if (this.form.etype === 'record') {
+            if (this.form.etype === 'record' || this.form.etype === 'chat') {
                 formData.append('raw', this.form.raw);
             } else if (this.form.etype === 'web') {
                 formData.append('addr', this.form.addr);

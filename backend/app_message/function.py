@@ -1,10 +1,11 @@
 import re
+import pandas as pd
 from django.utils.translation import gettext as _
-from backend.common.llm.llm_hub import chat
 from .command import *
+from backend.common.utils.regular_tools import regular_str
+from app_dataforge.entry import get_entry_list
 
 CMD_INNER_GET = "CMD_INNER_GET"
-
 
 def regular_title(title):
     """
@@ -16,16 +17,34 @@ def regular_title(title):
         title = title[:20]
     return title
 
-
-def do_chat(args):
+    
+def search_data(sdata, dic={}):
     """
-    Call the model for a chat
+    Search for data
     """
-    content = args["content"]
-    if content is not None:
-        content = content.strip()
-    ret, answer = chat(args["user_id"], args["session_id"], content)
-    if ret:
-        return True, {"type": "text", "content": answer}
+    condition = {"user_id": sdata.user_id}
+    condition.update(dic)
+    if len(sdata.current_content) > 0:
+        keyword = sdata.current_content
     else:
-        return True, {"type": "text", "content": _("chat_call_failed")}
+        keyword = None
+    logger.info(f"condition {condition}")
+    queryset = get_entry_list(keyword, condition, 5)
+    df = pd.DataFrame(queryset.values())
+    arr = []
+    for idx, item in df.iterrows():
+        label = regular_str(item["title"], del_enter=True, max_length=25)
+        value = CMD_INNER_GET + " " + str(item["idx"])
+        arr.append((label, value))
+
+    if len(arr) == 0:
+        return _("no_content_found_1727252424")
+    elif len(arr) == 1:
+        sdata.current_content = arr[0][1]
+        ret, detail = CommandManager.get_instance().msg_do_command(sdata)
+        logger.error(f'detail {detail}')
+        return detail
+    else:
+        return msg_common_select(sdata, arr)
+
+

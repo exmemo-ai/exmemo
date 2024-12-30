@@ -36,11 +36,17 @@ def add_data(dic, path=None, use_llm=True):
         return add_file(dic, path, use_llm=use_llm)
     elif dic["etype"] == "record":
         return add_record(dic, use_llm=use_llm)
+    elif dic["etype"] == "chat":
+        return add_chat(dic, use_llm=use_llm)
     elif dic["etype"] == "web":
         return add_web(dic, use_llm=use_llm)
     else:
         return False, False, _("unknown_type_colon_") + dic["etype"]
 
+def add_chat(dic, use_llm=True):
+    abstract = dic["abstract"]
+    del dic["abstract"]
+    return save_entry(dic, abstract, dic["raw"])
 
 def add_file(dic, path, use_llm=True):
     mtime_datetime = timezone.now().astimezone(pytz.UTC)
@@ -73,8 +79,6 @@ def add_file(dic, path, use_llm=True):
     if ret_convert:
         parser = MarkdownParser(md_path)
         meta_data = convert_dic_to_json(parser.fm)
-        # logger.warning(f'parse {md_path} {parser.fm}')
-        # meta_data = parser.fm # xieyan 240903
         content = parser.content
     if content is None and is_plain_text(path):
         content = open(path, "r").read()
@@ -100,8 +104,6 @@ def save_entry(dic, abstract, content, debug=False):
     use_embedding = EmbeddingTools.use_embedding()
     ret_emb = True
     try:
-        # later merge update logic
-        # args was originally an instance of StoreEntry, here it is converted to a dictionary
         if "addr" in dic and dic["addr"] is not None:
             StoreEntry.objects.filter(user_id=dic["user_id"], addr=dic["addr"]).delete()
         dic["block_id"] = 0
@@ -133,10 +135,9 @@ def save_entry(dic, abstract, content, debug=False):
                     dic.pop("embeddings")
                 StoreEntry.objects.create(**dic)
         return True, ret_emb, _("add_success")
-        # return True, f"Record successful, type: {dic['ctype']}" # later adjust
     except Exception as e:
         traceback.print_exc()
-        logger.error(f"save to db failed {e}")
+        logger.warning(f"save to db failed {e}")
         return False, ret_emb, _("add_failed")
 
 
@@ -270,6 +271,8 @@ def add_web(dic, use_llm=True, parse_content=True, debug=False):
     if "error" in dic and dic["error"] is not None:
         if "resource_path" in dic:
             dic = process_metadata(dic, is_chrome=True)
+        if "error" in dic:
+            del dic["error"]
         ret, ret_emb, detail = save_entry(dic, None, None)
         if ret:
             ret, detail = process_ret(ret, dic)
@@ -294,7 +297,7 @@ def delete_entry(uid, filelist):
     """
     Delete the file permanently
     """
-    logger.warning(f"real delete total {len(filelist)}")
+    logger.debug(f"real delete total {len(filelist)}")
     for item in filelist:
         addr = item["addr"]
         entrys = StoreEntry.objects.filter(user_id=uid, addr=addr)
@@ -350,48 +353,46 @@ def get_entry(idx):
         return None
 
 
-def get_entry_list(keywords, query_args, max_count):
-    logger.warning(f"query_args {query_args}")
+def get_entry_list(keywords, query_args, max_count, fields = None):
     query_args["block_id"] = 0
     query_args["is_deleted"] = False
-    fields = [
-        "idx",
-        "block_id",
-        "raw",
-        "title",
-        "etype",
-        "atype",
-        "ctype",
-        "status",
-        "addr",
-        "path",
-        "created_time",
-        "updated_time",
-    ]
+    if fields is None:
+        fields = [
+            "idx",
+            "block_id",
+            "raw",
+            "title",
+            "etype",
+            "atype",
+            "ctype",
+            "status",
+            "addr",
+            "path",
+            "created_time",
+            "updated_time",
+        ]
     if keywords is not None and len(keywords) > 0:
         keywords = regular_keyword(keywords)
         keyword_arr = keywords.split(" ")
         # find by title
         q_obj = Q()
         for keyword in keyword_arr:
-            q_obj &= Q(title__icontains=keyword)
-        queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[
-            :max_count
-        ]
+            q_obj &= Q(title__iregex=keyword)
+        queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
+        
         if len(queryset) == 0:
             # find by raw
             q_obj = Q()
             for keyword in keyword_arr:
-                q_obj &= Q(raw__icontains=keyword)
+                q_obj &= Q(raw__iregex=keyword)
             query_args_2 = query_args.copy()
             query_args_2.pop("block_id")
             queryset = StoreEntry.objects.filter(q_obj, **query_args_2).values(*fields)
             if len(queryset) > 0:
-                queryset = queryset.order_by("addr", "block_id").distinct("addr")[
-                    :max_count
-                ]
+                queryset = queryset.order_by("addr", "block_id").distinct("addr")[:max_count]
+
         if len(queryset) == 0:
-            # find by title trigram, sometimes right
+            # find by title trigram
             queryset = (
                 StoreEntry.objects.filter(**query_args)
                 .annotate(

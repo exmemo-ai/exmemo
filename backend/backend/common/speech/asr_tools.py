@@ -3,7 +3,7 @@ import requests
 import librosa
 from openai import OpenAI
 from loguru import logger
-from backend.common.speech.tts_base import get_url
+from backend.common.speech.tts_base import get_my_speech_url
 from django.utils.translation import gettext as _
 
 
@@ -36,10 +36,13 @@ def asr_whisper(path_in):
 
 
 def asr_mine(path_in):
+    my_url = get_my_speech_url()
+    if my_url is None:
+        return False, _("recognition_failure")
     try:
         with open(path_in, "rb") as f:
             files = {"file": f}
-            url = f"{get_url()}/asr"
+            url = f"{my_url}/asr"
             # url = 'http://192.168.10.168:9880/asr' # local test
             print("c", url)
             r = requests.post(url, files=files)

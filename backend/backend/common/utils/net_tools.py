@@ -1,17 +1,20 @@
 import re
 import json
+from loguru import logger
 from django.http import HttpResponse, FileResponse
 
 
 def do_result(ret, detail):
     if ret:
-        if isinstance(detail, dict):
-            if (
-                "type" in detail
+        dic = {"status": "success"}
+        if isinstance(detail, str):
+            dic["info"] = detail
+        elif isinstance(detail, dict):
+            if ("type" in detail
                 and detail["type"] in ["file", "audio"]
-                and "content" in detail
+                and "path" in detail
             ):
-                file = open(detail["content"], "rb")
+                file = open(detail["path"], "rb")
                 if detail["type"] == "audio":
                     response = FileResponse(file, content_type="audio/mpeg")
                 else:
@@ -23,14 +26,11 @@ def do_result(ret, detail):
                 )
                 return response
             else:
-                ret_dic = {"status": "success", "info": detail["content"]}
-                if "type" in detail:
-                    ret_dic["type"] = detail["type"]
-                if "request_delay" in detail:
-                    ret_dic["request_delay"] = detail["request_delay"]
-                return HttpResponse(json.dumps(ret_dic))
-        if isinstance(detail, str):
-            return HttpResponse(json.dumps({"status": "success", "info": detail}))
+                for key in detail:
+                    dic[key] = detail[key]
+        elif detail is not None:
+            logger.warning(f"do_result: unknown type {type(detail)}, detail: {detail}")
+        return HttpResponse(json.dumps(dic))
     else:
         if isinstance(detail, str):
             return HttpResponse(json.dumps({"status": "failed", "info": detail}))

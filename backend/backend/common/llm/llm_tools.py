@@ -4,10 +4,90 @@ from loguru import logger
 from openai import OpenAI
 import google.generativeai as genai
 from django.utils.translation import gettext as _
+from backend.common.user.resource import *
+LLM_DEFUALT = 'default'
+LLM_CUSTOM = 'custom'
 
-DEFAULT_CHAT_LLM = os.getenv("DEFAULT_CHAT_LLM", "gpt3.5-turbo")
-DEFAULT_TOOL_LLM = os.getenv("DEFAULT_TOOL_LLM", "gpt3.5-turbo")
+def check_llm_limit(user, debug=False):
+    privilege = user.privilege
+    limit_llm_day = privilege.get("limit_llm_day", -1)
+    used_tts_count = ResourceManager.get_instance().get_usage(
+        user.user_id, dtype="day", rtype="llm"
+    )
+    if debug:
+        logger.info(
+            "Usage limit: {limit_llm_day}, Used: {used_tts_count}".format(
+                limit_llm_day=limit_llm_day, used_tts_count=used_tts_count
+            )
+        )
+    if limit_llm_day > 0:
+        if used_tts_count >= limit_llm_day:
+            return False, _("the_maximum_number_of_words_called_today_has_been_reached")
+    return True, ''
 
+def save_llm_usage(user, app, engine_type, duration, token_count):
+    dic = {
+        "token_count": token_count,
+        "engine_type": engine_type,
+        "duration": duration,
+    }
+    if token_count > 0:
+        if len(engine_type) > 30:
+            engine_type = engine_type[:30]
+        ResourceManager.get_instance().add(
+            user.user_id, app, "llm", engine_type, token_count, duration, "success", dic
+        )
+    return dic
+
+class LLMInfo:
+    def __init__(self, engine_type=None, api_method=None, url=None, api_key=None, model_name=None):
+        self.engine_type = engine_type
+        self.api_method = api_method
+        self.url = url
+        self.api_key = api_key
+        self.model_name = model_name
+
+    @staticmethod
+    def get_info(engine_type, rtype='llm_tool_model'):
+        api_method = "openai"
+        url = None
+        api_key = None
+        model_name = None
+        ltype = LLM_DEFUALT
+        if isinstance(engine_type, dict):
+            if "type" in engine_type:
+                ltype = engine_type.get("type")
+            if "url" in engine_type:
+                url = engine_type.get("url")
+            if "model" in engine_type:
+                model_name = engine_type.get("model")
+            if "apikey" in engine_type:
+                api_key = engine_type.get("apikey")
+        if ltype != LLM_CUSTOM:
+            if rtype == 'llm_tool_model':
+                url = os.getenv('DEFAULT_TOOL_URL')
+                api_key = os.getenv('DEFAULT_TOOL_API_KEY')
+                model_name = os.getenv('DEFAULT_TOOL_MODEL')
+            else:
+                url = os.getenv('DEFAULT_CHAT_URL')
+                api_key = os.getenv('DEFAULT_CHAT_API_KEY')
+                model_name = os.getenv('DEFAULT_CHAT_MODEL')
+        if model_name is not None and model_name.find('gemini') >= 0:
+            api_method = "gemini"
+        return LLMInfo(ltype, api_method, url, api_key, model_name)
+    
+
+    def __str__(self):
+        if self.api_key is not None:
+            return f"engine_type {self.engine_type}, api_method: {self.api_method}, url: {self.url}, key: {self.api_key[:10]}... model_name: {self.model_name}"
+        else:
+            return f"engine_type {self.engine_type}, api_method: {self.api_method}, url: {self.url}, key: {self.api_key} model_name: {self.model_name}"
+    
+    def __repr__(self):
+        return self.__str__()
+    
+    def get_desc(self):
+        return f"{self.engine_type}_{self.model_name}"
 
 def get_llm_list():
     llm_list = []
@@ -38,48 +118,6 @@ def get_llm_list():
     ):
         llm_list.append({"label": "UserDefine", "value": "userdefine"})
     return llm_list
-
-
-def select_llm_model(engine_type):
-    api_method = "openai"
-    if engine_type == "ollama":
-        api_key = os.getenv("OLLAMA_LLM_API_KEY")
-        url = os.getenv("OLLAMA_LLM_URL")
-        model_name = os.getenv("OLLAMA_LLM_MODEL")
-    elif engine_type == "deepseek":
-        api_key = os.getenv("DEEPSEEK_API_KEY")
-        url = os.getenv("DEEPSEEK_URL")
-        model_name = os.getenv("DEEPSEEK_MODEL")
-    elif engine_type == "xunfei":
-        api_key = os.getenv("XUNFEI_LLM_API_KEY")
-        url = os.getenv("XUNFEI_LLM_URL")
-        model_name = os.getenv("XUNFEI_LLM_MODEL")
-    elif engine_type == "kimi":
-        api_key = os.getenv("KIMI_API_KEY")
-        url = os.getenv("KIMI_URL")
-        model_name = os.getenv("KIMI_MODEL")
-    elif engine_type == "qwen":
-        api_key = os.getenv("QWEN_API_KEY")
-        url = os.getenv("QWEN_URL")
-        model_name = os.getenv("QWEN_MODEL")
-    elif engine_type == "userdefine":
-        api_key = os.getenv("USER_DEFINE_API_KEY")
-        url = os.getenv("USER_DEFINE_URL")
-        model_name = os.getenv("USER_DEFINE_MODEL")
-    elif engine_type == "gemini":
-        api_method = "gemini"
-        url = None
-        api_key = os.getenv("GEMINI_API_KEY")
-        model_name = os.getenv("GEMINI_MODEL")
-    elif engine_type == "gpt4o" or engine_type == "gpt-4o":
-        url = os.getenv("OPENAI_BASE_URL")
-        api_key = os.getenv("OPENAI_API_KEY")
-        model_name = "gpt-4o"
-    else:
-        url = os.getenv("OPENAI_BASE_URL")
-        api_key = os.getenv("OPENAI_API_KEY")
-        model_name = "gpt-3.5-turbo"
-    return api_method, api_key, url, model_name
 
 
 def query_openai(

@@ -1,7 +1,7 @@
 <template>
   <el-container style="display: flex; flex-direction: column;">
     <div class="header-buttons">
-      <el-label>{{ $t('paperInfo') }}</el-label>
+      <el-text>{{ $t('paperInfo') }}</el-text>
       <el-input v-model="search_text" :placeholder="$t('paperPlaceholder')" />
       <el-button class="icon-button" @click="searchPaper">
         <el-icon>
@@ -69,7 +69,7 @@ export default {
   gap: 8px;
 }
 
-.el-label {
+.el-text {
   white-space: nowrap;
   flex-shrink: 0;
 }

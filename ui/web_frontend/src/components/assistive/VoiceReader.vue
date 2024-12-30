@@ -11,8 +11,8 @@
     <div style="margin-top: 10px;">
       <audio ref="audioPlayer" :src="audioSrc" @timeupdate="updateProgress"></audio>
       <el-slider v-model="progress" :max="duration" @change="changeProgress"></el-slider>
-      <el-button type="primary" @click="playAudio">{{ $t('play') }}</el-button>
-      <el-button type="primary" @click="pauseAudio">{{ $t('pause') }}</el-button>
+      <el-button type="primary" @click="playAudio" :disabled="!hasAudio">{{ $t('play') }}</el-button>
+      <el-button type="primary" @click="pauseAudio" :disabled="!hasAudio">{{ $t('pause') }}</el-button>
     </div>
   </el-container>
 </template>
@@ -29,12 +29,17 @@ export default {
     };
   },
   setup() {
-    const audioSrc = ref(getURL() + 'static/audio/xxx.mp3');
+    const audioSrc = ref('');
     const audioPlayer = ref(null);
     const progress = ref(0);
     const duration = ref(0);
+    const hasAudio = ref(false);
 
     const playAudio = () => {
+      if (!hasAudio.value) {
+        console.log('No audio to play');
+        return;
+      }
       audioPlayer.value.play();
     };
 
@@ -61,6 +66,7 @@ export default {
       audioPlayer,
       progress,
       duration,
+      hasAudio,
       playAudio,
       pauseAudio,
       updateProgress,
@@ -85,6 +91,7 @@ export default {
           if (rtype === 'tts') {
             this.audioSrc = getURL() + res.data.audio_url;
             this.$refs.audioPlayer.load();
+            this.hasAudio = true;
           } else {
             this.textarea_value = res.data.info;
           }

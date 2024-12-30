@@ -7,7 +7,6 @@ from backend.common.parser import converter
 import backend.common.files.filecache as filecache
 from backend.common.files import utils_file
 from backend.common.utils.web_tools import get_text_extract
-from backend.common.user.session import *
 
 
 def get_ext(path):
@@ -106,14 +105,13 @@ def convert_to_md(base_path, md_path=None, force=False, use_ocr=False):
     return ret, md_path
 
 
-def get_file_content(sid):
+def get_file_content(data):
     """
     Get file content
     """
-    ret = SessionManager.get_instance().get_cache(sid, "file")
-    if not isinstance(ret, tuple):
+    if not isinstance(data, tuple):
         return False, None, None, None
-    base_path = ret[0]
+    base_path = data[0]
     if base_path is None:
         return False, None, None, None
     ret, md_path = convert_to_md(base_path)
@@ -128,15 +126,15 @@ def get_file_content(sid):
         return False, base_path, None, None
 
 
-def get_file_abstract(sid, uid):
+def get_file_abstract(data, uid):
     """
     Summary of file content, retrieved from cache, mainly used for file summary in WeChat
     """
-    ret, path, title, content = get_file_content(sid)
-    logger.warning(f"get_file_abstract: {ret}, {path}, {title}")
+    ret, path, title, content = get_file_content(data)
+    logger.info(f"get_file_abstract: {ret}, {path}, {title}")
     if ret:
         info = filecache.TmpFileManager.get_instance().get_file_info(path)
-        logger.warning(f"info: {info}")
+        logger.info(f"info: {info}")
         if info is not None and "abstract" in info and info["abstract"] is not None:
             return True, info["abstract"]
         detail = get_text_extract(uid, content)

@@ -98,25 +98,13 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 if debug:
                     logger.info(f"upload_files success {success_list}")
                 if len(success_list) > 0:
-                    return HttpResponse(
-                        json.dumps(
-                            {
-                                "status": "success",
-                                "list": success_list,
-                                "emb_status": emb_status,
-                            }
-                        )
-                    )
+                    return do_result(True, {"list": success_list, "emb_status": emb_status})
                 else:
-                    return HttpResponse(
-                        json.dumps({"status": "failed", "info": _("no_update_needed")})
-                    )
+                    return do_result(False, _("no_update_needed"))
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"upload_files failed {e}")
-            return HttpResponse(
-                json.dumps({"status": "failed", "info": _("uploading_failed")})
-            )
+            logger.warning(f"upload_files failed {e}")
+            return do_result(False, _("uploading_failed"))
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -125,13 +113,13 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         try:
             logger.debug(request)
             instance = self.get_object()
-            logger.warning(f"user_id {instance.user_id}")
+            logger.debug(f"user_id {instance.user_id}")
             delete_entry(instance.user_id, [{"addr": instance.addr}])
-            return HttpResponse(json.dumps({"status": "success"}))
+            return do_result(True, None)
         except Exception as e:
-            logger.error(f"destroy failed {e}")
+            logger.warning(f"destroy failed {e}")
             traceback.print_exc()
-            return HttpResponse(json.dumps({"status": "failed"}))
+            return do_result(False, None)
 
     def list(self, request, *args, **kwargs):
         """
@@ -299,15 +287,13 @@ class EntryAPIView(APIView):
         dic["user_id"] = args["user_id"]
         logger.debug(f"etype {dic['etype']}")
         ret = False
-        if dic["etype"] == "record":
+        if dic["etype"] in ["record", "chat"]:
             raw = request.GET.get("raw", request.POST.get("raw", None))
             ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw)
         elif dic["etype"] in ["web", "note", "file"]:
             addr = request.GET.get("addr", request.POST.get("addr", None))
             ret, dic_new = EntryFeatureTool.get_instance().parse(dic, addr)
         if ret:
-            ret_dic = {"status": "success", "dic": dic_new}
+            return do_result(True, {"dic": dic_new})
         else:
-            ret_dic = {"status": "failed", "info": "extract failed"}
-        logger.debug(f"return {str(ret_dic)}")
-        return HttpResponse(json.dumps(ret_dic))
+            return do_result(False, {"info": "extract failed"})

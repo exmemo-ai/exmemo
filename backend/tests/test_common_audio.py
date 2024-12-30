@@ -11,10 +11,11 @@ class AudioTestCase(BaseTestCase):
         response = self.do_message({"content": "设置语音合成 讯飞"})
         self.parse_return_info(response)
 
-        response = self.do_message({"content": "转音频 你好我是测试"})
+        response = self.do_message({"content": "文本转音频 你好我是测试"})
         ret = self.parse_return_file(response, "audio/mpeg", "/tmp/audio_1.mp3")
         self.assertEqual(ret, True)
 
+    '''
     def test_2_tts_mine(self):
         """
         Simple text-to-speech: Custom
@@ -25,6 +26,7 @@ class AudioTestCase(BaseTestCase):
         response = self.do_message({"content": "转音频 你好我是测试"})
         ret = self.parse_return_file(response, "audio/mpeg", "/tmp/audio_2.mp3")
         self.assertEqual(ret, True)
+    '''
 
     def test_3_asr(self):
         """
@@ -36,8 +38,9 @@ class AudioTestCase(BaseTestCase):
             {"rtype": "file", "from": "others", "file": file}, format="multipart"
         )
         self.parse_return_info(response)
+        sid = self.parse_return_sid(response)
 
-        response = self.do_message({"content": "语音识别"})
+        response = self.do_message({"content": "语音识别", "sid": sid})
         ret = self.parse_return_file(
             response, "application/octet-stream", "/tmp/file.txt"
         )

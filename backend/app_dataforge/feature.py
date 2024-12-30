@@ -16,7 +16,7 @@ from backend.settings import LANGUAGE_CODE
 DEFAULT_CATEGORY = _("unclassified")
 DEFAULT_STATUS = "init"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
-
+TITLE_LENGTH = 20
 
 class EntryFeatureTool:
     _instance = None
@@ -49,7 +49,7 @@ class EntryFeatureTool:
             dic["atype"] = None
         if "title" not in dic or pd.isnull(dic["title"]) or len(dic["title"]) == 0:
             dic["title"] = None
-        if dic["etype"] == "record":
+        if dic["etype"] == "record" or dic["etype"] == "chat":
             if dic["title"] is None:
                 ret, title = self.get_title(
                     dic["user_id"], content, use_llm=use_llm, debug=debug
@@ -126,8 +126,8 @@ class EntryFeatureTool:
             dic["atype"] = "subjective"
         if dic["title"] is None:
             dic["title"] = content
-        if len(dic["title"]) > 10:
-            dic["title"] = dic["title"] + "..."
+        if len(dic["title"]) > TITLE_LENGTH:
+            dic["title"] = dic["title"][:TITLE_LENGTH] + "..."
         return True, dic
 
     def regular_status(self, dic_base, dic_detect):
@@ -262,7 +262,7 @@ class EntryFeatureTool:
         """
         Determine the Category Through the Language Model
         """
-        if etype == "record":
+        if etype == "record" or etype == "chat":
             df = self.df_record
         else:
             df = self.df_web
@@ -301,6 +301,12 @@ class EntryFeatureTool:
             if "atype" in dic and dic["atype"] is not None:
                 if dic["atype"] not in auth_list:
                     del dic["atype"]
+            if 'ctype' not in dic:
+                dic['ctype'] = DEFAULT_CATEGORY
+            if 'status' not in dic:
+                dic['status'] = DEFAULT_STATUS
+            if 'atype' not in dic:
+                dic['atype'] = None
             return dic
         except Exception as e:
             traceback.print_exc()

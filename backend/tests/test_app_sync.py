@@ -11,6 +11,11 @@ TMP_DIR = "/tmp/tmp"
 
 
 class SyncTestCase(BaseTestCase):
+    def __init__(self, methodName = "runTest"):
+        super().__init__(methodName)
+        if not os.path.exists(TMP_DIR):
+            os.mkdir(TMP_DIR)
+
     def inner_sync_upload(self):
         """
         create local files, and upload

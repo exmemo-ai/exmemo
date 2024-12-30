@@ -83,12 +83,12 @@ export default {
                 console.log(res);
                 console.log(res.data);
                 if (res.data.status == "success") {
-                    this.info_privilege = res.data.info.privilege;
+                    this.info_privilege = res.data.privilege;
                     this.$refs.ttsSettings.updateSettings({
-                        ...res.data.info.setting,
-                        engine_list: res.data.info.engine_list
+                        ...res.data.setting,
+                        engine_list: res.data.engine_list
                     });
-                    this.$refs.llmSettings.updateSettings(res.data.info);
+                    this.$refs.llmSettings.updateSettings(res.data);
                 }
             }).catch((err) => {
                 parseBackendError(this, err);
@@ -141,8 +141,10 @@ export default {
             formData.append('tts_language', ttsSettings.tts_language);
             formData.append('tts_speed', ttsSettings.tts_speed);
             formData.append('llm_chat_model', llmSettings.llm_chat_model);
+            formData.append('llm_tool_model', llmSettings.llm_tool_model);
             formData.append('llm_chat_prompt', llmSettings.llm_chat_prompt);
             formData.append('llm_chat_show_count', llmSettings.llm_chat_show_count);
+            formData.append('llm_chat_max_context_count', llmSettings.llm_chat_max_context_count);
             formData.append('llm_chat_memory_count', llmSettings.llm_chat_memory_count);
             axios.post(getURL() + 'api/setting/', formData).then((res) => {
                 console.log(res);

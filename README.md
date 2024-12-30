@@ -44,30 +44,12 @@ $ vi backend/.env
 
 * At least the following parameters need to be set: IP address, LANGUAGE_CODE, and PGSQL_PASSWORD.
 * It is recommended to use OpenAI as the backend model:
-    * If you can connect to OpenAI, set the OPENAI_API_KEY.
-    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_LLM and DEFAULT_TOOL_LLM to deepseek and configure the DEEPSEEK section.
+    * If you can connect to OpenAI, set the OpenAI api.
+    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek.
 
-### 2.2 Build Images
+### 2.2 Configure Plugin
 
-#### 2.2.1 Build Backend Image
-
-```shell
-$ cd backend
-$ docker build -t exmemo:240927 .
-$ docker tag exmemo:240927 exmemo:latest
-$ cd ..
-```
-
-#### 2.2.2 Build Frontend Image
-
-```shell
-$ cd ui/web_frontend
-$ docker build -t node_efrontend:240927 .
-$ docker tag node_efrontend:240927 node_efrontend:latest
-$ cd ../../
-```
-
-#### 2.2.3 WeChat Plugin
+#### 2.2.1 WeChat Plugin
 (Optional)
 
 ```shell
@@ -76,7 +58,7 @@ $ . install.sh # Copy plugin to WeChat tool
 $ cd ../../
 ```
 
-#### 2.2.4 Obsidian Plugin
+#### 2.2.2 Obsidian Plugin
 (Optional)
 
 Compile the Obsidian plugin as needed and install it in Obsidian. For details, see:
@@ -90,16 +72,23 @@ https://github.com/exmemo-ai/obsidian-exmemo-client
 $ docker-compose --env-file backend/.env --profile production up -d
 ```
 
+Please refer to shell/prod.sh.
+
 At this point, open http://ip:8084/ to see the frontend interface. Please register a user before using it.
 
 #### 2.3.2 Start in Development Mode
 (Optional)
 
-If you need to debug the frontend and backend code, start in development mode.
+If you need to debug the frontend and backend code, start in development mode, And manually run the backend Python program.
 
 ```shell
 $ docker-compose --env-file backend/.env --profile development up -d
+$ docker exec -it ebackend_dev bash
+$ cd backend
+$ python manage.py runserver 0.0.0.0:8005
 ```
+
+Please refer to shell/dev.sh and shell/run.sh.
 
 #### 2.3.3 S3 Storage: Minio
 (Optional)
@@ -127,11 +116,11 @@ Debugging: When running the program, check if the ExMemo plugin is loaded and in
 
 ### 2.4 Upgrade
 
-After the project is upgraded, you need to repackage the Docker image and rerun Docker Compose. Note that old containers need to be removed before restarting to avoid unpredictable issues. Follow these steps:
+After upgrading, rebuild the Docker image and rerun Docker Compose. Remove old containers during restart to avoid unexpected issues. Refer to shell/update.sh for details.
 
-```shell
-$ docker-compose --env-file backend/.env down --volumes --remove-orphans
-```
+*Please upgrade the following simultaneously: Frontend, Backend, Plugins, and the .env file to avoid feature issues from API changes.*
+
+Please refer to shell/update.sh.
 
 ### 2.5 Notes
 
@@ -139,11 +128,15 @@ Packaging can consume a lot of memory. If cloud server resources are limited, it
 
 The database password set in Docker Compose takes effect only when the database is created. If you need to change the password later, you will need to update it not only in the .env file but also by connecting to the database and using SQL commands to change it.
 
-## 3 License
+## 3 Changelog
+
+View the complete update history: [CHANGELOG](./CHANGELOG.md)
+
+## 4 License
 
 This project is licensed under the terms of the GNU Lesser General Public License v3.0. See the [LICENSE](./LICENSE) file for details.
 
-## 4 Contributors
+## 5 Contributors
 
 <a href="https://github.com/Exmemo/exmemo/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=Exmemo/exmemo" />

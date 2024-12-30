@@ -312,14 +312,14 @@ def get_paper(dir_path, addr, save=True, debug=False):
                     with open(pdf_path, "wb") as f:
                         f.write(r.content)
                 else:
-                    logger.error(
+                    logger.warning(
                         f"download: {url} failed: {r.status_code} {content_type}"
                     )
     if save and not os.path.exists(md_path) and os.path.exists(pdf_path):
         ret, detail = converter.convert(pdf_path, md_path, keywords=PAPER_KEYWORDS)
         filecache.TmpFileManager.get_instance().add_file(md_path)
         if not ret:
-            logger.error(f"convert: {md_path} failed: {detail}")
+            logger.warning(f"convert: {md_path} failed: {detail}")
     """
     parser = md_parser.MarkdownParser(md_path)
     if parser.fm is not None:
@@ -377,7 +377,7 @@ def paper_info_to_ob(info):
         ret.append(f"journal: ''")
     ret.append(f"status: {_('unread')}")
     ret.append(f"tags:")
-    ret.append(f"- {_('paper_reading')}")
+    ret.append("- " + _('paper_reading'))
     if "title_zh" in info:
         ret.append(f"title: {info['title_zh']}")
     else:
@@ -603,15 +603,15 @@ def polish(uid, content, debug=False):
         ret, answer, detail = llm_query(
             uid, PAPER_ROLE, text[:4096], "chat", debug=debug
         )
+        original_text = _('original_text')
+        polished_text = _('polished_text')
         return (
             True,
-            _(
-                f"""{_('original_text')}
+            f"""{original_text}
 {content}
 =====================
-{_('polished_text')}
-{answer}"""
-            ).format(content=content, answer=answer),
+{polished_text}
+{answer}""".format(content=content, answer=answer),
         )
     except Exception as e:
         return False, e

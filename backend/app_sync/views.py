@@ -18,6 +18,7 @@ from knox.auth import TokenAuthentication
 
 from backend.common.llm.llm_hub import EmbeddingTools
 from backend.common.user.utils import parse_common_args
+from backend.common.utils.net_tools import do_result
 
 from app_dataforge.entry import delete_entry, regerate_embedding
 from app_dataforge.models import StoreEntry
@@ -91,15 +92,13 @@ class SyncAPIView(APIView):
         emb_status = "success"
         emb_model = EmbeddingTools.get_model_name(use_embedding)
         if emb_model is None:
-            return HttpResponse(
-                json.dumps({"status": "failed", "emb_status": "no embedding model"})
-            )
+            return do_result(False, {"emb_status": "no embedding model"})
         for addr in addrs:
             if regerate_embedding(uid, addr, emb_model) is False:
                 emb_status = "failed"
-                logger.error(f"regerate embedding failed {addr}")
+                logger.warning(f"regerate embedding failed {addr}")
                 break
-        return HttpResponse(json.dumps({"status": "success", "emb_status": emb_status}))
+        return do_result(True, {"emb_status": emb_status})
 
     def do_check_embedding(self, args, request):
         """
@@ -122,7 +121,7 @@ class SyncAPIView(APIView):
                 addr_list.append(entry["addr"])
         addr_list = list(set(addr_list))
         logger.info(f"check embedding return {len(addr_list)}")
-        return HttpResponse(json.dumps({"status": "success", "list": addr_list}))
+        return do_result(True, {"list": addr_list})
 
     def check_update(self, args, request, debug=False):
         vault = request.GET.get("vault", request.POST.get("vault", None))
@@ -150,9 +149,9 @@ class SyncAPIView(APIView):
         if max_updated_time is None:
             max_updated_time = 0
         if last_sync_time < max_updated_time:
-            return HttpResponse(json.dumps({"status": "success", "update": True}))
+            return do_result(True, {"update": True})
         else:
-            return HttpResponse(json.dumps({"status": "success", "update": False}))
+            return do_result(True, {"update": False})
     
     def do_compare(self, args, request, debug=False):
         """
@@ -312,10 +311,7 @@ class SyncAPIView(APIView):
 
         delete_entry(uid, cloud_remove_list)
 
-        return HttpResponse(
-            json.dumps(
-                {
-                    "status": "success",
+        return do_result(True, {
                     "info": _("comparison_complete"),
                     "remove_list": client_remove_list,
                     "download_list": client_download_list,
@@ -323,4 +319,3 @@ class SyncAPIView(APIView):
                     "cloud_remove_list": cloud_remove_list,
                 }
             )
-        )

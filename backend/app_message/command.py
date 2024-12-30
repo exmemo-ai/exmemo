@@ -86,18 +86,20 @@ otherwise reply 'not a command', do not reply with other content."""
                 logger.warning(f"match_command failed {e}")
         return None, None
 
-    def msg_do_command(self, args, match_cmd=False, debug=True):
+    def msg_do_command(self, sdata, match_cmd=False, debug=True):
         """
         Handle command execution
         """
-        content = args["content"]
+        content = sdata.current_content
+        if content.startswith('/'):
+            content = content[1:]        
         content = re.sub(r"^\d+[\.\s]*", "", content)  # Strike out the first digit
         cmd = None
         content_adj = None
         # Split x by punctuation, spaces, etc.
         arr = re.split(r"[,，。!！?？\s]+", content)
         if len(arr) == 0:
-            return False, {"type": "text", "content": _("command_not_found")}
+            return False, _("command_not_found")
         x = arr[0]
         method = None
         for command in self.commands:  # Exact match
@@ -120,18 +122,19 @@ otherwise reply 'not a command', do not reply with other content."""
                 if cmd is not None:
                     break
         if cmd is None and match_cmd:
-            cmd, content_adj = self.match_command(args["user_id"], content)
+            cmd, content_adj = self.match_command(sdata.user_id, content)
             if cmd is not None:
                 method = "llm match"
         logger.debug(
             f"msg_do_command: {content} -> {cmd} {content_adj}, method: {method}"
         )
         if cmd is not None:
-            args["content"] = content_adj
+            sdata.current_content = content_adj
             for command in self.commands:
                 if cmd in command.cmd_list:
-                    return command.function(args)
-        return False, {"type": "text", "content": _("command_not_found")}
+                    detail = command.function({'sdata':sdata, 'from': 'command'})
+                    return True, detail
+        return False, _("command_not_found")
 
     def check_conflict(self):
         """
@@ -149,3 +152,17 @@ otherwise reply 'not a command', do not reply with other content."""
                             )
                         )
                 keys.append(keyword)
+
+def msg_common_select(sdata, cmd_list, detail=None):
+    """
+    Unified processing of selection commands
+    """
+    logger.debug(f"{sdata.sid} {cmd_list}")
+    sdata.set_cache("next_cmd", cmd_list)
+    if detail is not None:
+        content = f"{detail}\n"
+    else:
+        content = _("please_choose_colon_\n")
+    for idx, (label, value) in enumerate(cmd_list):
+        content += f"\n{idx+1}.{label}"
+    return content

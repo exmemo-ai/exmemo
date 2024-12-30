@@ -41,31 +41,13 @@ $ vi backend/.env
 ```
 
 * 至少需要设置以下几个参数：IP 地址、LANGUAGE_CODE 和 PGSQL_PASSWORD。
-* 建议使用 OpenAI 作为后端模型：
-	* 如果可以连接 OpenAI，请设置 OPENAI_API_KEY。
-	* 如果无法连接 OpenAI，例如在中国使用，可以将 DEFAULT_CHAT_LLM 和 DEFAULT_TOOL_LLM 设置为 deepseek，并配置 DEEPSEEK 部分。
+* **建议使用 OpenAI 作为后端模型：**
+	* 如果可以连接 OpenAI，推荐将 DEFAULT_CHAT_MODEL 设为 gpt-4o，将 DEFAULT_TOOL_MODEL 设为 gpt-4o-mini
+	* 如果无法连接 OpenAI，例如在中国使用，推荐将 DEFAULT_CHAT_* 和 DEFAULT_TOOL_* 设置为 deepseek。
 
-### 2.2 制作镜像
+### 2.2 配置插件
 
-#### 2.2.1 制作后端镜像
-
-``` shell
-$ cd backend
-$ docker build -t exmemo:240927 .
-$ docker tag exmemo:240927 exmemo:latest
-$ cd ..
-```
-
-#### 2.2.2 制作前端镜像
-
-``` shell
-$ cd ui/web_frontend
-$ docker build -t node_efrontend:240927 .
-$ docker tag node_efrontend:240927 node_efrontend:latest
-$ cd ../../
-```
-
-#### 2.2.3 微信插件
+#### 2.2.1 微信插件
 
 （可选）
 
@@ -75,7 +57,7 @@ $ . install.sh # 复制插件到微信工具中
 $ cd ../../
 ```
 
-#### 2.2.4 Obsidian 插件
+#### 2.2.2 Obsidian 插件
 
 （可选）
 
@@ -91,17 +73,24 @@ https://github.com/exmemo-ai/obsidian-exmemo-client
 $ docker-compose --env-file backend/.env --profile production up -d
 ```
 
+具体方法请参见 shell/prod.sh。
+
 此时打开 http://ip:8084/ 即可看到前端界面，使用时请先注册用户
 
 #### 2.3.2 以开发模式启动
 
 (可选)
 
-如需要调试前后端代码，请以开发模型启动。
+如需要调试前后端代码，请以开发模型启动。此时，需要手动运行后端 Python 程序。
 
 ```shell
 $ docker-compose --env-file backend/.env --profile development up -d
+$ docker exec -it ebackend_dev bash
+$ cd backend
+$ python manage.py runserver 0.0.0.0:8005
 ```
+
+具体方法请参见 shell/dev.sh, shell/run.sh。
 
 #### 2.3.3 S3 存储：minio
 
@@ -131,17 +120,21 @@ $ docker logs kwechat
 
 ### 2.4 升级
 
-项目升级后，需要重新打包 Docker 镜像，并重新运行 Docker Compose。请注意，在重启时需删除旧容器，以避免出现不可预料的问题。操作如下：
+项目升级后，需要重新打包 Docker 镜像，并重新运行 Docker Compose。在重启时需删除旧容器，以避免出现不可预料的问题。
 
-```shell
-$ docker-compose --env-file backend/.env down --volumes --remove-orphans
-```
+具体方法请参见 shell/update.sh。
+
+*请同时升级：前端、后端、插件、配置文件.env，否则可能因为接口升级导致部分功能无法正常使用。*
 
 ### 2.5 注意
 
 * 打包时比较占内存。当云服务器资源较少时，最好释放一些资源。
 * Docker-compose 中设置的数据库密码仅在建库时生效。如果之后需要修改密码，除了在 env 文件中进行更改外，还需要连接数据库并使用 SQL 语句进行修改。
 
-## 3 License
+## 3 更新日志
+
+查看完整更新历史：[CHANGELOG](./CHANGELOG_cn.md)
+
+## 4 License
 
 本项目根据 GNU Lesser General Public License v3.0 授权。详情请参阅 [LICENSE](./LICENSE) 文件。

@@ -18,8 +18,8 @@ import backend.common.speech.tts_tools as tts_tools
 import backend.common.speech.tts_mine as tts_mine
 from backend.common.user.user import *
 from backend.common.user.resource import ResourceManager
-from backend.common.user.session import SessionManager
 from backend.common.user.models import StoreResourceUsage
+from backend.common.speech.tts_base import get_my_speech_url
 
 
 def tts_finished(dic):
@@ -39,14 +39,13 @@ def tts_finished(dic):
     )
 
 
-def start_tts(title, content, uid, sid, force_fg=False, debug=True):
+def start_tts(title, content, uid, force_fg=False, debug=True):
     """
     Speech Synthesis
     Args:
         title: MP3 filename
         content: Synthesis content
         uid: user id
-        sid: session id
         fg: Whether to force foreground synthesis
     """
     user = UserManager.get_instance().get_user(uid)
@@ -73,12 +72,11 @@ def start_tts(title, content, uid, sid, force_fg=False, debug=True):
         if length > 0 and len(content) > length:
             content = content[:length]
             logger.debug(f"length limit {len(content)}")
-        conv_time, _ = tts_tools.estimate_time(
+        conv_time, audio_time = tts_tools.estimate_time(
             content, settings, TTSResource.get_instance().get_dic()
         )
         logger.info(f"do_tts conv_time: {conv_time}")
         if conv_time > 30 and not force_fg:
-            SessionManager.get_instance().set_cache(sid, "tts_file_title", title)
             ret, info = tts_tools.do_tts(
                 content,
                 uid,
@@ -91,9 +89,7 @@ def start_tts(title, content, uid, sid, force_fg=False, debug=True):
                 return (
                     ret,
                     conv_time,
-                    _(
-                        'The content is relatively long {length} characters, and it will take about {time} minutes to synthesize. If you do not wish to continue converting, please reply "stop"'
-                    ).format(length=len(content), time=round(conv_time / 60, 1)),
+                    _('the_content_is_relatively_long_{length}_characters_comma__and_it_will_take_about_{time}_minutes_to_synthesize_dot__if_you_do_not_wish_to_continue_converting_comma__please_reply_colon__stop').format(length=len(content), time=round(conv_time / 60, 1)),
                 )
             else:
                 return ret, 0, info
@@ -105,7 +101,7 @@ def start_tts(title, content, uid, sid, force_fg=False, debug=True):
                 return (
                     ret,
                     0,
-                    {"type": "audio", "content": info, "filename": f"{title}.mp3"},
+                    {"type": "audio", "path": info, "filename": f"{title}.mp3"},
                 )
             else:
                 return ret, 0, info
@@ -185,7 +181,7 @@ def tts_get_voice_and_engine(uid, keyword):
         ret.append((VOICE_MAP["xunfei"], f"{keyword} {VOICE_MAP['xunfei']}"))
         ret.append((VOICE_MAP["google"], f"{keyword} {VOICE_MAP['google']}"))
         ret.append((VOICE_MAP["openai"], f"{keyword} {VOICE_MAP['openai']}"))
-        if privilege.b_tts_mine:
+        if privilege.b_tts_mine and get_my_speech_url() is not None:
             mytts_voice = tts_get_voice_list("mytts")
             for voice in mytts_voice:
                 ret.append(
@@ -229,27 +225,27 @@ def tts_get_engine_list(uid):
         ret.append({"label": _("microsoft"), "value": "edge"})
         ret.append({"label": _("google"), "value": "google"})
         ret.append({"label": "OpenAI", "value": "openai"})
-        if privilege.b_tts_mine:
+        if privilege.b_tts_mine and get_my_speech_url() is not None:
             ret.append({"label": _("customization"), "value": "mytts"})
     return ret
 
 
-def run_tts(title, content, uid, sid, fg=False, debug=True):
-    ret, delay, detail = start_tts(title, content, uid, sid, debug=debug)
+def run_tts(title, content, uid, fg=False, debug=True):
+    ret, delay, detail = start_tts(title, content, uid, debug=debug)
     if ret:
         dic = {"type": "text"}
         if isinstance(detail, dict):
             dic["type"] = detail["type"]
-            dic["content"] = detail["content"]
+            dic["path"] = detail["path"]
             dic["filename"] = detail["filename"]
-            return True, dic
+            return dic
         else:
             if delay > 0:
                 dic["request_delay"] = delay
-            dic["content"] = detail
-        return True, dic
+            dic["info"] = detail
+        return dic
     else:
-        return True, {"type": "text", "content": detail}
+        return detail
 
 
 class TTSResource:
@@ -302,7 +298,7 @@ class TTSResource:
                     self.dic[name] = round(group["wps"].median(), 2)
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"calc_wps error {e}")
+            logger.warning(f"calc_wps error {e}")
         logger.info(f"real calc_wps {self.dic}")
 
     def get_wps(self, workers):

@@ -17,46 +17,65 @@ URL_ADDR = os.getenv('K_BACKEND_ADDR', 'http://192.168.10.166:8005')
 TMP_AUDIO = '/tmp/tmp.mp3'
 logger.info(f'backend addr {URL_ADDR}')
 
-class TokenManager:
+class User:
+    def __init__(self, token, user_id, password):
+        self.token = token
+        self.user_id = user_id
+        self.password = password
+        self.session_dict = {}
+
+    def set_sid(self, local_sid, remote_sid):
+        self.session_dict[local_sid] = remote_sid
+
+    def get_sid(self, local_sid):
+        if local_sid in self.session_dict:
+            return self.session_dict[local_sid]
+        return ""
+
+class UserManager:
     _instance = None
     
     @staticmethod
     def get_instance():
-        if TokenManager._instance is None:
-            TokenManager._instance = TokenManager()
-        return TokenManager._instance
-            
+        if UserManager._instance is None:
+            UserManager._instance = UserManager()
+        return UserManager._instance
+
     def __init__(self) -> None:
-        self.token_dict = {}
-        
+        self.user_dict = {}
+
     def set(self, uid, user_id, password, token):
-        self.token_dict[uid] = (token, user_id, password)
-        
+        self.user_dict[uid] = User(token, user_id, password)
+
     def get_token(self, uid):
-        if uid in self.token_dict:
-            return self.token_dict[uid][0]
+        if uid in self.user_dict:
+            return self.user_dict[uid].token
         return None
     
-    def get_user_info(self, uid):
-        if uid in self.token_dict:
-            return self.token_dict[uid][1], self.token_dict[uid][2]
-        return None, None
+    def get_sid(self, uid, local_id):
+        if uid in self.user_dict:
+            return self.user_dict[uid].get_sid(local_id)
+        return ""
+
+    def get_user(self, uid):
+        if uid in self.user_dict:
+            return self.user_dict[uid]
+        return None
     
     def remove_token(self, uid):
-        if uid in self.token_dict:
-            info = self.token_dict[uid]
-            self.token_dict[uid] = (None, info[1], info[2])
-            
-    def remove_user(self, uid):
-        if uid in self.token_dict:
-            del self.token_dict[uid]
+        if uid in self.user_dict:
+            self.user_dict[uid].token = None
 
-def real_login(user_name, user_id, password):
+    def remove_user(self, uid):
+        if uid in self.user_dict:
+            del self.user_dict[uid]
+
+def real_login(uid, user_id, password):
     url = URL_ADDR + '/api/auth/login/'
     data = {'username':user_id, 'password':password}
     r = requests.post(url, data=data)
     if r.status_code == 200:
-        TokenManager.get_instance().set(user_name, user_id, password, r.json()['token'])
+        UserManager.get_instance().set(uid, user_id, password, r.json()['token'])
         logger.info(f'login success')
         return True, '登录成功'
     else:
@@ -65,15 +84,15 @@ def real_login(user_name, user_id, password):
             return True, '用户名或密码错误，请重新登录'
         return True, f'登录失败, status code {r.status_code}'
    
-def real_logout(user_name):
+def real_logout(uid):
     url = URL_ADDR + '/api/auth/logout/'
-    token = TokenManager.get_instance().get_token(user_name)
+    token = UserManager.get_instance().get_token(uid)
     try:        
         if token is not None:
             headers = {'Authorization': f'Token {token}'}
         else:
             headers = None
-        TokenManager.get_instance().remove_user(user_name)        
+        UserManager.get_instance().remove_user(uid)        
         r = requests.post(url, headers=headers)
         if r.status_code == 200 or r.status_code == 204:
             return True, '登出成功'
@@ -89,13 +108,13 @@ def add_args(data, **kwargs):
         
     data['is_group'] = False
     if 'group_id' in kwargs and kwargs['group_id'] is not None:
-        data['session_id'] = kwargs['group_id']
+        data['local_sid'] = kwargs['group_id']
         data['is_group'] = True
     elif 'wechat_user_id' in kwargs and kwargs['wechat_user_id'] is not None:
-        data['session_id'] = '_' + kwargs['wechat_user_id']
+        data['local_sid'] = '_' + kwargs['wechat_user_id']
     else:
-        data['session_id'] = '_unknown'
-    
+        data['local_sid'] = '_unknown'
+    data['sid'] = UserManager.get_instance().get_sid(kwargs['wechat_user_id'], data['local_sid'])
     return data
 
 def decode_content_disposition(header_value):
@@ -126,7 +145,7 @@ def rm_timer():
             logger.warning(f'rm_timer {e}')
         g_timer = None
 
-def parse_log_info(user_name, info):
+def parse_log_info(uid, info):
     try:
         if isinstance(info, str):
             match = re.search(r'{.*}', info)
@@ -138,16 +157,17 @@ def parse_log_info(user_name, info):
         else:
             return False, f'not support info type {type(info)}'
         if 'user_id' in dic and 'password' in dic:
-            return real_login(user_name, dic['user_id'], dic['password'])
+            return real_login(uid, dic['user_id'], dic['password'])
         if 'logout' in dic:
-            return real_logout(user_name)
+            return real_logout(uid)
     except Exception as e:
-        logger.error(f'login {e}')
+        logger.warning(f'login {e}')
         return False, str(e)
     return False, None
 
-def parse_result(response, **kwargs):
+def parse_result(response, data, **kwargs):
     if response.status_code == 200:
+        uid = kwargs['wechat_user_id']
         content_type = response.headers['Content-Type']
         logger.info(f'content_type {content_type}')
         if 'audio' in content_type or 'octet-stream' in content_type:
@@ -168,9 +188,15 @@ def parse_result(response, **kwargs):
             if 'status' in ret_info:
                 if ret_info['status'] == 'success':
                     if 'info' in ret_info:
-                        ret, info = parse_log_info(kwargs['wechat_user_id'], ret_info['info'])
+                        ret, info = parse_log_info(uid, ret_info['info'])
                         if ret:
                             return True, False, {'type':'text', 'content':info}
+                        if 'sid' in ret_info:
+                            user = UserManager.get_instance().get_user(uid)
+                            if user is None:
+                                UserManager.get_instance().set(uid, None, None, None)
+                                user = UserManager.get_instance().get_user(uid)
+                            user.set_sid(data['local_sid'], ret_info['sid'])
                         if 'request_delay' in ret_info:
                             delay = ret_info['request_delay']
                             logger.info(f'1. delay {delay} handle message')
@@ -185,10 +211,11 @@ def parse_result(response, **kwargs):
         else:
             logger.info(f'unsupport content type: {content_type}')
     elif response.status_code == 401:
-        TokenManager.get_instance().remove_token(kwargs['wechat_user_id'])
-        user_id, password = TokenManager.get_instance().get_user_info(kwargs['wechat_user_id'])
-        if user_id is not None and password is not None:
-            ret, info = real_login(kwargs['wechat_user_id'], user_id, password)
+        uid = kwargs['wechat_user_id']
+        UserManager.get_instance().remove_token(uid)
+        user:User = UserManager.get_instance().get_user(uid)
+        if user is not None:
+            ret, info = real_login(uid, user.user_id, user.password)
             if ret:
                 return True, True, {'type':'text', 'content':'登录过期，正在重新登录...'}
             else:
@@ -200,7 +227,7 @@ def parse_result(response, **kwargs):
 def parse_data(string, rtype='text', **kwargs):
     ret = True
     retry = False
-    token = TokenManager.get_instance().get_token(kwargs['wechat_user_id'])
+    token = UserManager.get_instance().get_token(kwargs['wechat_user_id'])
     logger.info(f'parse DATA {string}, rtype {rtype}, has token {token is not None}')
     try:        
         if token is not None:
@@ -215,14 +242,14 @@ def parse_data(string, rtype='text', **kwargs):
             data = add_args(data, **kwargs)
             r = requests.post(url, files=files, data=data, headers=headers)
             logger.info(f'upload file {data} ret {r.text}')
-            ret, retry, info = parse_result(r, **kwargs)
+            ret, retry, info = parse_result(r, data, **kwargs)
         else:
             text = string.strip()
             if len(text) > 0:
                 data['content'] = text
                 data = add_args(data, **kwargs)
                 r = requests.post(url, data=data, headers=headers)
-                ret, retry, info = parse_result(r, **kwargs)
+                ret, retry, info = parse_result(r, data, **kwargs)
             else:
                 info = {'type':'text', 'content':'内容不能为空'}
     except Exception as e:

@@ -1,4 +1,4 @@
-from .user import DEFAULT_SESSION
+from .user import DEFAULT_USER
 from loguru import logger
 
 
@@ -6,21 +6,19 @@ def get_user_id(request):
     try:
         return request.user.username
     except Exception as e:
-        logger.error(f"get_user_id failed {e}")
-    return None
+        logger.warning(f"get_user_id failed {e}")
+    return DEFAULT_USER
 
 
 def parse_common_args(request):
     """
     Parse public parameters
     """
+    source = request.GET.get("source", request.POST.get("source", "wechat"))
     user_id = get_user_id(request)
     rtype = request.GET.get("rtype", request.POST.get("rtype", "html"))
     content = request.GET.get("content", request.POST.get("content", None))
     raw = request.GET.get("raw", request.POST.get("raw", None))
-    session_id = request.GET.get(
-        "session_id", request.POST.get("session_id", DEFAULT_SESSION)
-    )
     is_group = request.GET.get("is_group", request.POST.get("is_group", "false"))
     if isinstance(is_group, str) and is_group.lower() == "true":
         is_group = True
@@ -32,7 +30,7 @@ def parse_common_args(request):
         "content": content,
         "raw": raw,
         "user_id": user_id,
-        "session_id": session_id,
         "is_group": is_group,
+        "source": source,
     }
     return args

@@ -18,6 +18,7 @@ RUN echo '[global]' > /etc/pip.conf && \
 COPY requirements.txt .
 COPY data/sshd_config /etc/ssh/sshd_config
 RUN pip3 install -r requirements.txt
+RUN pip3 install git+https://github.com/openai/swarm.git
 RUN echo "root:1" | chpasswd
 
 COPY data/grpc.py /usr/local/lib/python3.11/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/transports/grpc.py 

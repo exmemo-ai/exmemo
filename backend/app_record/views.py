@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from knox.auth import TokenAuthentication
 from django.http import HttpResponse
 from django.utils.encoding import smart_str
+from django.utils.translation import gettext as _
 
 from backend.common.user.utils import parse_common_args
 from backend.common.utils.file_tools import get_content_type
@@ -35,7 +36,7 @@ class RecordAPIView(APIView):
         rtype = request.GET.get("rtype", request.POST.get("rtype", "get"))
         if rtype == "export":  # Export Record Sheet
             return self.export_record(args)
-        return do_result(False, _("Interface is deprecated"))
+        return do_result(False, _("interface_is_deprecated"))
 
     def export_record(self, args):
         """

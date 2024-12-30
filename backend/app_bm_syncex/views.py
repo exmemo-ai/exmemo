@@ -3,6 +3,7 @@ from loguru import logger
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from knox.auth import TokenAuthentication
+from django.utils.translation import gettext as _
 from backend.common.user.utils import parse_common_args
 from rest_framework.response import Response
 from app_dataforge.entry import check_entry_exist
@@ -66,7 +67,7 @@ class BookmarkAPIView(APIView):
                                 {
                                     "url": item.get("url"),
                                     "status": "success",
-                                    "info": "data_already_exists",
+                                    "info": _("data_already_exists"),
                                 }
                             )
                         else:

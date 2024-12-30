@@ -118,7 +118,7 @@ class TranslateAssistantView(APIView):
             elif content is not None:
                 ret, answer = translate.translate_sentence(args["user_id"], content)
         except Exception as e:
-            logger.error(f"translate_sentence {e}")
+            logger.warning(f"translate_sentence {e}")
             ret = False
             answer = str(e)
         return do_result(ret, answer)
@@ -160,7 +160,7 @@ class TranslateAPIView(APIView):
         try:
             ret, answer = translate.translate_sentence(args["user_id"], sentence)
         except Exception as e:
-            logger.error(f"translate_sentence {e}")
+            logger.warning(f"translate_sentence {e}")
             ret = False
             answer = str(e)
         return do_result(ret, answer)
@@ -169,7 +169,7 @@ class TranslateAPIView(APIView):
         try:
             ret, answer = translate.translate_word_role(args["user_id"], word, sentence)
         except Exception as e:
-            logger.error(f"translate_sentence {e}")
+            logger.warning(f"translate_sentence {e}")
             ret = False
             answer = str(e)
         return do_result(ret, answer)

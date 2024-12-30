@@ -4,7 +4,6 @@ from collections import deque
 from loguru import logger
 from django.contrib.auth.models import User as UserSystem
 from django.utils.translation import gettext as _
-from backend.common.llm.llm_tools import DEFAULT_CHAT_LLM
 from .models import StoreUser
 
 USER_LEVEL_GUEST = -1
@@ -19,6 +18,7 @@ ADMIN_PASSWORD = "admin123456"
 DEFAULT_CHAT_LLM_PROMPT = _("chat_prompt_default")
 DEFAULT_CHAT_LLM_SHOW_COUNT = 50
 DEFAULT_CHAT_LLM_MEMORY_COUNT = 5
+DEFAULT_CHAT_MAX_CONTEXT_COUNT = 1024
 
 def convert_units(num):
     if num >= 10**6:
@@ -35,10 +35,12 @@ class UserSettings:
         self.tts_language = "mix"
         self.tts_speed = "1.0"
         self.tts_voice = "caicai"
-        self.llm_chat_model = DEFAULT_CHAT_LLM
+        self.llm_chat_model = {}
+        self.llm_tool_model = {}
         self.llm_chat_prompt = DEFAULT_CHAT_LLM_PROMPT
         self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
         self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
+        self.llm_chat_max_context_count = DEFAULT_CHAT_MAX_CONTEXT_COUNT
 
     def get_json(self):
         return {
@@ -47,9 +49,11 @@ class UserSettings:
             "tts_speed": self.tts_speed,
             "tts_voice": self.tts_voice,
             "llm_chat_model": self.llm_chat_model,
+            "llm_tool_model": self.llm_tool_model,
             "llm_chat_prompt": self.llm_chat_prompt,
             "llm_chat_show_count": self.llm_chat_show_count,
             "llm_chat_memory_count": self.llm_chat_memory_count,
+            "llm_chat_max_context_count": self.llm_chat_max_context_count,
         }
 
     def set_json(self, data):
@@ -61,12 +65,16 @@ class UserSettings:
             self.tts_speed = data.get("tts_speed", self.tts_speed)
             self.tts_voice = data.get("tts_voice", "caicai")
             self.llm_chat_model = data.get("llm_chat_model", self.llm_chat_model)
+            self.llm_tool_model = data.get("llm_tool_model", self.llm_tool_model)
             self.llm_chat_prompt = data.get("llm_chat_prompt", self.llm_chat_prompt)
             self.llm_chat_show_count = data.get(
                 "llm_chat_show_count", self.llm_chat_show_count
             )
             self.llm_chat_memory_count = data.get(
                 "llm_chat_memory_count", self.llm_chat_memory_count
+            )
+            self.llm_chat_max_context_count = data.get(
+                "llm_chat_max_context_count", self.llm_chat_max_context_count
             )
 
     def set(self, name, value):
@@ -81,7 +89,7 @@ class UserSettings:
         return default_value
 
     def __repr__(self):
-        return f"<UserSettings {self.tts_engine} {self.tts_langugage} {self.tts_speed} {self.llm_chat_model}>"
+        return f"<UserSettings {self.tts_engine} {self.tts_langugage} {self.tts_speed} {self.llm_chat_model} {self.llm_tool_model}>"
 
 
 class UserPrivilege:
@@ -257,7 +265,7 @@ class UserOperate:
                     UserSystem.objects.create_user(self.user_id, "", password)
                     self.save()
                 except Exception as e:  # Might already exist, such as a test user
-                    logger.error(f"create user error {e}")
+                    logger.warning(f"create user error {e}")
                     self.level = USER_LEVEL_NORMAL
                     self.save()
 
@@ -274,7 +282,7 @@ class UserOperate:
             data.level = self.level
             data.save()
         except Exception as e:
-            logger.error(f"save user error {e}")
+            logger.warning(f"save user error {e}")
 
     @staticmethod
     def check_user_exist(user_id):
@@ -306,7 +314,7 @@ class UserOperate:
             UserOperate(uid, level=level, password=password, create=True)
             return True
         except Exception as e:
-            logger.error(f"create user error {e}")
+            logger.warning(f"create user error {e}")
             return False
 
 
@@ -359,5 +367,5 @@ class UserManager:
             UserSystem.objects.filter(username=user_id).delete()
             return True
         except Exception as e:
-            logger.error(f"delete user error {e}")
+            logger.warning(f"delete user error {e}")
             return False

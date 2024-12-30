@@ -1,6 +1,5 @@
 from django.utils.translation import gettext as _
 from .user import *
-from .session import *
 from .models import StoreResourceUsage
 
 
@@ -51,16 +50,23 @@ class ResourceManager:
             logger.debug(
                 f"get_usage: method {method}, dtype {dtype}, rtype {rtype}, {day} {uid}"
             )
+        
         if day == -1:
-            data = StoreResourceUsage.objects.filter(user_id=uid).all()
+            data = StoreResourceUsage.objects.filter(user_id=uid)
         else:
             data = StoreResourceUsage.objects.filter(
                 user_id=uid, updated_time__gte=day
-            ).all()
+            )
+            
+        if rtype == "llm":
+            data = data.filter(method__startswith='default')
+            
         if method is not None:
-            data = data.filter(method=method).all()
+            data = data.filter(method=method)
         if rtype is not None:
-            data = data.filter(rtype=rtype).all()
+            data = data.filter(rtype=rtype)
+            
+        data = data.all()
         count = 0
         for d in data:
             count += d.amount

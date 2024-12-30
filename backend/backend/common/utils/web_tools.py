@@ -17,7 +17,7 @@ from backend.common.llm.llm_hub import llm_query
 DEFAULT_TITLE = _("unknown_title")
 
 
-def get_text_extract(uid, content, limit=2000, engine_type=None, debug=False):
+def get_text_extract(uid, content, limit=2000, debug=False):
     """
     Extract the main content from the text
     """
@@ -37,7 +37,7 @@ def get_text_extract(uid, content, limit=2000, engine_type=None, debug=False):
             content=content
         )
         ret, answer, detail = llm_query(
-            uid, sys_info, text, "web", engine_type=engine_type, debug=debug
+            uid, sys_info, text, "web", debug=debug
         )
         if ret:
             return answer
@@ -83,10 +83,10 @@ def get_web_title(path, from_content=True):
                     return title
     return DEFAULT_TITLE
 
-
+''' now not used
 def get_web_content(path):
     """
-    Get webpage content, later remove
+    Get webpage content
     """
     with open(path, "r", errors="ignore") as file:
         file_content = file.read()
@@ -95,7 +95,7 @@ def get_web_content(path):
         if text is not None:
             text = re.sub(r"\n+", "\n", text)
         return text
-
+'''
 
 def get_url_content(url):
     logger.info(f"get_url_content {url}")
@@ -157,7 +157,7 @@ def download_file(url, debug=False):
             url, headers=headers, timeout=10
         )  # in case the timeout takes up too much time
     except requests.exceptions.Timeout:
-        logger.error(f"Timeout occurred while trying to download {url}")
+        logger.warning(f"Timeout occurred while trying to download {url}")
         return False, "error " + "Timeout"
     except (
         Exception
@@ -182,7 +182,7 @@ def download_file(url, debug=False):
         elif "application/pdf" in content_type:
             ext = ".pdf"
         else:
-            logger.warning("add web unsupport type {content_type}")
+            logger.info("add web unsupport type {content_type}")
             return False, f"error not support type {content_type}"
         if debug:
             logger.debug("download type ", ext)

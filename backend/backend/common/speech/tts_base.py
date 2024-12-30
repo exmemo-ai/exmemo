@@ -6,8 +6,10 @@ import soundfile as sf
 from loguru import logger
 
 
-def get_url():
+def get_my_speech_url():
     serv_addr = os.environ.get("MY_TTS_SERV_ADDR")
+    if not serv_addr or serv_addr == "":
+        return None
     return f"http://{serv_addr}"
 
 
@@ -42,10 +44,13 @@ def adj_speed(path_in, path_out, speed):
     """
     demo: adj_speed("/tmp/xx_new_fast.mp3", '/tmp/ooo.mp3')
     """
+    my_url = get_my_speech_url()
+    if my_url is None:
+        return False
     try:
         with open(path_in, "rb") as f:
             files = {"file": f}
-            url = get_url() + "/adj_speed"
+            url = my_url + "/adj_speed"
             r = requests.post(url, files=files, data={"speed": speed})
             if r.status_code == 200:
                 with open(path_out, "wb") as f:
@@ -69,7 +74,7 @@ def regular_speed(context, in_path, out_path, speed=1.0):
     if speed == 1.0:
         return
     if speed > 1.0:
-        logger.warning(f"adjust speed {speed} by tts service")
+        logger.info(f"adjust speed {speed} by tts service")
         adj_speed(in_path, out_path, speed)
     return
     y, sr = librosa.load(in_path)

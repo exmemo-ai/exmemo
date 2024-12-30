@@ -30,7 +30,7 @@ export default {
             console.log(parent_obj)
             this.dialogVisible = true;
             this.parent_obj = parent_obj;
-            this.txtAnswer = parent_obj.inputText;
+            this.txtAnswer = "";
         },
         handleClose(done) {
             this.dialogVisible = false;

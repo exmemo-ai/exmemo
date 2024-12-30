@@ -10,80 +10,53 @@ from langchain_community.embeddings import OllamaEmbeddings
 from django.utils.translation import gettext as _
 
 from backend.common.llm import llm_tools
-from backend.common.llm.llm_tools import DEFAULT_TOOL_LLM, DEFAULT_CHAT_LLM
-import backend.common.llm.chat_tools as chat_tools
 from backend.common.user.user import *
 from backend.common.user.resource import *
 from backend.common.utils import text_tools 
 
 EMBEDDING_CHUNK_SIZE = 512
 
-
 def llm_query(uid, role, question, app, engine_type=None, debug=False):
     start_time = time.time()
     user = UserManager.get_instance().get_user(uid)
-    if engine_type is None:
-        engine_type = DEFAULT_TOOL_LLM
-    privilege = user.privilege
-    limit_llm_day = privilege.get("limit_llm_day", -1)
-    used_tts_count = ResourceManager.get_instance().get_usage(
-        uid, dtype="day", rtype="llm"
-    )
-    if limit_llm_day > 0:
-        if debug:
-            logger.info(
-                "Usage limit: {limit_llm_day}, Used: {used_tts_count}".format(
-                    limit_llm_day=limit_llm_day, used_tts_count=used_tts_count
-                )
-            )
-        if used_tts_count >= limit_llm_day:
-            return (
-                False,
-                _("the_maximum_number_of_words_called_today_has_been_reached"),
-                {},
-            )
-    try:
-        if debug:
-            logger.debug(f"role {role}")
-            logger.debug(f"question {question}")
-            logger.debug(f"https_proxy {os.getenv('HTTPS_PROXY')}")
-            logger.debug(f"http_proxy {os.getenv('HTTP_PROXY')}")
 
-        api_method, api_key, url, model_name = llm_tools.select_llm_model(engine_type)
-        if api_method == "gemini":
+    ret, desc = llm_tools.check_llm_limit(user, debug)
+    if not ret:
+        return ret, desc, {}
+        
+    if engine_type is None:
+        engine_type = user.get("llm_tool_model", None)
+    try:
+        llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
+        if debug:
+            logger.debug(f"Role {role}")
+            logger.debug(f"Question {question}")
+            logger.debug(f"Proxy {os.getenv('HTTPS_PROXY')}")
+        if llm_info.api_method == "gemini":
             ret, answer, token_count = llm_tools.query_gemini(
-                role, question, api_key=api_key, model_name=model_name, debug=debug
+                role, question, api_key=llm_info.api_key, model_name=llm_info.model_name, debug=debug
             )
         else:
             ret, answer, token_count = llm_tools.query_openai(
                 role,
                 question,
-                api_key=api_key,
-                url=url,
-                model_name=model_name,
+                api_key=llm_info.api_key,
+                url=llm_info.url,
+                model_name=llm_info.model_name,
                 debug=debug,
             )
-        end_time = time.time()
-        duration = round(end_time - start_time, 3)
-        dic = {
-            "token_count": token_count,
-            "engine_type": engine_type,
-            "duration": duration,
-        }
         if ret:
-            ResourceManager.get_instance().add(
-                uid, app, "llm", engine_type, token_count, duration, "success", dic
-            )
+            duration = round(time.time() - start_time, 3)    
+            dic = llm_tools.save_llm_usage(user, app, llm_info.get_desc(), duration, token_count)
             if debug:
-                logger.debug("Question: {question}".format(question=question))
                 logger.debug("---------------------------")
                 logger.debug("Answer: {answer}...".format(answer=answer[:50]))
                 logger.debug(f"desc: {dic}")
-        return ret, answer, dic
+            return ret, answer, dic
     except Exception as e:
         logger.warning(f"{engine_type} failed {e}")
         traceback.print_exc()
-        return False, _("call_failed"), {"token_count": 0}
+    return False, _("call_failed"), {"token_count": 0}
 
 
 def find_first_json(s):
@@ -108,64 +81,6 @@ def llm_query_json(uid, role, question, app, engine_type=None, debug=False):
         if json_object is not None:
             return ret, json_object, dic
     return ret, {}, dic
-
-
-def chat(uid, sid, content, engine_type=None, debug=False):
-    """
-    Provides chat, internal saving chat records.
-    """
-    start_time = time.time()
-    user = UserManager.get_instance().get_user(uid)
-    # 241115
-    prompt = user.get("llm_chat_prompt", "")
-    if prompt != "" and content != "":
-        content = prompt + "\n" + content
-    logger.debug(f"chat {content}")
-    #
-    privilege = user.privilege
-    if engine_type is None:
-        engine_type = user.get("llm_chat_model", DEFAULT_CHAT_LLM)
-    limit_llm_day = privilege.get("limit_llm_day", -1)
-    used_llm_count = ResourceManager.get_instance().get_usage(
-        uid, dtype="day", rtype="llm"
-    )
-    if debug:
-        logger.info(
-            "Usage limit: {limit_llm_day}, Used: {used_llm_count}".format(
-                limit_llm_day=limit_llm_day, used_llm_count=used_llm_count
-            )
-        )
-    if limit_llm_day > 0:
-        if used_llm_count >= limit_llm_day:
-            return False, _("the_maximum_number_of_words_called_today_has_been_reached")
-    try:
-        if engine_type.startswith("gpt3.5"):
-            pre = ""
-        else:
-            pre = f"[{engine_type}] "
-        ret, answer, token_count = (
-            chat_tools.ChatManager.get_instance()
-            .get_session(sid, model=engine_type)
-            .predict(content)
-        )
-        if debug:
-            logger.info(
-                f"chat sid {sid} content {content} answer {answer} count {token_count}"
-            )
-        if ret:
-            end_time = time.time()
-            duration = end_time - start_time
-            dic = {"token_count": token_count}
-            ResourceManager.get_instance().add(
-                uid, "chat", "llm", engine_type, token_count, duration, "success", dic
-            )
-        return ret, pre + answer
-    except Exception as e:
-        logger.warning(f"failed {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False, _("call_failed")
 
 
 class EmbeddingTools:
@@ -247,7 +162,6 @@ class EmbeddingTools:
 
     @staticmethod
     def load_embedding_setting():
-        # later maybe read from settings
         embedding_type = os.getenv("EMBEDDING_TYPE", "none")
         ollama_url = os.getenv("EMBEDDING_OLLAMA_URL", None)
         ollama_model = os.getenv("EMBEDDING_OLLAMA_MODEL", None)
@@ -272,6 +186,6 @@ class EmbeddingTools:
                 else:
                     embeddings = [None for split in all_splits]
         except Exception as e:
-            logger.error(f"failed {e}")
+            logger.warning(f"failed {e}")
             embeddings = [None for split in all_splits]
         return ret, embeddings

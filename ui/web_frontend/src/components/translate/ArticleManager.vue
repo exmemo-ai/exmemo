@@ -3,7 +3,7 @@
         <div class="custom-options" style="display: flex; flex-direction: column;">
             <div class="header-buttons" style="display: flex; align-items: center;">
                 <div style="flex-shrink: 1;">
-                    <el-label>{{ $t('search') }}</el-label>
+                    <el-text>{{ $t('search') }}</el-text>
                 </div>
                 <div style="flex-grow: 1;">
                     <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>

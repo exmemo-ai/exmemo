@@ -197,8 +197,6 @@ class PdfTable:
         """
         if df is None:
             return None
-        # logger.warning(df.shape)
-        # logger.warning(df)
 
         columns = df.columns
         merge_list = []
@@ -525,8 +523,6 @@ def parse_pdf(
                         )
                     )
 
-            # for test
-            # logger.warning(f'page text {page_text}')
             # Extracting Image Data
             if debug:
                 logger.info(

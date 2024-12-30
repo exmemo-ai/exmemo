@@ -9,6 +9,7 @@
         </div>
         <div class="chat-area">
             <vue-advanced-chat height="100%" :current-user-id="chat.getCurrentUserId()"
+                :room-id="activeRoomId"
                 :rooms="JSON.stringify(sessions)" :messages="JSON.stringify(messages)" :rooms-loaded="sessionsLoaded"
                 :messages-loaded="messagesLoaded" @send-message="sendMessage($event.detail[0])"
                 @fetch-messages="fetchMessages($event.detail[0])" />
@@ -20,6 +21,10 @@
 import { register } from 'vue-advanced-chat'
 import { ChatService } from './chat.js'
 import AppNavbar from '@/components/support/AppNavbar.vue'
+import mitt from 'mitt'
+import { ref } from 'vue';
+
+const eventBus = mitt()
 
 export default ({
     name: 'ChatManager',
@@ -29,8 +34,9 @@ export default ({
 
     setup() {
         register()
-        const chat = new ChatService()
-        return { chat }
+        const chat = new ChatService(eventBus);
+        const activeRoomId = ref(null);
+        return { chat, activeRoomId }
     },
 
     data() {
@@ -44,25 +50,24 @@ export default ({
     },
 
     methods: {
+        handleMessageUpdated(messages) {
+            this.messages = messages;
+        },
+        async handleSessionUpdated(sessions) {
+            this.sessions = sessions;
+            this.activeRoomId = this.chat.currentSessionId;
+            this.sessionsLoaded = true;
+        },
         async fetchMessages(event) {
             this.messagesLoaded = false;
             try {
                 const sessionId = event.room?.roomId;
-                const sessionName = event.room?.roomName;
-                this.chat.setSession(sessionId, sessionName);
+                this.chat.setSession(sessionId);
                 await this.chat.fetchMessages();
             } catch (error) {
                 console.error('Error fetching messages:', error);
             }
             this.messagesLoaded = true;
-            this.messages = []; // only change messages's point will refresh the chat
-            this.messages = this.chat.getMessages();
-        },
-
-        async reloadSession() {
-            this.sessions = [];
-            this.sessions = await this.chat.getSessions();
-            this.sessionsLoaded = true;
         },
 
         async fetchSessions() {
@@ -71,7 +76,6 @@ export default ({
             } catch (error) {
                 console.error('Error fetching sessions:', error)
             }
-            this.reloadSession();
         },
 
         async sendMessage(message) {
@@ -87,13 +91,11 @@ export default ({
             }
         },
         async newSession() {
-            await this.fetchSessions();
             try {
                 await this.chat.newSession()
             } catch (error) {
                 console.error('Error creating new session:', error)
             }
-            await this.reloadSession();
         },
         async clearSession() {
             try {
@@ -101,18 +103,24 @@ export default ({
             } catch (error) {
                 console.error('Error clearing session:', error)
             }
-            await this.reloadSession();
         },
         handleResize() {
             this.isMobile = window.innerWidth < 768;
         },
     },
     mounted() {
+        eventBus.on('session-updated', this.handleSessionUpdated)
+        eventBus.on('message-updated', this.handleMessageUpdated)
         this.chat.setObj(this);
         this.isMobile = window.innerWidth < 768;
         window.addEventListener('resize', this.handleResize);
-        this.handleResize();        
+        this.handleResize();
         this.fetchSessions();
+    },
+
+    unmounted() {
+        eventBus.off('session-updated', this.handleSessionUpdated)
+        eventBus.off('message-updated', this.handleMessageUpdated)
     }
 })
 </script>

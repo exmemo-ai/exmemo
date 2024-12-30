@@ -95,7 +95,7 @@ class MinioFileManager:
             self.client.remove_object(MinioFileManager.BUCKET_NAME, f"{uid}/{oldpath}")
             return True
         except Exception as e:
-            logger.error(f"rename_file failed {e}")
+            logger.warning(f"rename_file failed {e}")
             traceback.print_exc()
             return False
 
