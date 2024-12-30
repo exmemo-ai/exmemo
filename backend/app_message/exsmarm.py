@@ -11,6 +11,10 @@ from swarm.types import (
 )
 
 class ExSmarm(Swarm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_called_tool = None
+
     def _check_locks(self, d: dict, path: str = '') -> None:
         for k, v in d.items():
             current_path = f"{path}.{k}" if path else k
@@ -82,6 +86,13 @@ class ExSmarm(Swarm):
             else:
                 tool_calls = message.tool_calls[:1]
                 logger.debug('only call the first tool')
+
+            current_tool = tool_calls[0].function.name if tool_calls else None
+            if current_tool and current_tool == self.last_called_tool:
+                logger.warning(f"Tool {current_tool} was called consecutively. Stopping to prevent infinite loop.")
+                break
+            self.last_called_tool = current_tool
+
             partial_response = self.handle_tool_calls(
                 tool_calls, 
                 active_agent.functions, 
