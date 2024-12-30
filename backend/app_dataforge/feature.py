@@ -49,7 +49,7 @@ class EntryFeatureTool:
             dic["atype"] = None
         if "title" not in dic or pd.isnull(dic["title"]) or len(dic["title"]) == 0:
             dic["title"] = None
-        if dic["etype"] == "record":
+        if dic["etype"] == "record" or dic["etype"] == "chat":
             if dic["title"] is None:
                 ret, title = self.get_title(
                     dic["user_id"], content, use_llm=use_llm, debug=debug

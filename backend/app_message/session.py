@@ -264,8 +264,7 @@ class Session:
 
 class SessionManager:
     __instance = None
-    #TIMER_INTERVAL = 30 * 60 # 30 minutes
-    TIMER_INTERVAL = 10 * 60 # 30 minutes
+    TIMER_INTERVAL = 5 * 60 # 5 minutes
 
     @staticmethod
     def get_instance():
@@ -327,16 +326,18 @@ class SessionManager:
         # get last session
         current_session = None
         most_recent_time = None
+        last_time = timezone.now()
         for sid, sess in self.sessions.items():
             if sess.user_id == user_id and sess.source == source:
                 if len(sess.messages) == 0:
                     logger.info(f'sid {sid}')
-                    time_str = sid.split('_')[1]
-                    # sid: xx_20241128093936091810
-                    last_time = timezone.datetime.strptime(
-                        time_str,
-                        "%Y%m%d%H%M%S%f"
-                    ).replace(tzinfo=timezone.get_current_timezone())                    
+                    if sid.find('_') != -1:
+                        time_str = sid.split('_')[1]
+                        # sid: xx_20241128093936091810
+                        last_time = timezone.datetime.strptime(
+                            time_str,
+                            "%Y%m%d%H%M%S%f"
+                        ).replace(tzinfo=timezone.get_current_timezone())                    
                 else:
                     last_time = timezone.datetime.strptime(
                         sess.messages[-1].created_time,

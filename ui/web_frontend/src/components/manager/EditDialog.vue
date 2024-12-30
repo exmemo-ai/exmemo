@@ -382,7 +382,7 @@ export default {
             const formData = new FormData();
             formData.append('rtype', 'extract');
             formData.append('etype', this.form.etype);
-            if (this.form.etype === 'record') {
+            if (this.form.etype === 'record' || this.form.etype === 'chat') {
                 formData.append('raw', this.form.raw);
             } else if (this.form.etype === 'web') {
                 formData.append('addr', this.form.addr);

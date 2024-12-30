@@ -287,7 +287,7 @@ class EntryAPIView(APIView):
         dic["user_id"] = args["user_id"]
         logger.debug(f"etype {dic['etype']}")
         ret = False
-        if dic["etype"] == "record":
+        if dic["etype"] in ["record", "chat"]:
             raw = request.GET.get("raw", request.POST.get("raw", None))
             ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw)
         elif dic["etype"] in ["web", "note", "file"]:

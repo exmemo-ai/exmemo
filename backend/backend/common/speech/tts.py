@@ -242,7 +242,7 @@ def run_tts(title, content, uid, fg=False, debug=True):
         else:
             if delay > 0:
                 dic["request_delay"] = delay
-            dic["content"] = detail
+            dic["info"] = detail
         return dic
     else:
         return detail

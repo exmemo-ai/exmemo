@@ -45,13 +45,15 @@ class BaseAgent:
         cmd_list = []
         for func in funcs:
             desc = BaseAgent.get_func_desc(self, func)
-            logger.debug(f'add_commands {desc}')
             real_func = func.__get__(None, type(self))
             if hasattr(real_func, 'is_command') and real_func.is_command:
+                logger.debug(f'add_commands {desc}')
                 CommandManager.get_instance().register(
                     Command(func, [desc], level=LEVEL_NORMAL)
                 )
                 cmd_list.append((desc, desc))
+            else:
+                logger.info(f'not a command {desc}')
 
         def msg_main(context_variables: dict):
             sdata = context_variables['sdata']

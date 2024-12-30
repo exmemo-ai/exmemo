@@ -62,7 +62,7 @@ class PaperAPIView(APIView):
             mp3_dir = os.path.dirname(mp3_path)
             if not os.path.exists(mp3_dir):
                 os.makedirs(mp3_dir)
-            shutil.copy(detail["content"], mp3_path)
+            shutil.copy(detail["path"], mp3_path)
             filecache.TmpFileManager.get_instance().add_file(mp3_path)
             return do_result(True, {"audio_url": "/" + rel_path})
         else:

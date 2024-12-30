@@ -84,6 +84,7 @@ class WebAgent(BaseAgent):
         super().__init__()
         self.agent_name = _("web_processing_agent")
 
+    '''
     @agent_function(_("web_functions_list"), is_command=False)
     def _afunc_web_op(context_variables: dict = None, web_addr: str = None):
         """Web functions list"""
@@ -93,6 +94,7 @@ class WebAgent(BaseAgent):
         sdata.current_content = web_addr
         ret, detail = msg_web_main(sdata)
         return detail
+    '''
 
     @agent_function(_("collect_webpage"))
     def _afunc_web_collect(context_variables: dict = None, web_addr: str = None):
