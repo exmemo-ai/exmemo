@@ -130,7 +130,7 @@ export default {
   data() {
     return {
       bookmarkLimit: 6,
-      sortedBookmarks: [],
+      sortedBookmarks: [], // 改为基本数组
       faviconCache: new Map(),
       faviconQueue: [],
       faviconLoading: new Set(),
@@ -150,17 +150,33 @@ export default {
           param: this.bookmarkLimit.toString()
         }
         
-        // 如果有自定义书签，添加到请求参数
+        console.log('Fetching bookmarks with params:', params)
+        
         const customBookmarks = this.selectedBookmarks.map(b => b.id)
         if (customBookmarks.length > 0) {
           params.custom_ids = customBookmarks.join(',')
         }
         
         const response = await axios.get(getURL() + 'api/keeper/', { params })
-        if(response.data.code === 200) {
-          this.sortedBookmarks = this.sortBookmarks(response.data.data)
+        console.log('API Response:', response.data)
+        
+        if(response.data.code === 200 && Array.isArray(response.data.data)) {
+          // 直接克隆数组数据
+          const bookmarks = JSON.parse(JSON.stringify(response.data.data))
+          console.log('Bookmarks before sorting:', bookmarks)
+          
+          // 对克隆的数据进行排序
+          const sorted = this.sortBookmarks(bookmarks)
+          console.log('Bookmarks after sorting:', sorted)
+          
+          // 强制更新数组
+          this.$nextTick(() => {
+            this.sortedBookmarks = sorted
+            console.log('Final sortedBookmarks:', this.sortedBookmarks)
+          })
         }
       } catch (error) {
+        console.error('Error fetching bookmarks:', error)
         parseBackendError(this, error)
       }
     },
@@ -176,44 +192,98 @@ export default {
     },
 
     sortBookmarks(bookmarks) {
-      // 如果有保存的顺序,优先使用
-      const savedOrder = localStorage.getItem('bookmarkOrder')
-      if (savedOrder) {
-        const order = JSON.parse(savedOrder)
-        return this.reorderBookmarks(bookmarks, order)
+      console.log('Starting sort with bookmarks:', bookmarks)
+      
+      if (!bookmarks || !Array.isArray(bookmarks) || bookmarks.length === 0) {
+        console.warn('Invalid or empty bookmarks data:', bookmarks)
+        return []
       }
 
-      // 否则使用默认排序逻辑
-      // 首先获取自定义排序的书签ID
-      const customBookmarks = localStorage.getItem('customBookmarks')
-      const customIds = customBookmarks ? JSON.parse(customBookmarks) : []
+      // 克隆数组以避免直接修改原始数据
+      const processedBookmarks = bookmarks.map(b => ({...b}))
+      console.log('Processed bookmarks:', processedBookmarks)
       
-      // 分离自定义书签和其他书签
+      // 分离自定义排序和普通书签
       const customBookmarksList = []
       const otherBookmarksList = []
       
-      bookmarks.forEach(bookmark => {
-        if (customIds.includes(bookmark.id)) {
+      processedBookmarks.forEach(bookmark => {
+        console.log('Processing bookmark:', bookmark)
+        if (bookmark.meta && bookmark.meta.custom_order === true) {
+          console.log('Adding to custom:', bookmark)
           customBookmarksList.push(bookmark)
         } else {
+          console.log('Adding to other:', bookmark)
           otherBookmarksList.push(bookmark)
         }
       })
 
-      // 对其他书签进行综合排序
+      console.log('Custom bookmarks:', customBookmarksList)
+      console.log('Other bookmarks:', otherBookmarksList)
+
+      // 排序其他书签
       otherBookmarksList.sort((a, b) => {
-        // 计算综合得分: 点击次数(50%) + 最近添加(30%) + 重要程度(20%)
         const getScore = (item) => {
-          const clickScore = (item.clicks || 0) * 0.5
-          const timeScore = (new Date(item.created_at).getTime() / 1000000) * 0.3
-          const weightScore = (item.weight || 0) * 0.2
-          return clickScore + timeScore + weightScore
+          if (!item || !item.meta) return 0
+          const clicks = item.meta.clicks || 0
+          const weight = item.meta.weight || 0
+          const timeScore = new Date(item.created_at || Date.now()).getTime() / 1000000
+          return (clicks * 0.5) + (timeScore * 0.3) + (weight * 0.2)
         }
-        return getScore(b) - getScore(a)
+        const scoreA = getScore(a)
+        const scoreB = getScore(b)
+        console.log(`Scores - A: ${scoreA}, B: ${scoreB}`)
+        return scoreB - scoreA
       })
 
-      // 合并自定义书签和排序后的其他书签
-      return [...customBookmarksList, ...otherBookmarksList]
+      // 合并结果
+      const result = [...customBookmarksList, ...otherBookmarksList]
+      console.log('Combined result before order:', result)
+
+      // 如果有保存的顺序，应用保存的顺序
+      const savedOrder = localStorage.getItem('bookmarkOrder')
+      if (savedOrder) {
+        try {
+          const order = JSON.parse(savedOrder)
+          console.log('Applying saved order:', order)
+          const orderedResult = this.reorderBookmarks(result, order)
+          console.log('Final ordered result:', orderedResult)
+          return orderedResult
+        } catch (e) {
+          console.error('Error applying saved order:', e)
+          localStorage.removeItem('bookmarkOrder')
+        }
+      }
+
+      console.log('Final result:', result)
+      return result
+    },
+
+    reorderBookmarks(bookmarks, order) {
+      if (!Array.isArray(bookmarks) || !Array.isArray(order)) {
+        console.warn('Invalid input for reordering:', { bookmarks, order })
+        return bookmarks
+      }
+
+      // 创建ID到书签的映射
+      const bookmarkMap = new Map()
+      bookmarks.forEach(b => {
+        console.log('Mapping bookmark:', b.id, b)
+        bookmarkMap.set(b.id, b)
+      })
+      
+      // 按照保存的顺序重新排列
+      const reordered = order
+        .filter(id => bookmarkMap.has(id))
+        .map(id => bookmarkMap.get(id))
+      
+      // 添加未在顺序中的书签
+      const remainingBookmarks = bookmarks.filter(b => !order.includes(b.id))
+      
+      console.log('Reordered bookmarks:', reordered)
+      console.log('Remaining bookmarks:', remainingBookmarks)
+      
+      return [...reordered, ...remainingBookmarks]
     },
 
     refreshBookmarks() {
@@ -490,13 +560,30 @@ export default {
     },
 
     reorderBookmarks(bookmarks, order) {
+      if (!Array.isArray(bookmarks) || !Array.isArray(order)) {
+        console.warn('Invalid input for reordering:', { bookmarks, order })
+        return bookmarks
+      }
+
       // 创建ID到书签的映射
-      const bookmarkMap = new Map(bookmarks.map(b => [b.id, b]))
+      const bookmarkMap = new Map()
+      bookmarks.forEach(b => {
+        console.log('Mapping bookmark:', b.id, b)
+        bookmarkMap.set(b.id, b)
+      })
       
       // 按照保存的顺序重新排列
-      return order
-        .filter(id => bookmarkMap.has(id)) // 只保留存在的书签
+      const reordered = order
+        .filter(id => bookmarkMap.has(id))
         .map(id => bookmarkMap.get(id))
+      
+      // 添加未在顺序中的书签
+      const remainingBookmarks = bookmarks.filter(b => !order.includes(b.id))
+      
+      console.log('Reordered bookmarks:', reordered)
+      console.log('Remaining bookmarks:', remainingBookmarks)
+      
+      return [...reordered, ...remainingBookmarks]
     },
   },
   

@@ -27,18 +27,58 @@ class BMKeeperAPIView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def _get_base_query(self, user_id):
-        """get base query for bookmarks"""
-        return StoreEntry.objects.filter(
-            user_id=user_id, 
-            source=SOURCE,
-            is_deleted='f'
-        )
+    def _remove_duplicates(self, bookmarks):
+        """Enhanced duplicate removal with better key generation"""
+        def get_key(item):
+            if isinstance(item, dict):
+                return (
+                    item.get('addr', ''),
+                    item.get('path', ''),
+                    item.get('title', ''),
+                    item.get('is_deleted', '')
+                )
+            return (
+                getattr(item, 'addr', ''),
+                getattr(item, 'path', ''),
+                getattr(item, 'title', ''),
+                getattr(item, 'is_deleted', '')
+            )
+        
+        seen = set()
+        unique_items = []
+        
+        for item in bookmarks:
+            key = get_key(item)
+            if key not in seen:
+                seen.add(key)
+                unique_items.append(item)
+                
+        return unique_items
+
+    def _get_base_query(self, user_id, query_type='default'):
+        """Enhanced base query builder supporting different query types"""
+        base_conditions = {
+            'user_id': user_id,
+            'block_id': 0,
+            'is_deleted': 'f'
+        }
+        
+        if query_type == 'readlater':
+            return StoreEntry.objects.filter(
+                **base_conditions,
+                etype='web',
+                status='todo'
+            )
+        else:
+            return StoreEntry.objects.filter(
+                **base_conditions,
+                source=SOURCE
+            )
 
     def _get_tree_bookmarks(self, query):
         """get data for tree view"""
         bookmarks = query.filter().values(
-            'idx', 'title', 'addr', 'path', 'meta'
+            'idx', 'title', 'addr', 'path', 'meta', 'is_deleted'
         ).order_by('path', 'title')
         
         results = [{
@@ -52,52 +92,56 @@ class BMKeeperAPIView(APIView):
 
     def _get_navigation_bookmarks(self, query, sort='recent', limit=10, custom_ids=None):
         """get data for navigation view"""
-        results = query.filter(status='collect', is_deleted='f')
+        bookmarks = query.filter(status='collect', is_deleted='f')
         
         if custom_ids:
-            # 如果提供了自定义ID列表，使用该列表顺序
             id_list = [int(id) for id in custom_ids.split(',') if id.isdigit()]
             if id_list:
-                results = results.filter(
+                bookmarks = bookmarks.filter(
                     idx__in=id_list,
                     meta__contains={'custom_order': True}
                 )
                 from django.db.models import Case, When
                 preserved = Case(*[When(idx=pk, then=pos) for pos, pk in enumerate(id_list)])
-                return results.order_by(preserved)[:limit]
+                bookmarks = bookmarks.order_by(preserved)[:limit]
+                return self._format_bookmarks(bookmarks)  # 使用格式化方法
         
-        # 获取所有自定义顺序的书签
-        custom_bookmarks = results.filter(meta__contains={'custom_order': True})
+        custom_bookmarks = bookmarks.filter(meta__contains={'custom_order': True})
         
-        # 获取剩余的书签并按权重排序
         remaining_limit = limit - custom_bookmarks.count()
         if remaining_limit > 0:
-            other_bookmarks = results.exclude(
+            other_bookmarks = bookmarks.exclude(
                 meta__contains={'custom_order': True}
             ).order_by('-meta__weight')[:remaining_limit]
             
-            # 合并结果
             from itertools import chain
             results = list(chain(custom_bookmarks, other_bookmarks))
         else:
             results = custom_bookmarks[:limit]
             
-        return results
+        return self._format_bookmarks(results)  # 使用格式化方法
+
+    def _format_bookmarks(self, bookmarks):
+        """Format bookmarks into serializable dictionary format"""
+        return [{
+            'id': bookmark.idx,
+            'title': bookmark.title,
+            'url': bookmark.addr,
+            'created_at': bookmark.created_time,
+            'meta': bookmark.meta,
+        } for bookmark in bookmarks]
 
     def _get_readlater_bookmarks(self, user_id, page=1, page_size=10):
-        """get data for read later view"""
-        query = StoreEntry.objects.filter(
-            user_id=user_id,
-            etype='web',
-            status='todo',
-            is_deleted='f',
-            block_id=0, # filter
-        ).order_by('-created_time')
+        """get data for read later view with deduplication"""
+        query = self._get_base_query(user_id, query_type='readlater')
+
+        all_bookmarks = list(query.order_by('-created_time'))
+        unique_bookmarks = self._remove_duplicates(all_bookmarks)
         
-        total = query.count()
+        total = len(unique_bookmarks)
         start = (page - 1) * page_size
-        results = query[start:start + page_size]
-        
+        results = unique_bookmarks[start:start + page_size]
+
         return results, total
 
     def get(self, request):
@@ -105,6 +149,34 @@ class BMKeeperAPIView(APIView):
         req_type = request.GET.get('type', '')
         param = request.GET.get('param', '')
         user_id = args['user_id']
+
+        try:
+            request_type = request.GET.get('type')
+            param = request.GET.get('param')
+            
+            logger.debug(f"BMKeeper GET request - type: {request_type}, param: {param}")
+            
+            if request_type == 'navigation':
+                # 添加调试日志
+                limit = int(param) if param and param.isdigit() else 6
+                logger.debug(f"Fetching navigation bookmarks with limit: {limit}")
+                
+                # 获取书签数据的代码...
+                bookmarks = self._get_navigation_bookmarks(self._get_base_query(user_id, query_type='default'), sort='recent', limit=limit)
+                
+                logger.debug(f"Found {len(bookmarks)} bookmarks")
+                
+                return Response({
+                    'code': 200,
+                    'data': bookmarks
+                })
+                
+        except Exception as e:
+            logger.error(f"Error in BMKeeperAPIView: {str(e)}")
+            return Response({
+                'code': 500,
+                'message': str(e)
+            })
 
         if 'folders' in request.path:
             folders = StoreEntry.objects.filter(
@@ -120,7 +192,7 @@ class BMKeeperAPIView(APIView):
             for folder in folders:
                 if folder and folder.startswith(base_prefix):
                     sub_path = folder.replace(base_prefix, '', 1)
-                    if sub_path:  
+                    if (sub_path):  
                         parent_folder = sub_path.rsplit('/', 1)[0]
                         if parent_folder: 
                             processed_folders.append(parent_folder)
@@ -132,7 +204,7 @@ class BMKeeperAPIView(APIView):
                 "data": ['/', *processed_folders]
             })
 
-        base_query = self._get_base_query(user_id)
+        base_query = self._get_base_query(user_id, query_type='default')
 
         if req_type == 'tree':
             results = self._get_tree_bookmarks(base_query)
@@ -146,12 +218,14 @@ class BMKeeperAPIView(APIView):
             sort = request.GET.get('sort', 'recent')
             limit = int(param) if param and param.isdigit() else 10
             custom_ids = request.GET.get('custom_ids')
-            results = self._get_navigation_bookmarks(base_query, sort, limit, custom_ids)
+            nav_results = self._get_navigation_bookmarks(base_query, sort, limit, custom_ids)
+            results = self._remove_duplicates(nav_results)
 
         elif req_type == 'search' and param:
-            results = base_query.filter(
+            search_results = base_query.filter(
                 Q(title__icontains=param) | Q(addr=param)
             ).order_by('-created_time')
+            results = self._remove_duplicates(search_results)
 
         elif req_type == 'readlater':
             page = int(request.GET.get('page', 1))
@@ -540,7 +614,7 @@ class BookmarkCustomOrderAPIView(APIView):
             })
             
         except Exception as e:
-            logger.error(f"Error fetching custom bookmarks: {str(e)}")
+            logger.error(f"Error fetching custom bookmarks: {e!r}")
             return Response({
                 "code": 500,
                 "msg": str(e)

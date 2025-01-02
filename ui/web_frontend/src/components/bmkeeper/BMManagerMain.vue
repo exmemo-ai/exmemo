@@ -6,11 +6,11 @@
     <el-container>
       <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
         <el-menu :default-active="activeMenu" @select="handleSelect">
-          <el-menu-item index="search">
-            <span>{{ $t('searchTitle') }}</span>
-          </el-menu-item>
           <el-menu-item index="navigation">
             <span>{{ $t('quickNavigation') }}</span>
+          </el-menu-item>
+          <el-menu-item index="search">
+            <span>{{ $t('searchTitle') }}</span>
           </el-menu-item>
           <el-menu-item index="readlater">
             <span>{{ $t('readLater') }}</span>
@@ -47,9 +47,9 @@ export default {
   data() {
     return {
       isMobile: false,
-      activeMenu: 'search',
-      currentComponent: 'SearchManager',
-      navTitle: this.$t('bookmarkSearch'),
+      activeMenu: 'navigation',
+      currentComponent: 'NavigationManager',
+      navTitle: this.$t('quickNavigation'),
       navInfo: 'BMManager'
     }
   },

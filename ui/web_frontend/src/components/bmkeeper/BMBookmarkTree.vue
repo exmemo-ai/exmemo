@@ -43,11 +43,9 @@
              :style="{ paddingLeft: node.level * 16 + 'px' }">
           <template v-if="data.type === 'folder'">
             <el-icon><Folder /></el-icon>
-            <el-tooltip :content="$t('doubleClickToEdit')" placement="top">
-              <span class="folder-name" @dblclick="handleFolderEdit(data)">
-                {{ formatLabel(data.title) }}
-              </span>
-            </el-tooltip>
+            <span class="folder-name">
+              {{ formatLabel(data.title) }}
+            </span>
             <span class="bookmark-count">({{ data.children?.length || 0 }})</span>
           </template>
           <template v-else>
@@ -98,23 +96,6 @@
         <el-form-item :label="$t('folder')">
           <el-input v-model="editForm.folder" />
         </el-form-item>
-        <el-form-item :label="$t('tags')">
-          <el-select
-            v-model="editForm.tags"
-            :placeholder="$t('enterTags')"
-            multiple
-            filterable
-            allow-create
-            default-first-option
-            style="width: 100%">
-            <el-option
-              v-for="tag in availableTags"
-              :key="tag"
-              :label="tag"
-              :value="tag">
-            </el-option>
-          </el-select>
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="editDialogVisible = false">{{ $t('cancel') }}</el-button>
@@ -155,10 +136,8 @@ export default {
         id: null,
         title: '',
         url: '',
-        folder: '',
-        tags: []  // 新增 tags 字段
+        folder: ''
       },
-      availableTags: [],  // 存储可用的标签选项
       faviconCache: new Map(),
       faviconQueue: [],
       faviconLoading: new Set(),
@@ -377,53 +356,38 @@ export default {
     },
     async submitEdit() {
       try {
-        // 发送更新请求前先保存展开状态
-        const currentExpandedKeys = [...this.expandedKeys];
         const response = await axios.put(getURL() + 'api/keeper/', {
-          type: 'tree',
           id: this.editForm.id,
           title: this.editForm.title,
-          url: this.editForm.url,
-          folder: this.editForm.folder,
-          tags: this.editForm.tags.join(',')
+          folder: updatedBookmark.folder
         })
 
         if (response.data.code === 200) {
-          // 更新本地节点数据
-          this.updateBookmarkInTree(this.treeData[0], {
-            id: this.editForm.id,
-            title: this.editForm.title,
-            url: this.editForm.url || response.data.data.url,
-            folder: this.editForm.folder || response.data.data.folder,
-            tags: this.editForm.tags,
-            type: 'bookmark'
-          });
-          
-          // 恢复展开状态
-          this.expandedKeys = currentExpandedKeys;
-          
-          ElMessage.success(this.$t('updateSuccess'));
-          this.editDialogVisible = false;
+          // 更新本地数据而不是重新获取
+          this.updateBookmarkInTree(this.treeData[0], response.data.data)
+          ElMessage.success(this.$t('updateSuccess'))
+          this.editDialogVisible = false
         }
       } catch (error) {
-        parseBackendError(this, error);
+        parseBackendError(this, error)
       }
     },
 
     // 添加新方法: 在树中更新书签
-    updateBookmarkInTree(node, updatedData) {
-      if (node.id === updatedData.id) {
-        // 只更新必要的属性，保持其他属性和树结构不变
-        node.title = updatedData.title;
-        if (updatedData.url) node.url = updatedData.url;
-        if (updatedData.folder) node.folder = updatedData.folder;
-        if (updatedData.tags) node.tags = updatedData.tags;
-        return true;
+    updateBookmarkInTree(node, updatedBookmark) {
+      if (node.id === updatedBookmark.id) {
+        Object.assign(node, {
+          ...node,
+          title: updatedBookmark.title,
+          url: updatedBookmark.url,
+          folder: updatedBookmark.folder
+        })
+        return true
       }
       
       if (node.children) {
         for (const child of node.children) {
-          if (this.updateBookmarkInTree(child, updatedData)) {
+          if (this.updateBookmarkInTree(child, updatedBookmark)) {
             return true
           }
         }
@@ -431,58 +395,25 @@ export default {
       return false
     },
 
-    // 从树中删除节点
-    removeNodeFromTree(node, targetId) {
-      if (node.children) {
-        const index = node.children.findIndex(child => child.id === targetId);
-        if (index !== -1) {
-          // 找到目标节点，从父节点的 children 数组中删除
-          node.children.splice(index, 1);
-          return true;
-        }
-        // 递归搜索子节点
-        for (const child of node.children) {
-          if (this.removeNodeFromTree(child, targetId)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    },
-
     async handleDelete(node, data) {
       try {
         await ElMessageBox.confirm(
           this.$t('confirmDelete'),
-          {
-            type: 'warning',
-            confirmButtonText: this.$t('confirm'),
-            cancelButtonText: this.$t('cancel')
-          }
+          this.$t('warning'),
+          { type: 'warning' }
         )
 
-        // 保存当前展开状态
-        const currentExpandedKeys = [...this.expandedKeys];
-
         const response = await axios.delete(getURL() + 'api/keeper/', {
-          params: { 
-            id: data.id,
-            real_delete: true
-          }
+          params: { id: data.id }
         })
 
         if (response.data.code === 200) {
-          // 直接在前端树中删除节点
-          this.removeNodeFromTree(this.treeData[0], data.id);
-          
-          // 恢复展开状态
-          this.expandedKeys = currentExpandedKeys;
-          
-          ElMessage.success(this.$t('deleteSuccess'));
+          ElMessage.success(this.$t('deleteSuccess'))
+          this.fetchBookmarks()
         }
       } catch (error) {
         if (error !== 'cancel') {
-          parseBackendError(this, error);
+          parseBackendError(this, error)
         }
       }
     },
@@ -696,75 +627,13 @@ export default {
     },
 
     handleEdit(data) {
-      this.editForm = {
-        ...data,
-        tags: data.tags ? data.tags.split(',').filter(Boolean) : []
-      }
+      this.editForm = { ...data }
       this.editDialogVisible = true
-    },
-
-    async fetchAvailableTags() {
-      try {
-        const response = await axios.get(getURL() + 'api/keeper/', {
-          params: { type: 'tags' }
-        });
-        if (response.data.code === 200) {
-          this.availableTags = response.data.data || [];
-        }
-      } catch (error) {
-        console.error('Error fetching tags:', error);
-      }
-    },
-
-    async handleFolderEdit(data) {
-      try {
-        const { value: newName } = await this.$prompt(
-          this.$t('enterNewFolderName'),
-          this.$t('editFolder'),
-          {
-            confirmButtonText: this.$t('confirm'),
-            cancelButtonText: this.$t('cancel'),
-            inputValue: data.title,
-            inputValidator: (value) => {
-              if (!value) {
-                return this.$t('folderNameRequired');
-              }
-              if (value.includes('/')) {
-                return this.$t('folderNameNoSlash');
-              }
-              return true;
-            }
-          }
-        );
-
-        if (newName && newName !== data.title) {
-          const bookmarks = this.getAllBookmarksInFolder(data);
-          const oldPath = `${this._getBookmarkBarPath()}${data.title}/`;
-          const newPath = `${this._getBookmarkBarPath()}${newName}/`;
-
-          const updatePromises = bookmarks.map(bookmark => {
-            const updatedFolder = bookmark.folder.replace(oldPath, newPath);
-            return axios.put(getURL() + 'api/keeper/', {
-              id: bookmark.id,
-              folder: updatedFolder
-            });
-          });
-
-          await Promise.all(updatePromises);
-          ElMessage.success(this.$t('updateSuccess'));
-          this.fetchBookmarks();
-        }
-      } catch (error) {
-        if (error !== 'cancel') {
-          parseBackendError(this, error);
-        }
-      }
     },
   },
 
   mounted() {
     this.fetchBookmarks()
-    this.fetchAvailableTags()  // 获取可用标签
   }
 }
 </script>
@@ -828,11 +697,6 @@ export default {
 
 .folder-name {
   font-weight: 500;
-  cursor: pointer;
-}
-
-.folder-name:hover {
-  color: var(--el-color-primary);
 }
 
 .el-tree-node__content {

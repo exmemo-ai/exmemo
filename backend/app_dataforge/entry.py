@@ -34,7 +34,7 @@ is_truncate  = os.getenv("IS_TRUNCATE", "False").lower() == "true"
 parse_content = os.getenv("IS_PARSE_CONTENT", "True").lower() == "true"
 
 def add_data(dic, path=None, use_llm=True):
-    if not is_truncate:
+    if not parse_content and not is_truncate and dic.get('resource_path') is not None: 
         use_llm = False
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
@@ -186,8 +186,8 @@ def process_metadata(dic):
     meta = {"error": dic.pop("error", None)}
     if "resource_path" in dic:
         meta.update({
+            "update_path":dic['resource_path'],
             "resource_path": dic.pop("resource_path"),
-            "update_path": dic.pop("path"),
             "visit_history": dic.pop("visit_history", [dic["add_date"]]),
             "add_date": dic.pop("add_date"),
             # from bm navigate

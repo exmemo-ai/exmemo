@@ -65,7 +65,20 @@ class BookmarkAPIView(APIView):
 
     def post(self, request):
         return self.do_web_bm(request)
-
+    
+    def remove_duplicates(self, post_data_lis):
+        seen = set()
+        unique_list = []
+        
+        for item in post_data_lis:
+            # 使用url和path组合作为唯一key
+            key = (item['url'], item['path'])
+            if key not in seen:
+                seen.add(key)
+                unique_list.append(item)
+                
+        return unique_list
+    
     def do_web_bm(self, request):
         """
         Provide interfaces to support webpage parsing
@@ -73,6 +86,12 @@ class BookmarkAPIView(APIView):
         debug = True
         args = parse_common_args(request)
         post_data_lis = request.data
+        post_data_lis = self.remove_duplicates(post_data_lis)
+        # 对比去重前后数据长度
+        if debug:
+            print(f"before remove duplicates: {len(request.data)}")
+            print(f"after remove duplicates: {len(post_data_lis)}")
+
         results = []
 
         extract_content = request.META.get('HTTP_X_EXTRACT_CONTENT', 'false').lower() == 'true'
@@ -80,7 +99,7 @@ class BookmarkAPIView(APIView):
 
         for item in post_data_lis:
             try:
-                args["resource_path"] = f"chrome/{item.get('path')}"
+                args["resource_path"] = f"chrome{item.get('path')}"
                 args["add_date"] = item.get("add_date")
                 args["title"] = item.get("title")
                 args['status'] = item.get('status')
@@ -90,6 +109,8 @@ class BookmarkAPIView(APIView):
                 
                 # 将 url 转换为 addr
                 url = item.get("url")
+                if args["title"]=='深圳科学院':
+                    print(item)
                 if url:
                     item["addr"] = url
 
