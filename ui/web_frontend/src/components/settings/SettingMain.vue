@@ -56,7 +56,6 @@ import { useI18n } from 'vue-i18n';
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
-import { info } from 'sass';
 
 export default {
     components: {
@@ -202,7 +201,7 @@ export default {
 
 .settings-content {
     flex: 1;
-    padding: 0 20px;
+    padding: 0 5px;
     overflow: auto;
 }
 
@@ -224,9 +223,40 @@ export default {
     max-width: 800px;
 }
 
+.aside-menu {
+    width: 200px !important;
+}
+
+.aside-menu :deep(.el-menu) {
+    border-right: none;
+}
+
+.aside-menu :deep(.el-menu-item) {
+    padding: 0 15px !important;
+}
+
 @media (max-width: 768px) {
     .settings-container {
         flex-direction: column;
+    }
+
+    .section-content {
+        min-width: 280px;
+        width: 100%;
+        padding: 0 5px;
+    }
+
+    .el-input, .el-select {
+        width: 100%;
+        min-width: 260px;
+    }
+
+    .aside-menu {
+        width: 100% !important;
+    }
+
+    .settings-content {
+        padding: 0 5px;
     }
 }
 

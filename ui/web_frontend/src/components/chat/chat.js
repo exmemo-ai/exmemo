@@ -15,6 +15,7 @@ export class ChatService {
         this.currentUserId = 'user';
         this.currentSessionId = null;
         this.botId = 'assistant';
+        this.fetchMessagesTimer = null;
     }
 
     async checkSession() {
@@ -219,25 +220,34 @@ export class ChatService {
     }
 
     async fetchMessages() {
-        try {
-            const formData = new FormData();
-            formData.append('rtype', 'get_messages');
-            formData.append('sid', this.currentSessionId);
-            formData.append('source', 'web');
-
-            const func = 'api/message/session/';
-            setDefaultAuthHeader();
-            const response = await axios.post(getURL() + func, formData);
-            await this.parseMessages(response);
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
-                throw new Error('Token expired');
-            }
-            const error_str = String(error);
-            this.addMessage(error_str, this.botId);
+        if (this.fetchMessagesTimer) {
+            clearTimeout(this.fetchMessagesTimer);
         }
-        this.addDefaultMessage();
+
+        return new Promise((resolve) => {
+            this.fetchMessagesTimer = setTimeout(async () => {
+                try {
+                    const formData = new FormData();
+                    formData.append('rtype', 'get_messages');
+                    formData.append('sid', this.currentSessionId);
+                    formData.append('source', 'web');
+    
+                    const func = 'api/message/session/';
+                    setDefaultAuthHeader();
+                    const response = await axios.post(getURL() + func, formData);
+                    await this.parseMessages(response);
+                } catch (error) {
+                    if (error.response && error.response.status === 401) {
+                        parseBackendError(this.obj, error);
+                        throw new Error('Token expired');
+                    }
+                    const error_str = String(error);
+                    this.addMessage(error_str, this.botId);
+                }
+                this.addDefaultMessage();
+                resolve();
+            }, 100); // 0.1 second delay
+        });
     }
 
     addDefaultMessage() {
