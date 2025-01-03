@@ -97,7 +97,11 @@ class MessageAPIView(APIView):
             if content is None:
                 return do_result(False, _("please_sign_up_or_log_in_first"))
             ret, detail = agent_manager.UserAgentManager.get_instance().do_command(sdata)
-            return do_result(True, {"type": "text", "info": detail, "sid": sdata.sid})
+            if isinstance(detail, dict):
+                detail.update({"sid": sdata.sid})
+                return do_result(True, detail)
+            else:
+                return do_result(True, {"type": "text", "info": detail, "sid": sdata.sid})
 
     def upload_file(self, sdata, request):
         ret, path, filename = real_upload_file(request)
