@@ -28,7 +28,14 @@
                     </div>
 
                     <div v-show="currentSection === 'privilege'" class="section-content">
-                        <pre class="file-content">{{ info_privilege }}</pre>
+                        <div class="info-section">
+                            <h3 class="info-title">{{ $t('privileges') }}</h3>
+                            <pre class="file-content">{{ info_privilege }}</pre>
+                        </div>
+                        <div class="info-section">
+                            <h3 class="info-title">{{ $t('usage') }}</h3>
+                            <pre class="file-content">{{ info_usage }}</pre>
+                        </div>
                     </div>
                 </div>
             </el-main>
@@ -49,6 +56,7 @@ import { useI18n } from 'vue-i18n';
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
+import { info } from 'sass';
 
 export default {
     components: {
@@ -66,6 +74,7 @@ export default {
             isLogin: true,
             login_user: '',
             info_privilege: '',
+            info_usage: '',
             currentSection: 'voice'
         };
     },
@@ -84,6 +93,7 @@ export default {
                 console.log(res.data);
                 if (res.data.status == "success") {
                     this.info_privilege = res.data.privilege;
+                    this.info_usage = res.data.usage;
                     this.$refs.ttsSettings.updateSettings({
                         ...res.data.setting,
                         engine_list: res.data.engine_list
@@ -218,5 +228,26 @@ export default {
     .settings-container {
         flex-direction: column;
     }
+}
+
+.info-section {
+    margin-bottom: 24px;
+}
+
+.info-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #2c3e50;
+}
+
+.file-content {
+    background-color: #f8f9fa;
+    padding: 16px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    margin: 0;
+    border: 1px solid #eaecef;
 }
 </style>

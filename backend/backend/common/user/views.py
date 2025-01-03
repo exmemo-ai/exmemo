@@ -10,6 +10,7 @@ from knox.auth import TokenAuthentication
 from knox.views import LoginView as KnoxLoginView
 
 from backend.common.utils.net_tools import do_result
+from backend.common.user.resource import ResourceManager
 from backend.common.speech.tts import tts_get_voice_list, tts_get_engine_list
 from backend.common.user.user import (
     UserManager,
@@ -113,6 +114,7 @@ class SettingAPIView(APIView):
     def get_setting(self, uid, user):
         setting = user.settings.get_json()
         engine_list = tts_get_engine_list(uid)
+        usage = ResourceManager.get_instance().get_usage_summary(uid)
         privilege = (
             _("user_level: {level}").format(level=user.get_level_desc())
             + "\n" + user.privilege.get_descript()
@@ -121,6 +123,7 @@ class SettingAPIView(APIView):
             "setting": setting,
             "engine_list": engine_list,
             "privilege": privilege,
+            "usage": usage,
         }
         logger.debug(f"setting {detail}")
         return do_result(True, detail)

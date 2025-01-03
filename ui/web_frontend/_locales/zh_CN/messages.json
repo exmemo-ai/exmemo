@@ -18,6 +18,7 @@
     "showCount": "显示的聊天条数",
     "memoryCount": "参考的历史对话条数",
     "privileges": "权限",
+    "usage": "用量",
     "save": "保存",
     "reset": "重置",
     "set_password": "设置密码",

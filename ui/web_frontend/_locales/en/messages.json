@@ -18,6 +18,7 @@
     "showCount": "Number of displayed chat messages",
     "memoryCount": "Messages to reference in chat",
     "privileges": "Privileges",
+    "usage": "Usage",
     "save": "Save",
     "reset": "Reset",
     "set_password": "Set Password",
