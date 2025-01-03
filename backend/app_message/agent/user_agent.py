@@ -7,7 +7,7 @@ from backend.common.speech.tts import (
 )
 from backend.common.user.user import *
 from backend.common.user.resource import *
-from app_message.agent.base_agent import BaseAgent, agent_function, DEFAULT_INSTRUCTIONS
+from app_message.agent.base_agent import BaseAgent, agent_function
 
 class UserAgent(BaseAgent):
     def __init__(self):
