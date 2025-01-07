@@ -16,7 +16,7 @@
             <span>{{ $t('readLater') }}</span>
           </el-menu-item>
           <el-menu-item index="bookmarks">
-            <span>{{ $t('bookmarkManager') }}</span>
+            <span>{{ $t('bookmarkTree') }}</span>
           </el-menu-item>
         </el-menu>
       </el-aside>

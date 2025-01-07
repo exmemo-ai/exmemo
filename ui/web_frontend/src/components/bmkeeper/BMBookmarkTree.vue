@@ -2,7 +2,7 @@
   <div class="bookmark-tree-container">
     <div class="tree-header">
       <div class="header-left">
-        <h3>{{ $t('bookmarkManager') }}</h3>
+        <h3>{{ $t('bookmarkTree') }}</h3>
         <!--
         <el-button-group>
           <el-button @click="expandAll">
@@ -198,10 +198,8 @@ export default {
         // 2. 处理标题中的斜杠问题 - 检查标题是否出现在路径末尾
         const titleWithoutSlash = item.title.replace(/\//g, '___SLASH___');
         if (cleanPath.endsWith(item.title)) {
-          // 如果路径以标题结尾,则移除标题部分
           cleanPath = cleanPath.slice(0, -item.title.length);
         } else if (cleanPath.endsWith('/')) {
-          // 如果路径以斜杠结尾,则添加标题
           cleanPath = cleanPath.slice(0, -1);
         }
 
@@ -358,8 +356,7 @@ export default {
       try {
         const response = await axios.put(getURL() + 'api/keeper/', {
           id: this.editForm.id,
-          title: this.editForm.title,
-          folder: updatedBookmark.folder
+          title: this.editForm.title
         })
 
         if (response.data.code === 200) {

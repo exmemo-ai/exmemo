@@ -129,6 +129,7 @@
     "readingTools": "阅读工具",
     "assistantTools": "辅助工具",
     "bookmarkManager": "书签管理",
+    "bookmarkTree": "书签目录",
     "add": "添加",
     "export": "导出",
     "searchPlaceholder": "搜索关键字",
@@ -214,5 +215,6 @@
     "deleteFolderSuccess": "文件夹删除成功",
     "bookmarkTitle": "标题",
     "selectFolder": "选择文件夹",
-    "customOrder": "用户指定"
+    "customOrder": "用户指定",
+    "foundResults": "结果"
 }
