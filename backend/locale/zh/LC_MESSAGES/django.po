@@ -49,7 +49,7 @@ msgstr "设为待处理，类型：{ctype}"
 #: app_dataforge/entry.py:171
 #, python-brace-format
 msgid "collection_successful_comma__type_colon__{ctype}"
-msgstr "采集成功，类型：{ctype}"
+msgstr "收藏成功，类型：{ctype}"
 
 #: app_dataforge/entry.py:175
 #, python-brace-format

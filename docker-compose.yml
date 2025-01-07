@@ -29,7 +29,7 @@ services:
       context: ./ui/web_frontend
       args:
         - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTPS_PROXY}
   efrontend_dev:
     image: node_efrontend:latest
     container_name: efrontend_dev
@@ -44,7 +44,7 @@ services:
       context: ./ui/web_frontend
       args:
         - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTP_PROXY}      
+        - HTTPS_PROXY=${HTTPS_PROXY}      
     volumes:
       - ${HOST_SRC_DIR}:/opt/
     entrypoint: ["sh", "-c"]
@@ -62,7 +62,7 @@ services:
       context: ./backend
       args:
         - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTPS_PROXY}
     container_name: ebackend
     env_file:
       - backend/.env
@@ -78,7 +78,7 @@ services:
       context: ./backend
       args:
         - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTPS_PROXY}
     container_name: ebackend_dev
     env_file:
       - backend/.env

@@ -28,7 +28,14 @@
                     </div>
 
                     <div v-show="currentSection === 'privilege'" class="section-content">
-                        <pre class="file-content">{{ info_privilege }}</pre>
+                        <div class="info-section">
+                            <h3 class="info-title">{{ $t('privileges') }}</h3>
+                            <pre class="file-content">{{ info_privilege }}</pre>
+                        </div>
+                        <div class="info-section">
+                            <h3 class="info-title">{{ $t('usage') }}</h3>
+                            <pre class="file-content">{{ info_usage }}</pre>
+                        </div>
                     </div>
                 </div>
             </el-main>
@@ -66,6 +73,7 @@ export default {
             isLogin: true,
             login_user: '',
             info_privilege: '',
+            info_usage: '',
             currentSection: 'voice'
         };
     },
@@ -84,6 +92,7 @@ export default {
                 console.log(res.data);
                 if (res.data.status == "success") {
                     this.info_privilege = res.data.privilege;
+                    this.info_usage = res.data.usage;
                     this.$refs.ttsSettings.updateSettings({
                         ...res.data.setting,
                         engine_list: res.data.engine_list
@@ -192,7 +201,7 @@ export default {
 
 .settings-content {
     flex: 1;
-    padding: 0 20px;
+    padding: 0 5px;
     overflow: auto;
 }
 
@@ -214,9 +223,61 @@ export default {
     max-width: 800px;
 }
 
+.aside-menu {
+    width: 200px !important;
+}
+
+.aside-menu :deep(.el-menu) {
+    border-right: none;
+}
+
+.aside-menu :deep(.el-menu-item) {
+    padding: 0 15px !important;
+}
+
 @media (max-width: 768px) {
     .settings-container {
         flex-direction: column;
     }
+
+    .section-content {
+        min-width: 280px;
+        width: 100%;
+        padding: 0 5px;
+    }
+
+    .el-input, .el-select {
+        width: 100%;
+        min-width: 260px;
+    }
+
+    .aside-menu {
+        width: 100% !important;
+    }
+
+    .settings-content {
+        padding: 0 5px;
+    }
+}
+
+.info-section {
+    margin-bottom: 24px;
+}
+
+.info-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #2c3e50;
+}
+
+.file-content {
+    background-color: #f8f9fa;
+    padding: 16px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    margin: 0;
+    border: 1px solid #eaecef;
 }
 </style>

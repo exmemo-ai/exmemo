@@ -187,10 +187,10 @@ def parse_result(response, data, **kwargs):
             logger.info(f'backend, ret {ret_info}')
             if 'status' in ret_info:
                 if ret_info['status'] == 'success':
+                    ret, info = parse_log_info(uid, ret_info)
+                    if ret:
+                        return True, False, {'type':'text', 'content':info}
                     if 'info' in ret_info:
-                        ret, info = parse_log_info(uid, ret_info['info'])
-                        if ret:
-                            return True, False, {'type':'text', 'content':info}
                         if 'sid' in ret_info:
                             user = UserManager.get_instance().get_user(uid)
                             if user is None:

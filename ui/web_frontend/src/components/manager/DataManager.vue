@@ -77,7 +77,7 @@
                 </el-table-column>
                 <el-table-column prop="etype" :label="t('data')" :width=70 v-if="!isMobile">
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ scope.row.etype }}</div>
+                        <div style="white-space: nowrap;">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100 v-if="!isMobile">
@@ -87,7 +87,7 @@
                 </el-table-column>
                 <el-table-column prop="status" :label="t('status')" :width=70>
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ scope.row.status }}</div>
+                        <div style="white-space: nowrap;">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
                     </template>
                 </el-table-column>
             </el-table>

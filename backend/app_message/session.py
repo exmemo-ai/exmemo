@@ -328,24 +328,27 @@ class SessionManager:
         most_recent_time = None
         last_time = timezone.now()
         for sid, sess in self.sessions.items():
-            if sess.user_id == user_id and sess.source == source:
-                if len(sess.messages) == 0:
-                    logger.info(f'sid {sid}')
-                    if sid.find('_') != -1:
-                        time_str = sid.split('_')[1]
-                        # sid: xx_20241128093936091810
+            try:
+                if sess.user_id == user_id and sess.source == source:
+                    if len(sess.messages) == 0:
+                        logger.info(f'sid {sid}')
+                        if sid.find('_') != -1:
+                            time_str = sid.split('_')[1]
+                            # sid: xx_20241128093936091810
+                            last_time = timezone.datetime.strptime(
+                                time_str,
+                                "%Y%m%d%H%M%S%f"
+                            ).replace(tzinfo=timezone.get_current_timezone())                    
+                    else:
                         last_time = timezone.datetime.strptime(
-                            time_str,
-                            "%Y%m%d%H%M%S%f"
-                        ).replace(tzinfo=timezone.get_current_timezone())                    
-                else:
-                    last_time = timezone.datetime.strptime(
-                        sess.messages[-1].created_time,
-                        "%Y-%m-%d %H:%M:%S"
-                    ).replace(tzinfo=timezone.get_current_timezone())
-                if most_recent_time is None or last_time > most_recent_time:
-                    most_recent_time = last_time
-                    current_session = sess
+                            sess.messages[-1].created_time,
+                            "%Y-%m-%d %H:%M:%S"
+                        ).replace(tzinfo=timezone.get_current_timezone())
+                    if most_recent_time is None or last_time > most_recent_time:
+                        most_recent_time = last_time
+                        current_session = sess
+            except Exception as e:
+                logger.warning(f"get_session_by_user error {e}")
         
         # check the session is active in 24 hour
         if current_session is not None and most_recent_time is not None:
@@ -394,18 +397,28 @@ class SessionManager:
         """
         
         slist = []
-        items = StoreEntry.objects.filter(user_id=user_id, etype="chat").order_by('-updated_time').values("addr", "title")[0:20]
+        items = StoreEntry.objects.filter(user_id=user_id, etype="chat").order_by('-updated_time').values("addr", "title", "updated_time")[0:20]
         sinfo = OrderedDict()
         for item in items:
             if item["addr"] not in sinfo:
-                sinfo[item["addr"]] = item["title"]
+                try:
+                    d = timezone.datetime.strptime(str(item["updated_time"]), "%Y-%m-%d %H:%M:%S.%f%z")
+                except ValueError:
+                    try:
+                        d = timezone.datetime.strptime(str(item["updated_time"]), "%Y-%m-%d %H:%M:%S%z")
+                    except ValueError:
+                        logger.warning(f"Failed to parse time: {item['updated_time']}")
+                        d = timezone.now()
+                sinfo[item["addr"]] = (item["title"], d)
         
         for session in self.sessions.values():
             if session.user_id == user_id:
                 if session.sid not in sinfo:
-                    sinfo[session.sid] = session.get_name()
+                    sinfo[session.sid] = (session.get_name(), session.last_chat_time)
 
-        for sid, sname in sinfo.items():
+        sinfo = dict(sorted(sinfo.items(), key=lambda x: x[1][1], reverse=False))
+        for sid, item in sinfo.items():
+            sname = item[0]
             if sname == "" or sname is None:
                 sname = sid
             slist.append({
