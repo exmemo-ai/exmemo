@@ -96,6 +96,8 @@
     "extract": "Extract",
     "delete": "Delete",
     "download": "Download",
+    "notSupport": "File type not supported",
+    "view": "View",
     "rename": "Rename",
     "title": "Title",
     "type": "Type",
@@ -188,5 +190,17 @@
     "unsupportedFileType": "Unsupported file type",
     "defaultChatPrompt": "Please answer questions concisely",
     "maxTokens": "Max Context Length",
-    "unlimited": "Unlimited"
+    "unlimited": "Unlimited",
+    "selectAll": "Select All",
+    "dataOperate": "Data Operation",
+    "copySelected": "Copy Selected",
+    "stopHighlight": "Stop Highlight",
+    "startHighlight": "Start Highlight",
+    "clearHighlight": "Clear Highlight",
+    "copyHighlight": "Copy Highlight",
+    "highlightModeOn": "Highlight Mode On",
+    "highlightModeOff": "Highlight Mode Off",
+    "speakError": "Speech error: ",
+    "stopSpeak": "Stop Speaking",
+    "read": "Read"
 }

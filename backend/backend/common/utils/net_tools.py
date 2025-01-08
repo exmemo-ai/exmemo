@@ -2,7 +2,7 @@ import re
 import json
 from loguru import logger
 from django.http import HttpResponse, FileResponse
-
+from backend import settings
 
 def do_result(ret, detail):
     if ret:
@@ -58,3 +58,6 @@ def test_valid_url():
     print(is_valid_url(url1))  # True
     print(is_valid_url(url2))  # False
     print(is_valid_url(url3))  # False
+
+def get_backend_addr():
+    return f"http://{settings.BACKEND_ADDR_OUTER}:{settings.BACKEND_PORT_OUTER}"

@@ -55,6 +55,8 @@
                 }}</el-button>
                 <el-button style="margin: 2px;" width="100%" v-if="(form.etype === 'file' || form.etype === 'note') && form.idx"
                     @click="downloadFile"> {{ $t('download') }}</el-button>
+                <el-button style="margin: 2px;" width="100%" v-if="form.idx"
+                    @click="viewContent"> {{ $t('view') }}</el-button>
                 <el-button style="margin: 2px;" width="100%" v-if="form.etype === 'file' && form.idx" @click="rename">{{ $t('rename')
                 }}</el-button>
             </div>
@@ -361,6 +363,12 @@ export default {
             console.log(this.$t('download', { idx: this.form.idx }));
             let filename = this.file_path.split('/').pop();
             this.realDownloadFile(this, this.form.idx, filename);
+        },
+        viewContent() {
+            this.closeEditDialog();
+            console.log(this.$t('view', { idx: this.form.idx }));
+            // window.open(`${window.location.origin}/view_markdown?idx=${this.form.idx}`, '_blank');
+            window.location.href = `${window.location.origin}/view_markdown?idx=${this.form.idx}`;
         },
         showDeleteConfirmation() {
             this.$confirm(this.$t('deleteConfirmation'), this.$t('promptTitle'), {

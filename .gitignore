@@ -182,3 +182,4 @@ package-lock.json
 tmp/
 test/
 bak/
+backend/static/

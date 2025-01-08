@@ -1,10 +1,10 @@
 import os
-import json
 import traceback
 import datetime
 from loguru import logger
 from wsgiref.util import FileWrapper
 
+from django.conf import settings
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext as _
 from django.http import HttpResponse, Http404
@@ -19,8 +19,10 @@ from knox.auth import TokenAuthentication
 
 from backend.common.files import utils_filemanager, filecache
 from backend.common.user.utils import parse_common_args, get_user_id
-from backend.common.utils.net_tools import do_result
+from backend.common.utils.net_tools import do_result, get_backend_addr
+from backend.common.utils.web_tools import get_url_content
 from backend.common.utils.file_tools import get_content_type, get_ext
+from backend.common.parser.converter import convert, is_support
 
 from .feature import EntryFeatureTool
 from .entry import delete_entry, add_data, get_entry_list, get_type_options, rename_file
@@ -181,11 +183,81 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         return paginator.get_paginated_response(data)
 
     def retrieve(self, request, *args, **kwargs):
-        # get method
-        # Previously handled the logic for converting markdown to HTML. No longer needed for now, just fetch the data by idx.
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        try:
+            instance = self.get_object()
+            if instance.etype == 'record' or instance.etype == 'chat':
+                serializer = self.get_serializer(instance)
+                data = serializer.data
+                data['content'] = instance.raw
+                return Response(data)
+            elif instance.etype == 'web':
+                serializer = self.get_serializer(instance)
+                data = serializer.data
+                _, data['content'] = get_url_content(instance.addr, format='markdown')
+                return Response(data)
+            elif instance.etype == 'file' or instance.etype == 'note':
+                if instance.path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    user_id = instance.user_id
+                    rel_path = os.path.join(user_id, instance.path)
+                    static_path = settings.STATICFILES_DIRS
+                    if len(static_path) > 0:
+                        static_path = static_path[0]
+                        media_path = os.path.join(static_path, rel_path)
+                        media_dir = os.path.dirname(media_path)
+                        if not os.path.exists(media_dir):
+                            os.makedirs(media_dir)
+                        ret = utils_filemanager.get_file_manager().get_file(
+                            user_id, instance.path, media_path
+                        )
+                        if ret:
+                            filecache.TmpFileManager.get_instance().add_file(media_path)
+                            serializer = self.get_serializer(instance)
+                            data = serializer.data
+                            data['content'] = f"![]({os.path.join(get_backend_addr(), 'static', rel_path)})"
+                            return Response(data)
+                    raise Http404
+                elif instance.path.lower().endswith('.md'): # markdown
+                    rel_path = instance.path
+                    user_id = instance.user_id
+                    file_path = filecache.get_tmpfile('.md')
+                    ret = utils_filemanager.get_file_manager().get_file(
+                        user_id, rel_path, file_path
+                    )
+                    if ret:
+                        with open(file_path, 'r', encoding='utf-8') as file:
+                            content = file.read()
+                            serializer = self.get_serializer(instance)
+                            data = serializer.data
+                            data['content'] = content
+                            return Response(data)
+                    raise Http404
+                elif is_support(instance.path.lower()): # docx, pdf, txt, html
+                    rel_path = instance.path
+                    user_id = instance.user_id
+                    file_path = filecache.get_tmpfile(get_ext(rel_path))
+                    ret = utils_filemanager.get_file_manager().get_file(
+                        user_id, rel_path, file_path
+                    )
+                    if ret:
+                        filecache.TmpFileManager.get_instance().add_file(file_path)
+                        md_path = filecache.get_tmpfile('.md')
+                        ret = convert(file_path, md_path)
+                        if ret:
+                            with open(md_path, 'r', encoding='utf-8') as file:
+                                content = file.read()
+                                serializer = self.get_serializer(instance)
+                                data = serializer.data
+                                data['content'] = content
+                                return Response(data)
+                    raise Http404
+            # others
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"retrieve failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
