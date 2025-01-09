@@ -213,7 +213,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                             filecache.TmpFileManager.get_instance().add_file(media_path)
                             serializer = self.get_serializer(instance)
                             data = serializer.data
-                            data['content'] = f"![]({os.path.join(get_backend_addr(), 'static', rel_path)})"
+                            url = rel_path.replace(' ', '%20')
+                            data['content'] = f"![]({os.path.join(get_backend_addr(), 'static', url)})"
                             return Response(data)
                     raise Http404
                 elif instance.path.lower().endswith('.md'): # markdown
