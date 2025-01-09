@@ -4,21 +4,18 @@
             <app-navbar :title="t('dataOperate')" :info="'DataOperate'" />
         </div>
         <el-main class="main-container">
-            <div class="button-group">
-                <el-button-group>
+            <div :class="{ 'mobile-buttons': isMobile }" class="button-container-flex">
+                <el-button-group class="basic-buttons" style="margin-right: 5px; margin-bottom: 5px">
                     <el-button type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
                     <el-button type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
                     <el-button type="primary" @click="readContent">
                         {{ isSpeaking ? t('stopSpeak') : t('read') }}
                     </el-button>
+                </el-button-group>
+                <el-button-group class="highlight-buttons" style="margin-right: 5px; margin-bottom: 5px">
                     <el-button type="primary" @click="highlightText">
                         {{ isHighlightMode ? t('stopHighlight') : t('startHighlight') }}
                     </el-button>
-                    <!--
-                    <el-button type="primary" @click="saveHighlight" :disabled="!isHighlightMode">
-                        {{ t('save') }}
-                    </el-button>
-                    -->
                     <el-button type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
                         {{ t('clearHighlight') }}
                     </el-button>

@@ -79,7 +79,7 @@ class EntryFeatureTool:
         elif dic["etype"] == "file":
             if dic["title"] is None:
                 filename = os.path.basename(content)
-                dic["title"] = os.path.splitext(filename)[0]
+                dic["title"] = filename
             if dic["ctype"] is None:
                 dic_new, content = self.get_ctype(
                     dic["user_id"],

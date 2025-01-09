@@ -1,6 +1,6 @@
 <template>
     <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <div style="display: flex; flex-direction: column;">
+        <div class="column-flex">
             <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
         </div>
         <el-main class="main-container custom-options">
@@ -69,35 +69,35 @@
                     <el-button class="icon-button" @click="searchKeyword">
                         <el-icon><Search /></el-icon>
                     </el-button>
-                    <el-button class="icon-button" @click="openEditDialog">
+                    <el-button class="icon-button" @click="openAddDialog">
                         <el-icon><Plus /></el-icon>
                     </el-button>
                 </div>
             </div>
-            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
+            <el-table :data="fileList" @row-click="handleRowClick" class="full-width" stripe>
                 <el-table-column prop="title" :label="t('title')">
                     <template v-slot="scope">
-                        <div class="ellipsis-container" style="white-space: nowrap;">{{ scope.row.title }}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="ctype" :label="t('type')" :width=100>
-                    <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ scope.row.ctype }}</div>
+                        <div class="ellipsis-container nowrap">{{ scope.row.title }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="etype" :label="t('data')" :width=70>
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
+                        <div class="nowrap">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="ctype" :label="t('type')" :width=100>
+                    <template v-slot="scope">
+                        <div class="nowrap">{{ scope.row.ctype }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100 v-if="!isMobile">
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ scope.row.updated_time }}</div>
+                        <div class="nowrap">{{ scope.row.updated_time }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="status" :label="t('status')" :width=70 v-if="!isMobile">
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
+                        <div class="nowrap">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
                     </template>
                 </el-table-column>
             </el-table>
@@ -107,6 +107,7 @@
             </el-pagination>
         </el-main>
         <EditDialog ref="editDialog" />
+        <AddDialog ref="addDialog" />
     </div>
 </template>
 
@@ -114,6 +115,7 @@
 import { Search, Plus } from '@element-plus/icons-vue'
 import axios from 'axios';
 import EditDialog from './EditDialog.vue';
+import AddDialog from './AddDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import { useI18n } from 'vue-i18n'
@@ -122,6 +124,7 @@ export default {
     name: 'NoteManager',
     components: {
         EditDialog,
+        AddDialog,
         AppNavbar,
         Search,
         Plus
@@ -214,12 +217,12 @@ export default {
                 console.log('getOptions error', error);
             }
         },
-        openEditDialog() {
-            this.$refs.editDialog.openEditDialog(this);
+        openAddDialog() {
+            this.$refs.addDialog.openDialog(this);
         },
         handleRowClick(row, column, event) {
             console.log(column, event)
-            this.$refs.editDialog.openEditDialog(this, row);
+            this.$refs.editDialog.openDialog(this, row);
         },
         handleResize() {
             this.isMobile = window.innerWidth < 768;
@@ -261,12 +264,6 @@ export default {
     margin: 0 auto;
 }
 
-@media (max-width: 767px) {
-    .desktop-width {
-        max-width: 100%;
-    }
-}
-
 .select-dropdown {
     min-width: 100px !important;
 }
@@ -282,16 +279,12 @@ export default {
     margin: 0 auto;
 }
 
-@media (max-width: 767px) {
-    .main-container {
-        max-width: 100%;
-    }
-}
-
 .header-buttons {
     display: flex;
     flex-wrap: nowrap;
     gap: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
     align-items: center;
 }
 
@@ -331,9 +324,34 @@ export default {
     width: 120px;
 }
 
+.column-flex {
+    display: flex;
+    flex-direction: column;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
 @media (max-width: 767px) {
+    .desktop-width {
+        max-width: 100%;
+    }
+
+    .main-container {
+        max-width: 100%;
+    }
+
     .header-buttons {
         gap: 2px;
     }
+
+    :deep(.el-main) {
+        padding: 5px;
+    }
+
+    :deep(.icon-button.el-button) {
+        margin: 0 !important;
+    }    
 }
 </style>

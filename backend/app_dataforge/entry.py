@@ -432,7 +432,7 @@ def rename_file(uid, oldaddr, newaddr):
             item.addr = newaddr
             item.path = newpath
             filename = os.path.basename(newpath)
-            item.title = os.path.splitext(filename)[0]
+            item.title = filename
             item.save()
         return True
     return False

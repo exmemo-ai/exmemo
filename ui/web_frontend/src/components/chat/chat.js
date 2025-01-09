@@ -3,6 +3,7 @@ import FormData from 'form-data';
 import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn';
 import defaultAvatar from '@/assets/images/chat.png'
 import { useI18n } from 'vue-i18n'
+import { getLocale } from '@/main.js' 
 
 export class ChatService {
     constructor(eventBus) {
@@ -109,10 +110,25 @@ export class ChatService {
     addMessage(message, userId, dt = null) {
         if (dt === null) {
             const now = new Date();
-            dt = now.toISOString().replace('T', ' ').replace(/\.\d+Z/, '');
+            const dateOptions = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            };
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            };
+            let locale = getLocale().replace('_', '-');
+            const date = now.toLocaleDateString(locale, dateOptions).replace(/\//g, '/');
+            const time = now.toLocaleTimeString(locale, timeOptions);
+            dt = `${date} ${time}`;
         }
         let date = dt.split(' ')[0];
         let timestamp = dt.split(' ')[1].slice(0, 5);
+        console.log('addMessage', timestamp);
         const newMessage = {
             _id: this.messages.length,
             content: message,
