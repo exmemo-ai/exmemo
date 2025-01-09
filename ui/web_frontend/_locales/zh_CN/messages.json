@@ -202,5 +202,8 @@
     "highlightModeOff": "高亮模式关闭",
     "speakError": "语音错误：",
     "stopSpeak": "停止朗读",
-    "read": "朗读"
+    "read": "朗读",
+    "copySuccess": "复制成功",
+    "copyFailed": "复制失败",
+    "clipboardNotSupported": "不支持剪贴板API"
 }

@@ -30,7 +30,7 @@
 
             <el-row :gutter="20">
                 <el-col :span="24">
-                    <div class="preview-container" ref="content" @mouseup="highlightSelection">
+                    <div class="preview-container" ref="content" @mouseup="highlightSelection" @touchend="highlightSelection" @contextmenu.prevent>
                         <MdPreview :id="previewId" :modelValue="markdownContent" />
                         <!--<MdCatalog :editorId="previewId" :scrollElement="scrollElement" />-->
                     </div>
@@ -54,7 +54,7 @@ import { ElMessage } from 'element-plus'
 
 const { t, locale } = useI18n()
 const isMobile = ref(false)
-const markdownContent = ref('## title\n\ncontent')
+const markdownContent = ref('')
 const previewId = 'preview-content'
 const route = useRoute()
 const isSpeaking = ref(false)
@@ -77,13 +77,40 @@ const clearHighlight = () => {
 const copyHighlight = () => {
     const highlightedTexts = document.querySelectorAll('.custom-highlight')
     const text = Array.from(highlightedTexts).map(text => text.textContent).join('\n')
-    navigator.clipboard.writeText(text)
-        .then(() => {
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                ElMessage.success(t('copySuccess'))
+            })
+            .catch(() => {
+                fallbackCopyTextToClipboard(text)
+            })
+    } else {
+        fallbackCopyTextToClipboard(text)
+    }
+}
+
+const fallbackCopyTextToClipboard = (text) => {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.opacity = '0'
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+
+    try {
+        const successful = document.execCommand('copy')
+        if (successful) {
             ElMessage.success(t('copySuccess'))
-        })
-        .catch(() => {
+        } else {
             ElMessage.error(t('copyFailed'))
-        })
+        }
+    } catch (err) {
+        ElMessage.error(t('clipboardNotSupported'))
+    }
+    document.body.removeChild(textArea)
 }
 
 const fetchContent = async (idx) => {
@@ -111,13 +138,17 @@ const selectAll = () => {
 }
 
 const copyContent = () => {
-    navigator.clipboard.writeText(markdownContent.value)
-        .then(() => {
-            ElMessage.success(t('copySuccess'));
-        })
-        .catch(() => {
-            ElMessage.error(t('copyFailed'));
-        });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(markdownContent.value)
+            .then(() => {
+                ElMessage.success(t('copySuccess'));
+            })
+            .catch(() => {
+                fallbackCopyTextToClipboard(markdownContent.value)
+            });
+    } else {
+        fallbackCopyTextToClipboard(markdownContent.value)
+    }
 }
 
 const readContent = () => {
@@ -148,13 +179,10 @@ const readContent = () => {
     }
 }
 
-// 监听高亮模式变化
 watch(isHighlightMode, (newValue) => {
     if (content.value) {
-        // 给预览容器添加自定义属性
         content.value.setAttribute('data-highlight-mode', newValue)
         
-        // 强制更新所有高亮元素的样式
         const highlights = content.value.getElementsByClassName('custom-highlight')
         Array.from(highlights).forEach(el => {
             el.style.backgroundColor = newValue ? 'yellow' : 'transparent'

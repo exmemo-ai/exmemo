@@ -202,5 +202,8 @@
     "highlightModeOff": "Highlight Mode Off",
     "speakError": "Speech error: ",
     "stopSpeak": "Stop Speaking",
-    "read": "Read"
+    "read": "Read",
+    "copySuccess": "复制成功",
+    "copyFailed": "复制失败",
+    "clipboardNotSupported": "Clipboard API not supported"
 }
