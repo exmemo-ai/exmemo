@@ -5,6 +5,7 @@ from threading import Timer
 
 from django.utils import timezone
 from backend.common.utils.net_tools import do_result
+from backend.common.utils.sys_tools import get_timezone
 from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, DEFAULT_CHAT_LLM_MEMORY_COUNT, DEFAULT_USER, DEFAULT_CHAT_MAX_CONTEXT_COUNT
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
@@ -210,8 +211,9 @@ class Session:
         if msg2 is not None and msg2 != "":
             self.add_message("assistant", msg2)
 
-    def add_message(self, sender, content):
-        created_time = timezone.now().astimezone(pytz.UTC)
+    def add_message(self, sender, content):        
+        #created_time = timezone.now().astimezone(pytz.UTC)
+        created_time = timezone.now().astimezone(get_timezone())
         self.messages.append(Message(len(self.messages), sender, content, created_time.strftime("%Y-%m-%d %H:%M:%S")))
         self.last_chat_time = created_time
         logger.info(f"after add_messages, len {len(self.messages)}, sid {self.sid}")
@@ -275,7 +277,6 @@ class SessionManager:
     def __init__(self):
         self.sessions = OrderedDict()
         self.timer = None
-        self.start_timer()
 
     def check_session_cache(self):
         logger.info("Check session cache")
@@ -294,15 +295,20 @@ class SessionManager:
             self.sessions.pop(sid)
             logger.info(f"Removed inactive session: {sid}")
 
+        if len(self.sessions) == 0:
+            self.stop_timer()
+
     def start_timer(self):
-        self.stop_timer()
-        self.timer = Timer(self.TIMER_INTERVAL, self._timer_task)
-        self.timer.start()
+        if self.timer is None:
+            self.timer = Timer(self.TIMER_INTERVAL, self._timer_task)
+            self.timer.start()
+            logger.info("Timer started")
 
     def _timer_task(self):
         logger.info("Timer task triggered")
         self.check_session_cache()
-        self.start_timer()
+        if len(self.sessions) > 0:
+            self.start_timer()
 
     def stop_timer(self):
         if self.timer is not None:
@@ -448,6 +454,8 @@ class SessionManager:
         sdata.send_message(msg1, msg2)
         if sdata.sid in self.sessions:
             self.sessions.move_to_end(sdata.sid)
+
+        self.start_timer()
 
         logger.info(f'add_message ret {sdata.sid}')
         return sdata.sid
