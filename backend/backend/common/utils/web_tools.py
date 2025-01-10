@@ -16,6 +16,7 @@ import backend.common.files.utils_file as utils_file
 from backend.common.llm.llm_hub import llm_query
 
 DEFAULT_TITLE = _("unknown_title")
+WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
 
 def get_text_extract(uid, content, limit=2000, debug=False):

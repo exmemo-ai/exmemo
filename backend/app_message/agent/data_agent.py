@@ -11,15 +11,13 @@ from backend.common.utils.file_tools import (
     get_file_abstract,
 )
 from backend.common.speech.tts import run_tts
-from backend.common.utils.web_tools import regular_url
+from backend.common.utils.web_tools import regular_url, WEB_URL
 from app_message.agent.base_agent import BaseAgent, agent_function
 from app_message.command import msg_common_select
 from app_record.record import get_export_file
 from app_message.function import search_data, regular_title
 from app_dataforge.entry import add_data
 from app_dataforge.misc_tools import add_url
-
-WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
 class RecordAgent(BaseAgent):
     def __init__(self):

@@ -115,8 +115,7 @@ class MessageAPIView(APIView):
 
 def real_upload_file(request):
     logger.debug(f"real_upload_file {request.FILES}")
-    files = request.FILES
-    for file in files.values():  # only one file
+    for file in request.FILES.values():  # only support one file
         filename = file.name
         tmp_path = filecache.get_tmpfile(get_ext(filename))
         logger.debug(f"file save to {tmp_path}")

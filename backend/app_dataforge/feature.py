@@ -17,6 +17,7 @@ DEFAULT_CATEGORY = _("unclassified")
 DEFAULT_STATUS = "init"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
 TITLE_LENGTH = 20
+TITLE_MAX_LENGTH = 256
 
 class EntryFeatureTool:
     _instance = None
@@ -126,8 +127,12 @@ class EntryFeatureTool:
             dic["atype"] = "subjective"
         if dic["title"] is None:
             dic["title"] = content
-        if len(dic["title"]) > TITLE_LENGTH:
-            dic["title"] = dic["title"][:TITLE_LENGTH] + "..."
+        if dic["etype"] == "file" or dic["etype"] == "note":
+            if len(dic["title"]) > TITLE_MAX_LENGTH:
+                dic["title"] = dic["title"][:TITLE_MAX_LENGTH] + "..."
+        else:
+            if len(dic["title"]) > TITLE_LENGTH:
+                dic["title"] = dic["title"][:TITLE_LENGTH] + "..."
         return True, dic
 
     def regular_status(self, dic_base, dic_detect):
