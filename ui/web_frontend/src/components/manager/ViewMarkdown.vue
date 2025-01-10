@@ -1,8 +1,10 @@
 <template>
     <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
+        <!--
         <div style="display: flex; flex-direction: column;">
             <app-navbar :title="t('dataOperate')" :info="'DataOperate'" />
         </div>
+        -->
         <el-main class="main-container">
             <div :class="{ 'mobile-buttons': isMobile }" class="button-container-flex">
                 <el-button-group class="basic-buttons" style="margin-right: 5px; margin-bottom: 5px">
@@ -42,7 +44,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import axios from 'axios';
-import { getURL } from '@/components/support/conn'
+import { setDefaultAuthHeader,getURL } from '@/components/support/conn'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import { getLocale } from '@/main.js' 
 import { useI18n } from 'vue-i18n'
@@ -51,7 +53,7 @@ import { ElMessage } from 'element-plus'
 
 const { t, locale } = useI18n()
 const isMobile = ref(false)
-const markdownContent = ref('')
+const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
 const route = useRoute()
 const isSpeaking = ref(false)
@@ -112,15 +114,16 @@ const fallbackCopyTextToClipboard = (text) => {
 
 const fetchContent = async (idx) => {
     let table_name = 'data'
-            axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
-                .then(response => {
-                    console.log('@@@@', response);
-                    if ('content' in response.data && response.data.content !== null) {
-                        markdownContent.value = response.data.content;
-                    } else {
-                        markdownContent.value = t('notSupport');
-                    }
-                });
+    setDefaultAuthHeader();
+    axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
+        .then(response => {
+            console.log('@@@@', response);
+            if ('content' in response.data && response.data.content !== null) {
+                markdownContent.value = response.data.content;
+            } else {
+                markdownContent.value = t('notSupport');
+            }
+        });
 }
 
 const selectAll = () => {
@@ -350,7 +353,7 @@ onBeforeUnmount(() => {
 }
 
 .desktop-width {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
 }
 

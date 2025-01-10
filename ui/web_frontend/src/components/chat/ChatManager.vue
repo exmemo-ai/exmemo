@@ -8,11 +8,11 @@
             </div>
         </div>
         <div class="chat-area">
-            <vue-advanced-chat height="100%" :current-user-id="chat.getCurrentUserId()"
-                :room-id="activeRoomId"
+            <vue-advanced-chat height="100%" :current-user-id="chat.getCurrentUserId()" :room-id="activeRoomId"
                 :rooms="JSON.stringify(sessions)" :messages="JSON.stringify(messages)" :rooms-loaded="sessionsLoaded"
                 :messages-loaded="messagesLoaded" @send-message="sendMessage($event.detail[0])"
-                @fetch-messages="fetchMessages($event.detail[0])" />
+                @fetch-messages="fetchMessages($event.detail[0])"
+                :show-audio=false />
         </div>
     </div>
 </template>
@@ -80,16 +80,34 @@ export default ({
 
         async sendMessage(message) {
             try {
-                this.chat.addMessage(message.content, this.chat.currentUserId);
-                this.messages = [];
-                this.messages = this.chat.getMessages();
-                await this.chat.sendMessage(message.content)
-                this.messages = [];
-                this.messages = this.chat.getMessages();
+                console.warn('message', message)
+                if (message.content && message.content.length > 0) {
+                    this.chat.addMessage(message.content, this.chat.currentUserId);
+                    this.messages = [];
+                    this.messages = this.chat.getMessages();
+                    await this.chat.sendMessage(message.content)
+                    this.messages = [];
+                    this.messages = this.chat.getMessages();
+                } else if (message.files && message.files.length > 0) {
+                    for (let i = 0; i < message.files.length; i++) {
+                        const file = message.files[i];                        
+                        // 添加文件消息到本地显示
+                        this.chat.addMessage(`正在发送文件: ${file.name}`, this.chat.currentUserId);
+                        this.messages = [];
+                        this.messages = this.chat.getMessages();
+                        
+                        // 发送文件到后端
+                        await this.chat.uploadFile(file);
+                        
+                        this.messages = [];
+                        this.messages = this.chat.getMessages();
+                    }
+                }
             } catch (error) {
                 console.error('Error sending message:', error)
             }
         },
+
         async newSession() {
             try {
                 await this.chat.newSession()

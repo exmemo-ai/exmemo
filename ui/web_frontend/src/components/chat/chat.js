@@ -107,6 +107,36 @@ export class ChatService {
         this.addMessage(info, this.botId);
     }
 
+    async uploadFile(file) {
+        let info = '';
+        try {
+            let formData = new FormData();
+            formData.append('rtype', 'file');
+            formData.append('file', file.blob, file.name.includes('.') ? file.name : `${file.name}.${file.extension}`);
+            formData.append('sid', this.currentSessionId);
+            formData.append('source', 'web');
+            formData.append('is_group', 'false');
+
+            const func = 'api/message/';
+            setDefaultAuthHeader();
+            const response = await axios.post(getURL() + func, formData);
+            console.log('response', response);
+            const [ret, message, sid] = this.parseMessageReturn(response);
+            if (ret === true) {
+                info = message;
+                if (sid != this.currentSessionId) {
+                    await this.reloadSessions(sid);
+                }
+            } else {
+                info = message;
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            info = String(error);
+        }
+        this.addMessage(info, this.botId);
+    }
+
     addMessage(message, userId, dt = null) {
         if (dt === null) {
             const now = new Date();
@@ -145,7 +175,8 @@ export class ChatService {
             const contentType = response.headers['content-type'];
             console.log('parseMessageReturn', contentType);
             if (contentType==='application/octet-stream' || contentType==='audio/mpeg') {
-                return [false, this.t('unsupportedFileType'), null];
+                return [false, this.t('unsupportedFileType'), null]; // here download by browser directly
+                //return [false, "[hahah](http://www.baidu.com)", null];
             }
             console.log('result', result)
             if (result.status === 'success') {

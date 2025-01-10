@@ -4,18 +4,11 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
             <div style="display: flex; align-items: center; gap: 10px">
-            <div>
-                <input type="radio" id="upload" value="file" v-model="form.etype">
-                <label for="upload">{{ $t('uploadFile') }}</label>
-            </div>
-            <div>
-                <input type="radio" id="record" value="record" v-model="form.etype">
-                <label for="record">{{ $t('record') }}</label>
-            </div>
-            <div>
-                <input type="radio" id="addWeb" value="web" v-model="form.etype">
-                <label for="addWeb">{{ $t('addWeb') }}</label>
-            </div>
+                <el-radio-group v-model="form.etype">
+                    <el-radio id="upload" label="file">{{ $t('uploadFile') }}</el-radio>
+                    <el-radio id="record" label="record">{{ $t('record') }}</el-radio>
+                    <el-radio id="addWeb" label="web">{{ $t('addWeb') }}</el-radio>
+                </el-radio-group>
             </div>
             <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
         </div>
@@ -128,6 +121,7 @@ export default {
         handleFileUpload(event) {
             this.file_path = event.target.files[0].name;
             this.file = event.target.files[0];
+            this.form.title = this.file_path.split('\\').pop().split('/').pop();
         },
         cancelUpload() {
             if (this.cancelTokenSource) {
@@ -146,3 +140,11 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+@media screen and (max-width: 768px) {
+    :deep(.el-radio) {
+        margin-right: 10px;
+    }
+}
+</style>

@@ -86,9 +86,9 @@
     "loginFailed400": "Login Failed: Incorrect username or password",
     "new": "New",
     "edit": "Edit",
-    "uploadFile": "Upload File",
+    "uploadFile": "File",
     "record": "Record",
-    "addWeb": "Add Web",
+    "addWeb": "Web",
     "file": "File",
     "path": "File Path",
     "web": "Web",
@@ -205,7 +205,8 @@
     "speakError": "Speech error: ",
     "stopSpeak": "Stop Speaking",
     "read": "Read",
-    "copySuccess": "复制成功",
-    "copyFailed": "复制失败",
-    "clipboardNotSupported": "Clipboard API not supported"
+    "copySuccess": "Copy Successful",
+    "copyFailed": "Copy Failed",
+    "clipboardNotSupported": "Clipboard API not supported",
+    "loading": "Loading"
 }

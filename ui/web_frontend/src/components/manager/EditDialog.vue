@@ -198,8 +198,8 @@ export default {
         viewContent() {
             this.closeDialog();
             console.log(this.$t('view', { idx: this.form.idx }));
-            // window.open(`${window.location.origin}/view_markdown?idx=${this.form.idx}`, '_blank');
-            window.location.href = `${window.location.origin}/view_markdown?idx=${this.form.idx}`;
+            window.open(`${window.location.origin}/view_markdown?idx=${this.form.idx}`, '_blank');
+            //window.location.href = `${window.location.origin}/view_markdown?idx=${this.form.idx}`;
         },
         showDeleteConfirmation() {
             this.$confirm(this.$t('deleteConfirmation'), this.$t('promptTitle'), {

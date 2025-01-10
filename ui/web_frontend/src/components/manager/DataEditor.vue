@@ -127,25 +127,6 @@ export default {
         async realSave() {
             let func = 'api/entry/data/'
             const formData = new FormData();
-            if (this.form.ctype !== '') {
-                formData.append('ctype', this.form.ctype);
-            }
-            if (this.form.etype !== '') {
-                formData.append('etype', this.form.etype);
-            }
-            if (this.form.title !== '') {
-                formData.append('title', this.form.title);
-            }
-            if (this.form.status !== '') {
-                formData.append('status', this.form.status);
-            }
-            if (this.form.atype !== '') {
-                formData.append('atype', this.form.atype);
-            }
-            if (this.form.idx !== null) {
-                formData.append('idx', this.form.idx);
-            }
-
             if (this.form.etype === 'record') {
                 if (this.form.raw === '') {
                     this.$message({
@@ -165,8 +146,23 @@ export default {
                 }
                 formData.append('etype', 'file')
                 formData.append('files', this.file);
-                formData.append(`filenames`, this.file.name);
-                formData.append(`filepaths`, `${this.file.name}`);
+                let file_name = this.file.name;
+                if (this.form.title !== '') {
+                    if (file_name.indexOf('.') > 0) {
+                        const file_ext = file_name.split('.').pop();
+                        const title_ext = this.form.title.split('.').pop();
+                        if (file_ext !== title_ext) {
+                            file_name = `${this.form.title}.${file_ext}`;
+                        } else {
+                            file_name = this.form.title;
+                        }
+                        file_name = this.form.title;
+                    } else {
+                        file_name = this.form.title;
+                    }
+                }
+                formData.append(`filenames`, file_name);
+                formData.append(`filepaths`, `${file_name}`);
             } else if (this.form.etype === 'web') {
                 if (this.form.addr === '') {
                     this.$message({
@@ -177,6 +173,24 @@ export default {
                 }
                 formData.append('addr', this.form.addr);
             }
+            if (this.form.ctype !== '') {
+                formData.append('ctype', this.form.ctype);
+            }
+            if (this.form.etype !== '') {
+                formData.append('etype', this.form.etype);
+            }
+            if (this.form.title !== '') {
+                formData.append('title', this.form.title);
+            }
+            if (this.form.status !== '') {
+                formData.append('status', this.form.status);
+            }
+            if (this.form.atype !== '') {
+                formData.append('atype', this.form.atype);
+            }
+            if (this.form.idx !== null) {
+                formData.append('idx', this.form.idx);
+            }            
 
             this.cancelTokenSource = axios.CancelToken.source();
             try {
