@@ -10,7 +10,7 @@ from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, D
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
 from app_dataforge.models import StoreEntry
-from app_dataforge.feature import TITLE_LENGTH, EntryFeatureTool
+from app_dataforge.feature import TITLE_LENGTH, DEFAULT_CATEGORY, EntryFeatureTool
 from backend.common.files.utils_file import count_tokens
 
 MAX_SESSIONS = 1000
@@ -90,55 +90,67 @@ class Session:
             logger.warning(f"load_from_db failed, sid {self.sid}")
         self.messages = self.messages[-show_count:]
 
+    def get_session_desc(self, obj = None):
+        messages = [item.to_dict() for item in self.messages]
+        raw = self.get_raw()
+        abstract = raw
+        if len(abstract) > 1024:
+            abstract = abstract[:1024] + "\n..."
+
+        if obj is None or obj.get("ctype") == DEFAULT_CATEGORY:            
+            string = self.reduce_message()
+            if len(string) > 0:
+                ret_title, info_title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
+                type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
+                ctype = type_dic['ctype']
+            else:
+                ret_title = False
+                ctype = DEFAULT_CATEGORY
+            if ret_title:
+                title = info_title
+            else:
+                title = self.get_name()
+            if len(title) > TITLE_LENGTH:
+                title = title[:TITLE_LENGTH] + "..."
+        else:
+            title = obj.get("title")
+            ctype = obj.get("ctype")
+
+        dic = {
+            "title": title,
+            "abstract": abstract,
+            "status": "collect",
+            "atype": "subjective",
+            "user_id": self.user_id,
+            "ctype": ctype,
+            "etype": "chat",
+            "raw": raw,
+            "source": self.source,
+            "addr": self.sid,
+            "meta": {"sid": self.sid, "is_group": self.is_group, 
+                    "messages": messages},
+        }
+        return dic
+
     def save_to_db(self):
         if self.is_logged_in() == False:
             return
         if len(self.messages) == 0:
             return
         obj = self.get_item_from_db()
-        messages = [item.to_dict() for item in self.messages]
         if obj is None:
-            string = self.reduce_message()
-            raw = self.get_raw()
-            abstract = raw
-            if len(abstract) > 1024:
-                abstract = abstract[:1024] + "\n..."
-            ret_title, info_title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
-            if ret_title:
-                title = info_title
-            else:
-                title = abstract
-            type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
-            if len(title) > TITLE_LENGTH:
-                title = title[:TITLE_LENGTH] + "..."
-            dic = {
-                "title": title,
-                "abstract": abstract,
-                "status": "collect",
-                "atype": "subjective",
-                "user_id": self.user_id,
-                "ctype": type_dic['ctype'],
-                "etype": "chat",
-                "raw": raw,
-                "source": self.source,
-                "addr": self.sid,
-                "meta": {"sid": self.sid, "is_group": self.is_group, 
-                        "messages": messages},
-            }
+            dic = self.get_session_desc()
             ret, ret_emb, info = add_data(dic)
             logger.info(f"add_data ret {ret}, {ret_emb}, {info}")
         else:
+            dic = self.get_session_desc(obj)
             StoreEntry.objects.filter(
                 user_id=self.user_id,
                 addr=self.sid
-            ).update(
-                meta={
-                    "sid": self.sid,
-                    "is_group": self.is_group,
-                    "messages": messages
-                },
-                raw=self.get_raw()
-            )
+            ).update(title=dic["title"],
+                     ctype=dic["ctype"],
+                     raw=dic["raw"], 
+                     meta=dic["meta"])
             logger.info(f"update entry success")
         self.sync_idx = len(self.messages)
 
@@ -222,7 +234,7 @@ class Session:
 
     def reduce_message(self):
         string = ""
-        if len(self.messages) == 0:
+        if len(self.messages) < 4:
             return ""
         for item in self.messages:
             if item.sender != "assistant":
@@ -231,7 +243,7 @@ class Session:
                     content = content.strip()
                     content = content[:100] + "..."
                 string += content
-                string += "\n"
+                string += ";"
                 if len(string) > 500:
                     break
         return string
@@ -266,7 +278,8 @@ class Session:
 
 class SessionManager:
     __instance = None
-    TIMER_INTERVAL = 5 * 60 # 5 minutes
+    #TIMER_INTERVAL = 5 * 60 # 5 minutes
+    TIMER_INTERVAL = 2 * 60 # 2 minutes
 
     @staticmethod
     def get_instance():
@@ -299,13 +312,15 @@ class SessionManager:
             self.stop_timer()
 
     def start_timer(self):
+        logger.info('start_timer', self.timer)
         if self.timer is None:
             self.timer = Timer(self.TIMER_INTERVAL, self._timer_task)
             self.timer.start()
             logger.info("Timer started")
 
     def _timer_task(self):
-        logger.info("Timer task triggered")
+        self.stop_timer()
+        logger.debug("Timer task triggered")
         self.check_session_cache()
         if len(self.sessions) > 0:
             self.start_timer()
