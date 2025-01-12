@@ -11,7 +11,9 @@ class StoreTranslate(models.Model):
     info = models.JSONField(default=dict)
     freq = models.IntegerField(default=-1)
     times = models.IntegerField(default=1)
+    status = models.CharField(max_length=128, default="not_learned")
     created_time = models.DateTimeField("date created")
+    updated_time = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.word

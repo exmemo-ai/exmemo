@@ -1,4 +1,5 @@
 from loguru import logger
+import json
 
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -14,6 +15,9 @@ from django.utils.translation import gettext as _
 from . import translate
 from .models import StoreEnglishArticle, StoreTranslate
 from .serializer import StoreEnglishArticleSerializer, StoreTranslateSerializer
+from backend.common.llm.llm_hub import llm_query_json
+
+MSG_ROLE = _("you_are_a_middle_school_english_teacher")
 
 
 class StoreWordViewSet(viewsets.ModelViewSet):
@@ -173,3 +177,79 @@ class TranslateAPIView(APIView):
             ret = False
             answer = str(e)
         return do_result(ret, answer)
+
+class TranslateLearnView(APIView):
+    def post(self, request):
+        return self.do_learn(request)
+
+    def get(self, request):
+        return self.do_learn(request)
+
+    def do_learn(self, request):
+        args = parse_common_args(request)
+        logger.info(f"translate learn {args}")
+        rtype = request.GET.get("rtype", request.POST.get("rtype", "get_unknown"))
+        if rtype == "get_words":
+            return self.get_words(args, request)
+        elif rtype == "get_review":
+            return self.get_review(args)
+        elif rtype == "update":
+            return self.update(request)
+        elif rtype == "get_sentence":
+            return self.get_sentence(args, request)
+        return do_result(False, f"not support {rtype}")
+    
+    def get_words(self, args, request):
+        if args['user_id'] is None:
+            return do_result(False, {"list": []})
+        status = request.GET.get("status", request.POST.get("status", "not_learned"))
+        queryset = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status=status).order_by("freq").all()[:50]
+        serializer = StoreTranslateSerializer(queryset, many=True)
+        data = serializer.data
+        json_data = json.loads(json.dumps(data))
+        return do_result(True, {"list": json_data})
+
+    def update(self, request):
+        listData = request.GET.get("list", request.POST.get("list", None))
+        if listData is None:
+            return do_result(False, "no list")
+        listData = json.loads(listData)
+        if len(listData) == 0:
+            return do_result(False, "empty list")
+        logger.warning(f"update {listData}")
+        for item in listData:
+            word = item.get("word", None)
+            status = item.get("status", None)
+            info = item.get("info", None)
+            if word is None or status is None:
+                continue
+            try:
+                StoreTranslate.objects.filter(idx=item.get("idx")).update(status=status, info=info);
+            except Exception as e:
+                logger.warning(f"update {e}")
+                return do_result(False, str(e))
+        return do_result(True, f"update items")
+    
+    def get_sentence(self, args, request):
+        word = request.GET.get("word", request.POST.get("word", None))
+        if word is None:
+            return do_result(False, "no word")
+        if args['user_id'] is None:
+            return do_result(False, "no user")
+
+        demo = '{"sentence": "This is a book.", "sentence_meaning": "这是一本书。", "word_meaning": "书"}'
+        query = "Please give me a simple sentence with the word '{word}' in it, and translate the sentence to Chinese. result like {demo}".format(
+            word=word, demo=demo
+        )
+        ret, dic, detail = llm_query_json(
+            args['user_id'], MSG_ROLE, query, "translate", debug=True
+        )
+        sentence = dic['sentence']
+        sentence_trans = dic['sentence_meaning']
+        word_trans = dic['word_meaning']
+        return do_result(True, {
+            "sentence": sentence, 
+            "sentence_meaning": sentence_trans,
+            "word_meaning": word_trans
+        })

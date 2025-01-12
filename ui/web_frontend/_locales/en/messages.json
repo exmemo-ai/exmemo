@@ -208,5 +208,28 @@
     "copySuccess": "Copy Successful",
     "copyFailed": "Copy Failed",
     "clipboardNotSupported": "Clipboard API not supported",
-    "loading": "Loading"
+    "loading": "Loading",
+    "trans": {
+        "reviewWords": "Review Words",
+        "reviewing": "Reviewing",
+        "learned": "Learned",
+        "learnMore": "Learn More",
+        "reviewFinished": "Review Finished",
+        "wordLearning": "Word Learning",
+        "learning": "Learning",
+        "total": "Total",
+        "word": "Word",
+        "exampleSentence": "Example Sentence",
+        "sentenceMeaning": "Sentence Meaning",
+        "wordMeaning": "Word Meaning",
+        "wordChineseMeaning": "Word Chinese Meaning",
+        "showAnswer": "Show Answer",
+        "learnFinished": "Learn Finished",
+        "selectWord": "Select Word",
+        "markAsKnown": "Mark as Known",
+        "learnToday": "Learn Today",
+        "startLearning": "Start Learning",
+        "noWordsAvailable": "No words available",
+        "errorFetchingWords": "Error fetching words" 
+    }    
 }

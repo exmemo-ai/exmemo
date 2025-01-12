@@ -8,7 +8,7 @@ class StoreTranslateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StoreTranslate
-        fields = ["idx", "user_id", "word", "info", "freq", "times", "created_time"]
+        fields = ["idx", "user_id", "word", "info", "freq", "times", "status", "created_time"]
 
     def get_type(self, obj):
         return obj.get_type_display()

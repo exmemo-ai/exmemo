@@ -208,5 +208,28 @@
     "copySuccess": "复制成功",
     "copyFailed": "复制失败",
     "clipboardNotSupported": "不支持剪贴板API",
-    "loading": "加载中"
+    "loading": "加载中",
+    "trans": {
+        "reviewWords": "复习单词",
+        "reviewing": "复习中",
+        "learned": "已学会",
+        "learnMore": "再学学",
+        "reviewFinished": "复习结束",
+        "wordLearning": "学习单词",
+        "learning": "学习中",
+        "total": "总数",
+        "word": "单词",
+        "exampleSentence": "例句",
+        "sentenceMeaning": "句意",
+        "wordMeaning": "句中语意",
+        "wordChineseMeaning": "单词翻译",
+        "showAnswer": "显示答案",
+        "learnFinished": "结束学习",
+        "selectWord": "选择单词",
+        "markAsKnown": "标记为已学会",
+        "learnToday": "今天学习",
+        "startLearning": "开始学习",
+        "noWordsAvailable": "没有可用的单词",
+        "errorFetchingWords": "获取单词时出错"
+    }
 }
