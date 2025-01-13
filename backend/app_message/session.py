@@ -298,7 +298,8 @@ class SessionManager:
         
         for sid, session in self.sessions.items():
             time_diff = current_time - session.last_chat_time
-            if time_diff.total_seconds() > 3600:  # 3600 second
+            logger.info(f"sid {sid} time_diff {time_diff.total_seconds()}")
+            if time_diff.total_seconds() > 600:  # 600 second
                 session.close()
                 sessions_to_remove.append(sid)
             else:
@@ -324,6 +325,8 @@ class SessionManager:
         self.check_session_cache()
         if len(self.sessions) > 0:
             self.start_timer()
+        else:
+            logger.debug("No active session, timer stopped")
 
     def stop_timer(self):
         if self.timer is not None:
