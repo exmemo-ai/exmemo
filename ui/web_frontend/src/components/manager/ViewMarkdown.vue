@@ -1,58 +1,67 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <!--
-        <div style="display: flex; flex-direction: column;">
-            <app-navbar :title="t('dataOperate')" :info="'DataOperate'" />
-        </div>
-        -->
+    <el-container class="app-container">
+        <el-header class="fixed-header" height="auto">
+            <el-container class="navbar-container nav-container">
+                <div class="top-row-2">
+                    <div class="title-container">
+                        <img :src="logo" class="nav-avatar" />
+                        <h3 class="title">{{ appName }}</h3>
+                    </div>
+                </div>
+                <div>
+                    <div class="user-controls" style="margin-bottom: 5px">
+                        <div :class="{ 'mobile-buttons': isMobile }" class="button-container-flex">
+                            <el-button-group class="basic-buttons" style="margin-right: 5px;">
+                                <el-button type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
+                                <el-button type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
+                                <el-button type="primary" @click="readContent">
+                                    {{ isSpeaking ? t('stopSpeak') : t('read') }}
+                                </el-button>
+                            </el-button-group>
+                            <el-button-group class="highlight-buttons" style="margin-right: 5px;">
+                                <el-button type="primary" @click="highlightText">
+                                    {{ isHighlightMode ? t('stopHighlight') : t('startHighlight') }}
+                                </el-button>
+                                <el-button type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
+                                    {{ t('clearHighlight') }}
+                                </el-button>
+                                <el-button type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
+                                    {{ t('copyHighlight') }}
+                                </el-button>
+                            </el-button-group>
+                        </div>
+                    </div>
+                </div>
+            </el-container>
+        </el-header>
+        
         <el-main class="main-container">
-            <div :class="{ 'mobile-buttons': isMobile }" class="button-container-flex">
-                <el-button-group class="basic-buttons" style="margin-right: 5px; margin-bottom: 5px">
-                    <el-button type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
-                    <el-button type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
-                    <el-button type="primary" @click="readContent">
-                        {{ isSpeaking ? t('stopSpeak') : t('read') }}
-                    </el-button>
-                </el-button-group>
-                <el-button-group class="highlight-buttons" style="margin-right: 5px; margin-bottom: 5px">
-                    <el-button type="primary" @click="highlightText">
-                        {{ isHighlightMode ? t('stopHighlight') : t('startHighlight') }}
-                    </el-button>
-                    <el-button type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
-                        {{ t('clearHighlight') }}
-                    </el-button>
-                    <el-button type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
-                        {{ t('copyHighlight') }}
-                    </el-button>
-                </el-button-group>
-            </div>
-
             <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="preview-container" ref="content" @mouseup="highlightSelection" @touchend="highlightSelection" @contextmenu.prevent>
                         <MdPreview :id="previewId" :modelValue="markdownContent" />
-                        <!--<MdCatalog :editorId="previewId" :scrollElement="scrollElement" />-->
                     </div>
                 </el-col>
             </el-row>
         </el-main>
-    </div>
+    </el-container>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import axios from 'axios';
+import logo from '@/assets/images/logo.png'
 import { setDefaultAuthHeader,getURL } from '@/components/support/conn'
-import AppNavbar from '@/components/support/AppNavbar.vue'
 import { getLocale } from '@/main.js' 
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { MdPreview } from 'md-editor-v3'
 
 const { t, locale } = useI18n()
 const isMobile = ref(false)
+const appName = 'ExMemo'
 const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
 const route = useRoute()
@@ -300,7 +309,34 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style>
+<style scoped>
+.app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.fixed-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: white;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.main-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0px;
+    height: calc(100vh - var(--header-height));
+}
+
+.scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
 .preview-container :deep(mark.custom-highlight) {
     padding: 2px;
     transition: background-color 0.3s;
@@ -314,10 +350,10 @@ onBeforeUnmount(() => {
     background-color: transparent !important;
 }
 
-<style scoped>
 .main-container {
-    padding: 20px;
-    height: calc(100vh - 60px);
+    padding: 0px;
+    height: auto;
+    min-height: calc(100vh - 60px);    
 }
 
 .editor-container {
@@ -374,18 +410,20 @@ onBeforeUnmount(() => {
     background-color: yellow;
 }
 
-@media (max-width: 767px) {
-    .el-row {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .el-col {
-        width: 100% !important;
-    }
+.el-row {
+    display: flex;
+    flex-direction: column;
+    margin: 0 !important;
+}    
 
-    .editor-container {
-        height: calc(100vh - 160px);
-    }
+.el-col {
+    width: 100% !important;
+}
+
+.preview-container {
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: white;
 }
 </style>

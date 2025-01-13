@@ -183,21 +183,7 @@ export default {
 </script>
 
 <style scoped>
-.navbar-container {
-    flex-direction: column;
-    padding: 10px;
-}
 
-.top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.title {
-    margin: 0;
-}
 
 .user-controls {
     display: flex;
@@ -215,19 +201,6 @@ export default {
 
 :deep(.el-tabs__header) {
     margin-bottom: 0;
-}
-
-.title-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nav-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
 }
 
 .user-controls .el-button.is-circle {
@@ -271,16 +244,6 @@ export default {
 
 /* 添加移动设备适配样式 */
 @media screen and (max-width: 768px) {
-    .title {
-        font-size: 16px;
-        margin: 0;
-    }
-
-    .nav-avatar {
-        width: 28px;
-        height: 28px;
-    }
-
     .username {
         display: none; /* 在移动端隐藏用户名 */
     }
