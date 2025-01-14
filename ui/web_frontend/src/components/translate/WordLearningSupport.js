@@ -1,12 +1,15 @@
 import axios from 'axios';
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 
-export async function fetchWordList(status='not_learned') {
+export async function fetchWordList(status='not_learned', date=null) {
     let func = 'api/translate/learn';
     setDefaultAuthHeader();
     const formData = new FormData();
     formData.append('rtype', 'get_words');
     formData.append('status', status);
+    if (date) {
+        formData.append('date', date);
+    }
     return await axios.post(getURL() + func, formData).then((res) => {
         return res.data.list;
     }).catch((err) => {

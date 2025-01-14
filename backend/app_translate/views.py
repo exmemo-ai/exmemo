@@ -1,6 +1,5 @@
 from loguru import logger
 import json
-
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +11,7 @@ from django.db.models import Q
 from backend.common.user.utils import parse_common_args, get_user_id
 from backend.common.utils.net_tools import do_result
 from django.utils.translation import gettext as _
+from django.utils import timezone
 from . import translate
 from .models import StoreEnglishArticle, StoreTranslate
 from .serializer import StoreEnglishArticleSerializer, StoreTranslateSerializer
@@ -203,8 +203,16 @@ class TranslateLearnView(APIView):
         if args['user_id'] is None:
             return do_result(False, {"list": []})
         status = request.GET.get("status", request.POST.get("status", "not_learned"))
-        queryset = StoreTranslate.objects.filter(
-            user_id=args['user_id'], status=status).order_by("freq").all()[:50]
+        dateStr = request.GET.get("date", request.POST.get("date", None))
+        limit = 100
+        if dateStr is not None:
+            queryset = StoreTranslate.objects.filter(
+                user_id=args['user_id'], status=status, 
+                updated_time__gte=dateStr).order_by("freq").all()[:limit]
+        else:
+            queryset = StoreTranslate.objects.filter(
+                user_id=args['user_id'], status=status
+                ).order_by("freq").all()[:limit]
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
         json_data = json.loads(json.dumps(data))
@@ -225,7 +233,7 @@ class TranslateLearnView(APIView):
             if word is None or status is None:
                 continue
             try:
-                StoreTranslate.objects.filter(idx=item.get("idx")).update(status=status, info=info);
+                StoreTranslate.objects.filter(idx=item.get("idx")).update(status=status, info=info, updated_time=timezone.now());
             except Exception as e:
                 logger.warning(f"update {e}")
                 return do_result(False, str(e))

@@ -7,15 +7,19 @@
             </div>
         </div>
         <div class="content word-learning translate-common-style">
-            <div class="translate-word-display">
+            <div v-if="wordList.length > 0" class="translate-word-display">
                 <bold>{{ $t('trans.word') }}: {{ wordStr }}</bold>
+                <p>{{ $t('trans.freq') }}: {{ freqStr }}</p>
                 <p v-if="showTranslation">{{ $t('trans.wordChineseMeaning') }}: {{ transStr }}</p>
+            </div>
+            <div v-else>
+                {{ $t('trans.noWordsAvailable') }}
             </div>
             <div class="translate-buttons">
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="markAsKnown">{{ $t('trans.markAsKnown') }}</el-button>
                 <el-button @click="learnToday">{{ $t('trans.learnToday') }}</el-button>
-                <el-button @click="startLearn">{{ $t('trans.startLearning') }}</el-button>
+                <el-button @click="startLearn">{{ $t('trans.finish') }}</el-button>
             </div>
         </div>
     </div>
@@ -29,6 +33,7 @@ export default {
         return {
             wordStr: '',
             transStr: '',
+            freqStr: '',
             wordList: [],
             currentIndex: 0,
             finishCount: 0,
@@ -72,19 +77,16 @@ export default {
             this.$emit('update-status', 'learn');
         },
         updateWordDisplay() {
+            console.log('EEE', this.wordList[this.currentIndex])
             this.wordStr = this.wordList[this.currentIndex].word;
             this.transStr = this.wordList[this.currentIndex].info.translate;
+            this.freqStr = this.wordList[this.currentIndex].freq;
             this.updateCount();
         },
         async fetch() {
             try {
                 this.wordList = await fetchWordList('not_learned');
-                if (this.wordList && this.wordList.length > 0) {
-                    this.updateWordDisplay();
-                } else {
-                    this.wordStr = this.$t('trans.noWordsAvailable');
-                    this.transStr = '';
-                }
+                this.updateWordDisplay();
             } catch (err) {
                 console.error(err);
                 this.wordStr = this.$t('trans.errorFetchingWords');

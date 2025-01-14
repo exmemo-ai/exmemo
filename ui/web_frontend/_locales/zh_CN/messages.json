@@ -209,13 +209,15 @@
     "copyFailed": "复制失败",
     "clipboardNotSupported": "不支持剪贴板API",
     "loading": "加载中",
+    "learn": "学习",
     "trans": {
-        "reviewWords": "复习单词",
+        "writeFromMemory": "默写",
+        "reviewWords": "复习",
         "reviewing": "复习中",
         "learned": "已学会",
         "learnMore": "再学学",
         "reviewFinished": "复习结束",
-        "wordLearning": "学习单词",
+        "wordLearning": "学习",
         "learning": "学习中",
         "total": "总数",
         "word": "单词",
@@ -226,10 +228,14 @@
         "showAnswer": "显示答案",
         "learnFinished": "结束学习",
         "selectWord": "选择单词",
-        "markAsKnown": "标记为已学会",
+        "markAsKnown": "标记为学会",
         "learnToday": "今天学习",
         "startLearning": "开始学习",
         "noWordsAvailable": "没有可用的单词",
-        "errorFetchingWords": "获取单词时出错"
+        "errorFetchingWords": "获取单词时出错",
+        "goPrev": "上一个",
+        "goNext": "下一个",
+        "finish": "完成",
+        "freq": "优先级"
     }
 }

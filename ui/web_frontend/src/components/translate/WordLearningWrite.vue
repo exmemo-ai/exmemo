@@ -1,26 +1,25 @@
 <template>
     <div>
         <div class="translate-header">
-            <h1>{{ $t('trans.reviewWords') }}</h1>
+            <h1>{{ $t('trans.writeFromMemory') }}</h1>
             <div class="translate-counter">
                 {{ finishCount }} / {{ wordList.length }}
             </div>
         </div>
         <div class="content word-learning translate-common-style">
-            <div v-if="wordList.length > 0" class="translate-word-display">
-                <bold>{{ $t('trans.word') }}: {{ wordStr }}</bold>
-                <p>{{ $t('trans.exampleSentence') }}: {{ sentence }}</p>
-                <p v-if="showTranslation">{{ $t('trans.wordChineseMeaning') }}: {{ transStr }}</p>
+            <div v-if="wordList && wordList.length > 0" class="translate-word-display">
+                <bold>{{ $t('trans.wordChineseMeaning') }}: {{ transStr }}</bold>
+                <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
             </div>
             <div v-else>
                 {{ $t('trans.noWordsAvailable') }}
             </div>
             <div class="translate-buttons">
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
-                <el-button @click="markAsLearned">{{ $t('trans.learned') }}</el-button>
-                <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
+                <el-button @click="goPrev">{{ $t('trans.goPrev') }}</el-button>
+                <el-button @click="goNext">{{ $t('trans.goNext') }}</el-button>
                 <el-button @click="reviewFinished">{{ $t('trans.finish') }}</el-button>
-            </div>            
+            </div>
         </div>
     </div>
 </template>
@@ -33,51 +32,47 @@ export default {
         return {
             wordStr: '',
             transStr: '',
-            sentence: '',
             wordList: [],
             currentIndex: 0,
             finishCount: 0,
-            showTranslation: false,
+            hideStatus: 0,
         };
     },
     methods: {
         toggleTranslation() {
-            this.showTranslation = !this.showTranslation;
+            this.hideStatus = this.hideStatus+1;
+            if (this.hideStatus > 2) {
+                this.hideStatus = 0;
+            }
+            this.updateWordDisplay();
         },
-        markAsLearned() {
-            this.wordList[this.currentIndex]['flag'] = true;
-            this.nextWord()
+        goPrev() {
+            this.currentIndex = (this.currentIndex - 1 + this.wordList.length) % this.wordList.length;
+            this.hideStatus = 0;
+            this.updateWordDisplay();
+            //this.reviewFinished();
         },
-        learnMore() {
-            this.nextWord()
-        },
-        nextWord() {
-            const startIndex = this.currentIndex;
-            do {
-                this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
-                if (this.wordList[this.currentIndex].flag !== true) {
-                    this.updateWordDisplay();
-                    this.showTranslation = false;
-                    return;
-                }
-            } while (this.currentIndex !== startIndex);
-            this.reviewFinished();
+        goNext() {
+            this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
+            this.hideStatus = 0;
+            this.updateWordDisplay();
         },
         updateWordDisplay() {
             if (this.currentIndex < this.wordList.length) {
                 const item = this.wordList[this.currentIndex]['item']
-                this.wordStr = item.word;
-                this.transStr = item.info.translate;
-                if ("examples" in item.info && item.info.examples.length > 0) {
-                    this.sentence = item.info.examples[0].sentence;
+                if (this.hideStatus == 0) {
+                    this.wordStr = '_'.repeat(item.word.length);
+                } else if (this.hideStatus == 1) {
+                    this.wordStr = item.word[0] + ' ' + '_'.repeat(item.word.length - 1);
                 } else {
-                    this.sentence = '';
+                    this.wordStr = item.word;
                 }
+                this.transStr = item.info.translate;
                 this.updateCount();
             }
         },
         updateCount() {
-            this.finishCount = this.wordList.filter(word => word['flag'] === true).length;
+            this.finishCount = this.currentIndex + 1;
         },
         reviewFinished() {
             let tmpList = []
@@ -85,18 +80,24 @@ export default {
                 tmpList.push(this.wordList[i]['item']);
             }
             realUpdate(tmpList);
-            this.$emit('update-status', 'write');
+            this.$emit('update-status', 'select');
         },
         async fetch() {
             this.wordList = []
-            let tmpList = await fetchWordList('review');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            let tmpList = await fetchWordList('review', dateStr);
             for (let i = 0; i < tmpList.length; i++) {
                 this.wordList.push({'item':tmpList[i], 'flag':false});
             }
             this.wordList.sort((a, b) => {
                 return b.item.created_time - a.item.created_time;
             });
-            this.updateWordDisplay();
+            if (this.wordList && this.wordList.length > 0) {
+                this.updateWordDisplay();
+            } else {
+                this.wordStr = '';
+                this.transStr = '';
+            }
         },     
     },
     mounted() {

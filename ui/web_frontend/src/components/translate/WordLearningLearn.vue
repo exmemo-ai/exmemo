@@ -2,23 +2,26 @@
     <div>
         <div class="translate-header">
             <h1>{{ $t('trans.wordLearning') }}</h1>
-            <div class="translate-counter">
+            <div class="translate-counter" v-if="wordList.length">
                 {{ finishCount }} / {{ wordList.length }}
             </div>
         </div>
         <div class="content word-learning translate-common-style">
-            <div class="translate-word-display">
+            <div v-if="wordList.length > 0" class="translate-word-display">
                 <bold class="word">{{ $t('trans.word') }}: {{ wordStr }}</bold>
                 <p class="example-sentence">{{ $t('trans.exampleSentence') }}: {{ exampleSentence }}</p>
                 <p v-if="showTranslation" class="sentence-meaning">{{ $t('trans.sentenceMeaning') }}: {{ sentenceMeaning }}</p>
                 <p v-if="showTranslation" class="word-meaning">{{ $t('trans.wordMeaning') }}: {{ transStr }}</p>
                 <p v-if="showTranslation" class="word-chinese-meaning">{{ $t('trans.wordChineseMeaning') }}: {{ wordChineseMeaning }}</p>
             </div>
+            <div v-else>
+                {{ $t('trans.noWordsAvailable') }}
+            </div>
             <div class="translate-buttons">
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
-                <el-button @click="learnFinished">{{ $t('trans.learnFinished') }}</el-button>
+                <el-button @click="learnFinished">{{ $t('trans.finish') }}</el-button>
             </div>
         </div>
     </div>

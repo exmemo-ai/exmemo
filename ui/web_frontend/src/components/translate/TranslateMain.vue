@@ -16,7 +16,7 @@
                         <span>{{ $t('articleList') }}</span>
                     </el-menu-item>
                     <el-menu-item index="learn">
-                        <span>{{ $t('Learn') }}</span>
+                        <span>{{ $t('learn') }}</span>
                     </el-menu-item>
                 </el-menu>
             </el-aside>

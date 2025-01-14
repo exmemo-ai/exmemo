@@ -209,7 +209,9 @@
     "copyFailed": "Copy Failed",
     "clipboardNotSupported": "Clipboard API not supported",
     "loading": "Loading",
+    "learn": "Learn",
     "trans": {
+        "writeFromMemory": "Write from Memory",
         "reviewWords": "Review Words",
         "reviewing": "Reviewing",
         "learned": "Learned",
@@ -230,6 +232,10 @@
         "learnToday": "Learn Today",
         "startLearning": "Start Learning",
         "noWordsAvailable": "No words available",
-        "errorFetchingWords": "Error fetching words" 
+        "errorFetchingWords": "Error fetching words",
+        "goPrev": "Previous",
+        "goNext": "Next",
+        "finish": "Finish",
+        "freq": "Frequency"
     }    
 }
