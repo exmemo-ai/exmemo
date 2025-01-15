@@ -3,13 +3,14 @@
         <div class="header">
             <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
             <div class="header-buttons">
-                <el-button @click="clearSession">{{ $t('clearSession') }}</el-button>
-                <el-button @click="newSession">{{ $t('newSession') }}</el-button>
+                <el-button @click="clearSession">{{ $t('session.clearSession') }}</el-button>
+                <el-button @click="newSession">{{ $t('session.newSession') }}</el-button>
             </div>
         </div>
         <div class="chat-area">
             <vue-advanced-chat height="100%" :current-user-id="chat.getCurrentUserId()" :room-id="activeRoomId"
                 :rooms="JSON.stringify(sessions)" :messages="JSON.stringify(messages)" :rooms-loaded="sessionsLoaded"
+                :room-actions="JSON.stringify(roomActions)" @room-action-handler="roomActionHandler($event.detail[0])"
                 :messages-loaded="messagesLoaded" @send-message="sendMessage($event.detail[0])"
                 @fetch-messages="fetchMessages($event.detail[0])"
                 :show-audio=false />
@@ -23,6 +24,8 @@ import { ChatService } from './chat.js'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import mitt from 'mitt'
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n'
+
 
 const eventBus = mitt()
 
@@ -36,7 +39,13 @@ export default ({
         register()
         const chat = new ChatService(eventBus);
         const activeRoomId = ref(null);
-        return { chat, activeRoomId }
+        const { t, te } = useI18n();
+        const roomActions = ref([
+            { name: 'deleteSession', title: t('session.deleteSession') },
+            { name: 'renameSession', title: t('session.renameSession') }
+        ]);
+
+        return { chat, activeRoomId, t, te, roomActions }
     },
 
     data() {
@@ -45,7 +54,7 @@ export default ({
             sessionsLoaded: false,
             messagesLoaded: false,
             messages: [],
-            sessions: [],
+            sessions: []
         }
     },
 
@@ -90,15 +99,12 @@ export default ({
                     this.messages = this.chat.getMessages();
                 } else if (message.files && message.files.length > 0) {
                     for (let i = 0; i < message.files.length; i++) {
-                        const file = message.files[i];                        
-                        // 添加文件消息到本地显示
-                        this.chat.addMessage(`正在发送文件: ${file.name}`, this.chat.currentUserId);
+                        const file = message.files[i];  
+                        this.chat.addMessage(t('session.sendFile') + `: ${file.name}`, this.chat.currentUserId);
                         this.messages = [];
                         this.messages = this.chat.getMessages();
-                        
-                        // 发送文件到后端
                         await this.chat.uploadFile(file);
-                        
+                       
                         this.messages = [];
                         this.messages = this.chat.getMessages();
                     }
@@ -115,13 +121,34 @@ export default ({
                 console.error('Error creating new session:', error)
             }
         },
-        async clearSession() {
+        async clearSession(sessionId = null) {
             try {
-                await this.chat.clearSession()
+                await this.chat.clearSession(sessionId)
             } catch (error) {
                 console.error('Error clearing session:', error)
             }
         },
+        async renameSession(sessionId) {
+            const newSessionName = prompt(t('session.newSessionName'));
+            if (newSessionName) {
+                try {
+                    await this.chat.renameSession(sessionId, newSessionName)
+                } catch (error) {
+                    console.error('Error renaming session:', error)
+                }
+            }
+        },
+		roomActionHandler({ action, roomId }) {
+            console.log('xxxx', action, 'roomid', roomId)
+			switch (action.name) {
+				case 'renameSession':                    
+                    this.renameSession(roomId);
+                    break;
+				case 'deleteSession':
+                    this.clearSession(roomId);
+                    break;
+			}
+		},        
         handleResize() {
             this.isMobile = window.innerWidth < 768;
         },
@@ -158,7 +185,7 @@ export default ({
 
 .chat-area {
     flex: 1;
-    min-height: 0; // 防止flex子元素溢出
+    min-height: 0;
 }
 
 html,

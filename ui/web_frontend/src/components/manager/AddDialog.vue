@@ -19,13 +19,9 @@
                     <el-input type="textarea" :rows="6" v-model="form.addr"
                         placeholder="http://"></el-input>
                 </div>
-                <div v-if="form.etype === 'file' || form.etype === 'note'" width="100%">
+                <div v-if="form.etype === 'file'" width="100%">
                     <div>
                         <input type="file" @change="handleFileUpload" width="100%">
-                    </div>
-                    <div v-if="saveProgress > 0" style="margin: 10px">
-                        <progress :value="saveProgress" max="100">{{ saveProgress }}%</progress>
-                        <el-button style="margin: 2px;" @click="cancelUpload">{{ $t('cancel') }}</el-button>
                     </div>
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
@@ -41,8 +37,6 @@
             :file_path="file_path"
             :file="file"
             :parent_obj="parent_obj"
-            :save-progress="saveProgress"
-            @update-progress="progress => saveProgress = progress"
         />
         <span class="dialog-footer">
         </span>
@@ -65,8 +59,6 @@ export default {
             file_path: null,
             file: null,
             dialogVisible: false,
-            saveProgress: 0,
-            cancelTokenSource: null,
             form: {
                 idx: null,
                 title: '',
@@ -122,12 +114,6 @@ export default {
             this.file_path = event.target.files[0].name;
             this.file = event.target.files[0];
             this.form.title = this.file_path.split('\\').pop().split('/').pop();
-        },
-        cancelUpload() {
-            if (this.cancelTokenSource) {
-                this.cancelTokenSource.cancel('cancel by user');
-                this.uploadProgress = 0;
-            }
         },
     },
     mounted() {

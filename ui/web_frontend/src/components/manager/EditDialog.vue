@@ -13,7 +13,7 @@
                 <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
                 <el-button size="small" @click="showDeleteConfirmation">{{ $t('delete') }}</el-button>
                 <el-button size="small" @click="viewContent">{{ $t('view') }}</el-button>
-                <el-button size="small" v-if="form.etype === 'file'" @click="downloadFile">{{ $t('download') }}</el-button> 
+                <el-button size="small" v-if="form.etype === 'file'" @click="download">{{ $t('download') }}</el-button> 
             </el-button-group>
         </div>
 
@@ -60,8 +60,6 @@
             :file_path="file_path"
             :file="file"
             :parent_obj="parent_obj"
-            :save-progress="saveProgress"
-            @update-progress="progress => saveProgress = progress"
         />
         <span class="dialog-footer">
         </span>
@@ -70,8 +68,9 @@
   
 <script>
 import axios from 'axios';
-import { getURL, parseBackendError, parseBlobData } from '@/components/support/conn'
+import { getURL, parseBackendError } from '@/components/support/conn'
 import DataEditor from './DataEditor.vue'
+import { downloadFile } from './dataUtils'
 
 export default {
     components: {
@@ -85,8 +84,6 @@ export default {
             file_path: null,
             file: null,
             dialogVisible: false,
-            saveProgress: 0,
-            cancelTokenSource: null,
             form: {
                 idx: null,
                 title: '',
@@ -102,7 +99,6 @@ export default {
     },
     methods: {
         openDialog(parent_obj, row) {
-            this.saveProgress = 0;
             this.parent_obj = parent_obj;
             this.form.idx = row.idx;
             this.form.ctype = row.ctype;
@@ -180,20 +176,10 @@ export default {
                 this.closeDialog();
             }
         },
-        realDownloadFile(obj, idx, filename) {
-            console.log(this.$t('downloadFile', { idx, filename }));
-            let table_name = 'data'
-            axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/' + 'download', {
-                responseType: 'blob',
-            })
-                .then(response => {
-                    parseBlobData(response, obj, filename);
-                });
-        },
-        downloadFile() {
+        download() {
             console.log(this.$t('download', { idx: this.form.idx }));
             let filename = this.file_path.split('/').pop();
-            this.realDownloadFile(this, this.form.idx, filename);
+            downloadFile(this.form.idx, filename);
         },
         viewContent() {
             this.closeDialog();

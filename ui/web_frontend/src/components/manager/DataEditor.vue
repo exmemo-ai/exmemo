@@ -48,11 +48,17 @@
             </el-radio-group>
         </div>
     </div>
+
+    <div v-if="saveProgress > 0" style="margin: 10px">
+        <progress :value="saveProgress" max="100">{{ saveProgress }}%</progress>
+        <el-button style="margin: 2px;" @click="cancelUpload">{{ $t('cancel') }}</el-button>
+    </div>
 </template>
 
 <script>
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
+import { saveEntry } from './dataUtils';
 
 export default {
     props: {
@@ -71,18 +77,21 @@ export default {
         parent_obj: {
             type: Object,
             default: null
-        },
-        saveProgress: {
-            type: Number,
-            default: 0
         }
     },
     data() {
         return {
-            cancelTokenSource: null
+            cancelTokenSource: null,
+            saveProgress: 0,
         }
     },
     methods: {
+        cancelUpload() {
+            if (this.cancelTokenSource) {
+                this.cancelTokenSource.cancel('cancel by user');
+                this.saveProgress = 0;
+            }
+        },
         extractInfo() {
             let func = 'api/entry/tool/'
             console.log(getURL() + func)
@@ -125,126 +134,17 @@ export default {
             });
         },
         async realSave() {
-            let func = 'api/entry/data/'
-            const formData = new FormData();
-            if (this.form.etype === 'record') {
-                if (this.form.raw === '') {
-                    this.$message({
-                        type: 'error',
-                        message: this.$t('inputRecordContent'),
-                    });
-                    return false;
+            return await saveEntry({
+                parentObj: this.parent_obj,
+                form: this.form,
+                file: this.file,
+                onProgress: (progress) => {
+                    this.saveProgress = progress;
+                },
+                onUploadStart: (cancelTokenSource) => {
+                    this.cancelTokenSource = cancelTokenSource;
                 }
-                formData.append('raw', this.form.raw);
-            } else if (this.form.etype === 'file' && this.form.idx === null) {
-                if (!this.file) {
-                    this.$message({
-                        type: 'error',
-                        message: this.$t('selectFileError'),
-                    });
-                    return false;
-                }
-                formData.append('etype', 'file')
-                formData.append('files', this.file);
-                let file_name = this.file.name;
-                if (this.form.title !== '') {
-                    if (file_name.indexOf('.') > 0) {
-                        const file_ext = file_name.split('.').pop();
-                        const title_ext = this.form.title.split('.').pop();
-                        if (file_ext !== title_ext) {
-                            file_name = `${this.form.title}.${file_ext}`;
-                        } else {
-                            file_name = this.form.title;
-                        }
-                        file_name = this.form.title;
-                    } else {
-                        file_name = this.form.title;
-                    }
-                }
-                formData.append(`filenames`, file_name);
-                formData.append(`filepaths`, `${file_name}`);
-            } else if (this.form.etype === 'web') {
-                if (this.form.addr === '') {
-                    this.$message({
-                        type: 'error',
-                        message: this.$t('inputWebAddressError'),
-                    });
-                    return false;
-                }
-                formData.append('addr', this.form.addr);
-            }
-            if (this.form.ctype !== '') {
-                formData.append('ctype', this.form.ctype);
-            }
-            if (this.form.etype !== '') {
-                formData.append('etype', this.form.etype);
-            }
-            if (this.form.title !== '') {
-                formData.append('title', this.form.title);
-            }
-            if (this.form.status !== '') {
-                formData.append('status', this.form.status);
-            }
-            if (this.form.atype !== '') {
-                formData.append('atype', this.form.atype);
-            }
-            if (this.form.idx !== null) {
-                formData.append('idx', this.form.idx);
-            }            
-
-            this.cancelTokenSource = axios.CancelToken.source();
-            try {
-                if (this.form.idx !== null) {
-                    func += this.form.idx + '/';
-                    const response = await axios.put(getURL() + func, formData);
-                    if (response.data.status == 'success') {
-                        this.$message({
-                            type: 'success',
-                            message: this.$t('updateSuccess'),
-                        });
-                        if (this.parent_obj) {
-                            this.parent_obj.fetchData();
-                        }
-                    } else {
-                        this.$message({
-                            type: 'error',
-                            message: this.$t('updateFail'),
-                        });
-                    }
-                } else {
-                    const response = await axios.post(getURL() + func, formData, {
-                        onUploadProgress: progressEvent => {
-                            this.$emit('update-progress', Math.round((progressEvent.loaded * 100) / progressEvent.total));
-                        },
-                        cancelToken: this.cancelTokenSource.token
-                    });
-                    if (response.data.status == 'success') {
-                        this.$message({
-                            type: 'success',
-                            message: this.$t('saveSuccess'),
-                        });
-                        if (this.parent_obj) {
-                            this.parent_obj.fetchData();
-                        }
-                    } else {
-                        this.$message({
-                            type: 'error',
-                            message: this.$t('saveFail'),
-                        });
-                    }
-                }
-                return true;
-            } catch (error) {
-                if (axios.isCancel(error)) {
-                    this.$message({
-                        type: 'info',
-                        message: this.$t('operationCancelled'),
-                    });
-                } else {
-                    parseBackendError(this, error);
-                }
-                return false;
-            }
+            });
         }
     }
 }

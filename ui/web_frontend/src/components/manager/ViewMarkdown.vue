@@ -1,8 +1,8 @@
 <template>
     <el-container class="app-container">
-        <el-header class="fixed-header" height="auto">
+        <el-header :class="{ 'scroll-header': !isMobile, 'fixed-header': isMobile }" height="auto">
             <el-container class="navbar-container nav-container">
-                <div class="top-row-2">
+                <div class="top-row-view">
                     <div class="title-container">
                         <img :src="logo" class="nav-avatar" />
                         <h3 class="title">{{ appName }}</h3>
@@ -17,16 +17,21 @@
                                 <el-button type="primary" @click="readContent">
                                     {{ isSpeaking ? t('stopSpeak') : t('read') }}
                                 </el-button>
+                                <el-button type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
+                                <el-button type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
                             </el-button-group>
                             <el-button-group class="highlight-buttons" style="margin-right: 5px;">
                                 <el-button type="primary" @click="highlightText">
-                                    {{ isHighlightMode ? t('stopHighlight') : t('startHighlight') }}
+                                    {{ isHighlightMode ? t('viewMarkdown.stopHighlight') : t('viewMarkdown.startHighlight') }}
                                 </el-button>
                                 <el-button type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
-                                    {{ t('clearHighlight') }}
+                                    {{ t('viewMarkdown.clearHighlight') }}
                                 </el-button>
                                 <el-button type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
-                                    {{ t('copyHighlight') }}
+                                    {{ t('viewMarkdown.copyHighlight') }}
+                                </el-button>
+                                <el-button type="primary" @click="saveHighLight" :disabled="!isHighlightMode || savedRanges.value?.length === 0">
+                                    {{ t('viewMarkdown.saveHighlight') }}
                                 </el-button>
                             </el-button-group>
                         </div>
@@ -34,16 +39,9 @@
                 </div>
             </el-container>
         </el-header>
-        
-        <el-main class="main-container">
-            <el-row :gutter="20">
-                <el-col :span="24">
-                    <div class="preview-container" ref="content" @mouseup="highlightSelection" @touchend="highlightSelection" @contextmenu.prevent>
-                        <MdPreview :id="previewId" :modelValue="markdownContent" />
-                    </div>
-                </el-col>
-            </el-row>
-        </el-main>
+        <div class="preview-container" ref="content" @mouseup="highlightSelection" @touchend="highlightSelection" @contextmenu.prevent>
+            <MdPreview :id="previewId" :modelValue="markdownContent" />
+        </div>
     </el-container>
 </template>
 
@@ -58,8 +56,9 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { MdPreview } from 'md-editor-v3'
+import { saveEntry, downloadFile } from './dataUtils';
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const isMobile = ref(false)
 const appName = 'ExMemo'
 const markdownContent = ref(t('loading'))
@@ -69,6 +68,8 @@ const isSpeaking = ref(false)
 const isHighlightMode = ref(false)
 let speechUtterance = null
 const content = ref(null)
+const savedRanges = ref([])
+const form = ref({})
 
 const handleResize = () => {
     isMobile.value = window.innerWidth < 768
@@ -80,11 +81,17 @@ const clearHighlight = () => {
         const parent = text.parentNode
         parent.replaceChild(document.createTextNode(text.textContent), text)
     })
+    savedRanges.value = []
 }
 
 const copyHighlight = () => {
     const highlightedTexts = document.querySelectorAll('.custom-highlight')
-    const text = Array.from(highlightedTexts).map(text => text.textContent).join('\n')
+    let text = Array.from(highlightedTexts).map(text => text.textContent).join('\n')
+    text = text + "\n"
+    text = text + "\n" + t('title') + ": " + form.value.title
+    text = text + "\n" + t('viewMarkdown.copiedFrom') + ": " + window.location.href
+    text = text + "\n" + t('viewMarkdown.copiedAt') + ": " + new Date().toLocaleString()
+    text = text.trim()
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)
@@ -126,13 +133,73 @@ const fetchContent = async (idx) => {
     setDefaultAuthHeader();
     axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
         .then(response => {
-            console.log('@@@@', response);
+            //console.log('response:', response.data);
             if ('content' in response.data && response.data.content !== null) {
                 markdownContent.value = response.data.content;
+                form.value = { ...response.data };
             } else {
                 markdownContent.value = t('notSupport');
             }
         });
+}
+
+const loadHighlight = () => {
+    if (form.value.meta?.highlights) {
+        try {
+            const highlights = JSON.parse(form.value.meta.highlights);
+            savedRanges.value = highlights;
+            applyHighlights(highlights);
+        } catch (error) {
+            console.error('Failed to parse highlights:', error);
+        }
+    }
+}
+
+const applyHighlights = (highlights) => {
+    if (!highlights || !highlights.length) 
+        return;
+
+    clearHighlight();
+    highlights.forEach(highlight => {
+        findAndHighlightText(highlight.text);
+    });
+}
+
+const findAndHighlightText = (text) => {
+    const container = content.value;
+    if (!container) return;
+
+    const textNodes = getTextNodes(container);
+    const searchText = text.trim();
+
+    for (const node of textNodes) {
+        const nodeText = node.textContent;
+        const index = nodeText.indexOf(searchText);
+        
+        if (index >= 0) {
+            const range = document.createRange();
+            const mark = document.createElement('mark');
+            mark.className = 'custom-highlight';
+            
+            range.setStart(node, index);
+            range.setEnd(node, index + searchText.length);
+            
+            const selectedText = range.extractContents();
+            mark.appendChild(selectedText);
+            range.insertNode(mark);            
+            break;
+        }
+    }
+}
+
+const openWeb = () => {
+    window.open(form.value.addr, '_blank')
+}
+
+const download = () => {
+    const file_path = form.value.addr;
+    let filename = file_path.split('/').pop();
+    downloadFile(form.value.idx, filename);
 }
 
 const selectAll = () => {
@@ -201,7 +268,10 @@ watch(isHighlightMode, (newValue) => {
 
 const highlightText = () => {
     isHighlightMode.value = !isHighlightMode.value
-    ElMessage.success(isHighlightMode.value ? t('highlightModeOn') : t('highlightModeOff'))
+    ElMessage.success(isHighlightMode.value ? t('viewMarkdown.highlightModeOn') : t('viewMarkdown.highlightModeOff'))
+    if (isHighlightMode.value) {
+        loadHighlight();
+    }
 }
 
 const highlightSelection = () => {
@@ -214,6 +284,14 @@ const highlightSelection = () => {
         const range = selection.getRangeAt(0)
         const selectedText = range.toString()
         if (!selectedText.trim()) return
+
+        savedRanges.value.push({
+            text: selectedText,
+            startOffset: range.startOffset,
+            endOffset: range.endOffset,
+            startContainer: range.startContainer.textContent,
+            timestamp: new Date().getTime()
+        })
 
         const markElement = range.commonAncestorContainer.parentElement
         if (markElement && markElement.classList.contains('custom-highlight')) {
@@ -276,7 +354,7 @@ const highlightSelection = () => {
             }
         }
         selection.removeAllRanges()
-        console.log('highlight success')
+        console.log('highlight success. Saved ranges:', savedRanges.value)
     } catch (error) {
         console.error('highlight failed:', error)
     }
@@ -294,10 +372,45 @@ const getTextNodes = (node) => {
     return textNodes
 }
 
+const saveHighLight = async () => {
+    if (savedRanges.value.length === 0) {
+        ElMessage.warning(t('noHighlightToSave'))
+        return
+    }
+    
+    const serializableHighlights = savedRanges.value.map(range => ({
+        text: range.text,
+        timestamp: range.timestamp,
+        startOffset: range.startOffset,
+        endOffset: range.endOffset
+    }))
+    
+    if (!form.value.meta) {
+        form.value.meta = {}
+    }
+    
+    form.value.meta.highlights = JSON.stringify(serializableHighlights)
+    
+    try {
+        const result = await saveEntry({
+            parentObj: null,
+            form: form.value,
+            file: null,
+            onProgress: null
+        })
+        
+        if (result) {
+            console.log('saveHighlightSuccess')
+        }
+    } catch (error) {
+        console.error(t('saveHighlightFail'), error)
+        ElMessage.error(t('saveHighlightFail'))
+    }
+}
+
 onMounted(() => {
     handleResize()
     window.addEventListener('resize', handleResize)
-    console.log('查询参数:', route.query.idx)
     fetchContent(route.query.idx)
 })
 
@@ -317,24 +430,34 @@ onBeforeUnmount(() => {
 }
 
 .fixed-header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
     background-color: white;
     padding: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.main-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0px;
-    height: calc(100vh - var(--header-height));
+.scroll-header {
+    position: relative;
+    background-color: white;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.scrollable-content {
-    flex: 1;
-    overflow-y: auto;
+@media (max-width: 768px) {
+    .preview-container {
+        margin-top: 130px;
+    }
+}
+
+.preview-container {
+    padding: 0px;
+    height: auto;    
+    border: 1px solid #dcdfe6;
+    background-color: white;
 }
 
 .preview-container :deep(mark.custom-highlight) {
@@ -350,10 +473,9 @@ onBeforeUnmount(() => {
     background-color: transparent !important;
 }
 
-.main-container {
-    padding: 0px;
-    height: auto;
-    min-height: calc(100vh - 60px);    
+.scrollable-content {
+    flex: 1;
+    overflow-y: auto;
 }
 
 .editor-container {
@@ -400,30 +522,14 @@ onBeforeUnmount(() => {
     border-radius: 4px;
 }
 
-.preview-container {
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    padding: 10px;
-}
-
 .highlighted {
     background-color: yellow;
 }
 
-.el-row {
+.top-row-view {
     display: flex;
-    flex-direction: column;
-    margin: 0 !important;
-}    
-
-.el-col {
-    width: 100% !important;
-}
-
-.preview-container {
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    padding: 10px;
-    background-color: white;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 </style>

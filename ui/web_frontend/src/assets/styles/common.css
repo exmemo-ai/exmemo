@@ -205,13 +205,6 @@ button {
     width: 100%;
 }
 
-.top-row-2 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
 .title {
     margin: 0;
 }

@@ -319,11 +319,42 @@ export class ChatService {
         return this.messages;
     }
 
-    async clearSession() {
+    async renameSession(sessionId, sessionName) {
+        try {
+            const formData = new FormData();
+            formData.append('rtype', 'rename_session');
+            if (sessionId === null) {
+                formData.append('sid', this.currentSessionId);
+            } else {
+                formData.append('sid', sessionId);
+            }
+            formData.append('source', 'web');
+            formData.append('sname', sessionName);
+
+            const func = 'api/message/session/';
+            setDefaultAuthHeader();
+            const response = await axios.post(getURL() + func, formData);
+            await this.parseInfo(response);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                parseBackendError(this.obj, error);
+                throw new Error('Token expired');
+            }
+            const error_str = String(error);
+            this.addMessage(error_str, this.botId);
+        }
+        await this.getCurrentSession();
+    }
+
+    async clearSession(sessionId) {
         try {
             const formData = new FormData();
             formData.append('rtype', 'clear_session');
-            formData.append('sid', this.currentSessionId);
+            if (sessionId === null) {
+                formData.append('sid', this.currentSessionId);
+            } else {
+                formData.append('sid', sessionId);
+            }
             formData.append('source', 'web');
 
             const func = 'api/message/session/';
