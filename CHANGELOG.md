@@ -14,3 +14,10 @@
 ### 1.3 Fixed
 
 - Case-insensitive document search
+
+## 2 [1.1.1] - 2025-01-15
+
+### 2.1 Added
+
+* Added data viewing interface, supporting frontend opening of markdown notes, images, files, and web pages; with highlight saving support.
+* Added learning functionality to translation tool, supporting: word selection for learning, learning, reviewing, dictation, and summary functions.
