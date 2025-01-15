@@ -89,7 +89,7 @@ export default {
                 this.transStr = this.wordList[this.currentIndex].word;
                 this.wordStr = this.wordList[this.currentIndex].word;
                 this.sentenceMeaning = this.wordList[this.currentIndex].info.translate;
-                this.wordChineseMeaning = this.wordList[this.currentIndex].info.translate || '词的中文意思';
+                this.wordChineseMeaning = this.wordList[this.currentIndex].info.translate || 'Chinese Meaning Not Available';
                 if ('examples' in this.wordList[this.currentIndex].info) {
                     const examples = this.wordList[this.currentIndex].info.examples;
                     if (examples.length > 0) {
