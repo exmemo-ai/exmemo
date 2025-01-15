@@ -36,8 +36,8 @@ def msg_search_detail(dic):
     obj = get_entry(idx)
     if obj is not None:
         if obj.etype == "file" or obj.etype == "note":
-            # check whether from web
             filename = os.path.basename(obj.path)
+            # check req from web
             if sdata.source == "web":
                 return {"type": "text", "info": f"[{filename}]({WEB_URL}/view_markdown?idx={obj.idx})"}
             else:
@@ -46,17 +46,14 @@ def msg_search_detail(dic):
                 if utils_filemanager.get_file_manager().get_file(uid, obj.path, path):
                     return {"type": "file", "path": path, "filename": filename}
         elif obj.etype == "web":
-            return obj.addr
+            if sdata.source == "web":
+                return {"type": "text", "info": f"[{obj.title}]({WEB_URL}/view_markdown?idx={obj.idx})"}
+            else:
+                return obj.addr
         else:
-            detail = f"\n主题:\n{obj.title}\n\n内容:\n{obj.raw}"
+            detail = f"\n{_('title')}:\n{obj.title}\n\n_('content'):\n{obj.raw}"
             return detail
     return _("failed_to_fetch_files")
-
-
-CommandManager.get_instance().register(
-    Command(msg_search_detail, [CMD_INNER_GET], level=LEVEL_NORMAL)
-)
-
 
 def do_message(sdata:Session):
     """
@@ -155,4 +152,7 @@ def msg_recv_file(base_path, filename, sdata):
     return ret, {"type": "text", "sid": sdata.sid, "info": detail}
 
 
+CommandManager.get_instance().register(
+    Command(msg_search_detail, [CMD_INNER_GET], level=LEVEL_NORMAL)
+)
 CommandManager.get_instance().check_conflict()

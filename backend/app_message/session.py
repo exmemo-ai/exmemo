@@ -90,7 +90,8 @@ class Session:
             logger.warning(f"load_from_db failed, sid {self.sid}")
         self.messages = self.messages[-show_count:]
 
-    def get_session_desc(self, obj = None):
+    def get_session_desc(self):
+        obj = self.get_item_from_db()
         messages = [item.to_dict() for item in self.messages]
         raw = self.get_raw()
         abstract = raw
@@ -113,7 +114,7 @@ class Session:
             if len(title) > TITLE_LENGTH:
                 title = title[:TITLE_LENGTH] + "..."
         else:
-            title = obj.get("title")
+            title = self.get_name()
             ctype = obj.get("ctype")
 
         dic = {
@@ -130,20 +131,22 @@ class Session:
             "meta": {"sid": self.sid, "is_group": self.is_group, 
                     "messages": messages},
         }
-        return dic
+        if obj is None:
+            return True, dic
+        return False, dic
 
     def save_to_db(self):
         if self.is_logged_in() == False:
             return
         if len(self.messages) == 0:
             return
-        obj = self.get_item_from_db()
-        if obj is None:
-            dic = self.get_session_desc()
+        is_new, dic = self.get_session_desc()
+        if is_new is None:
             ret, ret_emb, info = add_data(dic)
-            logger.info(f"add_data ret {ret}, {ret_emb}, {info}")
+            logger.info(f"save_to_db add_data ret {ret}, {ret_emb}, {info}")
         else:
-            dic = self.get_session_desc(obj)
+            logger.info(f"save_to_db update")
+            #logger.info(f"save_to_db update {dic}")
             StoreEntry.objects.filter(
                 user_id=self.user_id,
                 addr=self.sid
@@ -202,14 +205,15 @@ class Session:
     def close(self):
         self.save_to_db()
 
-    def clear_session(self):
+    def delete_session(self, sid):
         """
         Clear this session
         """
         StoreEntry.objects.filter(
-            user_id=self.user_id, addr=self.sid
+            user_id=self.user_id, addr=sid
         ).delete()
-        self.messages = []
+        if sid == self.sid:
+            self.messages = []
 
     def get_messages(self, force = False):
         if len(self.messages) == 0 or force:
@@ -410,6 +414,18 @@ class SessionManager:
         if session.sid in self.sessions:
             self.sessions.move_to_end(session.sid)
 
+    def rename_session(self, sdata, sid, sname):
+        if sname is None or sid is None:
+            return do_result(False, 'session not found')
+        if sid in self.sessions:
+            logger.info(f"sid {sid}, sessions {self.sessions.keys()}")
+            self.sessions[sid].sname = sname
+            self.sessions[sid].save_to_db()
+            return do_result(True, 'session renamed')
+        else:
+            logger.info(f'cannot get, rename session {sid} {sname}')
+            return do_result(False, 'session not found')
+
     def remove_session(self, sid):
         if sid in self.sessions:
             self.sessions.pop(sid)
@@ -478,10 +494,14 @@ class SessionManager:
         logger.info(f'add_message ret {sdata.sid}')
         return sdata.sid
     
-    def clear_session(self, sdata: Session):
-        self.remove_session(sdata.sid)
-        if sdata is not None:
-            sdata.clear_session()
+    def clear_session(self, sdata: Session, sid = None):
+        if sid is not None:
+            sdata.delete_session(sid)
+            self.remove_session(sid)
+        else:
+            if sdata is not None:
+                sdata.delete_session(sdata.sid)
+                self.remove_session(sdata.sid)
         return do_result(True, 'session cleared')
 
 def get_session_by_req(request):

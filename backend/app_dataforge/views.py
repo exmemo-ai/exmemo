@@ -27,14 +27,18 @@ from backend.common.parser.converter import convert, is_support
 from .feature import EntryFeatureTool
 from .entry import delete_entry, add_data, get_entry_list, get_type_options, rename_file
 from .models import StoreEntry
-from .serializer import StoreEntrySerializer
+from .serializers import ListSerializer, DetailSerializer
 
 
 class StoreEntryViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = StoreEntry.objects.filter(is_deleted=False).all()
-    serializer_class = StoreEntrySerializer
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ListSerializer
+        return DetailSerializer
 
     def create(self, request, *args, **kwargs):
         logger.info("now create instance")
@@ -255,7 +259,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
         except Exception as e:
-            logger.error(f"retrieve failed: {str(e)}")
+            logger.warning(f"retrieve failed: {str(e)}")
             import traceback
             traceback.print_exc()
             return Response(status=status.HTTP_404_NOT_FOUND)

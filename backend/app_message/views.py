@@ -33,7 +33,9 @@ class SessionAPIView(APIView):
             if rtype == "get_messages":
                 return sdata.get_messages()
             elif rtype == "clear_session":
-                return SessionManager.get_instance().clear_session(sdata)
+                return SessionManager.get_instance().clear_session(sdata, request.POST.get("sid", None))
+            elif rtype == "rename_session":
+                return SessionManager.get_instance().rename_session(sdata, request.POST.get("sid", None), request.POST.get("sname", None))
             elif rtype == "get_sessions":
                 return SessionManager.get_instance().get_sessions(sdata.user_id)
             elif rtype == "save_session":

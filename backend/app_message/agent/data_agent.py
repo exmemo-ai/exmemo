@@ -82,18 +82,6 @@ class WebAgent(BaseAgent):
         super().__init__()
         self.agent_name = _("web_processing_agent")
 
-    '''
-    @agent_function(_("web_functions_list"), is_command=False)
-    def _afunc_web_op(context_variables: dict = None, web_addr: str = None):
-        """Web functions list"""
-        if context_variables is None or 'sdata' not in context_variables:
-            return _("params_error")
-        sdata = context_variables["sdata"]
-        sdata.current_content = web_addr
-        ret, detail = msg_web_main(sdata)
-        return detail
-    '''
-
     @agent_function(_("collect_webpage"))
     def _afunc_web_collect(context_variables: dict = None, web_addr: str = None):
         """Collect web page"""
@@ -110,6 +98,16 @@ class WebAgent(BaseAgent):
             info = msg_add_url(web_addr, sdata, "collect")
             return info
         return _("no_urls_dot_")
+    
+    @agent_function(_("collect_view"))
+    def _afunc_web_collect_view(context_variables: dict = None, web_addr: str = None):
+        """Collect web page, and open view"""
+        ret = WebAgent._afunc_web_collect(context_variables, web_addr)
+        if ret == _("no_urls_dot_"):
+            return ret
+        sdata = context_variables["sdata"]
+        url = sdata.get_cache("url")
+        return search_data(sdata, dic={"addr": url})
 
     @agent_function(_("set_webpage_todo"))
     def _afunc_web_todo(context_variables: dict = None, web_addr: str = None):
