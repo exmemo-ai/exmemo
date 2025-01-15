@@ -1,5 +1,33 @@
 import axios from 'axios';
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
+import { t } from '@/utils/i18n';
+
+export async function getSummary() {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    let func = 'api/translate/learn';
+    setDefaultAuthHeader();
+    const formData = new FormData();
+    formData.append('rtype', 'summary');
+    if (dateStr) {
+        formData.append('date', dateStr);
+    }
+    return await axios.post(getURL() + func, formData).then((res) => {
+        console.log(res.data)
+        if ('total_words' in res.data) {
+            let desc =  t('trans.total_words') + ': ' +  res.data.total_words +'\n';
+            desc = desc + t('trans.learned') + ': ' + res.data.learned + '\n';
+            desc = desc + t('trans.not_learned') + ': ' + res.data.not_learned + '\n';
+            desc = desc + t('trans.to_review_today') + ': ' + res.data.today_review + '\n';
+            desc = desc + t('trans.to_learn_today') + ': ' + res.data.today_learning + '\n';
+            desc = desc + t('trans.to_review') + ': ' +  res.data.to_review;
+            return desc
+        }
+
+    }).catch((err) => {
+        console.error(err);
+        return 'Error: ' + err
+    });
+}
 
 export async function fetchWordList(status='not_learned', date=null) {
     let func = 'api/translate/learn';

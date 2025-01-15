@@ -89,3 +89,6 @@ app.component('ArticleManager', ArticleManager);
 app.use(ElementPlus);
 app.use(router);
 app.mount('#app');
+
+export default router;
+export { i18n };

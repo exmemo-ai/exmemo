@@ -18,7 +18,9 @@
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="goPrev">{{ $t('trans.goPrev') }}</el-button>
                 <el-button @click="goNext">{{ $t('trans.goNext') }}</el-button>
-                <el-button @click="reviewFinished">{{ $t('trans.finish') }}</el-button>
+                <!--
+                <el-button @click="save">{{ $t('save') }}</el-button>
+                -->
             </div>
         </div>
     </div>
@@ -50,7 +52,6 @@ export default {
             this.currentIndex = (this.currentIndex - 1 + this.wordList.length) % this.wordList.length;
             this.hideStatus = 0;
             this.updateWordDisplay();
-            //this.reviewFinished();
         },
         goNext() {
             this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
@@ -74,7 +75,7 @@ export default {
         updateCount() {
             this.finishCount = this.currentIndex + 1;
         },
-        reviewFinished() {
+        save() { // not use
             let tmpList = []
             for (let i = 0; i < this.wordList.length; i++) {
                 tmpList.push(this.wordList[i]['item']);

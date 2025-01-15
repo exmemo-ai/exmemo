@@ -23,6 +23,11 @@
                 <el-table-column prop="info.translate" :label="$t('translate')"></el-table-column>
                 <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
                 <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
+                <el-table-column :label="$t('status')" :width=100>
+                    <template v-slot="scope">
+                        {{ $t("trans."+scope.row.status) }}
+                    </template>
+                </el-table-column>
                 <el-table-column :label="$t('operation')" :width=100>
                     <template v-slot="scope">
                         <el-button link @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>

@@ -17,9 +17,10 @@
             </div>
             <div class="translate-buttons">
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
-                <el-button @click="markAsLearned">{{ $t('trans.learned') }}</el-button>
+                <el-button @click="markAsLearned">{{ $t('trans.markAsKnown') }}</el-button>
+                <el-button @click="markAsReview">{{ $t('trans.todayLearned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
-                <el-button @click="reviewFinished">{{ $t('trans.finish') }}</el-button>
+                <el-button @click="save">{{ $t('save') }}</el-button>
             </div>            
         </div>
     </div>
@@ -44,9 +45,12 @@ export default {
         toggleTranslation() {
             this.showTranslation = !this.showTranslation;
         },
-        markAsLearned() {
+        markAsReview() {
             this.wordList[this.currentIndex]['flag'] = true;
             this.nextWord()
+        },
+        markAsLearned() {
+            this.wordList[this.currentIndex]['item'].status = 'learned';
         },
         learnMore() {
             this.nextWord()
@@ -61,7 +65,7 @@ export default {
                     return;
                 }
             } while (this.currentIndex !== startIndex);
-            this.reviewFinished();
+            this.save();
         },
         updateWordDisplay() {
             if (this.currentIndex < this.wordList.length) {
@@ -79,7 +83,7 @@ export default {
         updateCount() {
             this.finishCount = this.wordList.filter(word => word['flag'] === true).length;
         },
-        reviewFinished() {
+        save() {
             let tmpList = []
             for (let i = 0; i < this.wordList.length; i++) {
                 tmpList.push(this.wordList[i]['item']);

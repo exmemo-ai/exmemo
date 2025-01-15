@@ -197,6 +197,8 @@ class TranslateLearnView(APIView):
             return self.update(request)
         elif rtype == "get_sentence":
             return self.get_sentence(args, request)
+        elif rtype == "summary":
+            return self.summary(args, request)
         return do_result(False, f"not support {rtype}")
     
     def get_words(self, args, request):
@@ -261,3 +263,25 @@ class TranslateLearnView(APIView):
             "sentence_meaning": sentence_trans,
             "word_meaning": word_trans
         })
+
+    def summary(self, args, request):
+        dateStr = request.GET.get("date", request.POST.get("date", None))
+        if dateStr == None:
+            dateStr = timezone.now().strftime("%Y-%m-%d")
+        totalWords = StoreTranslate.objects.filter(
+            user_id=args['user_id']).count()
+        not_learned = StoreTranslate.objects.filter(
+            user_id=args['user_id']).count()
+        learned = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status='learned').count()
+        learning = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status='learning').count()
+        todayReview = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status='review', updated_time__gte=dateStr).count()
+        review = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status='review').count()
+        
+        return do_result(True, {"total_words": totalWords, "learned": learned, 
+                                "not_learned": not_learned, "today_review": todayReview, 
+                                "today_learning": learning, "to_review": review})
+

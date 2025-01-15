@@ -19,7 +19,7 @@
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="markAsKnown">{{ $t('trans.markAsKnown') }}</el-button>
                 <el-button @click="learnToday">{{ $t('trans.learnToday') }}</el-button>
-                <el-button @click="startLearn">{{ $t('trans.finish') }}</el-button>
+                <el-button @click="save">{{ $t('save') }}</el-button>
             </div>
         </div>
     </div>
@@ -54,19 +54,16 @@ export default {
             this.nextWord();
             this.updateCount();
         },
-        startLearn() {
-            this.selectFinished();
-        },
         nextWord() {
             this.currentIndex++;
             this.showTranslation = false;
             if (this.currentIndex < this.wordList.length) {
                 this.updateWordDisplay();
             } else {
-                this.selectFinished();
+                this.save();
             }
         },
-        async selectFinished() {
+        async save() {
             let updateList = [];
             for (let i = 0; i < this.wordList.length; i++) {
                 if (this.wordList[i].status === 'learned' || this.wordList[i].status === 'learning') {

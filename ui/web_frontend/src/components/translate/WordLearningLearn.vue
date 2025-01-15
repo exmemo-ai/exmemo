@@ -21,7 +21,7 @@
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
-                <el-button @click="learnFinished">{{ $t('trans.finish') }}</el-button>
+                <el-button @click="save">{{ $t('save') }}</el-button>
             </div>
         </div>
     </div>
@@ -78,9 +78,9 @@ export default {
                     return;
                 }
             } while (this.currentIndex !== startIndex);
-            this.learnFinished()
+            this.save()
         },
-        async learnFinished() {
+        async save() {
             await realUpdate(this.wordList);
             this.$emit('update-status', 'review');
         },

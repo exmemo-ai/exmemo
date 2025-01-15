@@ -1,10 +1,11 @@
 <template>
     <div>
         <div class="top-button">
-            <el-button @click="handleSelectClick">{{$t('trans.selectWord')}}</el-button>
-            <el-button @click="handleLearnClick">{{ $t('trans.wordLearning') }}</el-button>
-            <el-button @click="handleReviewClick">{{ $t('trans.reviewWords') }}</el-button>
-            <el-button @click="handleWriteClick">{{ $t('trans.writeFromMemory') }}</el-button>
+            <el-button :type="selectType" @click="handleSelectClick">{{$t('trans.selectWord')}}</el-button>
+            <el-button :type="learnType" @click="handleLearnClick">{{ $t('trans.wordLearning') }}</el-button>
+            <el-button :type="reviewType" @click="handleReviewClick">{{ $t('trans.reviewWords') }}</el-button>
+            <el-button :type="writeType" @click="handleWriteClick">{{ $t('trans.writeFromMemory') }}</el-button>
+            <el-button :type="summaryType" @click="handleSummaryClick">{{ $t('trans.summary') }}</el-button>
         </div>
         <component :is="currentComponent" 
                    @update-status="updateStatus"
@@ -17,6 +18,7 @@ import WordLearningSelect from './WordLearningSelect.vue';
 import WordLearningReview from './WordLearningReview.vue';
 import WordLearningLearn from './WordLearningLearn.vue';
 import WordLearningWrite from './WordLearningWrite.vue';
+import WordLearningSummary from './WordLearningSummary.vue';
 
 export default {
     data() {
@@ -33,9 +35,26 @@ export default {
                     return WordLearningLearn;
                 case 'write':
                     return WordLearningWrite;
+                case 'summary':
+                    return WordLearningSummary;
                 default:
                     return WordLearningSelect;
             }
+        },
+        selectType() {
+            return this.status === 'select' ? 'primary' : '';
+        },
+        learnType() {
+            return this.status === 'learn' ? 'primary' : '';
+        },
+        reviewType() {
+            return this.status === 'review' ? 'primary' : '';
+        },
+        writeType() {
+            return this.status === 'write' ? 'primary' : '';
+        },
+        summaryType() {
+            return this.status === 'summary' ? 'primary' : '';
         }
     },
     methods: {
@@ -53,6 +72,9 @@ export default {
         },
         handleWriteClick() {
             this.status = 'write';
+        },
+        handleSummaryClick() {
+            this.status = 'summary';
         }
     }
 };
