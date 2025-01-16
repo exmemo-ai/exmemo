@@ -1,8 +1,6 @@
-import json
 import traceback
 from loguru import logger
 
-from django.http import HttpResponse
 from rest_framework.views import APIView
 from knox.auth import TokenAuthentication
 from django.utils.translation import gettext as _

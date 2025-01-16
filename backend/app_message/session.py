@@ -49,7 +49,7 @@ class Session:
         self.current_content = ""
         self.args = {}
         self.sync_idx = -1
-        self.last_chat_time = timezone.now().astimezone(pytz.UTC)
+        self.last_chat_time = timezone.now().astimezone(get_timezone())
 
     def get_name(self):
         if self.sname is not None:
@@ -194,7 +194,7 @@ class Session:
     def create_session(user_id, is_group, source):
         if user_id is None or user_id == "":
             user_id = DEFAULT_USER
-        sid = user_id + "_" + timezone.now().strftime("%Y%m%d%H%M%S%f")
+        sid = user_id + "_" + timezone.now().astimezone(get_timezone()).strftime("%Y%m%d%H%M%S%f")
         return Session(sid, user_id, is_group, source)
     
     def is_logged_in(self):
@@ -297,7 +297,7 @@ class SessionManager:
 
     def check_session_cache(self):
         logger.info("Check session cache")
-        current_time = timezone.now().astimezone(pytz.UTC)
+        current_time = timezone.now().astimezone(get_timezone())
         sessions_to_remove = []
         
         for sid, session in self.sessions.items():
@@ -354,7 +354,7 @@ class SessionManager:
         # get last session
         current_session = None
         most_recent_time = None
-        last_time = timezone.now()
+        last_time = timezone.now().astimezone(get_timezone())
         for sid, sess in self.sessions.items():
             try:
                 if sess.user_id == user_id and sess.source == source:
@@ -380,7 +380,7 @@ class SessionManager:
         
         # check the session is active in 24 hour
         if current_session is not None and most_recent_time is not None:
-            time_diff = timezone.now() - most_recent_time
+            time_diff = timezone.now().astimezone(get_timezone()) - most_recent_time
             if time_diff > timezone.timedelta(hours=24):
                 current_session.close()
                 self.remove_session(current_session.sid)
@@ -448,7 +448,7 @@ class SessionManager:
                         d = timezone.datetime.strptime(str(item["updated_time"]), "%Y-%m-%d %H:%M:%S%z")
                     except ValueError:
                         logger.warning(f"Failed to parse time: {item['updated_time']}")
-                        d = timezone.now()
+                        d = timezone.now().astimezone(get_timezone())
                 sinfo[item["addr"]] = (item["title"], d)
         
         for session in self.sessions.values():

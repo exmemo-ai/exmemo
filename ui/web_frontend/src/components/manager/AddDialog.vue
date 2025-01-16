@@ -32,7 +32,7 @@
 
         <hr style="margin: 10px 0;">        
         <DataEditor 
-            ref="typeSelector"
+            ref="dataEditor"
             :form="form"
             :file_path="file_path"
             :file="file"
@@ -75,6 +75,9 @@ export default {
     methods: {
         openDialog(parent_obj) {
             this.saveProgress = 0;
+            this.file = null;
+            this.file_path = null;
+            this.$refs.dataEditor?.resetProgress(); // 添加这一行
             this.parent_obj = parent_obj;
             this.form.idx = null
             this.form.ctype = ''
@@ -105,7 +108,7 @@ export default {
         },
         async doSave() {
             console.log("doSave");
-            const success = await this.$refs.typeSelector.realSave();
+            const success = await this.$refs.dataEditor.realSave();
             if (success) {
                 this.closeDialog();
             }

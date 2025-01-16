@@ -134,9 +134,9 @@ const fetchContent = async (idx) => {
     axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
         .then(response => {
             //console.log('response:', response.data);
+            form.value = { ...response.data };
             if ('content' in response.data && response.data.content !== null) {
                 markdownContent.value = response.data.content;
-                form.value = { ...response.data };
             } else {
                 markdownContent.value = t('notSupport');
             }
@@ -144,13 +144,23 @@ const fetchContent = async (idx) => {
 }
 
 const loadHighlight = () => {
-    if (form.value.meta?.highlights) {
-        try {
-            const highlights = JSON.parse(form.value.meta.highlights);
-            savedRanges.value = highlights;
-            applyHighlights(highlights);
-        } catch (error) {
-            console.error('Failed to parse highlights:', error);
+    if (form.value.meta) {
+        if (typeof form.value.meta === 'string') {
+            try {
+                form.value.meta = JSON.parse(form.value.meta);
+            } catch (error) {
+                console.error('Failed to parse meta:', error);
+                form.value.meta = {};
+            }
+        }
+        if (form.value.meta.highlights) {
+            try {
+                const highlights = form.value.meta.highlights;
+                savedRanges.value = highlights;
+                applyHighlights(highlights);
+            } catch (error) {
+                console.error('Failed to parse highlights:', error);
+            }
         }
     }
 }
@@ -160,6 +170,9 @@ const applyHighlights = (highlights) => {
         return;
 
     clearHighlight();
+    if (typeof highlights === 'string') {
+        highlights = JSON.parse(highlights);
+    }
     highlights.forEach(highlight => {
         findAndHighlightText(highlight.text);
     });
@@ -389,8 +402,15 @@ const saveHighLight = async () => {
         form.value.meta = {}
     }
     
-    form.value.meta.highlights = JSON.stringify(serializableHighlights)
-    
+    if (typeof form.value.meta === 'string') {
+        try {
+            form.value.meta = JSON.parse(form.value.meta)
+        } catch (error) {
+            console.error('Failed to parse meta:', error)
+            form.value.meta = {}
+        }
+    }
+    form.value.meta.highlights = JSON.stringify(serializableHighlights);
     try {
         const result = await saveEntry({
             parentObj: null,
