@@ -100,7 +100,7 @@ export default ({
                 } else if (message.files && message.files.length > 0) {
                     for (let i = 0; i < message.files.length; i++) {
                         const file = message.files[i];  
-                        this.chat.addMessage(t('session.sendFile') + `: ${file.name}`, this.chat.currentUserId);
+                        this.chat.addMessage(this.t('session.sendFile') + `: ${file.name}`, this.chat.currentUserId);
                         this.messages = [];
                         this.messages = this.chat.getMessages();
                         await this.chat.uploadFile(file);
@@ -129,7 +129,7 @@ export default ({
             }
         },
         async renameSession(sessionId) {
-            const newSessionName = prompt(t('session.newSessionName'));
+            const newSessionName = prompt(this.t('session.newSessionName'));
             if (newSessionName) {
                 try {
                     await this.chat.renameSession(sessionId, newSessionName)
