@@ -10,7 +10,7 @@
             <div v-if="wordList.length > 0" class="translate-word-display">
                 <bold>{{ $t('trans.word') }}: {{ wordStr }}</bold>
                 <p>{{ $t('trans.exampleSentence') }}: {{ sentence }}</p>
-                <p v-if="showTranslation">{{ $t('trans.wordChineseMeaning') }}: {{ transStr }}</p>
+                <p v-if="showTranslation">{{ $t('trans.wordTranslation') }}: {{ transStr }}</p>
             </div>
             <div v-else>
                 {{ $t('trans.noWordsAvailable') }}
@@ -51,6 +51,7 @@ export default {
         },
         markAsLearned() {
             this.wordList[this.currentIndex]['item'].status = 'learned';
+            this.nextWord()
         },
         learnMore() {
             this.nextWord()
@@ -59,7 +60,7 @@ export default {
             const startIndex = this.currentIndex;
             do {
                 this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
-                if (this.wordList[this.currentIndex].flag !== true) {
+                if (this.wordList[this.currentIndex].flag !== true && this.wordList[this.currentIndex].item.status !== 'learned') {
                     this.updateWordDisplay();
                     this.showTranslation = false;
                     return;

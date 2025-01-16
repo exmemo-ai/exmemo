@@ -10,7 +10,7 @@
             <div v-if="wordList.length > 0" class="translate-word-display">
                 <bold>{{ $t('trans.word') }}: {{ wordStr }}</bold>
                 <p>{{ $t('trans.freq') }}: {{ freqStr }}</p>
-                <p v-if="showTranslation">{{ $t('trans.wordChineseMeaning') }}: {{ transStr }}</p>
+                <p v-if="showTranslation">{{ $t('trans.wordTranslation') }}: {{ transStr }}</p>
             </div>
             <div v-else>
                 {{ $t('trans.noWordsAvailable') }}

@@ -13,7 +13,7 @@ from backend.common.utils.net_tools import do_result
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from . import translate
-from .models import StoreEnglishArticle, StoreTranslate
+from .models import StoreEnglishArticle, StoreTranslate, StoreTranslateWord
 from .serializer import StoreEnglishArticleSerializer, StoreTranslateSerializer
 from backend.common.llm.llm_hub import llm_query_json
 
@@ -241,28 +241,36 @@ class TranslateLearnView(APIView):
                 return do_result(False, str(e))
         return do_result(True, f"update items")
     
+        
     def get_sentence(self, args, request):
         word = request.GET.get("word", request.POST.get("word", None))
         if word is None:
             return do_result(False, "no word")
         if args['user_id'] is None:
             return do_result(False, "no user")
-
-        demo = '{"sentence": "This is a book.", "sentence_meaning": "这是一本书。", "word_meaning": "书"}'
-        query = "Please give me a simple sentence with the word '{word}' in it, and translate the sentence to Chinese. result like {demo}".format(
-            word=word, demo=demo
-        )
-        ret, dic, detail = llm_query_json(
-            args['user_id'], MSG_ROLE, query, "translate", debug=True
-        )
-        sentence = dic['sentence']
-        sentence_trans = dic['sentence_meaning']
-        word_trans = dic['word_meaning']
-        return do_result(True, {
-            "sentence": sentence, 
-            "sentence_meaning": sentence_trans,
-            "word_meaning": word_trans
-        })
+        try:
+            stored_example = StoreTranslateWord.objects.get(word=word)
+            examples = stored_example.examples
+            logger.error(f'examples {examples}')
+            if isinstance(examples, list) and len(examples) > 0:
+                return do_result(True, {"examples": examples})
+        except StoreTranslateWord.DoesNotExist:
+            ret, example = translate.generate_sentence_example(args['user_id'], word)
+            if ret:
+                ret, en_regular, freq, translation = translate.TranslateWord.get_instance().get_word_info(word, True, args['user_id'], False)
+                StoreTranslateWord.objects.create(
+                    user_id=args['user_id'],
+                    word=word,
+                    regular = en_regular,
+                    freq=freq,
+                    translation=translation,
+                    examples=[example],
+                    created_time=timezone.now()
+                )                
+                return do_result(True, {"examples": [example]})
+        except Exception as e:
+            logger.warning(f"get_sentence {e}")
+        return do_result(False, "generate sentence error")
 
     def summary(self, args, request):
         dateStr = request.GET.get("date", request.POST.get("date", None))
@@ -271,7 +279,7 @@ class TranslateLearnView(APIView):
         totalWords = StoreTranslate.objects.filter(
             user_id=args['user_id']).count()
         not_learned = StoreTranslate.objects.filter(
-            user_id=args['user_id']).count()
+            user_id=args['user_id'], status='not_learned').count()
         learned = StoreTranslate.objects.filter(
             user_id=args['user_id'], status='learned').count()
         learning = StoreTranslate.objects.filter(

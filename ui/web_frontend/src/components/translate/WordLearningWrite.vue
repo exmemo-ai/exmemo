@@ -8,7 +8,7 @@
         </div>
         <div class="content word-learning translate-common-style">
             <div v-if="wordList && wordList.length > 0" class="translate-word-display">
-                <bold>{{ $t('trans.wordChineseMeaning') }}: {{ transStr }}</bold>
+                <bold>{{ $t('trans.wordTranslation') }}: {{ transStr }}</bold>
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
             </div>
             <div v-else>

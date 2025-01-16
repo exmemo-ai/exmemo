@@ -8,11 +8,21 @@
         </div>
         <div class="content word-learning translate-common-style">
             <div v-if="wordList.length > 0" class="translate-word-display">
-                <bold class="word">{{ $t('trans.word') }}: {{ wordStr }}</bold>
+                <bold class="word">
+                    {{ $t('trans.word') }}: {{ wordStr }}
+                    <el-button 
+                        type="text" 
+                        @click="speakWord">
+                        <el-icon>
+                            <component :is="isSpeaking ? 'VideoPause' : 'VideoPlay'" />
+                        </el-icon>
+                    </el-button>
+
+                </bold>
                 <p class="example-sentence">{{ $t('trans.exampleSentence') }}: {{ exampleSentence }}</p>
-                <p v-if="showTranslation" class="sentence-meaning">{{ $t('trans.sentenceMeaning') }}: {{ sentenceMeaning }}</p>
-                <p v-if="showTranslation" class="word-meaning">{{ $t('trans.wordMeaning') }}: {{ transStr }}</p>
-                <p v-if="showTranslation" class="word-chinese-meaning">{{ $t('trans.wordChineseMeaning') }}: {{ wordChineseMeaning }}</p>
+                <p v-if="showTranslation" >{{ $t('trans.sentenceMeaning') }}: {{ sentenceMeaning }}</p>
+                <p v-if="showTranslation" >{{ $t('trans.wordMeaningInSentence') }}: {{ transStrInSentence }}</p>
+                <p v-if="showTranslation" >{{ $t('trans.wordTranslation') }}: {{ wordTranslation }}</p>
             </div>
             <div v-else>
                 {{ $t('trans.noWordsAvailable') }}
@@ -28,29 +38,37 @@
 </template>
 
 <script>
+import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
 import axios from 'axios';
 import { getURL, setDefaultAuthHeader } from '@/components/support/conn';
 import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { getLocale } from '@/main.js'
 
 export default {
+    components: {
+        VideoPlay,
+        VideoPause
+    },
     data() {
         return {
             wordStr: '',
-            transStr: '',
+            wordTranslation: '',
             exampleSentence: '',
             sentenceMeaning: '',
-            wordChineseMeaning: '',
+            transStrInSentence: '',
             wordList: [],
             currentIndex: 0,
             finishCount: 0,
             showTranslation: false,
+            isSpeaking: false,
+            speechUtterance: null,
         };
     },
     methods: {
         showAnswer() {
             this.showTranslation = true;
         },
-        learned() {
+        async learned() {
             if ('learn_times' in this.wordList[this.currentIndex].info) {
                 this.wordList[this.currentIndex].info['learn_times'] += 1;
             } else {
@@ -58,23 +76,23 @@ export default {
             }
             this.wordList[this.currentIndex].info['learn_date'] = new Date().toISOString().split('T')[0];
             this.wordList[this.currentIndex].status = 'review';
-            this.nextWord();
+            await this.nextWord();
         },
-        learnMore() {
+        async learnMore() {
             if ('learn_times' in this.wordList[this.currentIndex].info) {
                 this.wordList[this.currentIndex].info['learn_times'] += 1;
             } else {
                 this.wordList[this.currentIndex].info['learn_times'] = 1;
             }
-            this.nextWord();
+            await this.nextWord();
         },
-        nextWord() {
+        async nextWord() {
             this.showTranslation = false;
             let startIndex = this.currentIndex;
             do {
                 this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
                 if (this.wordList[this.currentIndex].status !== 'review') {
-                    this.updateWordDisplay();
+                    await this.updateWordDisplay();
                     return;
                 }
             } while (this.currentIndex !== startIndex);
@@ -84,12 +102,13 @@ export default {
             await realUpdate(this.wordList);
             this.$emit('update-status', 'review');
         },
-        updateWordDisplay() {
+        async updateWordDisplay() {
             if (this.wordList.length > 0) {
-                this.transStr = this.wordList[this.currentIndex].word;
                 this.wordStr = this.wordList[this.currentIndex].word;
-                this.sentenceMeaning = this.wordList[this.currentIndex].info.translate;
-                this.wordChineseMeaning = this.wordList[this.currentIndex].info.translate || 'Chinese Meaning Not Available';
+                this.wordTranslation = this.wordList[this.currentIndex].info.translate;;
+                this.exampleSentence = '';
+                this.sentenceMeaning = '';
+                this.transStrInSentence = '';
                 if ('examples' in this.wordList[this.currentIndex].info) {
                     const examples = this.wordList[this.currentIndex].info.examples;
                     if (examples.length > 0) {
@@ -101,17 +120,12 @@ export default {
                     const formData = new FormData();
                     formData.append('rtype', 'get_sentence');
                     formData.append('word', this.wordList[this.currentIndex].word);
-                    axios.post(getURL() + func, formData).then((res) => {
-                        if ('sentence' in res.data) {
-                            let example = {
-                                'sentence': res.data.sentence,
-                                'word_meaning': res.data.word_meaning,
-                                'sentence_meaning': res.data.sentence_meaning
+                    await axios.post(getURL() + func, formData).then((res) => {
+                        if ('examples' in res.data) {
+                            this.wordList[this.currentIndex].info.examples = res.data.examples;
+                            if (this.wordList[this.currentIndex].info.examples.length > 0) {
+                                this.updateExample(this.wordList[this.currentIndex].info.examples[Math.floor(Math.random() * this.wordList[this.currentIndex].info.examples.length)]);
                             }
-                            this.wordList[this.currentIndex].info.examples = [example];
-                        }
-                        if (this.wordList[this.currentIndex].info.examples.length > 0) {
-                            this.updateExample(this.wordList[this.currentIndex].info.examples[Math.floor(Math.random() * this.wordList[this.currentIndex].info.examples.length)]);
                         }
                     }).catch((err) => {
                         console.error(err);
@@ -122,8 +136,8 @@ export default {
         },
         updateExample(data) {
             this.exampleSentence = data['sentence']
-            this.transStr = data['word_meaning']
             this.sentenceMeaning = data['sentence_meaning']
+            this.transStrInSentence = data['word_meaning']
         },
         updateCount() {
             this.finishCount = this.wordList.filter(word => word.status === 'review').length;
@@ -131,7 +145,37 @@ export default {
         async fetch() {
             this.wordList = await fetchWordList('learning');
             this.updateWordDisplay();
-        },        
+        },
+        speakWord() {
+            if (this.isSpeaking) {
+                window.speechSynthesis.cancel()
+                this.isSpeaking = false
+                return
+            }
+
+            try {
+                this.speechUtterance = new SpeechSynthesisUtterance(this.wordStr)
+                this.speechUtterance.lang = getLocale()
+                
+                this.speechUtterance.onend = () => {
+                    this.isSpeaking = false
+                }
+                this.speechUtterance.onerror = () => {
+                    this.isSpeaking = false
+                    console.error('TTS error:', this.speechUtterance)
+                }
+                window.speechSynthesis.speak(this.speechUtterance)
+                this.isSpeaking = true
+            } catch (error) {
+                console.error('TTS error:', error)
+                this.isSpeaking = false
+            }
+        },
+    },
+    beforeUnmount() {
+        if (this.isSpeaking) {
+            window.speechSynthesis.cancel()
+        }
     },
     mounted() {
         this.fetch();
@@ -140,4 +184,9 @@ export default {
 </script>
 
 <style scoped>
+.word {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 </style>
