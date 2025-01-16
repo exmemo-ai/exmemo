@@ -11,15 +11,13 @@ from backend.common.utils.file_tools import (
     get_file_abstract,
 )
 from backend.common.speech.tts import run_tts
-from backend.common.utils.web_tools import regular_url
+from backend.common.utils.web_tools import regular_url, WEB_URL
 from app_message.agent.base_agent import BaseAgent, agent_function
 from app_message.command import msg_common_select
 from app_record.record import get_export_file
 from app_message.function import search_data, regular_title
 from app_dataforge.entry import add_data
 from app_dataforge.misc_tools import add_url
-
-WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
 class RecordAgent(BaseAgent):
     def __init__(self):
@@ -84,18 +82,6 @@ class WebAgent(BaseAgent):
         super().__init__()
         self.agent_name = _("web_processing_agent")
 
-    '''
-    @agent_function(_("web_functions_list"), is_command=False)
-    def _afunc_web_op(context_variables: dict = None, web_addr: str = None):
-        """Web functions list"""
-        if context_variables is None or 'sdata' not in context_variables:
-            return _("params_error")
-        sdata = context_variables["sdata"]
-        sdata.current_content = web_addr
-        ret, detail = msg_web_main(sdata)
-        return detail
-    '''
-
     @agent_function(_("collect_webpage"))
     def _afunc_web_collect(context_variables: dict = None, web_addr: str = None):
         """Collect web page"""
@@ -112,6 +98,16 @@ class WebAgent(BaseAgent):
             info = msg_add_url(web_addr, sdata, "collect")
             return info
         return _("no_urls_dot_")
+    
+    @agent_function(_("collect_view"))
+    def _afunc_web_collect_view(context_variables: dict = None, web_addr: str = None):
+        """Collect web page, and open view"""
+        ret = WebAgent._afunc_web_collect(context_variables, web_addr)
+        if ret == _("no_urls_dot_"):
+            return ret
+        sdata = context_variables["sdata"]
+        url = sdata.get_cache("url")
+        return search_data(sdata, dic={"addr": url})
 
     @agent_function(_("set_webpage_todo"))
     def _afunc_web_todo(context_variables: dict = None, web_addr: str = None):

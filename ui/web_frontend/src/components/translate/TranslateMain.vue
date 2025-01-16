@@ -15,6 +15,9 @@
                     <el-menu-item index="article">
                         <span>{{ $t('articleList') }}</span>
                     </el-menu-item>
+                    <el-menu-item index="learn">
+                        <span>{{ $t('learn') }}</span>
+                    </el-menu-item>
                 </el-menu>
             </el-aside>
             <el-main>
@@ -28,6 +31,7 @@
 import EnReader from './EnReader.vue'
 import WordManager from './WordManager.vue'
 import ArticleManager from './ArticleManager.vue'
+import WordLearning from './WordLearning.vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 
 export default {
@@ -36,7 +40,8 @@ export default {
         EnReader,
         WordManager,
         ArticleManager,
-        AppNavbar
+        AppNavbar,
+        WordLearning
     },
     data() {
         return {
@@ -65,6 +70,11 @@ export default {
                     this.currentComponent = 'ArticleManager';
                     this.navTitle = this.$t('articleList');
                     this.navInfo = 'ArticleList';
+                    break;
+                case 'learn':
+                    this.currentComponent = 'WordLearning';
+                    this.navTitle = this.$t('wordLearning');
+                    this.navInfo = 'WordLearning';
                     break;
             }
         },

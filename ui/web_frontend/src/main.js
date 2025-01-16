@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue'
 import ElementPlus from 'element-plus';
 import DataManager from './components/manager/DataManager.vue'; 
+import ViewMarkdown from './components/manager/ViewMarkdown.vue';
 import ChatManager from './components/chat/ChatManager.vue';
 import SupportTools from './components/assistive/AssistiveMain.vue';
 import SettingMain from './components/settings/SettingMain.vue';
@@ -31,7 +32,7 @@ const i18n = createI18n({
   messages,
 });
 
-function getLocale() {
+export function getLocale() {
   const locale = config.langCode || 'en';
   if (locale.includes('zh')) {
     return 'zh_CN';
@@ -44,6 +45,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: DataManager },
     { path: '/data', component: DataManager },
+    { path: '/view_markdown', component: ViewMarkdown },
     { path: '/chat', component: ChatManager },
     { path: '/support_tools', component: SupportTools },
     { path: '/login', component: LoginView },
@@ -74,6 +76,7 @@ router.beforeEach((to, from, next) => {
 const app = createApp(App);
 app.use(i18n);
 app.component('DataManager', DataManager);
+app.component('ViewMarkdown', ViewMarkdown);
 app.component('ChatManager', ChatManager);
 app.component('SupportTools', SupportTools);
 app.component('LoginView', LoginView);
@@ -86,3 +89,6 @@ app.component('ArticleManager', ArticleManager);
 app.use(ElementPlus);
 app.use(router);
 app.mount('#app');
+
+export default router;
+export { i18n };

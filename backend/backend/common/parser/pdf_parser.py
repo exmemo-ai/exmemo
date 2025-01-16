@@ -654,7 +654,7 @@ class PDFParser(BaseParser):
         if ocr_baidu.get_baidu_client() is None:
             self.use_ocr = False
         logger.info(
-            f"PDFParser, use_ocr:{kwargs.get('use_ocr', False)}, ocr_env:{ocr_baidu.get_baidu_client()}"
+            f"PDFParser, use_ocr:{self.use_ocr}, ocr_env:{ocr_baidu.get_baidu_client()}"
         )
         super().__init__(data, with_parse=with_parse, debug=debug, **kwargs)
 

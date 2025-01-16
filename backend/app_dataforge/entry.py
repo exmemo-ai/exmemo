@@ -75,7 +75,7 @@ def add_file(dic, path, use_llm=True):
         ret_convert, md_path = convert_to_md(
             path, md_path, force=True, use_ocr=user.privilege.b_ocr
         )
-
+    logger.info('after convert')
     if ret_convert:
         parser = MarkdownParser(md_path)
         meta_data = convert_dic_to_json(parser.fm)
@@ -134,6 +134,7 @@ def save_entry(dic, abstract, content, debug=False):
                 elif "embeddings" in dic:
                     dic.pop("embeddings")
                 StoreEntry.objects.create(**dic)
+            logger.info(f'save blocks {idx}')
         return True, ret_emb, _("add_success")
     except Exception as e:
         traceback.print_exc()
@@ -432,7 +433,7 @@ def rename_file(uid, oldaddr, newaddr):
             item.addr = newaddr
             item.path = newpath
             filename = os.path.basename(newpath)
-            item.title = os.path.splitext(filename)[0]
+            item.title = filename
             item.save()
         return True
     return False

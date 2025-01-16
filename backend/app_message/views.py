@@ -1,8 +1,6 @@
-import json
 import traceback
 from loguru import logger
 
-from django.http import HttpResponse
 from rest_framework.views import APIView
 from knox.auth import TokenAuthentication
 from django.utils.translation import gettext as _
@@ -33,7 +31,9 @@ class SessionAPIView(APIView):
             if rtype == "get_messages":
                 return sdata.get_messages()
             elif rtype == "clear_session":
-                return SessionManager.get_instance().clear_session(sdata)
+                return SessionManager.get_instance().clear_session(sdata, request.POST.get("sid", None))
+            elif rtype == "rename_session":
+                return SessionManager.get_instance().rename_session(sdata, request.POST.get("sid", None), request.POST.get("sname", None))
             elif rtype == "get_sessions":
                 return SessionManager.get_instance().get_sessions(sdata.user_id)
             elif rtype == "save_session":
@@ -115,8 +115,7 @@ class MessageAPIView(APIView):
 
 def real_upload_file(request):
     logger.debug(f"real_upload_file {request.FILES}")
-    files = request.FILES
-    for file in files.values():  # only one file
+    for file in request.FILES.values():  # only support one file
         filename = file.name
         tmp_path = filecache.get_tmpfile(get_ext(filename))
         logger.debug(f"file save to {tmp_path}")

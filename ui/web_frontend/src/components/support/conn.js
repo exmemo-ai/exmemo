@@ -1,5 +1,8 @@
 import axios from 'axios';
 import config from '@/components/support/config';
+import { t } from '@/utils/i18n'
+import { ElMessage } from 'element-plus';
+import router from '@/main';
 
 export function getURL() {
   let url = config.baseURL;
@@ -16,25 +19,25 @@ export function setDefaultAuthHeader() {
   }
 }
 
-export function parseBackendError(obj, err) {
+export function parseBackendError(obj, err) { // later remove obj
   console.log(err);
   if (err.response === undefined) {
-    obj.$message({
-      message: obj.$t('loginExpired'),
+    ElMessage({
+      message: t('loginExpired'),
       type: 'warning'
     });
   } else if (err.response.status === 401) {
     if (localStorage.getItem('token') !== null) {
       localStorage.setItem("token", null);
-      obj.$message({
-        message: obj.$t('loginExpired'),
+      ElMessage({
+        message: t('loginExpired'),
         type: 'warning'
       });
-      obj.$router.push('/login');
+      router.push('/login');
     }
   } else {
-    obj.$message({
-      message: obj.$t('operationFailed') + err,
+    ElMessage({
+      message: t('operationFailed') + err,
       type: 'warning'
     });
   }
@@ -49,7 +52,7 @@ export function realExportRecord(obj) {
   })
     .then(response => {
       if (response.data.status == 'success') {
-        parseBlobData(response, obj, 'export.xlsx');
+        parseBlobData(response, 'export.xlsx');
       } else {
         obj.$message({
           type: 'error',
@@ -62,7 +65,7 @@ export function realExportRecord(obj) {
     });
 }
 
-export function parseBlobData(response, obj, default_filename) {
+export function parseBlobData(response, default_filename) {
   /* download file */
   console.log('download data', response.data.length);
   console.log(response.data);
@@ -73,7 +76,7 @@ export function parseBlobData(response, obj, default_filename) {
       const text = event.target.result;
       let info = JSON.parse(text);
       if ('info' in info) {
-        obj.$message({
+        ElMessage({
           type: 'error',
           message: info['info'],
         });

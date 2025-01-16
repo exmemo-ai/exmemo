@@ -5,11 +5,12 @@ from threading import Timer
 
 from django.utils import timezone
 from backend.common.utils.net_tools import do_result
+from backend.common.utils.sys_tools import get_timezone
 from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, DEFAULT_CHAT_LLM_MEMORY_COUNT, DEFAULT_USER, DEFAULT_CHAT_MAX_CONTEXT_COUNT
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
 from app_dataforge.models import StoreEntry
-from app_dataforge.feature import TITLE_LENGTH, EntryFeatureTool
+from app_dataforge.feature import TITLE_LENGTH, DEFAULT_CATEGORY, EntryFeatureTool
 from backend.common.files.utils_file import count_tokens
 
 MAX_SESSIONS = 1000
@@ -48,7 +49,7 @@ class Session:
         self.current_content = ""
         self.args = {}
         self.sync_idx = -1
-        self.last_chat_time = timezone.now().astimezone(pytz.UTC)
+        self.last_chat_time = timezone.now().astimezone(get_timezone())
 
     def get_name(self):
         if self.sname is not None:
@@ -89,55 +90,70 @@ class Session:
             logger.warning(f"load_from_db failed, sid {self.sid}")
         self.messages = self.messages[-show_count:]
 
+    def get_session_desc(self):
+        obj = self.get_item_from_db()
+        messages = [item.to_dict() for item in self.messages]
+        raw = self.get_raw()
+        abstract = raw
+        if len(abstract) > 1024:
+            abstract = abstract[:1024] + "\n..."
+
+        if obj is None or obj.get("ctype") == DEFAULT_CATEGORY:            
+            string = self.reduce_message()
+            if len(string) > 0:
+                ret_title, info_title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
+                type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
+                ctype = type_dic['ctype']
+            else:
+                ret_title = False
+                ctype = DEFAULT_CATEGORY
+            if ret_title:
+                title = info_title
+            else:
+                title = self.get_name()
+            if len(title) > TITLE_LENGTH:
+                title = title[:TITLE_LENGTH] + "..."
+        else:
+            title = self.get_name()
+            ctype = obj.get("ctype")
+
+        dic = {
+            "title": title,
+            "abstract": abstract,
+            "status": "collect",
+            "atype": "subjective",
+            "user_id": self.user_id,
+            "ctype": ctype,
+            "etype": "chat",
+            "raw": raw,
+            "source": self.source,
+            "addr": self.sid,
+            "meta": {"sid": self.sid, "is_group": self.is_group, 
+                    "messages": messages},
+        }
+        if obj is None:
+            return True, dic
+        return False, dic
+
     def save_to_db(self):
         if self.is_logged_in() == False:
             return
         if len(self.messages) == 0:
             return
-        obj = self.get_item_from_db()
-        messages = [item.to_dict() for item in self.messages]
-        if obj is None:
-            string = self.reduce_message()
-            raw = self.get_raw()
-            abstract = raw
-            if len(abstract) > 1024:
-                abstract = abstract[:1024] + "\n..."
-            ret_title, info_title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
-            if ret_title:
-                title = info_title
-            else:
-                title = abstract
-            type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
-            if len(title) > TITLE_LENGTH:
-                title = title[:TITLE_LENGTH] + "..."
-            dic = {
-                "title": title,
-                "abstract": abstract,
-                "status": "collect",
-                "atype": "subjective",
-                "user_id": self.user_id,
-                "ctype": type_dic['ctype'],
-                "etype": "chat",
-                "raw": raw,
-                "source": self.source,
-                "addr": self.sid,
-                "meta": {"sid": self.sid, "is_group": self.is_group, 
-                        "messages": messages},
-            }
+        is_new, dic = self.get_session_desc()
+        if is_new is None:
             ret, ret_emb, info = add_data(dic)
-            logger.info(f"add_data ret {ret}, {ret_emb}, {info}")
+            logger.info(f"save_to_db add_data ret {ret}, {ret_emb}, {info}")
         else:
+            logger.info(f"save_to_db update")
+            #logger.info(f"save_to_db update {dic}")
             StoreEntry.objects.filter(
                 user_id=self.user_id,
                 addr=self.sid
-            ).update(
-                meta={
-                    "sid": self.sid,
-                    "is_group": self.is_group,
-                    "messages": messages
-                },
-                raw=self.get_raw()
-            )
+            ).update(title=dic["title"],
+                     ctype=dic["ctype"],
+                     raw=dic["raw"], 
+                     meta=dic["meta"])
             logger.info(f"update entry success")
         self.sync_idx = len(self.messages)
 
@@ -178,7 +194,7 @@ class Session:
     def create_session(user_id, is_group, source):
         if user_id is None or user_id == "":
             user_id = DEFAULT_USER
-        sid = user_id + "_" + timezone.now().strftime("%Y%m%d%H%M%S%f")
+        sid = user_id + "_" + timezone.now().astimezone(get_timezone()).strftime("%Y%m%d%H%M%S%f")
         return Session(sid, user_id, is_group, source)
     
     def is_logged_in(self):
@@ -189,14 +205,15 @@ class Session:
     def close(self):
         self.save_to_db()
 
-    def clear_session(self):
+    def delete_session(self, sid):
         """
         Clear this session
         """
         StoreEntry.objects.filter(
-            user_id=self.user_id, addr=self.sid
+            user_id=self.user_id, addr=sid
         ).delete()
-        self.messages = []
+        if sid == self.sid:
+            self.messages = []
 
     def get_messages(self, force = False):
         if len(self.messages) == 0 or force:
@@ -210,8 +227,9 @@ class Session:
         if msg2 is not None and msg2 != "":
             self.add_message("assistant", msg2)
 
-    def add_message(self, sender, content):
-        created_time = timezone.now().astimezone(pytz.UTC)
+    def add_message(self, sender, content):        
+        #created_time = timezone.now().astimezone(pytz.UTC)
+        created_time = timezone.now().astimezone(get_timezone())
         self.messages.append(Message(len(self.messages), sender, content, created_time.strftime("%Y-%m-%d %H:%M:%S")))
         self.last_chat_time = created_time
         logger.info(f"after add_messages, len {len(self.messages)}, sid {self.sid}")
@@ -220,7 +238,7 @@ class Session:
 
     def reduce_message(self):
         string = ""
-        if len(self.messages) == 0:
+        if len(self.messages) < 4:
             return ""
         for item in self.messages:
             if item.sender != "assistant":
@@ -229,7 +247,7 @@ class Session:
                     content = content.strip()
                     content = content[:100] + "..."
                 string += content
-                string += "\n"
+                string += ";"
                 if len(string) > 500:
                     break
         return string
@@ -264,7 +282,8 @@ class Session:
 
 class SessionManager:
     __instance = None
-    TIMER_INTERVAL = 5 * 60 # 5 minutes
+    #TIMER_INTERVAL = 5 * 60 # 5 minutes
+    TIMER_INTERVAL = 2 * 60 # 2 minutes
 
     @staticmethod
     def get_instance():
@@ -275,16 +294,16 @@ class SessionManager:
     def __init__(self):
         self.sessions = OrderedDict()
         self.timer = None
-        self.start_timer()
 
     def check_session_cache(self):
         logger.info("Check session cache")
-        current_time = timezone.now().astimezone(pytz.UTC)
+        current_time = timezone.now().astimezone(get_timezone())
         sessions_to_remove = []
         
         for sid, session in self.sessions.items():
             time_diff = current_time - session.last_chat_time
-            if time_diff.total_seconds() > 3600:  # 3600 second
+            logger.info(f"sid {sid} time_diff {time_diff.total_seconds()}")
+            if time_diff.total_seconds() > 600:  # 600 second
                 session.close()
                 sessions_to_remove.append(sid)
             else:
@@ -294,15 +313,24 @@ class SessionManager:
             self.sessions.pop(sid)
             logger.info(f"Removed inactive session: {sid}")
 
+        if len(self.sessions) == 0:
+            self.stop_timer()
+
     def start_timer(self):
-        self.stop_timer()
-        self.timer = Timer(self.TIMER_INTERVAL, self._timer_task)
-        self.timer.start()
+        logger.info('start_timer', self.timer)
+        if self.timer is None:
+            self.timer = Timer(self.TIMER_INTERVAL, self._timer_task)
+            self.timer.start()
+            logger.info("Timer started")
 
     def _timer_task(self):
-        logger.info("Timer task triggered")
+        self.stop_timer()
+        logger.debug("Timer task triggered")
         self.check_session_cache()
-        self.start_timer()
+        if len(self.sessions) > 0:
+            self.start_timer()
+        else:
+            logger.debug("No active session, timer stopped")
 
     def stop_timer(self):
         if self.timer is not None:
@@ -326,7 +354,7 @@ class SessionManager:
         # get last session
         current_session = None
         most_recent_time = None
-        last_time = timezone.now()
+        last_time = timezone.now().astimezone(get_timezone())
         for sid, sess in self.sessions.items():
             try:
                 if sess.user_id == user_id and sess.source == source:
@@ -352,7 +380,7 @@ class SessionManager:
         
         # check the session is active in 24 hour
         if current_session is not None and most_recent_time is not None:
-            time_diff = timezone.now() - most_recent_time
+            time_diff = timezone.now().astimezone(get_timezone()) - most_recent_time
             if time_diff > timezone.timedelta(hours=24):
                 current_session.close()
                 self.remove_session(current_session.sid)
@@ -386,6 +414,18 @@ class SessionManager:
         if session.sid in self.sessions:
             self.sessions.move_to_end(session.sid)
 
+    def rename_session(self, sdata, sid, sname):
+        if sname is None or sid is None:
+            return do_result(False, 'session not found')
+        if sid in self.sessions:
+            logger.info(f"sid {sid}, sessions {self.sessions.keys()}")
+            self.sessions[sid].sname = sname
+            self.sessions[sid].save_to_db()
+            return do_result(True, 'session renamed')
+        else:
+            logger.info(f'cannot get, rename session {sid} {sname}')
+            return do_result(False, 'session not found')
+
     def remove_session(self, sid):
         if sid in self.sessions:
             self.sessions.pop(sid)
@@ -408,7 +448,7 @@ class SessionManager:
                         d = timezone.datetime.strptime(str(item["updated_time"]), "%Y-%m-%d %H:%M:%S%z")
                     except ValueError:
                         logger.warning(f"Failed to parse time: {item['updated_time']}")
-                        d = timezone.now()
+                        d = timezone.now().astimezone(get_timezone())
                 sinfo[item["addr"]] = (item["title"], d)
         
         for session in self.sessions.values():
@@ -449,13 +489,19 @@ class SessionManager:
         if sdata.sid in self.sessions:
             self.sessions.move_to_end(sdata.sid)
 
+        self.start_timer()
+
         logger.info(f'add_message ret {sdata.sid}')
         return sdata.sid
     
-    def clear_session(self, sdata: Session):
-        self.remove_session(sdata.sid)
-        if sdata is not None:
-            sdata.clear_session()
+    def clear_session(self, sdata: Session, sid = None):
+        if sid is not None:
+            sdata.delete_session(sid)
+            self.remove_session(sid)
+        else:
+            if sdata is not None:
+                sdata.delete_session(sdata.sid)
+                self.remove_session(sdata.sid)
         return do_result(True, 'session cleared')
 
 def get_session_by_req(request):

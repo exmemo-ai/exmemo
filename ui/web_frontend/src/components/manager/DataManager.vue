@@ -1,11 +1,11 @@
 <template>
     <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <div style="display: flex; flex-direction: column;">
+        <div class="column-flex">
             <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
         </div>
         <el-main class="main-container custom-options">
             <div class="header-buttons">
-                <div class="search-container">
+                <div class="search-section">
                     <div class="label-container">
                         <el-text>{{ t('search') }}</el-text>
                     </div>
@@ -13,81 +13,91 @@
                         <el-input v-model="search_text" :placeholder="t('searchPlaceholder')"></el-input>
                     </div>
                 </div>
-                <div style="display: flex; flex-grow: 1; align-items: center; gap: 5px;" v-if="!isMobile">
-                    <div class="label-container">
-                        <el-text>{{ t('type') }}</el-text>
-                    </div>
-                    <div style="flex-grow: 1;">
-                        <el-select v-if="mounted && ctype_options && ctype_options.length > 0" v-model="ctype_value"
-                            :placeholder="t('selectPlaceholder')" popper-class="select-dropdown">
-                            <el-option v-for="item in ctype_options" :key="item.value" :label="item.label"
-                                :value="item.value">
-                            </el-option>
-                        </el-select>
-                    </div>
 
-                    <div class="label-container">
-                        <el-text>{{ t('data') }}</el-text>
-                    </div>
-                    <div style="flex-grow: 1;">
-                        <el-select v-if="mounted && etype_options.length" v-model="etype_value"
-                            :placeholder="t('selectPlaceholder')">
-                            <el-option v-for="item in etype_options" :key="item.value" :label="item.label"
-                                :value="item.value">
-                            </el-option>
-                        </el-select>
-                    </div>
-                    <div class="label-container">
-                        <el-text>{{ t('status') }}</el-text>
-                    </div>
-                    <div style="flex-grow: 1;">
-                        <el-select v-if="mounted && status_options.length" v-model="status_value"
-                            :placeholder="t('selectPlaceholder')">
-                            <el-option v-for="item in status_options" :key="item.value" :label="item.label"
-                                :value="item.value">
-                            </el-option>
-                        </el-select>
+                <div class="filter-section">
+                    <div class="filter-item">
+                        <div class="label-container">
+                            <el-text>{{ t('data') }}</el-text>
+                        </div>
+                        <div class="select-container">
+                            <el-select v-if="mounted && etype_options.length" 
+                                v-model="etype_value"
+                                :placeholder="t('selectPlaceholder')">
+                                <el-option v-for="item in etype_options" :key="item.value" 
+                                    :label="item.label" :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </div>
                     </div>
                 </div>
-                <div style="display: flex; flex-grow: 0; align-items: center;">
-                    <el-button class="icon-button" @click="searchKeyword" icon>
-                        <el-icon>
-                            <Search />
-                        </el-icon>
+                <div class="filter-section" v-if="!isMobile">
+                    <div class="filter-item">
+                        <div class="label-container">
+                            <el-text>{{ t('type') }}</el-text>
+                        </div>
+                        <div class="select-container">
+                            <el-select v-if="mounted && ctype_options && ctype_options.length > 0" 
+                                v-model="ctype_value"
+                                :placeholder="t('selectPlaceholder')" 
+                                popper-class="select-dropdown">
+                                <el-option v-for="item in ctype_options" :key="item.value" 
+                                    :label="item.label" :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-section" v-if="!isMobile">
+                    <div class="filter-item">
+                        <div class="label-container">
+                            <el-text>{{ t('status') }}</el-text>
+                        </div>
+                        <div class="select-container">
+                            <el-select v-if="mounted && status_options.length" 
+                                v-model="status_value"
+                                :placeholder="t('selectPlaceholder')">
+                                <el-option v-for="item in status_options" :key="item.value" 
+                                    :label="item.label" :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-section">
+                    <el-button class="icon-button" @click="searchKeyword">
+                        <el-icon><Search /></el-icon>
                     </el-button>
-                </div>
-                <div style="flex-shrink: 0;">
-                    <el-button class="icon-button" @click="openEditDialog" icon>
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
+                    <el-button class="icon-button" @click="openAddDialog">
+                        <el-icon><Plus /></el-icon>
                     </el-button>
                 </div>
             </div>
-            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
+            <el-table :data="fileList" @row-click="handleRowClick" class="full-width" stripe>
                 <el-table-column prop="title" :label="t('title')">
                     <template v-slot="scope">
-                        <div class="ellipsis-container" style="white-space: nowrap;">{{ scope.row.title }}</div>
+                        <div class="ellipsis-container nowrap">{{ scope.row.title }}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="etype" :label="t('data')" :width=70>
+                    <template v-slot="scope">
+                        <div class="nowrap">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="ctype" :label="t('type')" :width=100>
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ scope.row.ctype }}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="etype" :label="t('data')" :width=70 v-if="!isMobile">
-                    <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
+                        <div class="nowrap">{{ scope.row.ctype }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100 v-if="!isMobile">
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ scope.row.updated_time }}</div>
+                        <div class="nowrap">{{ scope.row.updated_time }}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="status" :label="t('status')" :width=70>
+                <el-table-column prop="status" :label="t('status')" :width=70 v-if="!isMobile">
                     <template v-slot="scope">
-                        <div style="white-space: nowrap;">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
+                        <div class="nowrap">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
                     </template>
                 </el-table-column>
             </el-table>
@@ -97,6 +107,7 @@
             </el-pagination>
         </el-main>
         <EditDialog ref="editDialog" />
+        <AddDialog ref="addDialog" />
     </div>
 </template>
 
@@ -104,6 +115,7 @@
 import { Search, Plus } from '@element-plus/icons-vue'
 import axios from 'axios';
 import EditDialog from './EditDialog.vue';
+import AddDialog from './AddDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import { useI18n } from 'vue-i18n'
@@ -112,6 +124,7 @@ export default {
     name: 'NoteManager',
     components: {
         EditDialog,
+        AddDialog,
         AppNavbar,
         Search,
         Plus
@@ -204,12 +217,12 @@ export default {
                 console.log('getOptions error', error);
             }
         },
-        openEditDialog() {
-            this.$refs.editDialog.openEditDialog(this);
+        openAddDialog() {
+            this.$refs.addDialog.openDialog(this);
         },
         handleRowClick(row, column, event) {
             console.log(column, event)
-            this.$refs.editDialog.openEditDialog(this, row);
+            this.$refs.editDialog.openDialog(this, row);
         },
         handleResize() {
             this.isMobile = window.innerWidth < 768;
@@ -251,12 +264,6 @@ export default {
     margin: 0 auto;
 }
 
-@media (max-width: 767px) {
-    .desktop-width {
-        max-width: 100%;
-    }
-}
-
 .select-dropdown {
     min-width: 100px !important;
 }
@@ -272,23 +279,44 @@ export default {
     margin: 0 auto;
 }
 
-@media (max-width: 767px) {
-    .main-container {
-        max-width: 100%;
-    }
-}
-
 .header-buttons {
     display: flex;
     flex-wrap: nowrap;
     gap: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
     align-items: center;
 }
 
-.search-container {
+.search-section {
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-shrink: 0;
+}
+
+.filter-section {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    gap: 5px;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-grow: 1;
+}
+
+.select-container {
+    flex-grow: 1;
+}
+
+.action-section {
+    display: flex;
+    gap: 0px;
+    align-items: center;
     flex-shrink: 0;
 }
 
@@ -296,9 +324,34 @@ export default {
     width: 120px;
 }
 
+.column-flex {
+    display: flex;
+    flex-direction: column;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
 @media (max-width: 767px) {
+    .desktop-width {
+        max-width: 100%;
+    }
+
+    .main-container {
+        max-width: 100%;
+    }
+
     .header-buttons {
         gap: 2px;
     }
+
+    :deep(.el-main) {
+        padding: 5px;
+    }
+
+    :deep(.icon-button.el-button) {
+        margin: 0 !important;
+    }    
 }
 </style>

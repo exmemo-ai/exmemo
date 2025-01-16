@@ -58,3 +58,6 @@ IFLYTEK_TTS_APIKEY=''
 
 # ASR
 OPENAI_API_KEY="sk-"
+
+# Time zone setting
+TIMEZONE='Asia/Shanghai'

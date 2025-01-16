@@ -10,6 +10,7 @@ import pandas as pd
 from django.utils.translation import gettext as _
 from backend.common.user.user import *
 from backend.common.user.resource import *
+from backend.common.utils.web_tools import WEB_URL
 from backend.common.files import utils_filemanager, filecache
 from backend.common.utils.net_tools import is_valid_url
 from backend.common.utils.file_tools import (
@@ -36,22 +37,23 @@ def msg_search_detail(dic):
     if obj is not None:
         if obj.etype == "file" or obj.etype == "note":
             filename = os.path.basename(obj.path)
-            ext = get_ext(filename)
-            path = filecache.get_tmpfile(ext)
-            if utils_filemanager.get_file_manager().get_file(uid, obj.path, path):
-                return {"type": "file", "path": path, "filename": filename}
+            # check req from web
+            if sdata.source == "web":
+                return {"type": "text", "info": f"[{filename}]({WEB_URL}/view_markdown?idx={obj.idx})"}
+            else:
+                ext = get_ext(filename)
+                path = filecache.get_tmpfile(ext)
+                if utils_filemanager.get_file_manager().get_file(uid, obj.path, path):
+                    return {"type": "file", "path": path, "filename": filename}
         elif obj.etype == "web":
-            return obj.addr
+            if sdata.source == "web":
+                return {"type": "text", "info": f"[{obj.title}]({WEB_URL}/view_markdown?idx={obj.idx})"}
+            else:
+                return obj.addr
         else:
-            detail = f"\n主题:\n{obj.title}\n\n内容:\n{obj.raw}"
+            detail = f"\n{_('title')}:\n{obj.title}\n\n_('content'):\n{obj.raw}"
             return detail
     return _("failed_to_fetch_files")
-
-
-CommandManager.get_instance().register(
-    Command(msg_search_detail, [CMD_INNER_GET], level=LEVEL_NORMAL)
-)
-
 
 def do_message(sdata:Session):
     """
@@ -144,11 +146,13 @@ def msg_recv_file(base_path, filename, sdata):
     logger.debug(f"parse_file: {base_path}")
     sdata.set_cache("file", (base_path, filename))
     ret = False
-    detail = None
+    detail = _("unsupported_document_type")
     if support_file(base_path):
         ret, detail = msg_upload_main(sdata)
     return ret, {"type": "text", "sid": sdata.sid, "info": detail}
 
 
-
+CommandManager.get_instance().register(
+    Command(msg_search_detail, [CMD_INNER_GET], level=LEVEL_NORMAL)
+)
 CommandManager.get_instance().check_conflict()

@@ -6,6 +6,7 @@ from app_translate.views import (
     StoreWordViewSet,
     StoreArticleViewSet,
     TranslateAssistantView,
+    TranslateLearnView
 )
 
 router = DefaultRouter()
@@ -14,6 +15,7 @@ router.register("article", StoreArticleViewSet)
 
 urlpatterns = [
     path("translate", TranslateAPIView.as_view(), name="translate-api"),
+    path("learn", TranslateLearnView.as_view(), name="translate-learn"),
     path("assistant", TranslateAssistantView.as_view(), name="translate-assistant"),
     path("", include(router.urls), name="translate-data"),
 ]

@@ -3,6 +3,7 @@ import FormData from 'form-data';
 import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn';
 import defaultAvatar from '@/assets/images/chat.png'
 import { useI18n } from 'vue-i18n'
+import { getLocale } from '@/main.js' 
 
 export class ChatService {
     constructor(eventBus) {
@@ -106,13 +107,58 @@ export class ChatService {
         this.addMessage(info, this.botId);
     }
 
+    async uploadFile(file) {
+        let info = '';
+        try {
+            let formData = new FormData();
+            formData.append('rtype', 'file');
+            formData.append('file', file.blob, file.name.includes('.') ? file.name : `${file.name}.${file.extension}`);
+            formData.append('sid', this.currentSessionId);
+            formData.append('source', 'web');
+            formData.append('is_group', 'false');
+
+            const func = 'api/message/';
+            setDefaultAuthHeader();
+            const response = await axios.post(getURL() + func, formData);
+            console.log('response', response);
+            const [ret, message, sid] = this.parseMessageReturn(response);
+            if (ret === true) {
+                info = message;
+                if (sid != this.currentSessionId) {
+                    await this.reloadSessions(sid);
+                }
+            } else {
+                info = message;
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            info = String(error);
+        }
+        this.addMessage(info, this.botId);
+    }
+
     addMessage(message, userId, dt = null) {
         if (dt === null) {
             const now = new Date();
-            dt = now.toISOString().replace('T', ' ').replace(/\.\d+Z/, '');
+            const dateOptions = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            };
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            };
+            let locale = getLocale().replace('_', '-');
+            const date = now.toLocaleDateString(locale, dateOptions).replace(/\//g, '/');
+            const time = now.toLocaleTimeString(locale, timeOptions);
+            dt = `${date} ${time}`;
         }
         let date = dt.split(' ')[0];
         let timestamp = dt.split(' ')[1].slice(0, 5);
+        console.log('addMessage', timestamp);
         const newMessage = {
             _id: this.messages.length,
             content: message,
@@ -129,7 +175,8 @@ export class ChatService {
             const contentType = response.headers['content-type'];
             console.log('parseMessageReturn', contentType);
             if (contentType==='application/octet-stream' || contentType==='audio/mpeg') {
-                return [false, this.t('unsupportedFileType'), null];
+                return [false, this.t('unsupportedFileType'), null]; // here download by browser directly
+                //return [false, "[hahah](http://www.baidu.com)", null];
             }
             console.log('result', result)
             if (result.status === 'success') {
@@ -272,11 +319,42 @@ export class ChatService {
         return this.messages;
     }
 
-    async clearSession() {
+    async renameSession(sessionId, sessionName) {
+        try {
+            const formData = new FormData();
+            formData.append('rtype', 'rename_session');
+            if (sessionId === null) {
+                formData.append('sid', this.currentSessionId);
+            } else {
+                formData.append('sid', sessionId);
+            }
+            formData.append('source', 'web');
+            formData.append('sname', sessionName);
+
+            const func = 'api/message/session/';
+            setDefaultAuthHeader();
+            const response = await axios.post(getURL() + func, formData);
+            await this.parseInfo(response);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                parseBackendError(this.obj, error);
+                throw new Error('Token expired');
+            }
+            const error_str = String(error);
+            this.addMessage(error_str, this.botId);
+        }
+        await this.getCurrentSession();
+    }
+
+    async clearSession(sessionId) {
         try {
             const formData = new FormData();
             formData.append('rtype', 'clear_session');
-            formData.append('sid', this.currentSessionId);
+            if (sessionId === null) {
+                formData.append('sid', this.currentSessionId);
+            } else {
+                formData.append('sid', sessionId);
+            }
             formData.append('source', 'web');
 
             const func = 'api/message/session/';

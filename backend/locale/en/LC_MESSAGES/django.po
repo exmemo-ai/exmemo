@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-27 08:18+0000\n"
+"POT-Creation-Date: 2025-01-15 15:55+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgstr "Data already exists"
 msgid "unknown_type_colon_"
 msgstr "Unknown type: "
 
-#: app_dataforge/entry.py:94
+#: app_dataforge/entry.py:93
 msgid "save_file_failed_excl_"
 msgstr "Save file failed!"
 
@@ -66,35 +66,35 @@ msgstr "Run failed"
 msgid "unclassified"
 msgstr "Unclassified"
 
-#: app_dataforge/feature.py:148
+#: app_dataforge/feature.py:153
 msgid "to_be_organized"
 msgstr "To be organized"
 
-#: app_dataforge/feature.py:148
+#: app_dataforge/feature.py:153
 msgid "to-do_list"
 msgstr "To-do list"
 
-#: app_dataforge/misc_tools.py:51
+#: app_dataforge/misc_tools.py:51 app_message/message.py:149
 msgid "unsupported_document_type"
 msgstr "Unsupported document type"
 
-#: app_dataforge/views.py:103
+#: app_dataforge/views.py:109
 msgid "no_update_needed"
 msgstr "No update needed"
 
-#: app_dataforge/views.py:107
+#: app_dataforge/views.py:113
 msgid "uploading_failed"
 msgstr "Uploading failed"
 
-#: app_dataforge/views.py:200 app_dataforge/views.py:211
+#: app_dataforge/views.py:277 app_dataforge/views.py:288
 msgid "upgrade_successfully"
 msgstr "Upgrade successfully"
 
-#: app_dataforge/views.py:202
+#: app_dataforge/views.py:279
 msgid "update_failed"
 msgstr "Update failed"
 
-#: app_dataforge/views.py:276
+#: app_dataforge/views.py:353
 msgid "unknown_action"
 msgstr "Unknown action"
 
@@ -132,7 +132,7 @@ msgstr "No valid records found."
 msgid "total_calories_colon__{kc}kc"
 msgstr "Total calories: {kc}kc"
 
-#: app_diet/diet.py:176 app_message/message.py:106
+#: app_diet/diet.py:176 app_message/message.py:108
 msgid "failed_to_process_information"
 msgstr "Failed to process information"
 
@@ -268,166 +268,167 @@ msgstr ""
 "Provide the {func_str} tool, please call the most suitable one and return "
 "the result in English."
 
-#: app_message/agent/data_agent.py:27
+#: app_message/agent/data_agent.py:25
 msgid "record_agent"
 msgstr "Record agent"
 
-#: app_message/agent/data_agent.py:29 app_message/agent/data_agent.py:38
+#: app_message/agent/data_agent.py:27 app_message/agent/data_agent.py:36
 msgid "search_records"
 msgstr "Search records"
 
-#: app_message/agent/data_agent.py:33 app_message/agent/data_agent.py:47
-#: app_message/agent/data_agent.py:68 app_message/agent/data_agent.py:91
-#: app_message/agent/data_agent.py:101 app_message/agent/data_agent.py:118
-#: app_message/agent/data_agent.py:135 app_message/agent/data_agent.py:150
-#: app_message/agent/data_agent.py:162 app_message/agent/data_agent.py:184
-#: app_message/agent/data_agent.py:198 app_message/agent/data_agent.py:212
-#: app_message/agent/data_agent.py:222 app_message/agent/data_agent.py:232
-#: app_message/agent/data_agent.py:254 app_message/agent/data_agent.py:266
-#: app_message/agent/data_agent.py:279 app_message/agent/other_agent.py:30
-#: app_message/agent/other_agent.py:40 app_message/agent/other_agent.py:56
-#: app_message/agent/other_agent.py:78 app_message/agent/other_agent.py:98
-#: app_message/agent/other_agent.py:107 app_message/agent/other_agent.py:124
-#: app_message/agent/other_agent.py:157 app_message/agent/other_agent.py:178
-#: app_message/agent/other_agent.py:193 app_message/agent/other_agent.py:219
-#: app_message/agent/other_agent.py:236 app_message/agent/other_agent.py:254
-#: app_message/agent/user_agent.py:58 app_message/agent/user_agent.py:69
-#: app_message/agent/user_agent.py:79 app_message/agent/user_agent.py:101
-#: app_message/agent/user_agent.py:112 app_message/agent/user_agent.py:120
+#: app_message/agent/data_agent.py:31 app_message/agent/data_agent.py:45
+#: app_message/agent/data_agent.py:66 app_message/agent/data_agent.py:89
+#: app_message/agent/data_agent.py:116 app_message/agent/data_agent.py:133
+#: app_message/agent/data_agent.py:148 app_message/agent/data_agent.py:160
+#: app_message/agent/data_agent.py:182 app_message/agent/data_agent.py:196
+#: app_message/agent/data_agent.py:210 app_message/agent/data_agent.py:220
+#: app_message/agent/data_agent.py:230 app_message/agent/data_agent.py:252
+#: app_message/agent/data_agent.py:264 app_message/agent/data_agent.py:277
+#: app_message/agent/other_agent.py:30 app_message/agent/other_agent.py:40
+#: app_message/agent/other_agent.py:56 app_message/agent/other_agent.py:78
+#: app_message/agent/other_agent.py:98 app_message/agent/other_agent.py:107
+#: app_message/agent/other_agent.py:124 app_message/agent/other_agent.py:157
+#: app_message/agent/other_agent.py:178 app_message/agent/other_agent.py:193
+#: app_message/agent/other_agent.py:219 app_message/agent/other_agent.py:236
+#: app_message/agent/other_agent.py:254 app_message/agent/user_agent.py:58
+#: app_message/agent/user_agent.py:69 app_message/agent/user_agent.py:79
+#: app_message/agent/user_agent.py:101 app_message/agent/user_agent.py:112
+#: app_message/agent/user_agent.py:120
 msgid "params_error"
 msgstr "params_error"
 
-#: app_message/agent/data_agent.py:39 app_message/agent/data_agent.py:190
+#: app_message/agent/data_agent.py:37 app_message/agent/data_agent.py:188
 msgid "please_enter_search_content"
 msgstr "Please enter the search content"
 
-#: app_message/agent/data_agent.py:43 app_message/agent/data_agent.py:52
+#: app_message/agent/data_agent.py:41 app_message/agent/data_agent.py:50
 msgid "record"
 msgstr "Record"
 
-#: app_message/agent/data_agent.py:53
+#: app_message/agent/data_agent.py:51
 msgid "please_enter_the_record_content"
 msgstr "Please enter the record content"
 
-#: app_message/agent/data_agent.py:64
+#: app_message/agent/data_agent.py:62
 msgid "export_records"
 msgstr "Export records"
 
-#: app_message/agent/data_agent.py:85
+#: app_message/agent/data_agent.py:83
 msgid "web_processing_agent"
 msgstr "Web processing agent"
 
-#: app_message/agent/data_agent.py:87
-msgid "web_functions_list"
-msgstr "Web functions list"
-
-#: app_message/agent/data_agent.py:97
+#: app_message/agent/data_agent.py:85
 msgid "collect_webpage"
 msgstr "Collect webpage"
 
-#: app_message/agent/data_agent.py:112 app_message/agent/data_agent.py:129
+#: app_message/agent/data_agent.py:100 app_message/agent/data_agent.py:106
+#: app_message/agent/data_agent.py:127
 msgid "no_urls_dot_"
 msgstr "No URLs."
 
-#: app_message/agent/data_agent.py:114
+#: app_message/agent/data_agent.py:102
+msgid "collect_view"
+msgstr "Collect and View"
+
+#: app_message/agent/data_agent.py:112
 msgid "set_webpage_todo"
 msgstr "Set webpage as unread"
 
-#: app_message/agent/data_agent.py:131
+#: app_message/agent/data_agent.py:129
 msgid "summarize_webpage_content"
 msgstr "Summarize webpage content"
 
-#: app_message/agent/data_agent.py:144
+#: app_message/agent/data_agent.py:142
 msgid "failed_to_fetch_webpages"
 msgstr "Failed to fetch webpages"
 
-#: app_message/agent/data_agent.py:146
+#: app_message/agent/data_agent.py:144
 msgid "get_text_content"
 msgstr "Get text content"
 
-#: app_message/agent/data_agent.py:156 app_message/agent/other_agent.py:92
+#: app_message/agent/data_agent.py:154 app_message/agent/other_agent.py:92
 #: backend/common/speech/tts.py:108
 msgid "no_content_found"
 msgstr "No content found"
 
-#: app_message/agent/data_agent.py:158
+#: app_message/agent/data_agent.py:156
 msgid "webpage_to_audio"
 msgstr "Webpage to audio"
 
-#: app_message/agent/data_agent.py:172
+#: app_message/agent/data_agent.py:170
 msgid "page_not_found"
 msgstr "Page not found"
 
-#: app_message/agent/data_agent.py:178
+#: app_message/agent/data_agent.py:176
 msgid "data_management_agent"
 msgstr "Data management agent"
 
-#: app_message/agent/data_agent.py:180 app_message/agent/data_agent.py:189
+#: app_message/agent/data_agent.py:178 app_message/agent/data_agent.py:187
 msgid "search_data"
 msgstr "Search data"
 
-#: app_message/agent/data_agent.py:194 app_message/agent/data_agent.py:203
+#: app_message/agent/data_agent.py:192 app_message/agent/data_agent.py:201
 msgid "search_files"
 msgstr "Search files"
 
-#: app_message/agent/data_agent.py:204
+#: app_message/agent/data_agent.py:202
 msgid "please_enter_what_you're_looking_for"
 msgstr "Please enter what you're looking for"
 
-#: app_message/agent/data_agent.py:208
+#: app_message/agent/data_agent.py:206
 msgid "search_todo_webpages"
 msgstr "Search todo webpages"
 
-#: app_message/agent/data_agent.py:218
+#: app_message/agent/data_agent.py:216
 msgid "search_collected_webpages"
 msgstr "Search collected webpages"
 
-#: app_message/agent/data_agent.py:228
+#: app_message/agent/data_agent.py:226
 msgid "search_webpages"
 msgstr "Search webpages"
 
-#: app_message/agent/data_agent.py:238
+#: app_message/agent/data_agent.py:236
 msgid "manage_data"
 msgstr "Manage data"
 
-#: app_message/agent/data_agent.py:242
+#: app_message/agent/data_agent.py:240
 msgid "please_open_following_link"
 msgstr "Please open following link:"
 
-#: app_message/agent/data_agent.py:248
+#: app_message/agent/data_agent.py:246
 msgid "file_processing_agent"
 msgstr "File processing agent"
 
-#: app_message/agent/data_agent.py:250
+#: app_message/agent/data_agent.py:248
 msgid "extract_file_content"
 msgstr "Extract file content"
 
-#: app_message/agent/data_agent.py:260 app_message/agent/data_agent.py:273
-#: app_message/agent/other_agent.py:145 app_message/message.py:138
+#: app_message/agent/data_agent.py:258 app_message/agent/data_agent.py:271
+#: app_message/agent/other_agent.py:145 app_message/message.py:140
 msgid "please_upload_or_share_a_file_first"
 msgstr "Please upload or share a file first"
 
-#: app_message/agent/data_agent.py:262 app_message/message.py:132
+#: app_message/agent/data_agent.py:260 app_message/message.py:134
 msgid "file_to_audio"
 msgstr "File to audio"
 
-#: app_message/agent/data_agent.py:275 app_message/message.py:128
+#: app_message/agent/data_agent.py:273 app_message/message.py:130
 msgid "collect_file"
 msgstr "Collect file"
 
-#: app_message/agent/data_agent.py:284
+#: app_message/agent/data_agent.py:282
 msgid "file_collection_failed_colon__file_not_found"
 msgstr "File collection failed: File not found"
 
-#: app_message/agent/data_agent.py:316
+#: app_message/agent/data_agent.py:314
 msgid "no_webpage_content_found"
 msgstr "No webpage content found"
 
-#: app_message/agent/data_agent.py:327
+#: app_message/agent/data_agent.py:325
 msgid "received_webpage_with_characters"
 msgstr "Received webpage with {length} characters"
 
-#: app_message/agent/data_agent.py:329
+#: app_message/agent/data_agent.py:327
 msgid "please_enter_the_url_or_share_the_page_with_me"
 msgstr "Please enter the URL or share the page with me"
 
@@ -483,7 +484,7 @@ msgstr "Get audio"
 msgid "converted_audio"
 msgstr "Convert to audio"
 
-#: app_message/agent/other_agent.py:120 app_message/message.py:135
+#: app_message/agent/other_agent.py:120 app_message/message.py:137
 msgid "speech_recognition"
 msgstr "Speech recognition"
 
@@ -555,7 +556,7 @@ msgstr "Gemini call failed"
 msgid "user_management"
 msgstr "User management"
 
-#: app_message/agent/user_agent.py:26 backend/common/user/views.py:56
+#: app_message/agent/user_agent.py:26 backend/common/user/views.py:57
 msgid "username_already_exists"
 msgstr "Username already exists"
 
@@ -563,11 +564,11 @@ msgstr "Username already exists"
 msgid "registration_successful"
 msgstr "Registration successful"
 
-#: app_message/agent/user_agent.py:30 backend/common/user/views.py:60
+#: app_message/agent/user_agent.py:30 backend/common/user/views.py:61
 msgid "registration_failed"
 msgstr "Registration failed"
 
-#: app_message/agent/user_agent.py:32 backend/common/user/views.py:62
+#: app_message/agent/user_agent.py:32 backend/common/user/views.py:63
 msgid "user_or_password_are_empty_dot_"
 msgstr "User or password are empty."
 
@@ -579,7 +580,7 @@ msgstr "Empty username"
 msgid "old_password_is_empty"
 msgstr "Old password is empty"
 
-#: app_message/agent/user_agent.py:41 backend/common/user/views.py:83
+#: app_message/agent/user_agent.py:41 backend/common/user/views.py:84
 msgid "the_new_password_is_blank"
 msgstr "The new password is blank"
 
@@ -587,11 +588,11 @@ msgstr "The new password is blank"
 msgid "old_and_new_passwords_are_identical_dot_"
 msgstr "Old and new passwords are identical."
 
-#: app_message/agent/user_agent.py:45 backend/common/user/views.py:68
+#: app_message/agent/user_agent.py:45 backend/common/user/views.py:69
 msgid "user_does_not_exist"
 msgstr "User does not exist"
 
-#: app_message/agent/user_agent.py:47 backend/common/user/views.py:76
+#: app_message/agent/user_agent.py:47 backend/common/user/views.py:77
 msgid "original_password_error"
 msgstr "Original password error"
 
@@ -599,7 +600,7 @@ msgstr "Original password error"
 msgid "change_successful"
 msgstr "Change successful"
 
-#: app_message/agent/user_agent.py:51 backend/common/user/views.py:81
+#: app_message/agent/user_agent.py:51 backend/common/user/views.py:82
 msgid "setup_failed"
 msgstr "Setup failed"
 
@@ -627,7 +628,7 @@ msgstr "System settings"
 msgid "query_user_privileges"
 msgstr "Query user privileges"
 
-#: app_message/agent/user_agent.py:104 backend/common/user/views.py:117
+#: app_message/agent/user_agent.py:104 backend/common/user/views.py:119
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "User level: {level}"
@@ -660,40 +661,40 @@ msgstr "Please choose:\n"
 msgid "no_content_found_1727252424"
 msgstr "No content found_1727252424"
 
-#: app_message/message.py:48
+#: app_message/message.py:56
 msgid "failed_to_fetch_files"
 msgstr "Failed to fetch files"
 
-#: app_message/message.py:65
+#: app_message/message.py:67
 msgid "nothing_entered"
 msgstr "Nothing entered"
 
-#: app_message/message.py:67
+#: app_message/message.py:69
 msgid "unrecognized_command"
 msgstr "Unrecognized command"
 
-#: app_message/message.py:118 app_message/message.py:120
+#: app_message/message.py:120 app_message/message.py:122
 msgid "no_optional_commands"
 msgstr "No optional commands"
 
-#: app_message/message.py:123
+#: app_message/message.py:125
 msgid "not_a_number"
 msgstr "Not a number"
 
-#: app_message/message.py:131
+#: app_message/message.py:133
 msgid "summarize_file_content"
 msgstr "Summarize file content"
 
-#: app_message/message.py:136
+#: app_message/message.py:138
 msgid "file_received"
 msgstr "File received"
 
-#: app_message/views.py:47 app_message/views.py:81 app_message/views.py:94
-#: app_message/views.py:109
+#: app_message/views.py:49 app_message/views.py:83 app_message/views.py:96
+#: app_message/views.py:115
 msgid "backend_processing_failed"
 msgstr "Backend processing failed"
 
-#: app_message/views.py:98
+#: app_message/views.py:100
 msgid "please_sign_up_or_log_in_first"
 msgstr "Please sign up or log in first"
 
@@ -890,8 +891,8 @@ msgstr "Polished text"
 msgid "translate_text"
 msgstr "Translation"
 
-#: app_paper/views.py:40 backend/common/user/views.py:49
-#: backend/common/user/views.py:111
+#: app_paper/views.py:40 backend/common/user/views.py:50
+#: backend/common/user/views.py:112
 msgid "method_not_supported_colon_"
 msgstr "Method not supported:"
 
@@ -955,7 +956,7 @@ msgstr "Interface is deprecated"
 msgid "comparison_complete"
 msgstr "Comparison complete"
 
-#: app_translate/translate.py:18
+#: app_translate/translate.py:18 app_translate/views.py:20
 msgid "you_are_a_middle_school_english_teacher"
 msgstr "You are a middle school English teacher"
 
@@ -970,11 +971,11 @@ msgstr ""
 "Freq: {freq}\n"
 "Count: {times}"
 
-#: app_translate/views.py:106
+#: app_translate/views.py:110
 msgid "please_enter_questions_or_content_to_be_translated"
 msgstr "Please enter questions or content to be translated"
 
-#: app_translate/views.py:109
+#: app_translate/views.py:113
 msgid "internal_processing_error"
 msgstr "Internal processing error"
 
@@ -1187,31 +1188,31 @@ msgstr "Currently synthesizing, {:.1%} completed"
 msgid "no_synthesized_audio_found"
 msgstr "No synthesized audio found"
 
-#: backend/common/user/resource.py:69
+#: backend/common/user/resource.py:76
 msgid "speech_synthesis"
 msgstr "Speech synthesis"
 
-#: backend/common/user/resource.py:69
+#: backend/common/user/resource.py:76
 msgid "language_model"
 msgstr "Language model"
 
-#: backend/common/user/resource.py:71
+#: backend/common/user/resource.py:78
 msgid "current_day"
 msgstr "Current day"
 
-#: backend/common/user/resource.py:72
+#: backend/common/user/resource.py:79
 msgid "current_week"
 msgstr "Current week"
 
-#: backend/common/user/resource.py:73
+#: backend/common/user/resource.py:80
 msgid "this_month"
 msgstr "This month"
 
-#: backend/common/user/resource.py:74
+#: backend/common/user/resource.py:81
 msgid "total"
 msgstr "Total"
 
-#: backend/common/user/resource.py:78
+#: backend/common/user/resource.py:85
 msgid "{}_usage"
 msgstr "{} usage"
 
@@ -1285,15 +1286,15 @@ msgstr "Administrator"
 msgid "unknown_level"
 msgstr "Unknown level"
 
-#: backend/common/user/views.py:58
+#: backend/common/user/views.py:59
 msgid "account_created__excl_"
 msgstr "Account created !"
 
-#: backend/common/user/views.py:79
+#: backend/common/user/views.py:80
 msgid "successfully_set"
 msgstr "Successfully set"
 
-#: backend/common/user/views.py:174 backend/common/user/views.py:179
+#: backend/common/user/views.py:177 backend/common/user/views.py:182
 msgid "settings_were_applied_successfully"
 msgstr "Settings were applied successfully"
 
@@ -1301,23 +1302,23 @@ msgstr "Settings were applied successfully"
 msgid "content_not_found"
 msgstr "Content not found"
 
-#: backend/common/utils/web_tools.py:17
+#: backend/common/utils/web_tools.py:18
 msgid "unknown_title"
 msgstr "Unknown title"
 
-#: backend/common/utils/web_tools.py:34
+#: backend/common/utils/web_tools.py:36
 msgid "empty_file_content"
 msgstr "Empty file content"
 
-#: backend/common/utils/web_tools.py:112
+#: backend/common/utils/web_tools.py:100
 msgid "parsing_content_is_not_supported_at_this_time"
 msgstr "Parsing content is not supported at this time"
 
-#: backend/common/utils/web_tools.py:139
+#: backend/common/utils/web_tools.py:127
 msgid "failure_reading_file"
 msgstr "Failure reading file"
 
-#: backend/common/utils/web_tools.py:247
+#: backend/common/utils/web_tools.py:249
 msgid "body"
 msgstr "Body"
 

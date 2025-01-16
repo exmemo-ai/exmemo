@@ -110,47 +110,14 @@ class TranslateWord:
     def __init__(self):
         self.translator = Translator(to_lang="zh", from_lang="en")
 
-    def translate_word_gpt(self, word, user_id, debug=False):
-        demo = "{'en_regular':'xxx', 'zh_main':'yyy', 'zh_all':'zzz'}"
-        req = f"""
-        Please take "{word}" and obtain its base form: when extracting the base form, 
-        the part of speech remains unchanged, but plural forms, tenses, etc., are removed. 
-        Translate its main meaning and all meanings into Chinese, and return them in JSON format: {demo}
-        """
-        sysinfo = "You are an English teacher"
-        ret, dic, _ = llm_query_json(
-            user_id,
-            sysinfo,
-            req,
-            "translate",
-            # engine_type='deepseek',
-            debug=False,
-        )
-        if ret:
-            if dic is not None and "en_regular" in dic and "zh_main" in dic and 'zh_all' in dic:
-                return ret, dic["en_regular"], dic["zh_all"]
-        return False, None, None
-
     def translate_word(self, word, user_id, with_gpt=False, sentence = None, debug=False):
         word = extract_word(word)
         if word is None:
             return False, None, None
         if debug:
             logger.debug(f"translate {word}, with_gpt {with_gpt}")
-        ret, en_regular, rank, translation = find_word_local(word)
-        if ret:
-            logger.debug("found in local")
-        else:
-            if with_gpt:
-                ret, en_regular, translation = self.translate_word_gpt(
-                    word, user_id, debug=debug
-                )
-            else:
-                translation = self.translator.translate(word)
-                if translation != "" and translation != word:
-                    ret, en_regular, translation = True, word, translation
-                else:
-                    ret, en_regular, translation = False, None, None
+
+        ret, en_regular, rank, translation = self.get_word_info(word, with_gpt, user_id, debug)
         if ret:
             r, obj = add_to_db(word, en_regular, translation, user_id, sentence=sentence, freq = rank)
             if r:
@@ -168,8 +135,61 @@ class TranslateWord:
                 )
         return ret, en_regular, translation
 
+    def get_word_info(self, word, with_gpt, user_id, debug):
+        ret, en_regular, rank, translation = find_word_local(word)
+        if ret:
+            logger.debug("found in local")
+        else:
+            if with_gpt:
+                ret, en_regular, translation = translate_word_gpt(
+                    word, user_id, debug=debug
+                )
+            else:
+                translation = self.translator.translate(word)
+                if translation != "" and translation != word:
+                    ret, en_regular, translation = True, word, translation
+                else:
+                    ret, en_regular, translation = False, None, None
+        return ret, en_regular, rank, translation
 
 def translate_word(word, uid, with_gpt=True, sentence=None):
     return TranslateWord.get_instance().translate_word(
         word, uid, with_gpt, sentence=sentence
     )
+
+
+def translate_word_gpt(self, word, user_id, debug=False):
+    demo = "{'en_regular':'xxx', 'zh_main':'yyy', 'zh_all':'zzz'}"
+    req = f"""
+    Please take "{word}" and obtain its base form: when extracting the base form, 
+    the part of speech remains unchanged, but plural forms, tenses, etc., are removed. 
+    Translate its main meaning and all meanings into Chinese, and return them in JSON format: {demo}
+    """
+    sysinfo = "You are an English teacher"
+    ret, dic, _ = llm_query_json(
+        user_id,
+        sysinfo,
+        req,
+        "translate",
+        # engine_type='deepseek',
+        debug=False,
+    )
+    if ret:
+        if dic is not None and "en_regular" in dic and "zh_main" in dic and 'zh_all' in dic:
+            return ret, dic["en_regular"], dic["zh_all"]
+    return False, None, None
+
+
+def generate_sentence_example(user_id, word):
+    demo = '{"sentence": "This is a book.", "sentence_meaning": "这是一本书。", "word_meaning": "书"}'
+    query = "Please give me a simple sentence with the word '{word}' in it, and translate the sentence to Chinese. result like {demo}".format(
+        word=word, demo=demo
+    )
+    try:
+        ret, dic, detail = llm_query_json(
+            user_id, MSG_ROLE, query, "translate", debug=True
+        )
+        return True, dic
+    except Exception as e:
+        logger.warning(f"generate_sentence_example error: {e}")
+        return False, dic

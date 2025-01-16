@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-27 08:18+0000\n"
+"POT-Creation-Date: 2025-01-15 15:55+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,7 @@ msgstr "数据已存在"
 msgid "unknown_type_colon_"
 msgstr "未知类型: "
 
-#: app_dataforge/entry.py:94
+#: app_dataforge/entry.py:93
 msgid "save_file_failed_excl_"
 msgstr "文件保存失败"
 
@@ -65,35 +65,35 @@ msgstr "运行失败"
 msgid "unclassified"
 msgstr "未知类别"
 
-#: app_dataforge/feature.py:148
+#: app_dataforge/feature.py:153
 msgid "to_be_organized"
 msgstr "待整理"
 
-#: app_dataforge/feature.py:148
+#: app_dataforge/feature.py:153
 msgid "to-do_list"
 msgstr "待办"
 
-#: app_dataforge/misc_tools.py:51
+#: app_dataforge/misc_tools.py:51 app_message/message.py:149
 msgid "unsupported_document_type"
 msgstr "不支持的文件类型"
 
-#: app_dataforge/views.py:103
+#: app_dataforge/views.py:109
 msgid "no_update_needed"
 msgstr "无需更新"
 
-#: app_dataforge/views.py:107
+#: app_dataforge/views.py:113
 msgid "uploading_failed"
 msgstr "上传失败"
 
-#: app_dataforge/views.py:200 app_dataforge/views.py:211
+#: app_dataforge/views.py:277 app_dataforge/views.py:288
 msgid "upgrade_successfully"
 msgstr "更新成功"
 
-#: app_dataforge/views.py:202
+#: app_dataforge/views.py:279
 msgid "update_failed"
 msgstr "更新失败"
 
-#: app_dataforge/views.py:276
+#: app_dataforge/views.py:353
 msgid "unknown_action"
 msgstr "未知操作"
 
@@ -128,7 +128,7 @@ msgstr "未找到有效记录"
 msgid "total_calories_colon__{kc}kc"
 msgstr "总热量：{kc}千卡"
 
-#: app_diet/diet.py:176 app_message/message.py:106
+#: app_diet/diet.py:176 app_message/message.py:108
 msgid "failed_to_process_information"
 msgstr "处理信息失败"
 
@@ -260,166 +260,167 @@ msgstr "系统提供以下工具. "
 msgid "provides {func_str} functions_please_select"
 msgstr "提供 {func_str} 工具，请调用其中最匹配的一个工具，并以中文返回结果"
 
-#: app_message/agent/data_agent.py:27
+#: app_message/agent/data_agent.py:25
 msgid "record_agent"
 msgstr "随手记"
 
-#: app_message/agent/data_agent.py:29 app_message/agent/data_agent.py:38
+#: app_message/agent/data_agent.py:27 app_message/agent/data_agent.py:36
 msgid "search_records"
 msgstr "搜索记录"
 
-#: app_message/agent/data_agent.py:33 app_message/agent/data_agent.py:47
-#: app_message/agent/data_agent.py:68 app_message/agent/data_agent.py:91
-#: app_message/agent/data_agent.py:101 app_message/agent/data_agent.py:118
-#: app_message/agent/data_agent.py:135 app_message/agent/data_agent.py:150
-#: app_message/agent/data_agent.py:162 app_message/agent/data_agent.py:184
-#: app_message/agent/data_agent.py:198 app_message/agent/data_agent.py:212
-#: app_message/agent/data_agent.py:222 app_message/agent/data_agent.py:232
-#: app_message/agent/data_agent.py:254 app_message/agent/data_agent.py:266
-#: app_message/agent/data_agent.py:279 app_message/agent/other_agent.py:30
-#: app_message/agent/other_agent.py:40 app_message/agent/other_agent.py:56
-#: app_message/agent/other_agent.py:78 app_message/agent/other_agent.py:98
-#: app_message/agent/other_agent.py:107 app_message/agent/other_agent.py:124
-#: app_message/agent/other_agent.py:157 app_message/agent/other_agent.py:178
-#: app_message/agent/other_agent.py:193 app_message/agent/other_agent.py:219
-#: app_message/agent/other_agent.py:236 app_message/agent/other_agent.py:254
-#: app_message/agent/user_agent.py:58 app_message/agent/user_agent.py:69
-#: app_message/agent/user_agent.py:79 app_message/agent/user_agent.py:101
-#: app_message/agent/user_agent.py:112 app_message/agent/user_agent.py:120
+#: app_message/agent/data_agent.py:31 app_message/agent/data_agent.py:45
+#: app_message/agent/data_agent.py:66 app_message/agent/data_agent.py:89
+#: app_message/agent/data_agent.py:116 app_message/agent/data_agent.py:133
+#: app_message/agent/data_agent.py:148 app_message/agent/data_agent.py:160
+#: app_message/agent/data_agent.py:182 app_message/agent/data_agent.py:196
+#: app_message/agent/data_agent.py:210 app_message/agent/data_agent.py:220
+#: app_message/agent/data_agent.py:230 app_message/agent/data_agent.py:252
+#: app_message/agent/data_agent.py:264 app_message/agent/data_agent.py:277
+#: app_message/agent/other_agent.py:30 app_message/agent/other_agent.py:40
+#: app_message/agent/other_agent.py:56 app_message/agent/other_agent.py:78
+#: app_message/agent/other_agent.py:98 app_message/agent/other_agent.py:107
+#: app_message/agent/other_agent.py:124 app_message/agent/other_agent.py:157
+#: app_message/agent/other_agent.py:178 app_message/agent/other_agent.py:193
+#: app_message/agent/other_agent.py:219 app_message/agent/other_agent.py:236
+#: app_message/agent/other_agent.py:254 app_message/agent/user_agent.py:58
+#: app_message/agent/user_agent.py:69 app_message/agent/user_agent.py:79
+#: app_message/agent/user_agent.py:101 app_message/agent/user_agent.py:112
+#: app_message/agent/user_agent.py:120
 msgid "params_error"
 msgstr "参数错误"
 
-#: app_message/agent/data_agent.py:39 app_message/agent/data_agent.py:190
+#: app_message/agent/data_agent.py:37 app_message/agent/data_agent.py:188
 msgid "please_enter_search_content"
 msgstr "请输入搜索内容"
 
-#: app_message/agent/data_agent.py:43 app_message/agent/data_agent.py:52
+#: app_message/agent/data_agent.py:41 app_message/agent/data_agent.py:50
 msgid "record"
 msgstr "记录"
 
-#: app_message/agent/data_agent.py:53
+#: app_message/agent/data_agent.py:51
 msgid "please_enter_the_record_content"
 msgstr "请输入记录内容"
 
-#: app_message/agent/data_agent.py:64
+#: app_message/agent/data_agent.py:62
 msgid "export_records"
 msgstr "导出记录"
 
-#: app_message/agent/data_agent.py:85
+#: app_message/agent/data_agent.py:83
 msgid "web_processing_agent"
 msgstr "网页处理"
 
-#: app_message/agent/data_agent.py:87
-msgid "web_functions_list"
-msgstr "网页功能列表"
-
-#: app_message/agent/data_agent.py:97
+#: app_message/agent/data_agent.py:85
 msgid "collect_webpage"
 msgstr "收藏网页"
 
-#: app_message/agent/data_agent.py:112 app_message/agent/data_agent.py:129
+#: app_message/agent/data_agent.py:100 app_message/agent/data_agent.py:106
+#: app_message/agent/data_agent.py:127
 msgid "no_urls_dot_"
 msgstr "没有网址"
 
-#: app_message/agent/data_agent.py:114
+#: app_message/agent/data_agent.py:102
+msgid "collect_view"
+msgstr "收藏并查看内容"
+
+#: app_message/agent/data_agent.py:112
 msgid "set_webpage_todo"
 msgstr "设置网页为待读"
 
-#: app_message/agent/data_agent.py:131
+#: app_message/agent/data_agent.py:129
 msgid "summarize_webpage_content"
 msgstr "总结网页内容"
 
-#: app_message/agent/data_agent.py:144
+#: app_message/agent/data_agent.py:142
 msgid "failed_to_fetch_webpages"
 msgstr "提取网页失败"
 
-#: app_message/agent/data_agent.py:146
+#: app_message/agent/data_agent.py:144
 msgid "get_text_content"
 msgstr "获取文本内容"
 
-#: app_message/agent/data_agent.py:156 app_message/agent/other_agent.py:92
+#: app_message/agent/data_agent.py:154 app_message/agent/other_agent.py:92
 #: backend/common/speech/tts.py:108
 msgid "no_content_found"
 msgstr "没有找到相应内容"
 
-#: app_message/agent/data_agent.py:158
+#: app_message/agent/data_agent.py:156
 msgid "webpage_to_audio"
 msgstr "网页转音频"
 
-#: app_message/agent/data_agent.py:172
+#: app_message/agent/data_agent.py:170
 msgid "page_not_found"
 msgstr "没有找到网页"
 
-#: app_message/agent/data_agent.py:178
+#: app_message/agent/data_agent.py:176
 msgid "data_management_agent"
 msgstr "数据管理"
 
-#: app_message/agent/data_agent.py:180 app_message/agent/data_agent.py:189
+#: app_message/agent/data_agent.py:178 app_message/agent/data_agent.py:187
 msgid "search_data"
 msgstr "搜索数据"
 
-#: app_message/agent/data_agent.py:194 app_message/agent/data_agent.py:203
+#: app_message/agent/data_agent.py:192 app_message/agent/data_agent.py:201
 msgid "search_files"
 msgstr "搜索文件"
 
-#: app_message/agent/data_agent.py:204
+#: app_message/agent/data_agent.py:202
 msgid "please_enter_what_you're_looking_for"
 msgstr "请输入待查找内容"
 
-#: app_message/agent/data_agent.py:208
+#: app_message/agent/data_agent.py:206
 msgid "search_todo_webpages"
 msgstr "搜索待办网页"
 
-#: app_message/agent/data_agent.py:218
+#: app_message/agent/data_agent.py:216
 msgid "search_collected_webpages"
 msgstr "搜索收藏的网页"
 
-#: app_message/agent/data_agent.py:228
+#: app_message/agent/data_agent.py:226
 msgid "search_webpages"
 msgstr "搜索网页"
 
-#: app_message/agent/data_agent.py:238
+#: app_message/agent/data_agent.py:236
 msgid "manage_data"
 msgstr "管理工具"
 
-#: app_message/agent/data_agent.py:242
+#: app_message/agent/data_agent.py:240
 msgid "please_open_following_link"
 msgstr "请打开链接："
 
-#: app_message/agent/data_agent.py:248
+#: app_message/agent/data_agent.py:246
 msgid "file_processing_agent"
 msgstr "文件处理"
 
-#: app_message/agent/data_agent.py:250
+#: app_message/agent/data_agent.py:248
 msgid "extract_file_content"
 msgstr "提取文件内容"
 
-#: app_message/agent/data_agent.py:260 app_message/agent/data_agent.py:273
-#: app_message/agent/other_agent.py:145 app_message/message.py:138
+#: app_message/agent/data_agent.py:258 app_message/agent/data_agent.py:271
+#: app_message/agent/other_agent.py:145 app_message/message.py:140
 msgid "please_upload_or_share_a_file_first"
 msgstr "请先上传或分享文件"
 
-#: app_message/agent/data_agent.py:262 app_message/message.py:132
+#: app_message/agent/data_agent.py:260 app_message/message.py:134
 msgid "file_to_audio"
 msgstr "文件转音频"
 
-#: app_message/agent/data_agent.py:275 app_message/message.py:128
+#: app_message/agent/data_agent.py:273 app_message/message.py:130
 msgid "collect_file"
 msgstr "收藏文件"
 
-#: app_message/agent/data_agent.py:284
+#: app_message/agent/data_agent.py:282
 msgid "file_collection_failed_colon__file_not_found"
 msgstr "文件收藏失败：未找到文件"
 
-#: app_message/agent/data_agent.py:316
+#: app_message/agent/data_agent.py:314
 msgid "no_webpage_content_found"
 msgstr "没有获取到网页内容"
 
-#: app_message/agent/data_agent.py:327
+#: app_message/agent/data_agent.py:325
 msgid "received_webpage_with_characters"
 msgstr "接收到{length}个字符的网页"
 
-#: app_message/agent/data_agent.py:329
+#: app_message/agent/data_agent.py:327
 msgid "please_enter_the_url_or_share_the_page_with_me"
 msgstr "请输入网址或者分享网页给我"
 
@@ -475,7 +476,7 @@ msgstr "获取音频"
 msgid "converted_audio"
 msgstr "转换音频"
 
-#: app_message/agent/other_agent.py:120 app_message/message.py:135
+#: app_message/agent/other_agent.py:120 app_message/message.py:137
 msgid "speech_recognition"
 msgstr "语音识别"
 
@@ -547,7 +548,7 @@ msgstr "Gemini调用失败"
 msgid "user_management"
 msgstr "用户操作"
 
-#: app_message/agent/user_agent.py:26 backend/common/user/views.py:56
+#: app_message/agent/user_agent.py:26 backend/common/user/views.py:57
 msgid "username_already_exists"
 msgstr "用户已存在"
 
@@ -555,11 +556,11 @@ msgstr "用户已存在"
 msgid "registration_successful"
 msgstr "注册成功"
 
-#: app_message/agent/user_agent.py:30 backend/common/user/views.py:60
+#: app_message/agent/user_agent.py:30 backend/common/user/views.py:61
 msgid "registration_failed"
 msgstr "注册失败"
 
-#: app_message/agent/user_agent.py:32 backend/common/user/views.py:62
+#: app_message/agent/user_agent.py:32 backend/common/user/views.py:63
 msgid "user_or_password_are_empty_dot_"
 msgstr "用户名或密码为空"
 
@@ -571,7 +572,7 @@ msgstr "用户名为空"
 msgid "old_password_is_empty"
 msgstr "原密码为空"
 
-#: app_message/agent/user_agent.py:41 backend/common/user/views.py:83
+#: app_message/agent/user_agent.py:41 backend/common/user/views.py:84
 msgid "the_new_password_is_blank"
 msgstr "新密码为空"
 
@@ -579,11 +580,11 @@ msgstr "新密码为空"
 msgid "old_and_new_passwords_are_identical_dot_"
 msgstr "新旧密码相同"
 
-#: app_message/agent/user_agent.py:45 backend/common/user/views.py:68
+#: app_message/agent/user_agent.py:45 backend/common/user/views.py:69
 msgid "user_does_not_exist"
 msgstr "用户不存在"
 
-#: app_message/agent/user_agent.py:47 backend/common/user/views.py:76
+#: app_message/agent/user_agent.py:47 backend/common/user/views.py:77
 msgid "original_password_error"
 msgstr "原密码错误"
 
@@ -591,7 +592,7 @@ msgstr "原密码错误"
 msgid "change_successful"
 msgstr "修改成功"
 
-#: app_message/agent/user_agent.py:51 backend/common/user/views.py:81
+#: app_message/agent/user_agent.py:51 backend/common/user/views.py:82
 msgid "setup_failed"
 msgstr "设置失败"
 
@@ -619,7 +620,7 @@ msgstr "系统设置"
 msgid "query_user_privileges"
 msgstr "查询用户权限"
 
-#: app_message/agent/user_agent.py:104 backend/common/user/views.py:117
+#: app_message/agent/user_agent.py:104 backend/common/user/views.py:119
 #, python-brace-format
 msgid "user_level: {level}"
 msgstr "用户等级：{level}"
@@ -652,40 +653,40 @@ msgstr "请选择：\n"
 msgid "no_content_found_1727252424"
 msgstr "未找到相应内容"
 
-#: app_message/message.py:48
+#: app_message/message.py:56
 msgid "failed_to_fetch_files"
 msgstr "获取文件失败"
 
-#: app_message/message.py:65
+#: app_message/message.py:67
 msgid "nothing_entered"
 msgstr "没有输入"
 
-#: app_message/message.py:67
+#: app_message/message.py:69
 msgid "unrecognized_command"
 msgstr "不识别的命令"
 
-#: app_message/message.py:118 app_message/message.py:120
+#: app_message/message.py:120 app_message/message.py:122
 msgid "no_optional_commands"
 msgstr "没有可选命令"
 
-#: app_message/message.py:123
+#: app_message/message.py:125
 msgid "not_a_number"
 msgstr "不是数字"
 
-#: app_message/message.py:131
+#: app_message/message.py:133
 msgid "summarize_file_content"
 msgstr "总结文件内容"
 
-#: app_message/message.py:136
+#: app_message/message.py:138
 msgid "file_received"
 msgstr "收到文件"
 
-#: app_message/views.py:47 app_message/views.py:81 app_message/views.py:94
-#: app_message/views.py:109
+#: app_message/views.py:49 app_message/views.py:83 app_message/views.py:96
+#: app_message/views.py:115
 msgid "backend_processing_failed"
 msgstr "后端处理失败"
 
-#: app_message/views.py:98
+#: app_message/views.py:100
 msgid "please_sign_up_or_log_in_first"
 msgstr "请先注册或登录"
 
@@ -882,8 +883,8 @@ msgstr "润色后的文本"
 msgid "translate_text"
 msgstr "翻译后的文本"
 
-#: app_paper/views.py:40 backend/common/user/views.py:49
-#: backend/common/user/views.py:111
+#: app_paper/views.py:40 backend/common/user/views.py:50
+#: backend/common/user/views.py:112
 msgid "method_not_supported_colon_"
 msgstr "不支持方法:"
 
@@ -945,7 +946,7 @@ msgstr "接口已被弃用"
 msgid "comparison_complete"
 msgstr "对比完成"
 
-#: app_translate/translate.py:18
+#: app_translate/translate.py:18 app_translate/views.py:20
 msgid "you_are_a_middle_school_english_teacher"
 msgstr "你是一位中学英语老师"
 
@@ -960,11 +961,11 @@ msgstr ""
 "频率：{freq}\n"
 "次数：{times}"
 
-#: app_translate/views.py:106
+#: app_translate/views.py:110
 msgid "please_enter_questions_or_content_to_be_translated"
 msgstr "请输入问题或者待翻译内容"
 
-#: app_translate/views.py:109
+#: app_translate/views.py:113
 msgid "internal_processing_error"
 msgstr "内部处理错误"
 
@@ -1175,31 +1176,31 @@ msgstr "正在合成中，已完成 {:.1%}"
 msgid "no_synthesized_audio_found"
 msgstr "没有找到合成音频"
 
-#: backend/common/user/resource.py:69
+#: backend/common/user/resource.py:76
 msgid "speech_synthesis"
 msgstr "语音合成"
 
-#: backend/common/user/resource.py:69
+#: backend/common/user/resource.py:76
 msgid "language_model"
 msgstr "语言模型"
 
-#: backend/common/user/resource.py:71
+#: backend/common/user/resource.py:78
 msgid "current_day"
 msgstr "本日"
 
-#: backend/common/user/resource.py:72
+#: backend/common/user/resource.py:79
 msgid "current_week"
 msgstr "本周"
 
-#: backend/common/user/resource.py:73
+#: backend/common/user/resource.py:80
 msgid "this_month"
 msgstr "本月"
 
-#: backend/common/user/resource.py:74
+#: backend/common/user/resource.py:81
 msgid "total"
 msgstr "总计"
 
-#: backend/common/user/resource.py:78
+#: backend/common/user/resource.py:85
 msgid "{}_usage"
 msgstr "{} 用量"
 
@@ -1273,15 +1274,15 @@ msgstr "管理员"
 msgid "unknown_level"
 msgstr "未知级别"
 
-#: backend/common/user/views.py:58
+#: backend/common/user/views.py:59
 msgid "account_created__excl_"
 msgstr "注册成功"
 
-#: backend/common/user/views.py:79
+#: backend/common/user/views.py:80
 msgid "successfully_set"
 msgstr "设置成功"
 
-#: backend/common/user/views.py:174 backend/common/user/views.py:179
+#: backend/common/user/views.py:177 backend/common/user/views.py:182
 msgid "settings_were_applied_successfully"
 msgstr "设置成功"
 
@@ -1289,23 +1290,23 @@ msgstr "设置成功"
 msgid "content_not_found"
 msgstr "无内容"
 
-#: backend/common/utils/web_tools.py:17
+#: backend/common/utils/web_tools.py:18
 msgid "unknown_title"
 msgstr "未知标题"
 
-#: backend/common/utils/web_tools.py:34
+#: backend/common/utils/web_tools.py:36
 msgid "empty_file_content"
 msgstr "文件内容为空"
 
-#: backend/common/utils/web_tools.py:112
+#: backend/common/utils/web_tools.py:100
 msgid "parsing_content_is_not_supported_at_this_time"
 msgstr "暂不支持解析内容"
 
-#: backend/common/utils/web_tools.py:139
+#: backend/common/utils/web_tools.py:127
 msgid "failure_reading_file"
 msgstr "读取文件失败"
 
-#: backend/common/utils/web_tools.py:247
+#: backend/common/utils/web_tools.py:249
 msgid "body"
 msgstr "正文"
 

@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import re
 import os
 import json
+import html2text
 
 from loguru import logger
 import mistune
@@ -15,6 +16,7 @@ import backend.common.files.utils_file as utils_file
 from backend.common.llm.llm_hub import llm_query
 
 DEFAULT_TITLE = _("unknown_title")
+WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
 
 def get_text_extract(uid, content, limit=2000, debug=False):
@@ -83,21 +85,7 @@ def get_web_title(path, from_content=True):
                     return title
     return DEFAULT_TITLE
 
-''' now not used
-def get_web_content(path):
-    """
-    Get webpage content
-    """
-    with open(path, "r", errors="ignore") as file:
-        file_content = file.read()
-        soup = BeautifulSoup(file_content, "html.parser")
-        text = soup.get_text()
-        if text is not None:
-            text = re.sub(r"\n+", "\n", text)
-        return text
-'''
-
-def get_url_content(url):
+def get_url_content(url, format='text'):
     logger.info(f"get_url_content {url}")
     if url is not None:
         try:
@@ -107,7 +95,7 @@ def get_url_content(url):
                 ext = os.path.splitext(base_path)[1][1:]
                 logger.debug(f"ext {ext}")
                 if ext == "html":
-                    return get_web_title(base_path), get_html_content(base_path)
+                    return get_web_title(base_path), get_html_content(base_path, format)
                 if ext == "pdf":
                     return "pdf", _("parsing_content_is_not_supported_at_this_time")
         except Exception as e:
@@ -233,18 +221,34 @@ def visit_all(dic, debug=False):
     return ret
 
 
-def get_html_content(path):
+def get_html_content(path, format):
     """
-    Get text content from HTML file
+    Get content from HTML file
+    Args:
+        path: HTML file path
+        format: Output format, 'text' or 'markdown'
+    Returns:
+        str: Formatted content
     """
     ret = {}
     with open(path, "r", errors="ignore") as file:
         file_content = file.read()
         soup = BeautifulSoup(file_content, "html.parser")
-        text = soup.get_text()
-        if text is not None:
+        
+        if format == 'markdown':
+            h = html2text.HTML2Text()
+            h.ignore_links = False
+            h.ignore_images = False
+            h.ignore_tables = False
+            text = h.handle(str(soup))
+        else:
+            text = soup.get_text()
             text = re.sub(r"\n+", "\n", text)
+            
+        if text is not None:
             ret[_("body")] = text
+            
+        # Handle embedded JSON in scripts
         scripts = soup.find_all("script")
         for script in scripts:
             string = script.string
@@ -254,16 +258,27 @@ def get_html_content(path):
                 for str_json in arr_json:
                     try:
                         dic = json.loads(str_json)
-                        ret.update(visit_all(dic))
+                        visited_dic = visit_all(dic)
+                        if format == 'markdown':
+                            # Convert HTML in JSON to markdown
+                            markdown_dic = {}
+                            for k, v in visited_dic.items():
+                                markdown_dic[k] = h.handle(v) if isinstance(v, str) else v
+                            ret.update(markdown_dic)
+                        else:
+                            ret.update(visited_dic)
                     except Exception as e:
                         print("--", e)
 
+    # Combine all sections
     ret_string = ""
     for key, value in ret.items():
-        ret_string = ret_string + key + "\n" + value + "\n\n"
-        # print(key, value[:100])
+        if format == 'markdown':
+            ret_string += f"{value}\n\n"
+        else:
+            ret_string += f"{key}\n{value}\n\n"
+    
     return ret_string
-
 
 # for test
 # print(get_html_content('/tmp/files/20240808_122110.html'))
