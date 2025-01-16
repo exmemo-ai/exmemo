@@ -2,9 +2,9 @@
 
 ### 1.1 Added
 
-* Integrated chat interface on the frontend
-* Stored chat history in the database
-* Added proxy functionality: User inputs starting with "/" are parsed as commands, while others are treated as chat
+- Integrated chat interface on the frontend
+- Stored chat history in the database
+- Added proxy functionality: User inputs starting with "/" are parsed as commands, while others are treated as chat
 
 ### 1.2 Changed
 
@@ -19,5 +19,16 @@
 
 ### 2.1 Added
 
-* Added data viewing interface, supporting frontend opening of markdown notes, images, files, and web pages; with highlight saving support.
-* Added learning functionality to translation tool, supporting: word selection for learning, learning, reviewing, dictation, and summary functions.
+- Added a data viewing interface that supports opening markdown notes, images, files, and web pages in the frontend, along with highlighting and saving capabilities.
+- Translation tool now includes a learning feature, supporting functions like selecting words to learn, studying, reviewing, dictation, and summarizing.
+- The frontend chat interface now allows deleting conversations, renaming conversations, and uploading files.
+
+### 2.2 Changed
+
+- Files now use their filenames as titles.
+- Modified conversation synchronization logic.
+- Adjusted data management in the frontend: updated the upload and edit dialog boxes and the list layout.
+
+### 2.3 Fixed
+
+- Fixed incorrect chat timestamps.
