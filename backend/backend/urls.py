@@ -4,7 +4,11 @@ from backend.common.user.views import UserAPIView, SettingAPIView, LoginView
 from backend.common.utils.sys_tools import is_app_installed
 from app_paper.views import PaperAPIView
 from app_web.views import WebAPIView
-from app_bm_syncex.views import BookmarkAPIView  # add by wanglei
+from app_bm_syncex.views import BookmarkAPIView,BookmarkClickAPIView
+# from app_bm_syncex.views import BookmarkSettingsView
+from app_bm_keeper.views import BMKeeperAPIView
+from app_bm_keeper.click import BookmarkClickAPIView
+from app_bm_keeper.nav_custom_order import BookmarkCustomOrderAPIView
 from knox import views as knox_views
 
 urlpatterns = [
@@ -15,6 +19,14 @@ urlpatterns = [
     path("api/paper/", PaperAPIView.as_view(), name="paper-api"),
     #
     path("api/bookmarks/", BookmarkAPIView.as_view(), name="web-bm-api"),  # wanglei
+    # path("api/bm/settings/", BookmarkSettingsView.as_view(), name="web-bm-settings-api"),
+    path("api/bookmark/click/", BookmarkClickAPIView.as_view(), name="web-bm-click-api"),
+    path("api/keeper/", BMKeeperAPIView.as_view(), name="web-keeper-api"),
+    path("api/keeper/folders/", BMKeeperAPIView.as_view(), name="web-keeper-folders-api"),
+    path("api/keeper/move/", BMKeeperAPIView.as_view(), name="web-keeper-move-api"),
+    path("api/keeper/click/", BookmarkClickAPIView.as_view(), name="web-keeper-click-api"),
+    path('api/keeper/custom-order/', BookmarkCustomOrderAPIView.as_view(), name='web-keeper-custom-order-api'),
+
     path("api/sync/", include("app_sync.urls")),
     #
     path("api/user/", UserAPIView.as_view(), name="user-api"),

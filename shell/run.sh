@@ -1,2 +1,2 @@
-cd backend
-python manage.py runserver 0.0.0.0:8005
+cd /opt/exmemo/backend
+nohup python manage.py runserver 0.0.0.0:8005 &

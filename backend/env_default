@@ -40,6 +40,12 @@ DEFAULT_TOOL_MODEL='gpt-4o-mini'
 DEFAULT_TOOL_URL='https://api.openai.com/v1'
 DEFAULT_TOOL_API_KEY='sk-'
 
+# CONTENT TRUNCATE
+IS_PARSE_CONTENT = 'False'
+IS_TRUNCATE='False'
+MAX_CONTENT_LENGTH=2000
+TRUNCATE_MODE='first_para' # first_para/title_content/first_last
+
 # EMBEDDING
 USE_EMBEDDING='False'
 EMBEDDING_TYPE='none' # openai/ollama/none
