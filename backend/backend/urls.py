@@ -6,7 +6,9 @@ from app_paper.views import PaperAPIView
 from app_web.views import WebAPIView
 from app_bm_syncex.views import BookmarkAPIView,BookmarkClickAPIView
 # from app_bm_syncex.views import BookmarkSettingsView
-from app_bm_keeper.views import BMKeeperAPIView, BookmarkClickAPIView, BookmarkCustomOrderAPIView
+from app_bm_keeper.views import BMKeeperAPIView
+from app_bm_keeper.click import BookmarkClickAPIView
+from app_bm_keeper.nav_custom_order import BookmarkCustomOrderAPIView
 from knox import views as knox_views
 
 urlpatterns = [
@@ -23,8 +25,7 @@ urlpatterns = [
     path("api/keeper/folders/", BMKeeperAPIView.as_view(), name="web-keeper-folders-api"),
     path("api/keeper/move/", BMKeeperAPIView.as_view(), name="web-keeper-move-api"),
     path("api/keeper/click/", BookmarkClickAPIView.as_view(), name="web-keeper-click-api"),
-    path('api/keeper/custom', BookmarkCustomOrderAPIView.as_view(), name='web-keeper-custom-order-api'),
-    path('api/keeper/custom-order', BookmarkCustomOrderAPIView.as_view(), name='web-keeper-custom-order-api'),
+    path('api/keeper/custom-order/', BookmarkCustomOrderAPIView.as_view(), name='web-keeper-custom-order-api'),
 
     path("api/sync/", include("app_sync.urls")),
     #

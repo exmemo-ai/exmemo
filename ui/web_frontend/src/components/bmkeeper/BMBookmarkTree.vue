@@ -74,14 +74,14 @@
       </template>
     </el-tree>
 
-    <!-- 添加拖拽提示 -->
+    <!-- add drag -->
     <div v-if="dragTip.show" 
          class="drag-tip" 
          :style="{ left: dragTip.x + 'px', top: dragTip.y + 'px' }">
       {{ dragTip.text }}
     </div>
 
-    <!-- 编辑书签对话框 -->
+    <!-- edit dialog -->
     <el-dialog
       v-model="editDialogVisible"
       :title="$t('editBookmark')"
@@ -126,7 +126,7 @@ export default {
   data() {
     return {
       treeData: [],
-      expandedKeys: [], // 初始化为空数组，稍后会在 fetchBookmarks 中设置
+      expandedKeys: [],
       defaultProps: {
         children: 'children',
         label: 'title'
@@ -142,8 +142,8 @@ export default {
       faviconQueue: [],
       faviconLoading: new Set(),
       defaultFavicon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23909399" d="M17,3H7A2,2 0 0,0 5,5V21L12,18L19,21V5C19,3.89 18.1,3 17,3Z"/></svg>',
-      isDragging: false, // 添加拖拽状态标记
-      isDraggingOver: null, // 添加当前悬停节点的ID
+      isDragging: false, 
+      isDraggingOver: null, 
       dragTip: {
         show: false,
         text: '',
@@ -173,7 +173,6 @@ export default {
       const bookmarkBarPath = this._getBookmarkBarPath();
       folderMap.set(bookmarkBarPath, root);
 
-      // 修改过滤和排序逻辑
       const sortedData = flatData
         .filter(item => {
           const isValid = item.folder && (
@@ -189,13 +188,11 @@ export default {
         });
 
       sortedData.forEach(item => {
-        // 1. 清理路径,移除前缀
         const fullPath = item.folder;
         let cleanPath = fullPath
           .replace(/^\/chrome\/书签栏\/|^chrome\/书签栏\//, '')
           .replace(/^\/bookmarks bar\/|^bookmarks bar\//, '');
         
-        // 2. 处理标题中的斜杠问题 - 检查标题是否出现在路径末尾
         const titleWithoutSlash = item.title.replace(/\//g, '___SLASH___');
         if (cleanPath.endsWith(item.title)) {
           cleanPath = cleanPath.slice(0, -item.title.length);
@@ -203,13 +200,11 @@ export default {
           cleanPath = cleanPath.slice(0, -1);
         }
 
-        // 3. 分割路径,过滤空字符串
         const pathParts = cleanPath
           .split('/')
           .filter(Boolean)
           .map(part => part.trim());
 
-        // 4. 如果没有文件夹路径,直接添加到根节点
         if (pathParts.length === 0) {
           const bookmarkNode = {
             id: item.id,
@@ -223,12 +218,10 @@ export default {
           return;
         }
 
-        // 5. 递归构建文件夹结构
         let currentNode = root;
         let currentPath = this._getBookmarkBarPath();
 
         for (const folderName of pathParts) {
-          // 跳过与标题相同的文件夹名称,避免重复分类
           if (folderName === item.title) continue;
           
           currentPath += folderName + '/';
@@ -248,7 +241,6 @@ export default {
           currentNode = folderNode;
         }
 
-        // 6. 添加书签节点,恢复标题中的斜杠
         const bookmarkNode = {
           id: item.id,
           title: item.title,
@@ -260,27 +252,22 @@ export default {
         currentNode.children.push(bookmarkNode);
       });
 
-      // 修改排序函数
       const sortNodes = (nodes) => {
         nodes.sort((a, b) => {
-          // 文件夹依然优先
           if (a.type !== b.type) {
             return a.type === 'folder' ? -1 : 1;
           }
-          
-          // 无论是文件夹还是书签，都按创建时间排序
+
           const timeA = new Date(a.created_at || 0).getTime();
           const timeB = new Date(b.created_at || 0).getTime();
           
           if (timeA === timeB) {
-            // 时间相同时按名称排序
             return a.title.localeCompare(b.title);
           }
           
           return timeA - timeB;
         });
 
-        // 递归排序子节点
         nodes.forEach(node => {
           if (node.children) {
             sortNodes(node.children);
@@ -293,7 +280,6 @@ export default {
       return [root];
     },
 
-    // 获取书签数据
     async fetchBookmarks() {
       try {
         const response = await axios.get(getURL() + 'api/keeper/', {
@@ -305,13 +291,11 @@ export default {
         if (response.data.code === 200) {
           const flatData = response.data.data;
           
-          // 验证数据格式
           if (!Array.isArray(flatData)) {
             console.error('Invalid data format: expected array');
             return;
           }
-          
-          // 验证数据字段
+
           const isValidData = flatData.every(item => 
             item.id && 
             item.title && 
@@ -325,7 +309,6 @@ export default {
 
           this.treeData = this.convertToTree(flatData);
 
-          // 立即设置展开状态，不使用 nextTick
           const rootNode = this.treeData[0];
           const expandKeys = ['bookmarkBar'];
           
@@ -336,10 +319,8 @@ export default {
             }
           }
           
-          // 直接设置展开状态
           this.expandedKeys = expandKeys;
           
-          // 确保展开状态生效
           if (this.bookmarkTreeRef) {
             this.bookmarkTreeRef.value?.setExpandedKeys(expandKeys);
           }
@@ -354,23 +335,32 @@ export default {
     },
     async submitEdit() {
       try {
-        const response = await axios.put(getURL() + 'api/keeper/', {
+
+        console.log('Submitting edit form:', this.editForm)
+
+        const requestData = {
           id: this.editForm.id,
-          title: this.editForm.title
-        })
+          title: this.editForm.title,
+          url: this.editForm.url,
+          folder: this.editForm.folder,
+          type: 'tree'
+        }
+        
+        console.log('Request data:', requestData)
+        
+        const response = await axios.put(getURL() + 'api/keeper/', requestData)
 
         if (response.data.code === 200) {
-          // 更新本地数据而不是重新获取
           this.updateBookmarkInTree(this.treeData[0], response.data.data)
           ElMessage.success(this.$t('updateSuccess'))
           this.editDialogVisible = false
+          await this.refreshTree()
         }
       } catch (error) {
         parseBackendError(this, error)
       }
     },
 
-    // 添加新方法: 在树中更新书签
     updateBookmarkInTree(node, updatedBookmark) {
       if (node.id === updatedBookmark.id) {
         Object.assign(node, {
@@ -431,7 +421,6 @@ export default {
     },
 
     formatLabel(label) {
-      // 添加空值检查
       if (!label) return '';
       return label.length > 50 ? label.substring(0, 47) + '...' : label;
     },
@@ -475,30 +464,24 @@ export default {
       return Array.from(keys);
     },
 
-    // 判断是否允许拖拽
     handleAllowDrag(node) {
-      // 允许拖拽书签和文件夹，但根节点不能拖动
       return node.data.id !== 'bookmarkBar'
     },
 
-    // 判断是否允许放置
     handleAllowDrop(draggingNode, dropNode, type) {
-      // 不允许拖到根节点之前或之后
       if (dropNode.data.id === 'bookmarkBar' && type !== 'inner') {
         return false
       }
       
-      // 书签节点不能作为父节点
       if (dropNode.data.type === 'bookmark' && type === 'inner') {
         return false
       }
 
-      // 检查是否形成循环引用
       if (draggingNode.data.type === 'folder' && type === 'inner') {
         let parent = dropNode.parent;
         while (parent) {
           if (parent.data.id === draggingNode.data.id) {
-            return false; // 避免循环引用
+            return false;
           }
           parent = parent.parent;
         }
@@ -507,50 +490,55 @@ export default {
       return true
     },
 
-    // 处理拖拽完成事件
     async handleDrop(draggingNode, dropNode, type) {
       this.isDragging = false;
-      const bookmarkBarPath = this._getBookmarkBarPath();
+      const bookmarkBarPath = this._getBookmarkBarPath().replace(/^\//, '');
       
-      // 构建新的文件夹路径
-      let newFolder = '';
+      let newBaseFolder = '';
       if (type === 'inner') {
-        newFolder = dropNode.data.id === 'bookmarkBar' ? 
+        newBaseFolder = dropNode.data.id === 'bookmarkBar' ? 
           bookmarkBarPath : 
           `${bookmarkBarPath}${dropNode.data.title}/`;
       } else {
         const parentNode = dropNode.parent;
-        newFolder = parentNode.data.id === 'bookmarkBar' ? 
+        newBaseFolder = parentNode.data.id === 'bookmarkBar' ? 
           bookmarkBarPath : 
           `${bookmarkBarPath}${parentNode.data.title}/`;
       }
 
       try {
         if (draggingNode.data.type === 'folder') {
-          // 处理文件夹移动
           const bookmarks = this.getAllBookmarksInFolder(draggingNode.data);
+          const draggedFolderName = draggingNode.data.title;
+          
           const updatePromises = bookmarks.map(bookmark => {
-            // 计算每个书签的新路径
-            const oldPath = bookmark.folder;
-            const oldFolderPath = `${bookmarkBarPath}${draggingNode.data.title}/`;
-            const newPath = oldPath.replace(oldFolderPath, newFolder);
+            const oldBasePath = `${bookmarkBarPath}`;
+            let relativePath = bookmark.folder.replace(oldBasePath, '');
+            
+            const pathParts = relativePath.split('/');
+            const bookmarkTitle = pathParts.pop(); 
+            const lastFolderParts = pathParts
+              .slice(pathParts.indexOf(draggedFolderName)) 
+              .join('/');
+
+            const newPath = `${newBaseFolder}${lastFolderParts}/${bookmarkTitle}`;
             
             return axios.put(getURL() + 'api/keeper/', {
               id: bookmark.id,
               title: bookmark.title,
               url: bookmark.url,
-              folder: newPath
+              folder: newPath.replace(/\/+/g, '/')
             });
           });
 
           await Promise.all(updatePromises);
         } else {
-          // 处理单个书签移动
+          // detal with bookmark
           await axios.put(getURL() + 'api/keeper/', {
             id: draggingNode.data.id,
             title: draggingNode.data.title,
             url: draggingNode.data.url,
-            folder: newFolder
+            folder: `${newBaseFolder}${draggingNode.data.title}`.replace(/\/+/g, '/')
           });
         }
 
@@ -575,7 +563,6 @@ export default {
     handleDragOver(draggingNode, dropNode, ev) {
       if (dropNode.data.type === 'folder') {
         this.isDraggingOver = dropNode.data.id;
-        // 更新提示文本和位置
         this.dragTip = {
           show: true,
           text: this.$t('dragToFolder', {
@@ -595,7 +582,6 @@ export default {
       }
     },
     
-    // 获取文件夹下所有书签
     getAllBookmarksInFolder(folderNode) {
       const bookmarks = [];
       const traverse = (node) => {
@@ -609,13 +595,12 @@ export default {
       return bookmarks;
     },
 
-    // 计算新的文件夹路径
     calculateNewPath(oldPath, oldFolderId, newFolderId) {
       return oldPath.replace(oldFolderId, newFolderId);
     },
 
     handleNodeClick(data, node) {
-      // 如果正在拖拽中，不触发点击事件
+
       if (this.isDragging) return;
       
       if (data.type === 'bookmark') {
@@ -624,7 +609,16 @@ export default {
     },
 
     handleEdit(data) {
-      this.editForm = { ...data }
+
+      console.log('Editing bookmark:', data)
+      this.editForm = {
+        id: data.id,
+        title: data.title,
+        url: data.url || data.addr,
+        folder: data.folder || data.path
+      }
+
+      console.log('Edit form data:', this.editForm)
       this.editDialogVisible = true
     },
   },
@@ -675,7 +669,6 @@ export default {
   color: #409EFF;
 }
 
-/* 移除之前的 .bookmark-link 相关样式 */
 
 .bookmark-count {
   color: #909399;
