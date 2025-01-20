@@ -115,7 +115,7 @@ export default {
                 this.transStrInSentence = '';
                 if ('examples' in this.wordList[this.currentIndex].info) {
                     const examples = this.wordList[this.currentIndex].info.examples;
-                    if (examples.length > 0) {
+                    if (examples.length > 0 && 'sentence' in examples[0]) {
                         this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
                         this.updateCount();
                         return;
