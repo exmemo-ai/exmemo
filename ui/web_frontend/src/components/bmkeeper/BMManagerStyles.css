@@ -264,7 +264,7 @@
 }
 
 :deep(.limit-select .el-input__wrapper) {
-  padding: 0 25px 0 8px !重要;
+  padding: 0 25px 0 8px !important;
 }
 
 :deep(.limit-select .el-input__inner) {
@@ -352,6 +352,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: calc(100% - 60px);
+}
 
 .bookmark-info {
   flex: 1;
