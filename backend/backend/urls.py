@@ -4,7 +4,6 @@ from backend.common.user.views import UserAPIView, SettingAPIView, LoginView
 from backend.common.utils.sys_tools import is_app_installed
 from app_paper.views import PaperAPIView
 from app_web.views import WebAPIView
-from app_bm_syncex.views import BookmarkAPIView  # add by wanglei
 from knox import views as knox_views
 
 urlpatterns = [
@@ -14,7 +13,9 @@ urlpatterns = [
     path("api/web/", WebAPIView.as_view(), name="web-api"),
     path("api/paper/", PaperAPIView.as_view(), name="paper-api"),
     #
-    path("api/bookmarks/", BookmarkAPIView.as_view(), name="web-bm-api"),  # wanglei
+    path("api/bookmarks/", include("app_bm_syncex.urls")),
+    path("api/keeper/", include("app_bm_keeper.urls")),
+    #
     path("api/sync/", include("app_sync.urls")),
     #
     path("api/user/", UserAPIView.as_view(), name="user-api"),

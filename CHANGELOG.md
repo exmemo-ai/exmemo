@@ -32,3 +32,25 @@
 ### 2.3 Fixed
 
 - Fixed incorrect chat timestamps.
+
+
+## 3 [1.1.2] - 2025-01-20
+
+### 3.1 Added
+
+- Integrated a comprehensive bookmark management UI, including navigation, search, "To-Read", and directory features.
+- Backend now allows configuration of whether to extract text content using LLM, with additional settings for LLM truncation.
+- Added LLM-based supplementary methods for extracting summaries from web pages.
+- Introduced a feature to monitor and track bookmark click counts via the browser extension.  
+
+### 3.2 Changed
+
+- The bookmark source field has been changed from `web_chrome_bm` to `bookmark`.
+- Changed the bookmark deletion logic to soft deletion (softly marks bookmarks as deleted).
+- After editing bookmarks, the updated paths are now stored separately in both `mata` and `external path`.  
+
+### 3.3 Fixed
+
+- Fixed an issue where the "todo" status was incorrectly assigned during bulk bookmark imports.
+- Fixed the problem of duplicate bookmarks being imported.
+- Fixed an issue with invalid bookmark path formats during import.

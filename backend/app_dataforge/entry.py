@@ -17,7 +17,7 @@ from backend.common.files import utils_filemanager, filecache
 from backend.common.utils.text_tools import convert_dic_to_json
 from backend.common.utils.file_tools import is_plain_text, convert_to_md
 from backend.common.utils.regular_tools import regular_keyword
-from backend.common.utils.web_tools import read_md_content, download_file
+from backend.common.utils.web_tools import read_md_content, download_file, get_text_extract
 from backend.common.parser import converter, utils_md
 from backend.common.parser.md_parser import MarkdownParser
 from backend.common.llm.llm_hub import EmbeddingTools
@@ -29,9 +29,13 @@ from .feature import EntryFeatureTool
 DESC_LENGTH = 50
 REL_DIR_FILES = "files"
 REL_DIR_NOTES = "notes"
-
+# get PARSE_CONTENT from backend env settings
+PARSE_CONTENT = os.getenv("IS_PARSE_CONTENT", "True").lower() == "true"
 
 def add_data(dic, path=None, use_llm=True):
+    IS_TRUNCATE  = os.getenv("IS_TRUNCATE", "False").lower() == "true"
+    if not PARSE_CONTENT and not IS_TRUNCATE and dic.get('resource_path') is not None: 
+        use_llm = False
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
     elif dic["etype"] == "record":
@@ -179,35 +183,42 @@ def process_ret(ret, dic):
     return ret, detail
 
 
-def process_metadata(dic, is_chrome=False):
-    info = {"error": dic["error"]}
-    if is_chrome:
-        info.update(
-            {"resource_path": dic["resource_path"], "add_date": dic["add_date"]}
-        )
-        dic.pop("resource_path")
-        dic.pop("add_date")
-    dic["meta"] = info
-    dic.pop("error")
-    dic.pop("parse_content", None)
+def process_metadata(dic):
+    """Metadata processing and configuration extraction"""
+    meta = {"error": dic.pop("error", None)}
+    if "resource_path" in dic:
+        meta.update({
+            "update_path":dic['resource_path'],
+            "resource_path": dic.pop("resource_path"),
+            "visit_history": dic.pop("visit_history", [dic["add_date"]]),
+            "add_date": dic.pop("add_date"),
+            # from bm navigate
+            "clicks":dic.pop("clicks", 1),
+            "weight": dic.pop("weight", 0.0),
+            "custom_order": dic.pop("custom_order", 0),
+        })
+        
+    dic["meta"] = meta
     return dic
 
-
 def handle_resource_path(
-    dic, use_llm=False, is_chrome=False, parse_content=False, debug=False
+    dic, use_llm=True, debug=False
 ):
-    """
-    - Handle Chrome bookmarks and parse them into the database; do not update if already present in the database
-    - Add a switch: whether to extract web content, default is not to extract
-    """
-    dic = process_metadata(dic, is_chrome)
+    dic = process_metadata(dic)
+    
     ret, parsed_dic = EntryFeatureTool.get_instance().parse(
         dic, dic["addr"], use_llm=use_llm
     )
-    if parse_content:  # chrome can also extract content
-        return process_and_save_entry(dic, use_llm=use_llm, debug=debug)
+    
+    if PARSE_CONTENT:
+        return process_and_save_entry(
+            dic, 
+            use_llm=use_llm,
+            debug=debug
+        )
+        
     if ret:
-        ret, ret_emb, detail = save_entry(parsed_dic, None, None)
+        ret, ret_emb, detail = save_entry(parsed_dic, None, None) 
         ret, detail = process_ret(ret, dic)
         return ret, ret_emb, detail
 
@@ -232,11 +243,13 @@ def process_downloaded_file(dic, debug=False):
                     abstract = info["abstract"]
                 else:
                     abstract = None
-                content = read_md_content(md_path)
+                content = read_md_content(md_path) 
+                if abstract is None:
+                    abstract = get_text_extract(dic["user_id"], content, debug=debug)
                 if debug:
                     if abstract is not None:
                         logger.info(f"abstract {len(abstract)}")
-                    logger.info(f"content {len(content)}")
+                logger.info(f"content {len(content)}")
                 parser = MarkdownParser(md_path)
                 info = parser.fm
                 return info, abstract, content
@@ -250,28 +263,35 @@ def process_downloaded_file(dic, debug=False):
 
 
 def process_and_save_entry(dic, use_llm=True, debug=False):
-    info, abstract, content = process_downloaded_file(dic, debug=debug)
+    """Process and save web page data"""
+    
+    temp_dic = dic.copy()
+    
+    info, abstract, content = process_downloaded_file(temp_dic, debug=debug)
     if info == _("run_failed"):
         return False, True, _("run_failed")
+        
     if "meta" not in dic:
         dic["meta"] = info
     else:
         dic["meta"].update(info)
+        
     ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=use_llm)
+    
     ret, ret_emb, detail = save_entry(dic, abstract, content)
     if ret:
         ret, detail = process_ret(ret, dic)
     return ret, ret_emb, detail
 
 
-def add_web(dic, use_llm=True, parse_content=True, debug=False):
+def add_web(dic, use_llm=True, debug=False):
     """
     Download the file from the URL, parse the file, and store the data from the file into the database;
     This only handles plain web pages, does not consider files
     """
     if "error" in dic and dic["error"] is not None:
         if "resource_path" in dic:
-            dic = process_metadata(dic, is_chrome=True)
+            dic = process_metadata(dic)
         if "error" in dic:
             del dic["error"]
         ret, ret_emb, detail = save_entry(dic, None, None)
@@ -280,9 +300,9 @@ def add_web(dic, use_llm=True, parse_content=True, debug=False):
         return ret, ret_emb, detail
     if "resource_path" in dic:
         return handle_resource_path(
-            dic, parse_content=dic["parse_content"], is_chrome=True
+            dic, use_llm=use_llm
         )
-    if parse_content:
+    if PARSE_CONTENT:
         return process_and_save_entry(dic, use_llm, debug)
     else:
         ret, dic = EntryFeatureTool.get_instance().parse(

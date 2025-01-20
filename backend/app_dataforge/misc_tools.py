@@ -30,10 +30,9 @@ def create_dic(url, args, status):
     if args.get("resource_path"):
         dic["title"] = args["title"]
         dic["resource_path"] = args["resource_path"] # path inner
-        dic["path"] = args["resource_path"] # path outer
+        dic["path"] = args["resource_path"] # path outer, use edit
         dic["add_date"] = args["add_date"]
         dic["source"] = args["source"]
-        dic["parse_content"] = args["parse_content"]
         dic["error"] = args["error"]
     return dic
 

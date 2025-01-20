@@ -1,31 +1,85 @@
 import json
+import os
 from loguru import logger
+from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from knox.auth import TokenAuthentication
 from django.utils.translation import gettext as _
 from backend.common.user.utils import parse_common_args
 from rest_framework.response import Response
+from django.utils import timezone
 from app_dataforge.entry import check_entry_exist
 from app_dataforge.views import delete_entry
 from app_dataforge.misc_tools import add_url
 from app_dataforge.models import StoreEntry
+# from .config_manager import BookmarkConfigManager
+# from .config_service import config_service
 
-SOURCE = "web_chrome_bm"  # Where the annotation comes from
-PARSE_CONTENT = False  # Whether to parse the content
-
+SOURCE = "bookmark"
 
 class BookmarkAPIView(APIView):
     """
     Google Chrome Bookmark Synchronization API
     """
-
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    
+    # def _update_llm_env(self, config):
+    #     """
+    #     Update LLM environment variables
+    #     """
+    #     if config.get('llm_model'):
+    #         os.environ['DEFAULT_CHAT_LLM'] = config['llm_model']
+    #         os.environ['DEFAULT_TOOL_LLM'] = config['llm_model']
+            
+    #     if config.get('llm_api_key'):
+    #         os.environ['OPENAI_API_KEY'] = config['llm_api_key']
+            
+    #     if config.get('llm_base_url'):
+    #         os.environ['OPENAI_API_BASE'] = config['llm_base_url']
+
+    # def _get_parsing_config(self, username):
+    #     """
+    #     Get parsing configuration from user settings
+    #     """
+    #     config = config_service.get_config(username)
+    #     parsing_args = {
+    #         "parse_content": config['extract_content'],
+    #         "truncate_content": config['truncate_content'],
+    #         "max_content_length": config['max_content_length'],
+    #         "truncate_mode": config['truncate_mode'],
+    #         "use_llm": False
+    #     }
+        
+    #     # check config and update LLM environment
+    #     if (config['extract_content'] and 
+    #         config['llm_api_key'] and 
+    #         config['llm_base_url'] and 
+    #         config['llm_model']):
+    #         parsing_args["use_llm"] = True
+            
+    #     return parsing_args
+
     def post(self, request):
         return self.do_web_bm(request)
+    
+    def remove_duplicates(self, post_data_lis):
+        seen = set()
+        unique_list = []
+        
+        for item in post_data_lis:
 
+            key = (item['url'], item['path'])
+            if key not in seen:
+                seen.add(key)
+                unique_list.append(item)
+                
+        return unique_list
+    
     def do_web_bm(self, request):
         """
         Provide interfaces to support webpage parsing
@@ -33,32 +87,38 @@ class BookmarkAPIView(APIView):
         debug = True
         args = parse_common_args(request)
         post_data_lis = request.data
+        post_data_lis = self.remove_duplicates(post_data_lis)
+        if debug:
+            print(f"before remove duplicates: {len(request.data)}")
+            print(f"after remove duplicates: {len(post_data_lis)}")
+
         results = []
 
+        extract_content = request.META.get('HTTP_X_EXTRACT_CONTENT', 'false').lower() == 'true'
+        os.environ['IS_PARSE_CONTENT'] = str(extract_content)
+
         for item in post_data_lis:
-            # logger.info('item info',item)
             try:
-                args["resource_path"] = f"chrome/{item.get('path')}"
+                args["resource_path"] = f"chrome{item.get('path')}"
                 args["add_date"] = item.get("add_date")
                 args["title"] = item.get("title")
                 args['status'] = item.get('status')
                 args["source"] = SOURCE
-                args["parse_content"] = PARSE_CONTENT
                 args["error"] = None
                 action = item.get("action")
+                
+                url = item.get("url")
+                if url:
+                    item["addr"] = url
+
                 if action == "delete":
-                    queryset = StoreEntry.objects.filter(user_id=args["user_id"], addr=item.get('url'), is_deleted='f')
-                    if queryset.exists():
-                        delete_entry(args["user_id"], list(queryset.values()))
-                        results.append(
-                            {"url": item.get("url"), "status": "success", "info": "data_removed"}
-                        )
-                    else:
-                        results.append(
-                            {"url": item.get("url"), "status": "success", "info": "data_not_exist"}
-                        )
-                elif action == "move":
-                    pass
+                    delete_entry(args["user_id"], [item])
+                    results.append({
+                        "url": url, 
+                        "status": "success", 
+                        "info": "bookmark_deleted"
+                    })
+                    continue
                 else:
                     if item.get("url") is not None:
                         # Check if the URL is in the database, return directly if it exists
@@ -71,9 +131,9 @@ class BookmarkAPIView(APIView):
                                 }
                             )
                         else:
-                            ret, base_path, info = add_url(item.get("url"), args, item.get('status'))
+                            ret, base_path, info = add_url(url, args, item.get('status'))
                             results.append(
-                                {"url": item.get("url"), "status": "success", "info": info}
+                                {"url": url, "status": "success", "info": info}
                             )
             except json.JSONDecodeError as e:
                 results.append(
@@ -84,3 +144,85 @@ class BookmarkAPIView(APIView):
                     {"url": item.get("url"), "status": "failed", "error": str(e)}
                 )
         return Response({"status": "success", "results": results})
+
+class BookmarkClickAPIView(APIView):
+    """处理书签点击事件的API"""
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            logger.info(f"Received click data: {request.data}")
+            
+            url = request.data.get('url')
+            meta = request.data.get('meta', {})
+            
+            if not url:
+                logger.error("Missing URL in request data")
+                return Response({'status': 'error', 'message': 'URL is required'}, status=400)
+                
+            args = parse_common_args(request)
+            query_params = {
+                'user_id': args['user_id'],
+                'addr': url,
+                'source': SOURCE,
+                'is_deleted': False
+            }
+            
+            logger.info(f"Looking up bookmark with params: {query_params}")
+            bookmark = StoreEntry.objects.filter(**query_params).first()
+            
+            if not bookmark:
+                logger.warning(f"Bookmark not found for URL: {url}")
+                return Response({
+                    'status': 'error',
+                    'message': 'bookmark not found',
+                    'query_params': query_params
+                }, status=404)
+            
+            if not isinstance(bookmark.meta, dict):
+                bookmark.meta = {}
+            
+            current_time = timezone.now().isoformat()
+            visit_record = current_time
+            
+            if 'visit_history' not in bookmark.meta:
+                bookmark.meta['visit_history'] = []
+            bookmark.meta['visit_history'].append(visit_record)
+            
+            if 'visit_history' not in bookmark.meta:
+                bookmark.meta['visit_history'] = []
+            bookmark.meta['visit_history'].append(visit_record)
+
+            clicks = len(bookmark.meta['visit_history'])
+            last_visit_time = datetime.fromisoformat(current_time)
+            age_in_days = (timezone.now() - bookmark.created_at).days
+            
+            frequency_weight = min(1.0, clicks / max(1, age_in_days)) * 0.5
+            recency_weight = min(1.0, 1 / max(1, (timezone.now() - last_visit_time).days)) * 0.3
+            base_weight = float(bookmark.meta.get('base_weight', 0.0)) * 0.2
+            
+            bookmark.meta['clicks'] = clicks
+            bookmark.meta['weight'] = frequency_weight + recency_weight + base_weight
+            bookmark.meta['last_visit'] = current_time
+            
+            bookmark.save()
+            logger.info(f"Successfully updated bookmark: {bookmark.title}, total clicks: {bookmark.meta['clicks']}")
+            
+            return Response({
+                'status': 'success',
+                'data': {
+                    'title': bookmark.title,
+                    'clicks': bookmark.meta['clicks'],
+                    'weight': bookmark.meta['weight'],
+                    'visit_record': visit_record
+                }
+            })
+            
+        except Exception as e:
+            logger.exception("Error processing bookmark click")
+            return Response({
+                'status': 'error',
+                'message': str(e),
+                'detail': traceback.format_exc()
+            }, status=500)

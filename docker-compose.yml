@@ -84,6 +84,7 @@ services:
       - backend/.env
     ports:
       - "${BACKEND_PORT_INNER}:8005"
+      - "${SSH_PORT}:22"
     volumes:
       - ${HOST_DATA_DIR}:/data
       - ${HOST_EXPORTS_DIR}:/exports/
@@ -93,6 +94,7 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
+        /etc/init.d/ssh restart
         python /opt/exmemo/backend/main.py
   ewechat:
     image: zhayujie/chatgpt-on-wechat

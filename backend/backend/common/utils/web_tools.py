@@ -18,12 +18,43 @@ from backend.common.llm.llm_hub import llm_query
 DEFAULT_TITLE = _("unknown_title")
 WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
+# Move environment variables here
+IS_TRUNCATE = os.getenv("IS_TRUNCATE", "False").lower() == "true"
+TRUNCATE_MODE = os.getenv("TRUNCATE_MODE", "title_content")
+MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "2000"))
 
-def get_text_extract(uid, content, limit=2000, debug=False):
+def truncate_content(content, title=None, method="title_content"):
+    """Truncate content based on different methods 
+    """
+    if not content:
+        return content
+        
+    paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
+    
+    if method == "title_content":
+        if title:
+            return f"title: {title}\ncontent: {content}"
+        return content
+        
+    elif method == "first_para":
+        if paragraphs:
+            return paragraphs[0]
+        return content
+            
+    elif method == "first_last":
+        if len(paragraphs) >= 2:
+            return f"{paragraphs[0]}\n...\n{paragraphs[-1]}"
+        return content
+    
+    return content
+
+def get_text_extract(uid, content, is_truncate=IS_TRUNCATE, limit=MAX_CONTENT_LENGTH, truncate_mode=TRUNCATE_MODE, debug=False):
     """
     Extract the main content from the text
     """
     try:
+        if is_truncate:
+            content = truncate_content(content, method=truncate_mode)
         if len(content) > limit:
             lang = utils_file.check_language(content)
             if lang == "en":

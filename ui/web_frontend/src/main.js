@@ -13,6 +13,7 @@ import RegisterUser from './components/user/RegisterUser.vue';
 import TranslateMain from './components/translate/TranslateMain.vue';
 import WordManager from './components/translate/WordManager.vue';
 import ArticleManager from './components/translate/ArticleManager.vue';
+import BMManagerMain from './components/bmkeeper/BMManagerMain.vue';
 import 'element-plus/theme-chalk/index.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { createI18n } from 'vue-i18n'; 
@@ -54,7 +55,8 @@ const router = createRouter({
     { path: '/register', component: RegisterUser},
     { path: '/translate', component: TranslateMain},
     { path: '/word_manager', component: WordManager},
-    { path: '/article_manager', component: ArticleManager}
+    { path: '/article_manager', component: ArticleManager},
+    { path: '/bm_manager', component: BMManagerMain}
   ]
 });
 
@@ -86,6 +88,7 @@ app.component('MainSetting', SettingMain);
 app.component('TranslateMain', TranslateMain);
 app.component('WordManager', WordManager);
 app.component('ArticleManager', ArticleManager);
+app.component('BMManager', BMManagerMain);
 app.use(ElementPlus);
 app.use(router);
 app.mount('#app');
