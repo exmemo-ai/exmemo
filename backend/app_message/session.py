@@ -141,7 +141,7 @@ class Session:
         if len(self.messages) == 0:
             return
         is_new, dic = self.get_session_desc()
-        if is_new is None:
+        if is_new:
             ret, ret_emb, info = add_data(dic)
             logger.info(f"save_to_db add_data ret {ret}, {ret_emb}, {info}")
         else:
@@ -156,6 +156,7 @@ class Session:
                      meta=dic["meta"])
             logger.info(f"update entry success")
         self.sync_idx = len(self.messages)
+        logger.info(f"sync_idx {self.sync_idx}, len {len(self.messages)}")
 
     def sync(self):
         if self.sync_idx < len(self.messages):
@@ -203,7 +204,7 @@ class Session:
         return True
 
     def close(self):
-        self.save_to_db()
+        self.sync()
 
     def delete_session(self, sid):
         """

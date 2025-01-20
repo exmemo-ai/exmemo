@@ -141,6 +141,7 @@ class WebAgent(BaseAgent):
                 return detail
         return _("failed_to_fetch_webpages")
 
+    '''
     @agent_function(_("get_text_content"))
     def _afunc_web_content(context_variables: dict = None):
         """Get web content"""
@@ -152,7 +153,8 @@ class WebAgent(BaseAgent):
         if content is not None:
             return content
         return _("no_content_found")
-
+    '''
+    
     @agent_function(_("webpage_to_audio"))
     def _afunc_web_audio(context_variables: dict = None):
         """Web page to audio"""
