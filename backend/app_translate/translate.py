@@ -189,7 +189,8 @@ def generate_sentence_example(user_id, word):
         ret, dic, detail = llm_query_json(
             user_id, MSG_ROLE, query, "translate", debug=True
         )
-        return True, dic
+        if ret and dic is not None and "sentence" in dic and "sentence_meaning" in dic and "word_meaning" in dic:
+            return True, dic
     except Exception as e:
         logger.warning(f"generate_sentence_example error: {e}")
-        return False, dic
+    return False, {}

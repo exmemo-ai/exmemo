@@ -253,7 +253,7 @@ class TranslateLearnView(APIView):
             examples = stored_example.examples
             logger.error(f'examples {examples}')
             if isinstance(examples, list) and len(examples) > 0:
-                return do_result(True, {"examples": examples})
+                return do_result(True, {"word": word, "examples": examples})
         except StoreTranslateWord.DoesNotExist:
             ret, example = translate.generate_sentence_example(args['user_id'], word)
             if ret:
@@ -267,7 +267,7 @@ class TranslateLearnView(APIView):
                     examples=[example],
                     created_time=timezone.now()
                 )                
-                return do_result(True, {"examples": [example]})
+                return do_result(True, {"word": word, "examples": [example]})
         except Exception as e:
             logger.warning(f"get_sentence {e}")
         return do_result(False, "generate sentence error")
