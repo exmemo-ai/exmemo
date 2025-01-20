@@ -8,7 +8,7 @@
         </div>
         <div class="content word-learning translate-common-style">
             <div v-if="wordList && wordList.length > 0" class="translate-word-display">
-                <bold>{{ $t('trans.wordTranslation') }}: {{ transStr }}</bold>
+                <p>{{ $t('trans.wordTranslation') }}: {{ transStr }}</p>
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
             </div>
             <div v-else>
@@ -18,9 +18,6 @@
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="goPrev">{{ $t('trans.goPrev') }}</el-button>
                 <el-button @click="goNext">{{ $t('trans.goNext') }}</el-button>
-                <!--
-                <el-button @click="save">{{ $t('save') }}</el-button>
-                -->
             </div>
         </div>
     </div>
@@ -69,19 +66,12 @@ export default {
                     this.wordStr = item.word;
                 }
                 this.transStr = item.info.translate;
+                this.transStr = this.transStr.replace(/\[.*?\]/g, '');
                 this.updateCount();
             }
         },
         updateCount() {
             this.finishCount = this.currentIndex + 1;
-        },
-        save() { // not use
-            let tmpList = []
-            for (let i = 0; i < this.wordList.length; i++) {
-                tmpList.push(this.wordList[i]['item']);
-            }
-            realUpdate(tmpList);
-            this.$emit('update-status', 'select');
         },
         async fetch() {
             this.wordList = []

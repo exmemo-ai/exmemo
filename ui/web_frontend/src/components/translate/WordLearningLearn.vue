@@ -3,12 +3,12 @@
         <div class="translate-header">
             <h1>{{ $t('trans.wordLearning') }}</h1>
             <div class="translate-counter" v-if="wordList.length">
-                {{ finishCount }} / {{ wordList.length }}
+                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}
             </div>
         </div>
         <div class="content word-learning translate-common-style">
             <div v-if="wordList.length > 0" class="translate-word-display">
-                <bold class="word">
+                <p class="word">
                     {{ $t('trans.word') }}: {{ wordStr }}
                     <el-button 
                         type="text" 
@@ -17,8 +17,7 @@
                             <component :is="isSpeaking ? 'VideoPause' : 'VideoPlay'" />
                         </el-icon>
                     </el-button>
-
-                </bold>
+                </p>
                 <p class="example-sentence">{{ $t('trans.exampleSentence') }}: {{ exampleSentence }}</p>
                 <p v-if="showTranslation" >{{ $t('trans.sentenceMeaning') }}: {{ sentenceMeaning }}</p>
                 <p v-if="showTranslation" >{{ $t('trans.wordMeaningInSentence') }}: {{ transStrInSentence }}</p>
@@ -31,7 +30,6 @@
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
-                <el-button @click="save">{{ $t('save') }}</el-button>
             </div>
         </div>
     </div>
@@ -47,7 +45,7 @@ import { getLocale } from '@/main.js'
 export default {
     components: {
         VideoPlay,
-        VideoPause
+        VideoPause,
     },
     data() {
         return {
@@ -62,6 +60,7 @@ export default {
             showTranslation: false,
             isSpeaking: false,
             speechUtterance: null,
+            needSave: false,
         };
     },
     methods: {
@@ -76,6 +75,7 @@ export default {
             }
             this.wordList[this.currentIndex].info['learn_date'] = new Date().toISOString().split('T')[0];
             this.wordList[this.currentIndex].status = 'review';
+            this.needSave = true;
             await this.nextWord();
         },
         async learnMore() {
@@ -93,14 +93,20 @@ export default {
                 this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
                 if (this.wordList[this.currentIndex].status !== 'review') {
                     await this.updateWordDisplay();
+                    //this.save(false);
                     return;
                 }
             } while (this.currentIndex !== startIndex);
-            this.save()
+            this.save(true)
         },
-        async save() {
-            await realUpdate(this.wordList);
-            this.$emit('update-status', 'review');
+        async save(nextStep = true) {
+            if (this.needSave) {
+                await realUpdate(this.wordList);
+                this.needSave = false;
+            }
+            if (nextStep) {
+                this.$emit('update-status', 'review');
+            }
         },
         async updateWordDisplay() {
             if (this.wordList.length > 0) {
@@ -179,7 +185,8 @@ export default {
     },
     mounted() {
         this.fetch();
-    }
+    },
+    expose: ['save'],
 };
 </script>
 

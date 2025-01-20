@@ -3,12 +3,12 @@
         <div class="translate-header">
             <h1>{{ $t('trans.selectWord') }}</h1>
             <div class="translate-counter">
-                {{ finishCount }} / {{wordList.length }}
+                {{ selectCount }} / {{ getTotalCount() }}
             </div>
         </div>
         <div class="content word-learning translate-common-style">
             <div v-if="wordList.length > 0" class="translate-word-display">
-                <bold>{{ $t('trans.word') }}: {{ wordStr }}</bold>
+                <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
                 <p>{{ $t('trans.freq') }}: {{ freqStr }}</p>
                 <p v-if="showTranslation">{{ $t('trans.wordTranslation') }}: {{ transStr }}</p>
             </div>
@@ -19,7 +19,6 @@
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="markAsKnown">{{ $t('trans.markAsKnown') }}</el-button>
                 <el-button @click="learnToday">{{ $t('trans.learnToday') }}</el-button>
-                <el-button @click="save">{{ $t('save') }}</el-button>
             </div>
         </div>
     </div>
@@ -36,8 +35,9 @@ export default {
             freqStr: '',
             wordList: [],
             currentIndex: 0,
-            finishCount: 0,
-            showTranslation: false
+            selectCount: 0,
+            showTranslation: false,
+            needSave: false,
         };
     },
     methods: {
@@ -48,22 +48,25 @@ export default {
             this.wordList[this.currentIndex].status = 'learned';
             this.nextWord();
             this.updateCount();
+            this.needSave = true;
         },
         learnToday() {
             this.wordList[this.currentIndex].status = 'learning';
             this.nextWord();
             this.updateCount();
+            this.needSave = true;
         },
         nextWord() {
             this.currentIndex++;
             this.showTranslation = false;
             if (this.currentIndex < this.wordList.length) {
                 this.updateWordDisplay();
+                //this.save(false);
             } else {
-                this.save();
+                this.save(true);
             }
         },
-        async save() {
+        async save(nextStep = true) {
             let updateList = [];
             for (let i = 0; i < this.wordList.length; i++) {
                 if (this.wordList[i].status === 'learned' || this.wordList[i].status === 'learning') {
@@ -71,10 +74,11 @@ export default {
                 }
             }
             await realUpdate(updateList);
-            this.$emit('update-status', 'learn');
+            if (nextStep) {
+                this.$emit('update-status', 'learn');
+            }
         },
         updateWordDisplay() {
-            console.log('EEE', this.wordList[this.currentIndex])
             this.wordStr = this.wordList[this.currentIndex].word;
             this.transStr = this.wordList[this.currentIndex].info.translate;
             this.freqStr = this.wordList[this.currentIndex].freq;
@@ -91,12 +95,17 @@ export default {
             }
         },
         updateCount() {
-            this.finishCount = this.wordList.filter(word => word.status === 'learning').length;
-        }          
+            this.selectCount = this.wordList.filter(word => word.status === 'learning').length;
+        },
+        getTotalCount() {
+            const notLearned = this.wordList.filter(word => word.status !== 'learned');
+            return notLearned.length;
+        },  
     },
     mounted() {
         this.fetch();
-    }
+    },
+    expose: ['save'],
 };
 </script>
 
