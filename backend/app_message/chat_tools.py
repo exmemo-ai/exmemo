@@ -89,7 +89,7 @@ def do_chat(sdata, debug=False):
         if ret:
             duration = time.time() - start_time
             llm_tools.save_llm_usage(user, "chat", llm_info.get_desc(), duration, token_count)
-        return ret, pre + answer
+        return ret, pre + str(answer)
     except Exception as e:
         logger.warning(f"failed: {e}")
         traceback.print_exc()
