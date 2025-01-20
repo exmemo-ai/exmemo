@@ -53,7 +53,6 @@ export default {
       searchQuery: '',
       searchResults: [],
       hasSearched: false,
-      // 添加searchTitle属性
       searchTitle: this.$t('searchTitle'),
       faviconServiceIndex: 0,
       faviconCache: new Map(),

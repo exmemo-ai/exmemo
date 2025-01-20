@@ -190,14 +190,13 @@
 /* 书签列表容器样式 */
 .bookmark-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 固定3列 */
-  gap: 8px; /* 减小列间距 */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   margin-top: 8px;
   width: 100%;
   padding: 0; 
 }
 
-/* 书签卡片��式 */
 .bookmark-card {
   position: relative;
   width: 100%;
@@ -210,14 +209,14 @@
 
 /* 主容器样式 */
 .main-container {
-  max-width: 95%; /* 占满宽度 */
+  max-width: 95%;
   margin: 0 auto;
-  padding: 10px 4px; /* 减小左右内边距 */
+  padding: 10px 4px;
 }
 
 .search-input {
   max-width: 600px;
-  margin-bottom: 0;  /* 从15px改为0 */
+  margin-bottom: 0;
 }
 
 .full-width {
@@ -256,9 +255,8 @@
   gap: 10px;
 }
 
-/* 添加以下样式 */
 :deep(.sort-select) {
-  min-width: 120px;  /* 设置最小宽度确保文字显示完整 */
+  min-width: 120px;
 }
 
 :deep(.el-select .el-input__inner) {
@@ -266,11 +264,11 @@
 }
 
 :deep(.limit-select .el-input__wrapper) {
-  padding: 0 25px 0 8px !重要;  /* 调整内边距 */
+  padding: 0 25px 0 8px !重要;
 }
 
 :deep(.limit-select .el-input__inner) {
-  text-align: center;  /* 数字居中显示 */
+  text-align: center;
 }
 
 .click-icon {
@@ -353,8 +351,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: calc(100% - 60px); /* 为图标预留空间 */
-}
+  max-width: calc(100% - 60px);
 
 .bookmark-info {
   flex: 1;
@@ -383,7 +380,7 @@
 .link-container {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* 左右布局 */
+  justify-content: space-between;
   gap: 12px;
   width: 100%;
   padding: 8px;
@@ -394,21 +391,21 @@
   align-items: flex-start;
   gap: 12px;
   flex: 1;
-  min-width: 0; /* 防止内容溢出 */
+  min-width: 0;
 }
 
 .bookmark-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0; /* 防止内容溢出 */
+  min-width: 0;
 }
 
 .bookmark-actions {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-left: 8px; /* 与左侧内容保持间距 */
+  margin-left: 8px;
 }
 
 .bookmark-title {
@@ -418,7 +415,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-right: 8px; /* 与右侧按钮保持间距 */
+  margin-right: 8px;
 }
 
 .bookmark-summary {
@@ -429,6 +426,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }

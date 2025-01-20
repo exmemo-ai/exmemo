@@ -18,15 +18,13 @@ class BookmarkWeightCalculator:
             'continuous': self._calculate_continuous_clicks_weight()
         }
         
-        # 各维度的权重系数
         coefficients = {
-            'freshness': 0.3,        # 新鲜度权重
-            'clicks': 0.3,           # 点击总量权重
-            'recent_activity': 0.2,  # 近期活跃度权重
-            'continuous': 0.2        # 连续点击权重
+            'freshness': 0.3,       
+            'clicks': 0.3,           
+            'recent_activity': 0.2,  
+            'continuous': 0.2       
         }
-        
-        # 计算加权总分
+
         total_weight = sum(
             weight * coefficients[factor] 
             for factor, weight in weights.items()
@@ -38,7 +36,6 @@ class BookmarkWeightCalculator:
         """计算新鲜度权重，考虑创建时间和最后点击时间"""
         days_since_creation = (self.current_time - self.bookmark.created_time).days
         
-        # 获取最后一次点击时间
         last_click = (BookmarkClick.objects.filter(bookmark=self.bookmark)
                      .order_by('-meta__clicked_at')
                      .first())
@@ -51,7 +48,6 @@ class BookmarkWeightCalculator:
         else:
             days_since_last_click = days_since_creation
             
-        # 使用对数函数计算衰减
         creation_weight = 1.0 / (1 + math.log1p(days_since_creation/30))
         last_click_weight = 1.0 / (1 + math.log1p(days_since_last_click/7))
         
@@ -63,7 +59,7 @@ class BookmarkWeightCalculator:
             bookmark=self.bookmark
         ).count()
         
-        # 使用对数函数避免点击数过大导致权重失衡
+
         return math.log1p(total_clicks)
     
     def _calculate_recent_activity_weight(self):
@@ -81,7 +77,6 @@ class BookmarkWeightCalculator:
                 meta__clicked_at__gte=start_time.isoformat()
             ).count()
         
-        # 不同时间窗口的权重系数
         window_weights = {
             'day': 0.5,
             'week': 0.3,
@@ -97,7 +92,6 @@ class BookmarkWeightCalculator:
     
     def _calculate_continuous_clicks_weight(self):
         """计算连续点击权重"""
-        # 获取最近24小时内的点击记录
         recent_clicks = BookmarkClick.objects.filter(
             bookmark=self.bookmark,
             meta__clicked_at__gte=(self.current_time - timedelta(hours=24)).isoformat()
@@ -111,13 +105,12 @@ class BookmarkWeightCalculator:
             for click in recent_clicks
         ]
         
-        # 计算连续点击的分数
         continuous_score = 0
         for i in range(1, len(click_times)):
             time_diff = (click_times[i] - click_times[i-1]).total_seconds() / 3600  # 转换为小时
-            if time_diff <= 1:  # 1小时内的点击
+            if time_diff <= 1:  
                 continuous_score += 1.0
-            elif time_diff <= 4:  # 4小时内的点击
+            elif time_diff <= 4:  
                 continuous_score += 0.5
                 
         return math.log1p(continuous_score)

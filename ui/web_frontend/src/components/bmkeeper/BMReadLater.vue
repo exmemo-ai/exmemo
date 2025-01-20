@@ -176,7 +176,7 @@ export default {
             count: existing ? existing.count + 1 : 1,
             relatedIds: existing ? [...existing.relatedIds, bookmark.id] : [bookmark.id],
             tags: bookmark.tags || '',
-            summary: bookmark.raw || '' // 添加summary映射
+            summary: bookmark.raw || ''
           });
         } else {
           existing.count++;
@@ -291,9 +291,7 @@ export default {
     },
 
     formatFolderDisplay(folder) {
-      // 如果是根路径，直接返回
       if (folder === '/') return folder;
-      // 否则返回后面的路径部分
       return folder;
     },
     
@@ -301,7 +299,6 @@ export default {
       if (!value) {
         this.filteredFolders = this.allFolders;
       } else {
-        // 在搜索时也使用处理后的路径
         this.filteredFolders = this.allFolders.filter(folder => 
           this.formatFolderDisplay(folder).toLowerCase().includes(value.toLowerCase())
         );
@@ -341,7 +338,6 @@ export default {
         )
         
         if (confirmed) {
-          // 删除所有相关ID
           const deletePromises = bookmark.relatedIds.map(id => 
             axios.delete(getURL() + 'api/keeper/', { params: { id } })
           );
@@ -366,7 +362,7 @@ export default {
       this.editForm = {
         id: bookmark.id,
         title: bookmark.title,
-        tags: bookmark.tags ? bookmark.tags.split(',') : [] // 编辑时拆分成数组
+        tags: bookmark.tags ? bookmark.tags.split(',') : []
       }
       this.editDialogVisible = true
     },
@@ -377,20 +373,19 @@ export default {
           type: 'readlater', 
           id: this.editForm.id,
           title: this.editForm.title,
-          tags: this.editForm.tags.join(',') // 提交时转回字符串
+          tags: this.editForm.tags.join(',')
         })
 
         if (response.data.code === 200) {
           ElMessage.success(this.$t('updateSuccess'))
           this.editDialogVisible = false
           
-          // 更新本地数据
           const updatedBookmark = response.data.data
           this.recentReadLater = this.recentReadLater.map(bm => {
             if (bm.id === updatedBookmark.id) {
               return {
                 ...bm,
-                ...updatedBookmark,  // 直接使用后端返回的所有更新数据
+                ...updatedBookmark,
                 updated_time: updatedBookmark.updated_time
               }
             }
@@ -444,19 +439,19 @@ export default {
 }
 
 .bookmark-edit-dialog :deep(.tags-form-item) {
-  margin-bottom: 50px;  /* 为下拉框留出空间 */
+  margin-bottom: 50px;
 }
 
 :deep(.tags-select-dropdown) {
-  max-height: 200px;  /* 限制下拉框最大高度 */
+  max-height: 200px;
 }
 
 .bookmark-edit-dialog :deep(.el-dialog__body) {
-  padding-bottom: 0;  /* 减小对话框底部内边距 */
+  padding-bottom: 0;
 }
 
 .bookmark-edit-dialog :deep(.el-form-item:last-child) {
-  margin-bottom: 20px;  /* 调整最后一个表单项的底部边距 */
+  margin-bottom: 20px;
 }
 
 .title-and-tags {
@@ -611,7 +606,6 @@ export default {
   margin-top: 24px;
 }
 
-/* 修改编辑对话框相关样式 */
 .bookmark-edit-dialog :deep(.el-select) {
   width: 100%;
 }
@@ -666,7 +660,6 @@ export default {
   box-shadow: none !important;
 }
 
-/* 移除多余的底部间距 */
 .bookmark-edit-dialog :deep(.el-form-item:last-child) {
   margin-bottom: 0;
 }
@@ -675,7 +668,7 @@ export default {
   margin-top: 20px;
 }
 
-/* 隐藏所有下拉和空数据提示 */
+
 .bookmark-edit-dialog :deep(.el-select__popper),
 .bookmark-edit-dialog :deep(.el-select-dropdown),
 .bookmark-edit-dialog :deep(.el-select__dropdown),

@@ -22,15 +22,12 @@ def update_all_bookmark_weights():
     
     for bookmark in bookmarks:
         try:
-            # 计算新权重
             calculator = BookmarkWeightCalculator(bookmark, current_time)
             new_weight = calculator.calculate_total_weight()
-            
-            # 更新数据库
+
             bookmark.weight = new_weight
             bookmark.save(update_fields=['weight'])
-            
-            # 更新缓存
+
             BookmarkCacheManager.set_weight(bookmark.id, new_weight)
             
             results['updated'] += 1
@@ -40,7 +37,6 @@ def update_all_bookmark_weights():
             
     return results
 
-# 批量更新函数，可用于手动触发
 def batch_update_weights(batch_size=100):
     """批量更新书签权重"""
     bookmarks = StoreEntry.objects.filter(

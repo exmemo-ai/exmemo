@@ -72,7 +72,7 @@ class BookmarkAPIView(APIView):
         unique_list = []
         
         for item in post_data_lis:
-            # 使用url和path组合作为唯一key
+
             key = (item['url'], item['path'])
             if key not in seen:
                 seen.add(key)
@@ -88,7 +88,6 @@ class BookmarkAPIView(APIView):
         args = parse_common_args(request)
         post_data_lis = request.data
         post_data_lis = self.remove_duplicates(post_data_lis)
-        # 对比去重前后数据长度
         if debug:
             print(f"before remove duplicates: {len(request.data)}")
             print(f"after remove duplicates: {len(post_data_lis)}")
@@ -108,10 +107,7 @@ class BookmarkAPIView(APIView):
                 args["error"] = None
                 action = item.get("action")
                 
-                # 将 url 转换为 addr
                 url = item.get("url")
-                if args["title"]=='深圳科学院':
-                    print(item)
                 if url:
                     item["addr"] = url
 
@@ -184,11 +180,9 @@ class BookmarkClickAPIView(APIView):
                     'query_params': query_params
                 }, status=404)
             
-            # 确保meta字段初始化
             if not isinstance(bookmark.meta, dict):
                 bookmark.meta = {}
             
-            # 记录访问
             current_time = timezone.now().isoformat()
             visit_record = current_time
             
@@ -232,47 +226,3 @@ class BookmarkClickAPIView(APIView):
                 'message': str(e),
                 'detail': traceback.format_exc()
             }, status=500)
-
-# ======= 前端llm&截断配置项接收，暂时注释 =======
-# class BookmarkSettingsView(APIView): 
-#     """."""
-#     authentication_classes = [TokenAuthentication]
-#     permission_classes = [IsAuthenticated]
-    
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.config_manager = BookmarkConfigManager()
-
-    # def get(self, request):
-    #     """获取用户配置"""
-    #     try:
-    #         config = config_service.get_config(request.user.username)
-    #         return Response(config)
-    #     except Exception as e:
-    #         logger.error(f"Error loading config: {str(e)}")
-    #         return Response({'status': 'error', 'message': str(e)}, status=500)
-
-    # def post(self, request):
-    #     """更新用户配置"""
-    #     try:
-    #         logger.info(f"Received settings data: {request.data}")
-            
-    #         config = request.data.get('settings', {})
-    #         logger.info(f"Parsed config data: {config}")
-            
-    #         if 'BOOKMARK_EXTRACT_CONTENT' in config:
-    #             config['BOOKMARK_EXTRACT_CONTENT'] = config['BOOKMARK_EXTRACT_CONTENT'].lower() == 'true'
-    #             logger.info(f"Converted extract_content: {config['BOOKMARK_EXTRACT_CONTENT']}")
-            
-    #         if 'BOOKMARK_TRUNCATE_CONTENT' in config:
-    #             config['BOOKMARK_TRUNCATE_CONTENT'] = config['BOOKMARK_TRUNCATE_CONTENT'].lower() == 'true'
-    #         if 'BOOKMARK_AUTO_TAG' in config:
-    #             config['BOOKMARK_AUTO_TAG'] = config['BOOKMARK_AUTO_TAG'].lower() == 'true'
-            
-    #         save_result = config_service.update_config(request.user.username, config)
-    #         logger.info(f"Config save result: {save_result}")
-            
-    #         return Response({'status': 'success'})
-    #     except Exception as e:
-    #         logger.error(f"Error saving config: {str(e)}")
-    #         return Response({'status': 'error', 'message': str(e)}, status=500)

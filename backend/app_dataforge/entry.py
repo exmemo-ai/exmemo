@@ -29,12 +29,12 @@ from .feature import EntryFeatureTool
 DESC_LENGTH = 50
 REL_DIR_FILES = "files"
 REL_DIR_NOTES = "notes"
-# get is_truncate from user settings
-is_truncate  = os.getenv("IS_TRUNCATE", "False").lower() == "true"
-parse_content = os.getenv("IS_PARSE_CONTENT", "True").lower() == "true"
+# get PARSE_CONTENT from backend env settings
+PARSE_CONTENT = os.getenv("IS_PARSE_CONTENT", "True").lower() == "true"
 
 def add_data(dic, path=None, use_llm=True):
-    if not parse_content and not is_truncate and dic.get('resource_path') is not None: 
+    IS_TRUNCATE  = os.getenv("IS_TRUNCATE", "False").lower() == "true"
+    if not PARSE_CONTENT and not IS_TRUNCATE and dic.get('resource_path') is not None: 
         use_llm = False
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
@@ -184,7 +184,7 @@ def process_ret(ret, dic):
 
 
 def process_metadata(dic):
-    """处理元数据,提取解析配置"""
+    """Metadata processing and configuration extraction"""
     meta = {"error": dic.pop("error", None)}
     if "resource_path" in dic:
         meta.update({
@@ -210,7 +210,7 @@ def handle_resource_path(
         dic, dic["addr"], use_llm=use_llm
     )
     
-    if parse_content:
+    if PARSE_CONTENT:
         return process_and_save_entry(
             dic, 
             use_llm=use_llm,
@@ -263,7 +263,7 @@ def process_downloaded_file(dic, debug=False):
 
 
 def process_and_save_entry(dic, use_llm=True, debug=False):
-    """处理并保存网页数据"""
+    """Process and save web page data"""
     
     temp_dic = dic.copy()
     
@@ -302,7 +302,7 @@ def add_web(dic, use_llm=True, debug=False):
         return handle_resource_path(
             dic, use_llm=use_llm
         )
-    if parse_content:
+    if PARSE_CONTENT:
         return process_and_save_entry(dic, use_llm, debug)
     else:
         ret, dic = EntryFeatureTool.get_instance().parse(
