@@ -1,15 +1,13 @@
 <template>
     <div>
         <div class="top-button">
-            <el-button :type="selectType" @click="handleSelectClick">{{$t('trans.selectWord')}}</el-button>
+            <el-button :type="selectType" @click="handleSelectClick">{{ $t('trans.selectWord') }}</el-button>
             <el-button :type="learnType" @click="handleLearnClick">{{ $t('trans.wordLearning') }}</el-button>
             <el-button :type="reviewType" @click="handleReviewClick">{{ $t('trans.reviewWords') }}</el-button>
             <el-button :type="writeType" @click="handleWriteClick">{{ $t('trans.writeFromMemory') }}</el-button>
             <el-button :type="summaryType" @click="handleSummaryClick">{{ $t('trans.summary') }}</el-button>
         </div>
-        <component :is="currentComponent" 
-                   @update-status="updateStatus"
-                   ></component>
+        <component :is="currentComponent" ref="currentComponent" @update-status="updateStatus"></component>
     </div>
 </template>
 
@@ -58,24 +56,39 @@ export default {
         }
     },
     methods: {
-        updateStatus(newStatus) {
-            this.status = newStatus;
+        async saveBeforeSwitch() {
+            const componentsToSave = ['select', 'learn', 'review'];
+            if (componentsToSave.includes(this.status) && this.$refs.currentComponent) {
+                await this.$refs.currentComponent.save(false);
+            }
         },
-        handleSelectClick() {
+        async handleSelectClick() {
+            await this.saveBeforeSwitch();
             this.status = 'select';
         },
-        handleLearnClick() {
+        async handleLearnClick() {
+            await this.saveBeforeSwitch();
             this.status = 'learn';
         },
-        handleReviewClick() {
+        async handleReviewClick() {
+            await this.saveBeforeSwitch();
             this.status = 'review';
         },
-        handleWriteClick() {
+        async handleWriteClick() {
+            await this.saveBeforeSwitch();
             this.status = 'write';
         },
-        handleSummaryClick() {
+        async handleSummaryClick() {
+            await this.saveBeforeSwitch();
             this.status = 'summary';
+        },
+        updateStatus(newStatus) {
+            this.status = newStatus;
         }
+    },
+    beforeUnmount() {
+        console.log('component unmounting');
+        this.saveBeforeSwitch();
     }
 };
 </script>

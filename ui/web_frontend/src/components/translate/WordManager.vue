@@ -39,6 +39,24 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="total">
             </el-pagination>
         </div>
+        <el-dialog v-model="editDialogVisible" :title="$t('edit')" width="30%">
+            <el-form :model="editForm">
+                <el-form-item :label="$t('status')">
+                    <el-select v-model="editForm.status" style="width: 100%">
+                        <el-option :label="$t('trans.not_learned')" value="not_learned"/>
+                        <el-option :label="$t('trans.learned')" value="learned"/>
+                        <el-option :label="$t('trans.learning')" value="learning"/>
+                        <el-option :label="$t('trans.reviewing')" value="reviewing"/>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="editDialogVisible = false">{{ $t('cancel') }}</el-button>
+                    <el-button type="primary" @click="saveEdit">{{ $t('confirm') }}</el-button>
+                </span>
+            </template>
+        </el-dialog>
         <CheckDialog ref="checkDialog" />
     </div>
 </template>
@@ -48,6 +66,7 @@ import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
 import { Search } from '@element-plus/icons-vue';
+import { realUpdate } from './WordLearningSupport';
 
 export default {
     name: 'WordManager',
@@ -68,6 +87,12 @@ export default {
             search_text: '',
             //
             fileList: [],
+            editDialogVisible: false,
+            editForm: {
+                idx: null,
+                word: '',
+                status: ''
+            },
         };
     },
     methods: {
@@ -114,7 +139,18 @@ export default {
                 });
         },
         handleRowClick(row, column, event) {
-            console.log(column, event)
+            this.editForm = { ...row };
+            this.editDialogVisible = true;
+        },
+        async saveEdit() {
+            try {
+                await realUpdate([this.editForm]);
+                this.editDialogVisible = false;
+                this.fetchData();
+                this.$message.success(this.$t('updateSuccess'));
+            } catch (error) {
+                this.$message.error(this.$t('updateFailed'));
+            }
         },
         searchWord() {
             this.$refs.checkDialog.openDialog(this);

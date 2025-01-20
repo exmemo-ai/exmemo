@@ -242,11 +242,14 @@
         "goPrev": "Previous",
         "goNext": "Next",
         "finish": "Finish",
-        "freq": "Frequency"
+        "freq": "Frequency",
+        "remainToReview": "Remain: {count}",
+        "todayLearn": "Today's Learn"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",
         "copiedAt": "Copied at",
+        "readSelected": "Read Selected",
         "saveHighlightSuccess": "Save highlight successful",
         "saveHighlightFail": "Save highlight failed",
         "stopHighlight": "Stop Highlight",
@@ -259,7 +262,9 @@
         "noHighlightToSave": "No highlight to save",
         "openWeb": "Open Web",
         "downloadFile": "Download File",
-        "summary": "Summary"
+        "summary": "Summary",
+        "noTextSelected": "No text selected",
+        "detail": "Detail"
     },
     "bookmarkManager": "Bookmark Manager",
     "bookmarkTree": "Bookmark Directory",

@@ -244,11 +244,14 @@
         "finish": "完成",
         "freq": "优先级",
         "todayLearned": "今日已复习",
-        "summary": "统计"
+        "summary": "统计",
+        "remainToReview": "剩余: {count}",
+        "todayLearn": "今日学习"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",
         "copiedAt": "复制于",
+        "readSelected": "朗读选区",
         "saveHighlightSuccess": "高亮保存成功",
         "saveHighlightFail": "高亮保存失败",
         "stopHighlight": "停止高亮",
@@ -260,7 +263,9 @@
         "saveHighlight": "保存高亮",
         "noHighlightToSave": "没有高亮可保存",
         "openWeb": "打开网页",
-        "downloadFile": "下载文件"
+        "downloadFile": "下载文件",
+        "noTextSelected": "未选中文本",
+        "detail": "详情"
     },
     "bookmarkManager": "书签管理",
     "bookmarkTree": "书签目录",

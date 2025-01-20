@@ -1,6 +1,6 @@
 <template>
     <el-container class="app-container">
-        <el-header :class="{ 'scroll-header': !isMobile, 'fixed-header': isMobile }" height="auto">
+        <el-header :class="{ 'scroll-header': !isPortrait, 'fixed-header': isPortrait }" height="auto">
             <el-container class="navbar-container nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
@@ -10,27 +10,27 @@
                 </div>
                 <div>
                     <div class="user-controls" style="margin-bottom: 5px">
-                        <div :class="{ 'mobile-buttons': isMobile }" class="button-container-flex">
+                        <div :class="{ 'mobile-buttons': isPortrait }" class="button-container-flex">
                             <el-button-group class="basic-buttons" style="margin-right: 5px;">
-                                <el-button type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
-                                <el-button type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
-                                <el-button type="primary" @click="readContent">
-                                    {{ isSpeaking ? t('stopSpeak') : t('read') }}
+                                <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
+                                <el-button size="small" type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
+                                <el-button size="small" type="primary" @click="readContent">
+                                    {{ isSpeaking ? t('stopSpeak') : t('viewMarkdown.readSelected') }}
                                 </el-button>
-                                <el-button type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
-                                <el-button type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
+                                <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
+                                <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
                             </el-button-group>
                             <el-button-group class="highlight-buttons" style="margin-right: 5px;">
-                                <el-button type="primary" @click="highlightText">
+                                <el-button size="small" type="primary" @click="highlightText">
                                     {{ isHighlightMode ? t('viewMarkdown.stopHighlight') : t('viewMarkdown.startHighlight') }}
                                 </el-button>
-                                <el-button type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
+                                <el-button size="small" type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
                                     {{ t('viewMarkdown.clearHighlight') }}
                                 </el-button>
-                                <el-button type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
+                                <el-button size="small" type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
                                     {{ t('viewMarkdown.copyHighlight') }}
                                 </el-button>
-                                <el-button type="primary" @click="saveHighLight" :disabled="!isHighlightMode || savedRanges.value?.length === 0">
+                                <el-button size="small" type="primary" @click="saveHighLight" :disabled="!isHighlightMode || savedRanges.value?.length === 0">
                                     {{ t('viewMarkdown.saveHighlight') }}
                                 </el-button>
                             </el-button-group>
@@ -59,7 +59,7 @@ import { MdPreview } from 'md-editor-v3'
 import { saveEntry, downloadFile } from './dataUtils';
 
 const { t } = useI18n()
-const isMobile = ref(false)
+const isPortrait = ref(false)
 const appName = 'ExMemo'
 const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
@@ -72,7 +72,7 @@ const savedRanges = ref([])
 const form = ref({})
 
 const handleResize = () => {
-    isMobile.value = window.innerWidth < 768
+    isPortrait.value = window.innerHeight > window.innerWidth
 }
 
 const clearHighlight = () => {
@@ -89,7 +89,8 @@ const copyHighlight = () => {
     let text = Array.from(highlightedTexts).map(text => text.textContent).join('\n')
     text = text + "\n"
     text = text + "\n" + t('title') + ": " + form.value.title
-    text = text + "\n" + t('viewMarkdown.copiedFrom') + ": " + window.location.href
+    text = text + "\n" + t('viewMarkdown.detail') + ": " + window.location.href
+    text = text + "\n" + t('viewMarkdown.copiedFrom') + ": " + form.value.addr
     text = text + "\n" + t('viewMarkdown.copiedAt') + ": " + new Date().toLocaleString()
     text = text.trim()
 
@@ -248,7 +249,16 @@ const readContent = () => {
     }
 
     try {
-        speechUtterance = new SpeechSynthesisUtterance(markdownContent.value)
+        const selection = window.getSelection()
+        const text = selection.toString().trim()
+        const contentToRead = text
+
+        if (!contentToRead) {
+            ElMessage.warning(t('viewMarkdown.noTextSelected'))
+            return
+        }
+
+        speechUtterance = new SpeechSynthesisUtterance(contentToRead)
         speechUtterance.lang = getLocale()
         
         speechUtterance.onend = () => {
@@ -467,7 +477,7 @@ onBeforeUnmount(() => {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width: 768px) {
+@media (orientation: portrait) {
     .preview-container {
         margin-top: 130px;
     }
