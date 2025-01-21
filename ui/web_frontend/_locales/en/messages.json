@@ -232,6 +232,7 @@
         "wordMeaningInSentence": "Word meaning in sentence",
         "wordTranslation": "Word translation",
         "showAnswer": "Show Answer",
+        "showHint": "Show Hint",
         "learnFinished": "Learn Finished",
         "selectWord": "Select Word",
         "markAsKnown": "Mark as Known",
@@ -244,7 +245,8 @@
         "finish": "Finish",
         "freq": "Frequency",
         "remainToReview": "Remain: {count}",
-        "todayLearn": "Today's Learn"
+        "todayLearn": "Today's Learn",
+        "options": "Options"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",

@@ -3,7 +3,7 @@
         <div class="translate-header">
             <h1>{{ $t('trans.selectWord') }}</h1>
             <div class="translate-counter">
-                {{ selectCount }} / {{ getTotalCount() }}
+                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
         <div class="content word-learning translate-common-style">

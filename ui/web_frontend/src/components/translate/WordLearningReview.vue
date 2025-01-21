@@ -20,7 +20,7 @@
                 {{ $t('trans.noWordsAvailable') }}
             </div>
             <div class="translate-buttons">
-                <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
+                <el-button @click="setHint">{{ $t('trans.showHint') }}</el-button>
                 <el-button @click="markAsLearned">{{ $t('trans.markAsKnown') }}</el-button>
                 <el-button @click="markAsReview">{{ $t('trans.todayLearned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
@@ -46,7 +46,7 @@ export default {
         };
     },
     methods: {
-        toggleTranslation() {
+        setHint() {
             this.showTranslation += 1;
             if (this.showTranslation > 2) {
                 this.showTranslation = 0;
