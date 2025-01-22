@@ -199,9 +199,12 @@ def add_web(dic, use_llm=True, debug=False):
         ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=False, debug=debug)
         ret, ret_emb, detail = save_entry(dic, None, None, debug=debug)
     else:
-        abstract = get_web_abstract(dic['user_id'], dic["addr"])
+        if user.get("web_auto_abstract"):
+            abstract = get_web_abstract(dic['user_id'], dic["addr"])
+        else:
+            abstract = None
         ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=use_llm, debug=debug)
-        if dic["source"] != "bookmark" or user.get("bookmark_save_content"):
+        if user.get("web_save_content"):
             title, content = get_url_content(dic["addr"])
             ret, ret_emb, detail = save_entry(dic, abstract, content)
         else:

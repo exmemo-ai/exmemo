@@ -50,7 +50,8 @@ class UserSettings:
         # xieyan 250122
         self.batch_use_llm = False
         self.bookmark_download_web = False
-        self.bookmark_save_content = False
+        self.web_save_content = False
+        self.web_auto_abstract = False
         self.truncate_content = True
         self.truncate_max_length = DEFAULT_TRUNCATE_MAX_LENGTH
         self.truncate_mode = DEFAULT_TRUNCATE_MODE
@@ -69,7 +70,8 @@ class UserSettings:
             "llm_chat_max_context_count": self.llm_chat_max_context_count,
             "batch_use_llm": self.batch_use_llm,
             "bookmark_download_web": self.bookmark_download_web,
-            "bookmark_save_content": self.bookmark_save_content,
+            "web_save_content": self.web_save_content,
+            "web_auto_abstract": self.web_auto_abstract,
             "truncate_content": self.truncate_content,
             "truncate_max_length": self.truncate_max_length,
             "truncate_mode": self.truncate_mode,
@@ -99,8 +101,11 @@ class UserSettings:
             self.bookmark_download_web = data.get(
                 "bookmark_download_web", self.bookmark_download_web
             )
-            self.bookmark_save_content = data.get(
-                "bookmark_save_content", self.bookmark_save_content
+            self.web_save_content = data.get(
+                "web_save_content", self.web_save_content
+            )
+            self.web_auto_abstract = data.get(
+                "web_auto_abstract", self.web_auto_abstract
             )
             self.truncate_content = data.get("truncate_content", self.truncate_content)
             self.truncate_max_length = data.get(
