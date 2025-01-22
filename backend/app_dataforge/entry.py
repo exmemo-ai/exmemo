@@ -193,7 +193,9 @@ def add_web(dic, use_llm=True, debug=False):
     """
     user = UserManager.get_instance().get_user(dic["user_id"])
     has_error = "error" in dic and dic["error"] is not None
-    if (has_error) or (dic["source"] == "bookmark" and user.get("bookmark_download_web") == False):
+    # if it's not bookmark, need_download to get title...
+    need_download = dic["source"] != "bookmark" or user.get("bookmark_download_web") == True
+    if has_error or not need_download:
         # insert to db directly
         dic['ctype'] = DEFAULT_CATEGORY # xieyan 250122，有了 title & ctype 就不下载了
         ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=False, debug=debug)
