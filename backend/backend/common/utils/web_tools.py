@@ -14,21 +14,43 @@ from django.utils.translation import gettext as _
 import backend.common.files.filecache as filecache
 import backend.common.files.utils_file as utils_file
 from backend.common.llm.llm_hub import llm_query
+from backend.common.user.user import UserManager
+from backend.common.user.user import *
 
 DEFAULT_TITLE = _("unknown_title")
 WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
+"""
 # Move environment variables here
 IS_TRUNCATE = os.getenv("IS_TRUNCATE", "False").lower() == "true"
 TRUNCATE_MODE = os.getenv("TRUNCATE_MODE", "title_content")
 MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "2000"))
+"""
 
-def truncate_content(content, title=None, method="title_content"):
+def truncate_content(content, title, max_length, method):
     """Truncate content based on different methods 
     """
+    # xieyan 250122，这个逻辑不对，我第一段是："正文"两个字，还需要细化
     if not content:
         return content
-        
+    lang = utils_file.check_language(content)
+    if lang == "en":
+        max_length = max_length * 4
+
+    if len(content) <= max_length:
+        return content
+    if method == TRUNCATE_MODE_FIRST_LAST:
+        first_length = int(max_length * 0.8)
+        last_length = max_length - first_length
+        return f"{content[:first_length]}...\n{content[-last_length:]}"
+    elif method == TRUNCATE_MODE_TITLE_CONTENT:
+        if title:
+            content = f"title: {title}\ncontent: {content}"
+        return content[:max_length] + "..."
+    if method == TRUNCATE_MODE_FIRST:
+        return content[:max_length] + "..."
+
+    """ 
     paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
     
     if method == "title_content":
@@ -45,23 +67,22 @@ def truncate_content(content, title=None, method="title_content"):
         if len(paragraphs) >= 2:
             return f"{paragraphs[0]}\n...\n{paragraphs[-1]}"
         return content
-    
     return content
+    """
 
-def get_text_extract(uid, content, is_truncate=IS_TRUNCATE, limit=MAX_CONTENT_LENGTH, truncate_mode=TRUNCATE_MODE, debug=False):
+def get_text_extract(uid, content, title=None, debug=False):
     """
     Extract the main content from the text
     """
+    user = UserManager.get_instance().get_user(uid)
+    is_truncate=user.get("truncate_content")
+    truncate_mode=user.get("truncate_mode")
+    logger.info(f'get_text_extract {is_truncate} {truncate_mode} {len(content)}')
     try:
         if is_truncate:
-            content = truncate_content(content, method=truncate_mode)
-        if len(content) > limit:
-            lang = utils_file.check_language(content)
-            if lang == "en":
-                content = content[: limit * 4]
-            else:
-                content = content[:limit]
-            content = content[:limit]
+            max_length=user.get("truncate_max_length")
+            content = truncate_content(content, title, max_length, truncate_mode)
+            logger.info(f'truncate_content {len(content)}')
         logger.info(f"get_text_extract: {content[:50]}, len {len(content)}")
         if len(content) == 0:
             return _("empty_file_content")
@@ -75,7 +96,7 @@ def get_text_extract(uid, content, is_truncate=IS_TRUNCATE, limit=MAX_CONTENT_LE
         if ret:
             return answer
     except Exception as e:
-        print("failed", e)
+        logger.warning(f"failed {e}")
     return None
 
 
@@ -227,7 +248,7 @@ def get_web_abstract(uid, url):
     title, content = get_url_content(url)
     content_show = content.replace("\n", " ")
     logger.debug(f"get_web_abstract: {title[:20]} {content_show[:20]}")
-    detail = get_text_extract(uid, content, limit=4000, debug=False)
+    detail = get_text_extract(uid, content, title, debug=False)
 
     if detail is not None:
         path = filecache.TmpFileManager.get_instance().get_file_by_key("url", url)

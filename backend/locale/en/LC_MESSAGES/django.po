@@ -74,6 +74,10 @@ msgstr "To be organized"
 msgid "to-do_list"
 msgstr "To-do list"
 
+#: app_dataforge/misc_tools.py:56
+msgid "download_web_not_allowed"
+msgstr "Download web not allowed"
+
 #: app_dataforge/misc_tools.py:51 app_message/message.py:149
 msgid "unsupported_document_type"
 msgstr "Unsupported document type"

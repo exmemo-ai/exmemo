@@ -73,6 +73,10 @@ msgstr "待整理"
 msgid "to-do_list"
 msgstr "待办"
 
+#: app_dataforge/misc_tools.py:56
+msgid "download_web_not_allowed"
+msgstr "不允许下载网页"
+
 #: app_dataforge/misc_tools.py:51 app_message/message.py:149
 msgid "unsupported_document_type"
 msgstr "不支持的文件类型"

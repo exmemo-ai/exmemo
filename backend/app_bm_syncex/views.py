@@ -85,6 +85,7 @@ class BookmarkAPIView(APIView):
         Provide interfaces to support webpage parsing
         """
         debug = True
+        count_success = 0
         args = parse_common_args(request)
         post_data_lis = request.data
         post_data_lis = self.remove_duplicates(post_data_lis)
@@ -94,10 +95,15 @@ class BookmarkAPIView(APIView):
 
         results = []
 
+        # xieyan 250122 下面两行建议去掉，否则将与用户设置冲突
         extract_content = request.META.get('HTTP_X_EXTRACT_CONTENT', 'false').lower() == 'true'
-        os.environ['IS_PARSE_CONTENT'] = str(extract_content)
+        os.environ['IS_PARSE_CONTENT'] = str(extract_content) 
 
-        for item in post_data_lis:
+        if len(post_data_lis) > 1:
+            args['is_batch'] = True # xieyan 250122: 可能在其它地方设置，这里选简单写一下
+
+        for idx, item in enumerate(post_data_lis):           
+            # logger.error(f"{idx} item {item}") # xieyan 250122 debug
             try:
                 args["resource_path"] = f"chrome{item.get('path')}"
                 args["add_date"] = item.get("add_date")
@@ -132,7 +138,9 @@ class BookmarkAPIView(APIView):
                             )
                         else:
                             ret, base_path, info = add_url(url, args, item.get('status'))
-                            results.append(
+                            if ret:
+                                count_success += 1
+                            results.append( # xieyan 250122: 不对的是不是不返回？
                                 {"url": url, "status": "success", "info": info}
                             )
             except json.JSONDecodeError as e:
@@ -143,6 +151,7 @@ class BookmarkAPIView(APIView):
                 results.append(
                     {"url": item.get("url"), "status": "failed", "error": str(e)}
                 )
+        logger.info(f"do_web_bm return {count_success}") # xieyan 250122 debug
         return Response({"status": "success", "results": results})
 
 class BookmarkClickAPIView(APIView):

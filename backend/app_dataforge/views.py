@@ -197,7 +197,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             elif instance.etype == 'web':
                 serializer = self.get_serializer(instance)
                 data = serializer.data
-                _, data['content'] = get_url_content(instance.addr, format='markdown')
+                title, data['content'] = get_url_content(instance.addr, format='markdown')
                 return Response(data)
             elif instance.etype == 'file' or instance.etype == 'note':
                 if instance.path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):

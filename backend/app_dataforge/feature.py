@@ -8,16 +8,15 @@ from backend.common.llm.llm_hub import llm_query, llm_query_json
 from backend.settings import BASE_DATA_DIR
 from .prompt import PROMPT_CLASSIFY, PROMPT_TITLE
 from backend.common.utils.text_tools import get_language_name
-from backend.common.utils.file_tools import convert_to_md
-from backend.common.utils.web_tools import read_md_content, get_web_title, download_file
+from backend.common.utils.web_tools import get_url_content
 from backend.common.utils.text_tools import replace_chinese_punctuation_with_english
 from backend.settings import LANGUAGE_CODE
+from backend.common.files import utils_file
 
 DEFAULT_CATEGORY = _("unclassified")
 DEFAULT_STATUS = "init"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
-TITLE_LENGTH = 20
-TITLE_MAX_LENGTH = 256
+TITLE_MAX_LENGTH = 128
 
 class EntryFeatureTool:
     _instance = None
@@ -97,23 +96,20 @@ class EntryFeatureTool:
                 dic["atype"] = "objective"
         elif dic["etype"] == "web":
             if dic["title"] is None or dic["ctype"] is None:
-                dret, path = download_file(content)
-                if dret:
-                    if dic["title"] is None:
-                        dic["title"] = get_web_title(path)
-                    if dic["ctype"] is None:
-                        ret, md_path = convert_to_md(path)
-                        if ret:
-                            content = read_md_content(md_path)
-                            dic_new, content = self.get_ctype(
-                                dic["user_id"],
-                                content,
-                                dic["etype"],
-                                use_llm=use_llm,
-                                debug=debug,
-                            )
-                            if "ctype" in dic_new:
-                                dic["ctype"] = dic_new["ctype"]
+                #logger.debug(f"get_url_content {dic}")
+                title, web_content = get_url_content(content)
+                if dic["title"] is None:
+                    dic["title"] = title
+                if dic["ctype"] is None:
+                    dic_new, content = self.get_ctype(
+                        dic["user_id"],
+                        web_content,
+                        dic["etype"],
+                        use_llm=use_llm,
+                        debug=debug,
+                    )
+                    if "ctype" in dic_new:
+                        dic["ctype"] = dic_new["ctype"]
             if dic["status"] is None:
                 dic["status"] = "collect"
             if dic["atype"] is None:
@@ -127,12 +123,8 @@ class EntryFeatureTool:
             dic["atype"] = "subjective"
         if dic["title"] is None:
             dic["title"] = content
-        if dic["etype"] == "file" or dic["etype"] == "note":
-            if len(dic["title"]) > TITLE_MAX_LENGTH:
-                dic["title"] = dic["title"][:TITLE_MAX_LENGTH] + "..."
-        else:
-            if len(dic["title"]) > TITLE_LENGTH:
-                dic["title"] = dic["title"][:TITLE_LENGTH] + "..."
+        if len(dic["title"]) > TITLE_MAX_LENGTH:
+            dic["title"] = dic["title"][:TITLE_MAX_LENGTH] + "..."
         return True, dic
 
     def regular_status(self, dic_base, dic_detect):
@@ -167,7 +159,7 @@ class EntryFeatureTool:
                 clist += row["alias"].split(",")
         clist = list(set(clist))
         if debug:
-            print(clist)
+            logger.debug(clist)
         return clist
 
     def get_ctype_by_keyword(self, content, etype, debug=False):
@@ -260,7 +252,7 @@ class EntryFeatureTool:
                     answer = re.sub(r"[^\w\s]", "", answer)
                     return True, answer
         except Exception as e:
-            print("failed", e)
+            logger.warning(f"failed {e}")
         return False, None
 
     def get_type_by_llm(self, user_id, content, etype, debug=False):
@@ -279,8 +271,12 @@ class EntryFeatureTool:
                 f"get_type_by_llm, types {len(ctype_list)}, content {content[:10]}..."
             )
         try:
-            if len(content) > 100:
-                content = content[:100] + "..."
+            lang = utils_file.check_language(content)
+            max_length = 100
+            if lang == "en":
+                max_length = max_length * 4
+            if len(content) > max_length:
+                content = content[:max_length] + "..."
             query = PROMPT_CLASSIFY.format(
                 content=content,
                 ctype_list=",".join(ctype_list),
@@ -315,5 +311,5 @@ class EntryFeatureTool:
             return dic
         except Exception as e:
             traceback.print_exc()
-            print("failed", e)
+            logger.warning(f"failed {e}")
         return {"ctype": DEFAULT_CATEGORY, "atype": None, "status": None}

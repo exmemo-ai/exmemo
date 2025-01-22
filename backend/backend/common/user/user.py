@@ -19,6 +19,12 @@ DEFAULT_CHAT_LLM_PROMPT = _("chat_prompt_default")
 DEFAULT_CHAT_LLM_SHOW_COUNT = 50
 DEFAULT_CHAT_LLM_MEMORY_COUNT = 5
 DEFAULT_CHAT_MAX_CONTEXT_COUNT = 1024
+# xieyan 250122
+TRUNCATE_MODE_FIRST = "first"
+TRUNCATE_MODE_TITLE_CONTENT = "title_content"
+TRUNCATE_MODE_FIRST_LAST = "first_last"
+DEFAULT_TRUNCATE_MODE = TRUNCATE_MODE_FIRST
+DEFAULT_TRUNCATE_MAX_LENGTH = 1024
 
 def convert_units(num):
     if num >= 10**6:
@@ -41,6 +47,13 @@ class UserSettings:
         self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
         self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
         self.llm_chat_max_context_count = DEFAULT_CHAT_MAX_CONTEXT_COUNT
+        # xieyan 250122
+        self.batch_use_llm = False
+        self.bookmark_download_web = False
+        self.bookmark_save_content = False
+        self.truncate_content = True
+        self.truncate_max_length = DEFAULT_TRUNCATE_MAX_LENGTH
+        self.truncate_mode = DEFAULT_TRUNCATE_MODE
 
     def get_json(self):
         return {
@@ -54,6 +67,12 @@ class UserSettings:
             "llm_chat_show_count": self.llm_chat_show_count,
             "llm_chat_memory_count": self.llm_chat_memory_count,
             "llm_chat_max_context_count": self.llm_chat_max_context_count,
+            "batch_use_llm": self.batch_use_llm,
+            "bookmark_download_web": self.bookmark_download_web,
+            "bookmark_save_content": self.bookmark_save_content,
+            "truncate_content": self.truncate_content,
+            "truncate_max_length": self.truncate_max_length,
+            "truncate_mode": self.truncate_mode,
         }
 
     def set_json(self, data):
@@ -76,6 +95,19 @@ class UserSettings:
             self.llm_chat_max_context_count = data.get(
                 "llm_chat_max_context_count", self.llm_chat_max_context_count
             )
+            self.batch_use_llm = data.get("batch_use_llm", self.batch_use_llm)
+            self.bookmark_download_web = data.get(
+                "bookmark_download_web", self.bookmark_download_web
+            )
+            self.bookmark_save_content = data.get(
+                "bookmark_save_content", self.bookmark_save_content
+            )
+            self.truncate_content = data.get("truncate_content", self.truncate_content)
+            self.truncate_max_length = data.get(
+                "truncate_max_length", self.truncate_max_length
+            )
+            self.truncate_mode = data.get("truncate_mode", self.truncate_mode)
+
 
     def set(self, name, value):
         if hasattr(self, name):
