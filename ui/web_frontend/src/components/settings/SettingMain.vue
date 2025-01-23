@@ -12,11 +12,11 @@
                     <el-menu-item index="dialog">
                         <span>{{ $t('dialogModel') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="bookmark">
-                        <span>{{ $t('settings.bookmark') }}</span>
-                    </el-menu-item>
                     <el-menu-item index="extract">
                         <span>{{ $t('settings.extract') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="bookmark">
+                        <span>{{ $t('settings.bookmark') }}</span>
                     </el-menu-item>
                     <el-menu-item index="privilege">
                         <span>{{ $t('privileges') }}</span>

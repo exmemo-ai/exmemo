@@ -270,7 +270,7 @@
     },
     "settings": {
         "bookmark": "Bookmark",
-        "extract": "Extract",
+        "extract": "AI extract",
         "batchSetting": "Batch processing",
         "batchUseLLM": "Allow LLM usage in batch processing",
         "webContent": "Web content",

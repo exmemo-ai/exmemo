@@ -24,6 +24,8 @@ def truncate_content(content, title, max_length, method):
     if not content:
         return content
     lang = utils_file.check_language(content)
+    if isinstance(max_length, str):
+        max_length = int(max_length)
     if lang == "en":
         max_length = max_length * 4
 
@@ -66,6 +68,8 @@ def get_text_extract(uid, content, title=None, debug=False):
         if ret:
             return answer
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         logger.warning(f"failed {e}")
     return None
 

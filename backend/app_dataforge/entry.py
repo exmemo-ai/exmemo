@@ -115,10 +115,11 @@ def add_file(dic, path, use_llm=True):
         content = None
     dic["meta"] = meta_data
 
+    abstract = None
     if (dic['etype'] == 'note' and user.get("note_get_abstract")) or (dic['etype'] == 'file' and user.get("file_get_abstract")):
-        abstract = get_file_abstract(dic["path"], dic["user_id"])
-    else:
-        abstract = None
+        ret, detail = get_file_abstract(path, dic["user_id"])
+        if ret:
+            abstract = detail
 
     return save_entry(dic, abstract, content)
 

@@ -271,7 +271,7 @@
     },
     "settings": {
         "bookmark": "书签",
-        "extract": "提取",
+        "extract": "智能提取",
         "batchSetting": "批量处理",
         "batchUseLLM": "批量处理时允许使用大模型",
         "webContent": "网页内容",
