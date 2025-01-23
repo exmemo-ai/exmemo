@@ -8,133 +8,157 @@ English | [中文简体](./README_cn.md)
 
 ![](./images/img1.png)
 
-ExMemo is a personal knowledge management project designed to centrally record and manage various information, including favorite texts, books, music, videos, web pages, work documents, as well as thoughts and reflections on life. Even specific information like item locations, phone numbers, and addresses can be automatically categorized and found whenever needed. By systematically integrating data, it breaks the limitations of thinking and discovers internal connections.
+ExMemo is a personal knowledge management tool designed to record and manage various types of information, such as favorite texts, web pages, work documents, images, music, videos, and personal reflections. It can also store specific details like item locations, phone numbers, and addresses. By leveraging automated categorization and naming, ExMemo organizes information systematically, helping users broaden their thinking and uncover hidden connections.
 
 ![](./images/img2.png)
 
-The system consists of a database, backend, and multiple frontends. Distributed storage and databases are used to store user files, texts, and corresponding vector data. Data storage can be deployed locally to protect user privacy. The backend provides general interfaces for adding, deleting, modifying, and querying data, and is responsible for invoking large models and processing data. The system supports online large models such as OpenAI, Gemini, Qwen, as well as the offline Ollama model. Multiple frontends, including web services, WeChat bots, Obsidian plugins, and browser extensions, allow users to upload and download data.
+The system consists of a database, backend, and multiple frontend components. Distributed storage and databases store user files, texts, and vector data, with support for local deployment to ensure privacy. The backend provides APIs for CRUD operations, handles large model interactions, and processes data. It supports online models like OpenAI, Deepseek, and Qwen, as well as offline models like Ollama. Frontend options include a web service, a WeChat bot, an Obsidian plugin, and a browser extension, allowing users to upload and download data conveniently.
 
-Additionally, I have added some small tools on top of the data framework, such as calorie calculators, translation, and paper reading assistance. These tools demonstrate the effect of combining personal data with large models and tools. Other developers can also develop their own data-based applications using the backend service.
+ExMemo also integrates practical tools like calorie calculators, translators, reading aids for academic papers, and English learning helpers, demonstrating the synergy of personal data with large models and tools. Developers can use the backend service to create personalized applications based on user data.
 
-## 2 Installation and Operation
+*Data Manager*
 
-The system uses modular management. It is implemented using PgVector database, Python, JavaScript + VUE3, and TypeScript. Due to different environments, the system is split into multiple Docker images. Users only need to edit the docker-compose.yml file to start the required modules.
+![](./images/data_manager.png)
 
-### 2.1 Environment
+*Chat Interface*
 
-Download the source code. Assume all project-related data will be stored in the /exports/exmemo directory.
+![](./images/chat.png)
 
-```shell
-$ mkdir -p /exports/exmemo
-$ cd /exports/exmemo
-$ mkdir code
-$ mkdir data
-$ cd code
-$ git clone https://github.com/exmemo-ai/exmemo.git
-$ git clone https://github.com/zhayujie/chatgpt-on-wechat # if use wechat, download it
-$ cd exmemo
+*View Notes*
+
+![](./images/view.png)
+
+*Bookmark Manager*
+
+![](./images/bookmark.png)
+
+## 2 Installation
+
+The system employs modular management using PgVector databases and languages like Python, JavaScript (VUE3), and TypeScript. It is containerized with multiple Docker images to suit different environments. Users can start required modules via `docker-compose`.
+
+### 2.1 Configuration
+
+Download the source code and assume all project-related data is stored in the `/exports/exmemo` directory.
+
+``` shell
+export EXMEMO_DIR=/exports/exmemo
+mkdir -p $EXMEMO_DIR/code $EXMEMO_DIR/data
+cd $EXMEMO_DIR/code
+git clone https://github.com/exmemo-ai/exmemo.git
+cd exmemo
 ```
 
-Configure the user's personal environment variables according to the env_default format.
+Set personal environment variables based on the format of env_default.
 
-```shell
-$ cp backend/env_default backend/.env
-$ vi backend/.env
+``` shell
+cp backend/env_default backend/.env
+vi backend/.env
 ```
 
-* At least the following parameters need to be set: IP address, LANGUAGE_CODE, and PGSQL_PASSWORD.
-* It is recommended to use OpenAI as the backend model:
-    * If you can connect to OpenAI, set the OpenAI api.
-    * If you cannot connect to OpenAI, for example in China, you can set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek.
+At minimum, configure the following: IP addresses, LANGUAGE_CODE, and PGSQL_PASSWORD.
 
-### 2.2 Configure Plugin
+**Recommended backend model configuration:**
 
-#### 2.2.1 WeChat Plugin
-(Optional)
+* If OpenAI is accessible, set DEFAULT_CHAT_MODEL to gpt-4o and DEFAULT_TOOL_MODEL to gpt-4o-mini.
+* If OpenAI is not accessible (e.g., in China), set DEFAULT_CHAT_* and DEFAULT_TOOL_* to deepseek.
 
-```shell
-$ cd ui/wechat/
-$ . install.sh # Copy plugin to WeChat tool
-$ cd ../../
-```
+### 2.2 Start Services
 
-#### 2.2.2 Obsidian Plugin
-(Optional)
-
-Compile the Obsidian plugin as needed and install it in Obsidian. For details, see:
-https://github.com/exmemo-ai/obsidian-exmemo-client
-
-### 2.3 Start Services
-
-#### 2.3.1 Start in Production Mode
+#### 2.2.1 Start in Production Mode
 
 ```shell
-$ docker-compose --env-file backend/.env --profile production up -d
+docker-compose --env-file backend/.env --profile production up -d
 ```
 
-Please refer to shell/prod.sh.
+Refer to shell/prod.sh for detailed commands.
 
-At this point, open http://ip:8084/ to see the frontend interface. Please register a user before using it.
+Once completed, you can use ExMemo's core features. Access the frontend at http://ip:8084/ and register an account to get started.
 
-#### 2.3.2 Start in Development Mode
-(Optional)
+### 2.3 Upgrades
 
-If you need to debug the frontend and backend code, start in development mode, And manually run the backend Python program.
+During upgrades, rebuild Docker images, restart Docker Compose, and remove old containers to avoid issues. Follow the steps in shell/update.sh.
+
+### 2.4 Notes
+
+* Always update the frontend, backend, plugins, and .env configuration files together to avoid compatibility issues caused by API changes.
+* Building images consumes significant memory. Release resources if running on a limited cloud server.
+* The database password in docker-compose is only applied during database creation. Update .env and modify the database password using SQL statements if needed.
+
+## 3 Additional Configuration
+
+*These configurations are optional and do not affect core functionalities.*
+
+### 3.1 Obsidian Plugin
+
+Install the third-party plugin obsidian-exmemo-client from the Obsidian community. Configure the backend address in the settings to enable note management and synchronization across devices.
+
+Plugin source code: https://github.com/exmemo-ai/obsidian-exmemo-client
+
+### 3.2 Browser Plugin
+
+browser-exmemo-bmsync is a Chrome extension that synchronizes browser bookmarks with ExMemo. Usage guide: https://github.com/exmemo-ai/browser-exmemo-bmsync
+
+### 3.3 WeChat Plugin
+
+Integrate the open-source project chatgpt-on-wechat (COW) to use ExMemo via WeChat, Feishu, or DingTalk. ExMemo acts as a plugin for COW, with source code located in ui/wechat/. Installation steps:
+
+First, download the chatgpt-on-wechat project:
+
+``` shell
+cd $EXMEMO_DIR/code
+git clone https://github.com/zhayujie/chatgpt-on-wechat
+```
+
+Install the plugin:
 
 ```shell
-$ docker-compose --env-file backend/.env --profile development up -d
-$ docker exec -it ebackend_dev bash
-$ cd backend
-$ python manage.py runserver 0.0.0.0:8005
+cd $EXMEMO_DIR/code/exmemo/ui/wechat
+. install.sh # Copy the plugin to the WeChat tool
 ```
 
-Please refer to shell/dev.sh and shell/run.sh.
-
-#### 2.3.3 S3 Storage: Minio
-(Optional)
-
-By default, data is stored in the host machine's directory. If you want to use Minio S3 storage, configure the relevant MINIO items in the .env file. Minio Docker does not start by default. If you want to start the Minio service on the host, do so manually.
+Start the WeChat image:
 
 ```shell
-$ docker-compose -f docker-compose-dev.yml up -d minio
+cd $EXMEMO_DIR/code/exmemo/
+docker-compose --env-file backend/.env --profile production up -d ewechat
 ```
 
-#### 2.3.4 WeChat Login
-(Optional)
-
-If you don't use WeChat, you can skip this step. This is for connecting ExMemo services as a plugin to the chatgpt-on-wechat. For details, see the project: https://github.com/zhayujie/chatgpt-on-wechat
+Check logs:
 
 ```shell
-docker logs kwechat
+$ docker logs ewechat
 ```
 
-Scan the QR code in the logs to log in.
+For debugging, ensure the ExMemo plugin initializes correctly. If it fails, verify that ExMemo is set to true in chatgpt-on-wechat/plugins/plugins.json.
 
-Usage: User A (bot) logs in by scanning the code. Other users can chat with the large model and read/write/search user data through conversations with A (bot). If you are using it for the first time, type "help" to see all the features.
+### 3.4 Start in Development Mode
 
-Debugging: When running the program, check if the ExMemo plugin is loaded and initialized correctly. If it fails to initialize, check whether ExMemo is set to true in the chatgpt-on-wechat/plugins/plugins.json file.
+For backend/frontend code modification and debugging, start in development mode and run the backend Python program manually.
 
-### 2.4 Upgrade
+```shell
+docker-compose --env-file backend/.env --profile development up -d
+docker exec -it ebackend_dev bash
+> cd backend
+> python manage.py runserver 0.0.0.0:8005
+```
 
-After upgrading, rebuild the Docker image and rerun Docker Compose. Remove old containers during restart to avoid unexpected issues. Refer to shell/update.sh for details.
+Refer to shell/dev.sh and shell/run.sh for more details.
 
-*Please upgrade the following simultaneously: Frontend, Backend, Plugins, and the .env file to avoid feature issues from API changes.*
+### 3.5 S3 Storage: Minio
 
-Please refer to shell/update.sh.
+By default, data is stored in the host directory. To use Minio S3 storage, configure Minio options in .env. Minio does not start automatically. To enable Minio on the host, start the service manually:
 
-### 2.5 Notes
+```shell
+docker-compose -f docker-compose-dev.yml up -d minio
+```
 
-Packaging can consume a lot of memory. If cloud server resources are limited, it is recommended to free up some resources.
+## 4 Changelog
 
-The database password set in Docker Compose takes effect only when the database is created. If you need to change the password later, you will need to update it not only in the .env file but also by connecting to the database and using SQL commands to change it.
+View the full changelog: [CHANGELOG](./CHANGELOG.md)
 
-## 3 Changelog
+## 5 License
 
-View the complete update history: [CHANGELOG](./CHANGELOG.md)
-
-## 4 License
-
-This project is licensed under the terms of the GNU Lesser General Public License v3.0. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the GNU Lesser General Public License v3.0. For details, see the [LICENSE](./LICENSE) file.
 
 ## 5 Contributors
 
