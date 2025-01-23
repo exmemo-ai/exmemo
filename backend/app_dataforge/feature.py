@@ -12,6 +12,8 @@ from backend.common.utils.web_tools import get_url_content
 from backend.common.utils.text_tools import replace_chinese_punctuation_with_english
 from backend.settings import LANGUAGE_CODE
 from backend.common.files import utils_file
+from backend.common.user.user import UserManager
+
 
 DEFAULT_CATEGORY = _("unclassified")
 DEFAULT_STATUS = "init"
@@ -39,7 +41,8 @@ class EntryFeatureTool:
             debug=True
         )  # Only manual records may have prefix descriptions
 
-    def parse(self, dic, content, use_llm=True, debug=False):
+    def parse(self, dic, content, use_llm=True, force=False, debug=False):
+        user = UserManager.get_instance().get_user(dic["user_id"])
         # from input params
         if "ctype" not in dic or pd.isnull(dic["ctype"]) or len(dic["ctype"]) == 0:
             dic["ctype"] = None
@@ -71,7 +74,18 @@ class EntryFeatureTool:
                 filename = os.path.basename(content)
                 dic["title"] = os.path.splitext(filename)[0]
             if dic["ctype"] is None:
-                dic["ctype"] = DEFAULT_CATEGORY
+                if user.get("note_get_category") == False and force == False:
+                    dic["ctype"] = DEFAULT_CATEGORY
+                else:
+                    dic_new, content = self.get_ctype(
+                        dic["user_id"],
+                        dic["title"],
+                        dic["etype"],
+                        use_llm=use_llm,
+                        debug=debug,
+                    )
+                    if "ctype" in dic_new:
+                        dic["ctype"] = dic_new["ctype"]
             if dic["status"] is None:
                 dic["status"] = "collect"
             if dic["atype"] is None:
@@ -81,20 +95,26 @@ class EntryFeatureTool:
                 filename = os.path.basename(content)
                 dic["title"] = filename
             if dic["ctype"] is None:
-                dic_new, content = self.get_ctype(
-                    dic["user_id"],
-                    dic["title"],
-                    dic["etype"],
-                    use_llm=use_llm,
-                    debug=debug,
-                )
-                if "ctype" in dic_new:
-                    dic["ctype"] = dic_new["ctype"]
+                if user.get("file_get_category") == False and force == False:
+                    dic["ctype"] = DEFAULT_CATEGORY
+                else:
+                    dic_new, content = self.get_ctype(
+                        dic["user_id"],
+                        dic["title"],
+                        dic["etype"],
+                        use_llm=use_llm,
+                        debug=debug,
+                    )
+                    if "ctype" in dic_new:
+                        dic["ctype"] = dic_new["ctype"]
             if dic["status"] is None:
                 dic["status"] = "collect"
             if dic["atype"] is None:
                 dic["atype"] = "objective"
         elif dic["etype"] == "web":
+            if dic["ctype"] is None:
+                if user.get("web_get_category") == False and force == False:
+                    dic["ctype"] = DEFAULT_CATEGORY
             if dic["title"] is None or dic["ctype"] is None:
                 #logger.debug(f"get_url_content {dic}")
                 title, web_content = get_url_content(content)

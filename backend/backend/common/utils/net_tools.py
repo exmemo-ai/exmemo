@@ -58,6 +58,12 @@ def test_valid_url():
     print(is_valid_url(url1))  # True
     print(is_valid_url(url2))  # False
     print(is_valid_url(url3))  # False
+    
 
-def get_backend_addr():
-    return f"http://{settings.BACKEND_ADDR_OUTER}:{settings.BACKEND_PORT_OUTER}"
+def get_backend_addr(request = None):
+    if request is None:
+        return f"http://{settings.BACKEND_ADDR_OUTER}:{settings.BACKEND_PORT_OUTER}"
+    protocol = 'https' if request.is_secure() else 'http'    
+    host = request.get_host()  # format "hostname:port"
+    return f"{protocol}://{host}"
+

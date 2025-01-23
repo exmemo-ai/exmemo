@@ -15,7 +15,7 @@ from django.utils.translation import gettext as _
 
 from backend.common.files import utils_filemanager, filecache
 from backend.common.utils.text_tools import convert_dic_to_json
-from backend.common.utils.file_tools import is_plain_text, convert_to_md
+from backend.common.utils.file_tools import is_plain_text, convert_to_md, get_file_abstract
 from backend.common.utils.regular_tools import regular_keyword
 from backend.common.utils.web_tools import get_url_content, get_web_abstract
 from backend.common.parser import converter, utils_md
@@ -36,6 +36,13 @@ def add_data(dic, path=None, use_llm=True):
     if dic.get("is_batch", False) and user.get("batch_use_llm") == False:
         use_llm = False
     #logger.debug(f'use_llm {use_llm} {dic.get("is_batch", False)} {user.get("batch_use_llm") == False}')
+    """
+    path is the temporary file path to be uploaded
+    For the uploaded file, addr is the relative path for storage, under xxx/files/
+    For ob notes, addr is the relative path for storage, under xxx/note/
+    For web pages, addr is the URL
+    For records, addr is the timestamp
+    """
 
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
@@ -53,20 +60,7 @@ def add_chat(dic, use_llm=True):
     del dic["abstract"]
     return save_entry(dic, abstract, dic["raw"])
 
-def add_file(dic, path, use_llm=True):
-    mtime_datetime = timezone.now().astimezone(pytz.UTC)
-    # logger.debug(f'save to serv {path}, {mtime_datetime}')
-    """
-    path is the temporary file path to be uploaded
-    For the uploaded file, addr is the relative path for storage, under xxx/files/
-    For ob notes, addr is the relative path for storage, under xxx/note/
-    For web pages, addr is the URL
-    For records, addr is the timestamp
-"""
-
-    filename = os.path.basename(dic["addr"])
-    ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
-
+def get_file_content_by_path(path, user):
     meta_data = {}
     content = None
     ret_convert = False
@@ -76,7 +70,6 @@ def add_file(dic, path, use_llm=True):
         ret_convert = True
     elif converter.is_support(path):
         md_path = filecache.get_tmpfile(".md")
-        user = UserManager.get_instance().get_user(dic["user_id"])
         ret_convert, md_path = convert_to_md(
             path, md_path, force=True, use_ocr=user.privilege.b_ocr
         )
@@ -87,6 +80,15 @@ def add_file(dic, path, use_llm=True):
         content = parser.content
     if content is None and is_plain_text(path):
         content = open(path, "r").read()
+    return meta_data, content
+
+def add_file(dic, path, use_llm=True):
+    mtime_datetime = timezone.now().astimezone(pytz.UTC)
+    # logger.debug(f'save to serv {path}, {mtime_datetime}')
+
+    user = UserManager.get_instance().get_user(dic["user_id"])
+    filename = os.path.basename(dic["addr"])
+    ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
 
     if dic["etype"] == "note":
         dic["path"] = os.path.join(REL_DIR_NOTES, dic["addr"])
@@ -100,9 +102,25 @@ def add_file(dic, path, use_llm=True):
 
     if "md5" not in dic or dic["md5"] is None:
         dic["md5"] = utils_md.get_file_md5(path)
-    dic["meta"] = meta_data
     dic["created_time"] = mtime_datetime
-    return save_entry(dic, None, content)
+
+    if (dic['etype'] == 'note' and user.get("note_save_content")) or (dic['etype'] == 'file' and user.get("file_save_content")):
+        meta_data, content = get_file_content_by_path(path, user)
+    elif converter.is_markdown(path):
+        parser = MarkdownParser(path)
+        meta_data = convert_dic_to_json(parser.fm)
+        content = None
+    else:
+        meta_data = {}
+        content = None
+    dic["meta"] = meta_data
+
+    if (dic['etype'] == 'note' and user.get("note_get_abstract")) or (dic['etype'] == 'file' and user.get("file_get_abstract")):
+        abstract = get_file_abstract(dic["path"], dic["user_id"])
+    else:
+        abstract = None
+
+    return save_entry(dic, abstract, content)
 
 
 def filter_model_fields(data):
@@ -197,11 +215,11 @@ def add_web(dic, use_llm=True, debug=False):
     need_download = dic["source"] != "bookmark" or user.get("bookmark_download_web") == True
     if has_error or not need_download:
         # insert to db directly
-        dic['ctype'] = DEFAULT_CATEGORY # xieyan 250122，有了 title & ctype 就不下载了
+        dic['ctype'] = DEFAULT_CATEGORY # if it has ctype, will not download web content
         ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=False, debug=debug)
         ret, ret_emb, detail = save_entry(dic, None, None, debug=debug)
     else:
-        if user.get("web_auto_abstract"):
+        if user.get("web_get_abstract"):
             abstract = get_web_abstract(dic['user_id'], dic["addr"])
         else:
             abstract = None

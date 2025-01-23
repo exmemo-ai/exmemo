@@ -254,7 +254,7 @@ class FileAgent(BaseAgent):
             return _("params_error")
         sdata = context_variables["sdata"]
         data = sdata.get_cache("file")
-        ret, detail = get_file_abstract(data, sdata.user_id)
+        ret, detail = get_file_abstract(data[0], sdata.user_id)
         if ret:
             return detail
         return _("please_upload_or_share_a_file_first")
@@ -266,7 +266,7 @@ class FileAgent(BaseAgent):
             return _("params_error")
         sdata = context_variables["sdata"]
         data = sdata.get_cache("file")
-        ret, path, title, content = get_file_content(data)
+        ret, path, title, content = get_file_content(data[0])
         if ret:
             sdata.set_cache("tts_file_title", title)
             return run_tts(title, content, sdata.user_id)

@@ -218,7 +218,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                             serializer = self.get_serializer(instance)
                             data = serializer.data
                             url = rel_path.replace(' ', '%20')
-                            data['content'] = f"![]({os.path.join(get_backend_addr(), 'static', url)})"
+                            data['content'] = f"![]({os.path.join(get_backend_addr(request), 'static', url)})"
                             return Response(data)
                     raise Http404
                 elif instance.path.lower().endswith('.md'): # markdown
@@ -366,10 +366,10 @@ class EntryAPIView(APIView):
         ret = False
         if dic["etype"] in ["record", "chat"]:
             raw = request.GET.get("raw", request.POST.get("raw", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw)
+            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw, force=True)
         elif dic["etype"] in ["web", "note", "file"]:
             addr = request.GET.get("addr", request.POST.get("addr", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, addr)
+            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, addr, force=True)
         if ret:
             return do_result(True, {"dic": dic_new})
         else:

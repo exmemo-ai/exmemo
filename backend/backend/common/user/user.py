@@ -5,6 +5,7 @@ from loguru import logger
 from django.contrib.auth.models import User as UserSystem
 from django.utils.translation import gettext as _
 from .models import StoreUser
+from dataclasses import dataclass, asdict, field
 
 USER_LEVEL_GUEST = -1
 USER_LEVEL_NORMAL = 0
@@ -19,7 +20,6 @@ DEFAULT_CHAT_LLM_PROMPT = _("chat_prompt_default")
 DEFAULT_CHAT_LLM_SHOW_COUNT = 50
 DEFAULT_CHAT_LLM_MEMORY_COUNT = 5
 DEFAULT_CHAT_MAX_CONTEXT_COUNT = 1024
-# xieyan 250122
 TRUNCATE_MODE_FIRST = "first"
 TRUNCATE_MODE_TITLE_CONTENT = "title_content"
 TRUNCATE_MODE_FIRST_LAST = "first_last"
@@ -35,84 +35,43 @@ def convert_units(num):
         return str(num)
 
 
+@dataclass
 class UserSettings:
-    def __init__(self):
-        self.tts_engine = "edge"
-        self.tts_language = "mix"
-        self.tts_speed = "1.0"
-        self.tts_voice = "caicai"
-        self.llm_chat_model = {}
-        self.llm_tool_model = {}
-        self.llm_chat_prompt = DEFAULT_CHAT_LLM_PROMPT
-        self.llm_chat_show_count = DEFAULT_CHAT_LLM_SHOW_COUNT
-        self.llm_chat_memory_count = DEFAULT_CHAT_LLM_MEMORY_COUNT
-        self.llm_chat_max_context_count = DEFAULT_CHAT_MAX_CONTEXT_COUNT
-        # xieyan 250122
-        self.batch_use_llm = False
-        self.bookmark_download_web = False
-        self.web_save_content = False
-        self.web_auto_abstract = False
-        self.truncate_content = True
-        self.truncate_max_length = DEFAULT_TRUNCATE_MAX_LENGTH
-        self.truncate_mode = DEFAULT_TRUNCATE_MODE
+    tts_engine: str = "edge"
+    tts_language: str = "mix"
+    tts_speed: str = "1.0"
+    tts_voice: str = "caicai"
+    llm_chat_model: dict = field(default_factory=dict)
+    llm_tool_model: dict = field(default_factory=dict)
+    llm_chat_prompt: str = DEFAULT_CHAT_LLM_PROMPT
+    llm_chat_show_count: int = DEFAULT_CHAT_LLM_SHOW_COUNT
+    llm_chat_memory_count: int = DEFAULT_CHAT_LLM_MEMORY_COUNT
+    llm_chat_max_context_count: int = DEFAULT_CHAT_MAX_CONTEXT_COUNT
+    batch_use_llm: bool = False
+    bookmark_download_web: bool = False
+    web_save_content: bool = False
+    web_get_category: bool = True
+    web_get_abstract: bool = False
+    file_save_content: bool = False
+    file_get_category: bool = True
+    file_get_abstract: bool = False
+    note_save_content: bool = True
+    note_get_category: bool = True
+    note_get_abstract: bool = False
+    truncate_content: bool = True
+    truncate_max_length: int = DEFAULT_TRUNCATE_MAX_LENGTH
+    truncate_mode: str = DEFAULT_TRUNCATE_MODE
 
     def get_json(self):
-        return {
-            "tts_engine": self.tts_engine,
-            "tts_language": self.tts_language,
-            "tts_speed": self.tts_speed,
-            "tts_voice": self.tts_voice,
-            "llm_chat_model": self.llm_chat_model,
-            "llm_tool_model": self.llm_tool_model,
-            "llm_chat_prompt": self.llm_chat_prompt,
-            "llm_chat_show_count": self.llm_chat_show_count,
-            "llm_chat_memory_count": self.llm_chat_memory_count,
-            "llm_chat_max_context_count": self.llm_chat_max_context_count,
-            "batch_use_llm": self.batch_use_llm,
-            "bookmark_download_web": self.bookmark_download_web,
-            "web_save_content": self.web_save_content,
-            "web_auto_abstract": self.web_auto_abstract,
-            "truncate_content": self.truncate_content,
-            "truncate_max_length": self.truncate_max_length,
-            "truncate_mode": self.truncate_mode,
-        }
+        return asdict(self)
 
     def set_json(self, data):
         if isinstance(data, str):
             data = json.loads(data)
         if isinstance(data, dict):
-            self.tts_engine = data.get("tts_engine", self.tts_engine)
-            self.tts_language = data.get("tts_language", self.tts_language)
-            self.tts_speed = data.get("tts_speed", self.tts_speed)
-            self.tts_voice = data.get("tts_voice", "caicai")
-            self.llm_chat_model = data.get("llm_chat_model", self.llm_chat_model)
-            self.llm_tool_model = data.get("llm_tool_model", self.llm_tool_model)
-            self.llm_chat_prompt = data.get("llm_chat_prompt", self.llm_chat_prompt)
-            self.llm_chat_show_count = data.get(
-                "llm_chat_show_count", self.llm_chat_show_count
-            )
-            self.llm_chat_memory_count = data.get(
-                "llm_chat_memory_count", self.llm_chat_memory_count
-            )
-            self.llm_chat_max_context_count = data.get(
-                "llm_chat_max_context_count", self.llm_chat_max_context_count
-            )
-            self.batch_use_llm = data.get("batch_use_llm", self.batch_use_llm)
-            self.bookmark_download_web = data.get(
-                "bookmark_download_web", self.bookmark_download_web
-            )
-            self.web_save_content = data.get(
-                "web_save_content", self.web_save_content
-            )
-            self.web_auto_abstract = data.get(
-                "web_auto_abstract", self.web_auto_abstract
-            )
-            self.truncate_content = data.get("truncate_content", self.truncate_content)
-            self.truncate_max_length = data.get(
-                "truncate_max_length", self.truncate_max_length
-            )
-            self.truncate_mode = data.get("truncate_mode", self.truncate_mode)
-
+            for key, value in data.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
 
     def set(self, name, value):
         if hasattr(self, name):
@@ -270,6 +229,16 @@ class UserOperate:
         ret = self.settings.set(name, value)
         if save and ret:
             self.save()
+
+    def set_multiple(self, settings_dict, save=True):
+        updated = False
+        for name, value in settings_dict.items():
+            if self.settings.set(name, value):
+                updated = True
+                
+        if save and updated:
+            self.save()
+        return updated
 
     def get(self, name, default_value=None):
         return self.settings.get(name, default_value)

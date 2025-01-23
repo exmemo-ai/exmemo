@@ -20,17 +20,7 @@ from backend.common.user.user import *
 DEFAULT_TITLE = _("unknown_title")
 WEB_URL = f"http://{os.getenv('FRONTEND_ADDR_OUTER', '')}:{os.getenv('FRONTEND_PORT_OUTER', '8084')}"
 
-"""
-# Move environment variables here
-IS_TRUNCATE = os.getenv("IS_TRUNCATE", "False").lower() == "true"
-TRUNCATE_MODE = os.getenv("TRUNCATE_MODE", "title_content")
-MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "2000"))
-"""
-
 def truncate_content(content, title, max_length, method):
-    """Truncate content based on different methods 
-    """
-    # xieyan 250122，这个逻辑不对，我第一段是："正文"两个字，还需要细化
     if not content:
         return content
     lang = utils_file.check_language(content)
@@ -49,26 +39,6 @@ def truncate_content(content, title, max_length, method):
         return content[:max_length] + "..."
     if method == TRUNCATE_MODE_FIRST:
         return content[:max_length] + "..."
-
-    """ 
-    paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
-    
-    if method == "title_content":
-        if title:
-            return f"title: {title}\ncontent: {content}"
-        return content
-        
-    elif method == "first_para":
-        if paragraphs:
-            return paragraphs[0]
-        return content
-            
-    elif method == "first_last":
-        if len(paragraphs) >= 2:
-            return f"{paragraphs[0]}\n...\n{paragraphs[-1]}"
-        return content
-    return content
-    """
 
 def get_text_extract(uid, content, title=None, debug=False):
     """
