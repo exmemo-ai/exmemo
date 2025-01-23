@@ -151,7 +151,7 @@ class BookmarkAPIView(APIView):
                 results.append(
                     {"url": item.get("url"), "status": "failed", "error": str(e)}
                 )
-        logger.info(f"do_web_bm return {count_success}") # xieyan 250122 debug
+        logger.info(f"do_web_bm return {count_success}")
         return Response({"status": "success", "results": results})
 
 class BookmarkClickAPIView(APIView):

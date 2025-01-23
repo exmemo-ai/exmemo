@@ -58,13 +58,15 @@ class ResourceManager:
                 user_id=uid, updated_time__gte=day
             )
             
-        if rtype == "llm":
-            data = data.filter(method__startswith='default')
+        if rtype == "default_llm":
+            data = data.filter(rtype='llm', method__startswith='default')
+        elif rtype == "other_llm":
+            data = data.filter(rtype='llm').exclude(method__startswith='default')
+        elif rtype is not None:
+            data = data.filter(rtype=rtype)
             
         if method is not None:
             data = data.filter(method=method)
-        if rtype is not None:
-            data = data.filter(rtype=rtype)
             
         data = data.all()
         count = 0
@@ -73,7 +75,11 @@ class ResourceManager:
         return count
 
     def get_usage_summary(self, uid):
-        MODEL_MAP = {"tts": _("speech_synthesis"), "llm": _("language_model")}
+        MODEL_MAP = {
+            "tts": _("speech_synthesis"), 
+            "default_llm": _("default_language_model"),
+            "other_llm": _("custom_language_model")
+        }
         TYPE_MAP = {
             "day": _("current_day"),
             "week": _("current_week"),

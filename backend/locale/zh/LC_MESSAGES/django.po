@@ -1184,9 +1184,13 @@ msgstr "没有找到合成音频"
 msgid "speech_synthesis"
 msgstr "语音合成"
 
-#: backend/common/user/resource.py:76
-msgid "language_model"
-msgstr "语言模型"
+#: backend/common/user/resource.py:80
+msgid "default_language_model"
+msgstr "默认语言模型"
+
+#: backend/common/user/resource.py:81
+msgid "custom_language_model"
+msgstr "自定义语言模型"
 
 #: backend/common/user/resource.py:78
 msgid "current_day"
@@ -1241,7 +1245,7 @@ msgstr "翻译书籍:"
 #: backend/common/user/user.py:180
 #, python-brace-format
 msgid "model_rate_limit_colon__{limit_llm_day_formatted}_tokens/day"
-msgstr "默认LLM限制：{limit_llm_day_formatted} 个token/天"
+msgstr "默认语言模型限制：{limit_llm_day_formatted} 个token/天"
 
 #: backend/common/user/user.py:185
 #, python-brace-format
