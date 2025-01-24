@@ -92,7 +92,9 @@ class BookmarkAPIView(APIView):
                             if ret:
                                 count_success += 1
                             if not ret:
-                                print(ret, base_path, info)
+                                results.append(
+                                    {"url": url, "status": "failed", "error": info}
+                                )
                             results.append(
                                 {"url": url, "status": "success", "info": info}
                             )
