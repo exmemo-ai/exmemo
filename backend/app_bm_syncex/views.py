@@ -91,13 +91,13 @@ class BookmarkAPIView(APIView):
                             ret, base_path, info = add_url(url, args, item.get('status'))
                             if ret:
                                 count_success += 1
-                            if not ret:
+                                results.append(
+                                    {"url": url, "status": "success", "info": info}
+                                )
+                            else:
                                 results.append(
                                     {"url": url, "status": "failed", "error": info}
                                 )
-                            results.append(
-                                {"url": url, "status": "success", "info": info}
-                            )
             except json.JSONDecodeError as e:
                 results.append(
                     {"url": item.get("url"), "status": "failed", "error": str(e)}
