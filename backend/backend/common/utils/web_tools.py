@@ -209,6 +209,65 @@ def download_file(url, debug=False):
         logger.debug(f"parse_url: failed {url}, code {r.status_code}")
         return False, f"error {r.status_code}"
 
+# wanglei 0124
+def test_url_valid(url, timeout=5):
+    """
+    Test if a URL is valid and accessible
+    Args:
+        url (str): URL to test
+        timeout (int): Timeout in seconds
+    Returns:
+        tuple: (error_type, error_message) - (None if valid, error type if invalid)
+    """
+    # logger.debug(f"Testing URL validity: {url}")
+    
+    # Special protocols that are assumed to be valid
+    VALID_SPECIAL_PROTOCOLS = [
+        'chrome://',
+        'edge://',
+        'brave://',
+        'file://',
+        'about:',
+        'firefox:',
+        'opera:'
+    ]
+    
+    if any(url.lower().startswith(protocol.lower()) for protocol in VALID_SPECIAL_PROTOCOLS):
+        return 'html', "Special protocol URL is assumed valid"
+
+    if not url.lower().startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; V2005A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/123.0.6312.118 Mobile Safari/537.36 VivoBrowser/20.8.0.0"
+    }
+    
+    try:
+        r = requests.get(url, headers=headers, timeout=timeout, stream=True)
+        r.close()  # not download content
+        
+        if r.status_code == 200:
+            content_type = r.headers.get("Content-Type", "").lower()
+            if any(mime in content_type for mime in [
+                "text/html", 
+                "application/xhtml+xml", 
+                "application/xml",
+                "application/pdf"
+            ]):
+                return "html", "Url is valid"
+            return "error", f"Unsupported content type: {content_type}"
+        else:
+            return "error", f"HTTP error: {r.status_code}"
+            
+    except requests.exceptions.Timeout:
+        return "error", "Connection timeout"
+    except requests.exceptions.SSLError:
+        return "error", "SSL certificate error"
+    except requests.exceptions.ConnectionError:
+        return "error", "Connection failed"
+    except Exception as e:
+        return "error", f"Error: {str(e)}"
+
 
 def get_web_abstract(uid, url):
     """

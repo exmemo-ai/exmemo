@@ -34,7 +34,7 @@
                 class="bookmark-title"
                 :title="bookmark.title"
               >
-                {{ bookmark.title.length > 20 ? bookmark.title.substring(0, 20) + '...' : bookmark.title }}
+                {{ bookmark.displayTitle || formatTitle(bookmark.title) }}
               </a>
             </div>
             <div class="action-buttons">
@@ -68,6 +68,7 @@
       v-model="customizeDialogVisible"
       width="800px"
       class="customize-dialog"
+      @close="handleCustomizeDialogClose"
     >
       <div class="customize-container">
         <!-- left search panel -->
@@ -115,8 +116,9 @@
                 type="danger" 
                 size="small" 
                 @click="removeFromSelected(bookmark)"
-                icon="Delete"
-              />
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
             </div>
           </div>
         </div>
@@ -146,7 +148,7 @@
 
 <script>
 import Sortable from 'sortablejs'
-import { Histogram, Search, Edit } from '@element-plus/icons-vue'
+import { Histogram, Search, Edit, Delete } from '@element-plus/icons-vue'  // 添加 Delete 图标导入
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
 
@@ -156,6 +158,7 @@ export default {
     Histogram,
     Search,
     Edit,
+    Delete,
   },
   data() {
     return {
@@ -175,6 +178,27 @@ export default {
         id: null,
         title: '',
       },
+      maxTitleLength: 20, // 默认长度
+    }
+  },
+  computed: {
+    titleMaxLength() {
+      const width = window.innerWidth
+      const zoom = window.devicePixelRatio || 1
+      const baseLength = width < 768 ? 15 : 
+                        width < 1024 ? 20 :
+                        width < 1440 ? 25 : 30
+      
+      return Math.floor(baseLength / zoom)
+    },
+    
+    formatTitle() {
+      return (title) => {
+        if (!title) return ''
+        return title.length > this.titleMaxLength ? 
+          title.substring(0, this.titleMaxLength) + '...' : 
+          title
+      }
     }
   },
   methods: {
@@ -387,9 +411,7 @@ export default {
         if (response.data.code === 200) {
           this.selectedBookmarks = response.data.data.map(bookmark => ({
             ...bookmark,
-            title: bookmark.title.length > 20 ? 
-              bookmark.title.substring(0, 20) + '...' : 
-              bookmark.title
+            title: this.formatTitle(bookmark.title)
           }))
         }
       } catch (error) {
@@ -443,12 +465,10 @@ export default {
           const selectedIds = new Set(this.selectedBookmarks.map(b => b.id))
           
           this.filteredBookmarks = response.data.data
-            .filter(bookmark => !selectedIds.has(bookmark.id)) // 排除已选择的书签
+            .filter(bookmark => !selectedIds.has(bookmark.id))
             .map(bookmark => ({
               ...bookmark,
-              title: bookmark.title.length > 20 ? 
-                bookmark.title.substring(0, 20) + '...' : 
-                bookmark.title
+              title: this.formatTitle(bookmark.title)
             }))
 
           console.log(`Found ${this.filteredBookmarks.length} matching bookmarks`)
@@ -620,6 +640,37 @@ export default {
         parseBackendError(this, error)
       }
     },
+
+    async handleCustomizeDialogClose() {
+      localStorage.removeItem('bookmarkOrder')
+      await this.fetchBookmarks()
+    },
+    handleResize() {
+      this.maxTitleLength = this.titleMaxLength
+      this.refreshAllTitles()
+    },
+
+    refreshAllTitles() {
+      // 刷新所有书签标题
+      if (this.sortedBookmarks) {
+        this.sortedBookmarks = this.sortedBookmarks.map(bookmark => ({
+          ...bookmark,
+          displayTitle: this.formatTitle(bookmark.title)
+        }))
+      }
+      if (this.selectedBookmarks) {
+        this.selectedBookmarks = this.selectedBookmarks.map(bookmark => ({
+          ...bookmark,
+          displayTitle: this.formatTitle(bookmark.title)
+        }))
+      }
+      if (this.filteredBookmarks) {
+        this.filteredBookmarks = this.filteredBookmarks.map(bookmark => ({
+          ...bookmark,
+          displayTitle: this.formatTitle(bookmark.title)
+        }))
+      }
+    }
   },
   
   async mounted() {
@@ -628,6 +679,15 @@ export default {
     this.$nextTick(() => {
       this.initSortable()
     })
+
+    window.addEventListener('resize', this.handleResize)
+    window.matchMedia('(resolution)').addListener(this.handleResize)
+    this.handleResize()
+  },
+  
+  beforeUnmount() {
+    window.removeEventListener('resize', this.handleResize)
+    window.matchMedia('(resolution)').removeListener(this.handleResize)
   },
   
   updated() {
@@ -701,6 +761,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: calc(14px / var(--zoom-ratio, 1));
 }
 
 .bookmark-url {
@@ -737,7 +798,7 @@ export default {
   margin-bottom: 15px;
 }
 
-.search-results,
+search-results,
 .selected-list {
   flex: 1;
   overflow-y: auto;

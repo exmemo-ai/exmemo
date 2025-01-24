@@ -331,7 +331,8 @@
     "confirmDeleteFolder": "Are you sure you want to delete this folder and all its bookmarks?",
     "deleteFolderSuccess": "Folder deleted successfully",
     "bookmarkTitle": "Title",
-    "selectFolder": "Select folder",
-    "customOrder": "Custom order",
-    "foundResults": "Results"
+    "selectFolder": "Select Folder",
+    "customOrder": "Custom Order",
+    "foundResults": "Results",
+    "webSource": "Data sources include all read-later pages uploaded through the 'Bookmark Sync' browser extension, WeChat client, or web frontend."
 }

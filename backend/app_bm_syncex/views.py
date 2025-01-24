@@ -13,8 +13,6 @@ from app_dataforge.entry import check_entry_exist
 from app_dataforge.views import delete_entry
 from app_dataforge.misc_tools import add_url
 from app_dataforge.models import StoreEntry
-# from .config_manager import BookmarkConfigManager
-# from .config_service import config_service
 
 SOURCE = "bookmark"
 
@@ -24,45 +22,6 @@ class BookmarkAPIView(APIView):
     """
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    
-    # def _update_llm_env(self, config):
-    #     """
-    #     Update LLM environment variables
-    #     """
-    #     if config.get('llm_model'):
-    #         os.environ['DEFAULT_CHAT_LLM'] = config['llm_model']
-    #         os.environ['DEFAULT_TOOL_LLM'] = config['llm_model']
-            
-    #     if config.get('llm_api_key'):
-    #         os.environ['OPENAI_API_KEY'] = config['llm_api_key']
-            
-    #     if config.get('llm_base_url'):
-    #         os.environ['OPENAI_API_BASE'] = config['llm_base_url']
-
-    # def _get_parsing_config(self, username):
-    #     """
-    #     Get parsing configuration from user settings
-    #     """
-    #     config = config_service.get_config(username)
-    #     parsing_args = {
-    #         "parse_content": config['extract_content'],
-    #         "truncate_content": config['truncate_content'],
-    #         "max_content_length": config['max_content_length'],
-    #         "truncate_mode": config['truncate_mode'],
-    #         "use_llm": False
-    #     }
-        
-    #     # check config and update LLM environment
-    #     if (config['extract_content'] and 
-    #         config['llm_api_key'] and 
-    #         config['llm_base_url'] and 
-    #         config['llm_model']):
-    #         parsing_args["use_llm"] = True
-            
-    #     return parsing_args
 
     def post(self, request):
         return self.do_web_bm(request)
@@ -89,21 +48,13 @@ class BookmarkAPIView(APIView):
         args = parse_common_args(request)
         post_data_lis = request.data
         post_data_lis = self.remove_duplicates(post_data_lis)
-        if debug:
-            print(f"before remove duplicates: {len(request.data)}")
-            print(f"after remove duplicates: {len(post_data_lis)}")
 
         results = []
 
-        # xieyan 250122 下面两行建议去掉，否则将与用户设置冲突
-        extract_content = request.META.get('HTTP_X_EXTRACT_CONTENT', 'false').lower() == 'true'
-        os.environ['IS_PARSE_CONTENT'] = str(extract_content) 
+        # check if the request is_batch
+        args['is_batch'] = bool(post_data_lis[0].get('is_batch', False)) if post_data_lis else False
 
-        if len(post_data_lis) > 1:
-            args['is_batch'] = True # xieyan 250122: 可能在其它地方设置，这里选简单写一下
-
-        for idx, item in enumerate(post_data_lis):           
-            # logger.error(f"{idx} item {item}") # xieyan 250122 debug
+        for idx, item in enumerate(post_data_lis):
             try:
                 args["resource_path"] = f"chrome{item.get('path')}"
                 args["add_date"] = item.get("add_date")
@@ -111,6 +62,7 @@ class BookmarkAPIView(APIView):
                 args['status'] = item.get('status')
                 args["source"] = SOURCE
                 args["error"] = None
+                args["detail"] = None
                 action = item.get("action")
                 
                 url = item.get("url")
@@ -140,7 +92,9 @@ class BookmarkAPIView(APIView):
                             ret, base_path, info = add_url(url, args, item.get('status'))
                             if ret:
                                 count_success += 1
-                            results.append( # xieyan 250122: 不对的是不是不返回？
+                            if not ret:
+                                print(ret, base_path, info)
+                            results.append(
                                 {"url": url, "status": "success", "info": info}
                             )
             except json.JSONDecodeError as e:
