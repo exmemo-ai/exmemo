@@ -335,5 +335,6 @@
     "bookmarkTitle": "标题",
     "selectFolder": "选择文件夹",
     "customOrder": "用户指定",
-    "foundResults": "结果"
+    "foundResults": "结果",
+    "webSource": "数据来源包括所有通过“书签同步”浏览器扩展、微信端或前端上传的待读网页。"
 }
