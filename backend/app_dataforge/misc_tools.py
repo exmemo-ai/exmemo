@@ -35,7 +35,7 @@ def create_dic(url, args, status):
         dic["path"] = args.get("resource_path")  # path outer, use edit
         dic["source"] = args.get("source")
 
-        meta = {"error": args.get("error"), "detail": args.get("detail")}
+        meta = {"error": args.get("error")}
         meta.update({
             "is_batch": args.get("is_batch"), # wanglei 0124,is_batch 放在了 meta 里
             # path inner
@@ -60,7 +60,6 @@ def add_url(url, args, status):
         wtype, detail = test_url_valid(url)
     else:
         wtype, detail = get_web_type(url)
-
     # logger.info(f"test_url_valid: {wtype}, {detail}")
 
     """

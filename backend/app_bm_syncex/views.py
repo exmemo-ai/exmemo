@@ -62,7 +62,6 @@ class BookmarkAPIView(APIView):
                 args['status'] = item.get('status')
                 args["source"] = SOURCE
                 args["error"] = None
-                args["detail"] = None
                 action = item.get("action")
                 
                 url = item.get("url")
