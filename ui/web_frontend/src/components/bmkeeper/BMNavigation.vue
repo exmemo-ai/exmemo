@@ -178,7 +178,7 @@ export default {
         id: null,
         title: '',
       },
-      maxTitleLength: 20, // 默认长度
+      maxTitleLength: 40, 
     }
   },
   computed: {
@@ -186,8 +186,8 @@ export default {
       const width = window.innerWidth
       const zoom = window.devicePixelRatio || 1
       const baseLength = width < 768 ? 15 : 
-                        width < 1024 ? 20 :
-                        width < 1440 ? 25 : 30
+                        width < 1024 ? 30 :
+                        width < 1440 ? 30 : 40
       
       return Math.floor(baseLength / zoom)
     },
@@ -651,7 +651,6 @@ export default {
     },
 
     refreshAllTitles() {
-      // 刷新所有书签标题
       if (this.sortedBookmarks) {
         this.sortedBookmarks = this.sortedBookmarks.map(bookmark => ({
           ...bookmark,
@@ -854,12 +853,15 @@ search-results,
 }
 
 .edit-button {
-  opacity: 0;
-  transition: opacity 0.2s;
   padding: 4px;
 }
 
-.bookmark-card:hover .edit-button {
+.click-count {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bookmark-card:hover .click-count {
   opacity: 1;
 }
 
