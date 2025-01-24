@@ -32,10 +32,6 @@ REL_DIR_NOTES = "notes"
 # get PARSE_CONTENT from backend env settings
 
 def add_data(dic, path=None, use_llm=True):
-    user = UserManager.get_instance().get_user(dic["user_id"])
-    if dic.get("is_batch", False) and user.get("batch_use_llm") == False:
-        use_llm = False
-    #logger.debug(f'use_llm {use_llm} {dic.get("is_batch", False)} {user.get("batch_use_llm") == False}')
     """
     path is the temporary file path to be uploaded
     For the uploaded file, addr is the relative path for storage, under xxx/files/
@@ -43,6 +39,9 @@ def add_data(dic, path=None, use_llm=True):
     For web pages, addr is the URL
     For records, addr is the timestamp
     """
+    user = UserManager.get_instance().get_user(dic["user_id"])
+    if dic.get("is_batch", False) and user.get("batch_use_llm") == False:
+        use_llm = False
 
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
@@ -211,7 +210,7 @@ def add_web(dic, use_llm=True, debug=False):
     This only handles plain web pages, does not consider files
     """
     user = UserManager.get_instance().get_user(dic["user_id"])
-    has_error = "error" in dic and dic["error"] is not None
+    has_error = "error" in dic['meta'] and dic['meta']["error"] is not None
     # if it's not bookmark, need_download to get title...
     need_download = dic["source"] != "bookmark" or user.get("bookmark_download_web") == True
     if has_error or not need_download:

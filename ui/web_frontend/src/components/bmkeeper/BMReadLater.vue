@@ -1,5 +1,6 @@
 <template>
   <div class="section">
+    <div class="web-source">{{ $t('webSource') }}</div>
     <div class="bookmark-list">
       <el-card v-for="bookmark in mergedBookmarks" :key="bookmark.groupId" class="bookmark-card">
         <div class="link-container">
@@ -714,5 +715,11 @@ export default {
 
 .folder-item:hover {
   background-color: var(--el-color-primary-light-9);
+}
+
+.web-source {
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+  margin-bottom: 16px;
 }
 </style>

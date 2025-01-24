@@ -41,6 +41,23 @@ class EntryFeatureTool:
             debug=True
         )  # Only manual records may have prefix descriptions
 
+    def get_base_path(self, path, title):
+        if title in path:
+            base_path = path.split(title)[0].rstrip('/')
+            return base_path
+        return path
+
+    def update_bookmark_paths(self, dic, title_copy, new_title, base_path):
+        new_path = f"{base_path}/{new_title}"
+        dic.update({
+            "path": new_path,
+            "meta": {
+                **dic.get("meta", {}),
+                "update_path": new_path,
+                "resource_path": new_path
+            }
+        })
+
     def parse(self, dic, content, use_llm=True, force=False, debug=False):
         user = UserManager.get_instance().get_user(dic["user_id"])
         # from input params
@@ -144,7 +161,13 @@ class EntryFeatureTool:
         if dic["title"] is None:
             dic["title"] = content
         if len(dic["title"]) > TITLE_MAX_LENGTH:
-            dic["title"] = dic["title"][:TITLE_MAX_LENGTH] + "..."
+            title_copy = dic["title"]
+            new_title = dic["title"][:TITLE_MAX_LENGTH] + "..."
+            dic["title"] = new_title
+            # Update path, add wanglei
+            if dic['source'] == 'bookmark':
+                base_path = self.get_base_path(dic["path"], title_copy)
+                self.update_bookmark_paths(dic, title_copy, new_title, base_path)
         return True, dic
 
     def regular_status(self, dic_base, dic_detect):
