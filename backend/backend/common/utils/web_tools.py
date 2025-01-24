@@ -209,7 +209,6 @@ def download_file(url, debug=False):
         logger.debug(f"parse_url: failed {url}, code {r.status_code}")
         return False, f"error {r.status_code}"
 
-# wanglei 0124
 def test_url_valid(url, timeout=5):
     """
     Test if a URL is valid and accessible

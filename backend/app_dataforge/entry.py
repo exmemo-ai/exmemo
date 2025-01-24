@@ -40,7 +40,7 @@ def add_data(dic, path=None, use_llm=True):
     For records, addr is the timestamp
     """
     user = UserManager.get_instance().get_user(dic["user_id"])
-    if dic['meta'].get("is_batch", False) and user.get("batch_use_llm") == False:
+    if dic.get("is_batch", False) and user.get("batch_use_llm") == False:
         use_llm = False
 
     if dic["etype"] == "file" or dic["etype"] == "note":
@@ -210,7 +210,7 @@ def add_web(dic, use_llm=True, debug=False):
     This only handles plain web pages, does not consider files
     """
     user = UserManager.get_instance().get_user(dic["user_id"])
-    has_error = "error" in dic['meta'] and dic['meta']["error"] is not None # wanglei 0124 放在meta里
+    has_error = "error" in dic['meta'] and dic['meta']["error"] is not None
     # if it's not bookmark, need_download to get title...
     need_download = dic["source"] != "bookmark" or user.get("bookmark_download_web") == True
     if has_error or not need_download:

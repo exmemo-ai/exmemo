@@ -34,10 +34,10 @@ def create_dic(url, args, status):
         dic["title"] = args.get("title")
         dic["path"] = args.get("resource_path")  # path outer, use edit
         dic["source"] = args.get("source")
+        dic["is_batch"] = args.get("is_batch")
 
         meta = {"error": args.get("error")}
         meta.update({
-            "is_batch": args.get("is_batch"), # wanglei 0124,is_batch 放在了 meta 里
             # path inner
             "update_path": args.get("resource_path"),
             "resource_path": args.get("resource_path"),
@@ -55,7 +55,6 @@ def create_dic(url, args, status):
 
 def add_url(url, args, status):
     user = UserManager.get_instance().get_user(args["user_id"])
-    # wanglei 0124 error内容测试url连接是否有效
     if args["source"] == "bookmark" and user.get("bookmark_download_web") == False:
         wtype, detail = test_url_valid(url)
     else:
