@@ -61,16 +61,6 @@ def add_url(url, args, status):
         wtype, detail = get_web_type(url)
     # logger.info(f"test_url_valid: {wtype}, {detail}")
 
-    """
-    user = UserManager.get_instance().get_user(args["user_id"])
-    if args["source"] == "bookmark" and user.get("bookmark_download_web") == False:
-        wtype = "error"
-        detail = _("download_web_not_allowed")
-    else:
-        wtype, detail = get_web_type(url)
-    """
-    
-
     if wtype in ["html", "error"]:
         dic = create_dic(url, args, status)
         if wtype == "error":
