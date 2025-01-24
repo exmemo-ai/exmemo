@@ -15,27 +15,35 @@ from django.utils.translation import gettext as _
 
 from backend.common.files import utils_filemanager, filecache
 from backend.common.utils.text_tools import convert_dic_to_json
-from backend.common.utils.file_tools import is_plain_text, convert_to_md
+from backend.common.utils.file_tools import is_plain_text, convert_to_md, get_file_abstract
 from backend.common.utils.regular_tools import regular_keyword
-from backend.common.utils.web_tools import read_md_content, download_file, get_text_extract
+from backend.common.utils.web_tools import get_url_content, get_web_abstract
 from backend.common.parser import converter, utils_md
 from backend.common.parser.md_parser import MarkdownParser
 from backend.common.llm.llm_hub import EmbeddingTools
 from backend.common.user.user import UserManager
 
 from .models import StoreEntry
-from .feature import EntryFeatureTool
+from .feature import EntryFeatureTool, DEFAULT_CATEGORY
 
 DESC_LENGTH = 50
 REL_DIR_FILES = "files"
 REL_DIR_NOTES = "notes"
 # get PARSE_CONTENT from backend env settings
-PARSE_CONTENT = os.getenv("IS_PARSE_CONTENT", "True").lower() == "true"
 
 def add_data(dic, path=None, use_llm=True):
-    IS_TRUNCATE  = os.getenv("IS_TRUNCATE", "False").lower() == "true"
-    if not PARSE_CONTENT and not IS_TRUNCATE and dic.get('resource_path') is not None: 
+    user = UserManager.get_instance().get_user(dic["user_id"])
+    if dic.get("is_batch", False) and user.get("batch_use_llm") == False:
         use_llm = False
+    #logger.debug(f'use_llm {use_llm} {dic.get("is_batch", False)} {user.get("batch_use_llm") == False}')
+    """
+    path is the temporary file path to be uploaded
+    For the uploaded file, addr is the relative path for storage, under xxx/files/
+    For ob notes, addr is the relative path for storage, under xxx/note/
+    For web pages, addr is the URL
+    For records, addr is the timestamp
+    """
+
     if dic["etype"] == "file" or dic["etype"] == "note":
         return add_file(dic, path, use_llm=use_llm)
     elif dic["etype"] == "record":
@@ -52,20 +60,7 @@ def add_chat(dic, use_llm=True):
     del dic["abstract"]
     return save_entry(dic, abstract, dic["raw"])
 
-def add_file(dic, path, use_llm=True):
-    mtime_datetime = timezone.now().astimezone(pytz.UTC)
-    # logger.debug(f'save to serv {path}, {mtime_datetime}')
-    """
-    path is the temporary file path to be uploaded
-    For the uploaded file, addr is the relative path for storage, under xxx/files/
-    For ob notes, addr is the relative path for storage, under xxx/note/
-    For web pages, addr is the URL
-    For records, addr is the timestamp
-"""
-
-    filename = os.path.basename(dic["addr"])
-    ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
-
+def get_file_content_by_path(path, user):
     meta_data = {}
     content = None
     ret_convert = False
@@ -75,7 +70,6 @@ def add_file(dic, path, use_llm=True):
         ret_convert = True
     elif converter.is_support(path):
         md_path = filecache.get_tmpfile(".md")
-        user = UserManager.get_instance().get_user(dic["user_id"])
         ret_convert, md_path = convert_to_md(
             path, md_path, force=True, use_ocr=user.privilege.b_ocr
         )
@@ -86,6 +80,15 @@ def add_file(dic, path, use_llm=True):
         content = parser.content
     if content is None and is_plain_text(path):
         content = open(path, "r").read()
+    return meta_data, content
+
+def add_file(dic, path, use_llm=True):
+    mtime_datetime = timezone.now().astimezone(pytz.UTC)
+    # logger.debug(f'save to serv {path}, {mtime_datetime}')
+
+    user = UserManager.get_instance().get_user(dic["user_id"])
+    filename = os.path.basename(dic["addr"])
+    ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
 
     if dic["etype"] == "note":
         dic["path"] = os.path.join(REL_DIR_NOTES, dic["addr"])
@@ -99,9 +102,43 @@ def add_file(dic, path, use_llm=True):
 
     if "md5" not in dic or dic["md5"] is None:
         dic["md5"] = utils_md.get_file_md5(path)
-    dic["meta"] = meta_data
     dic["created_time"] = mtime_datetime
-    return save_entry(dic, None, content)
+
+    if (dic['etype'] == 'note' and user.get("note_save_content")) or (dic['etype'] == 'file' and user.get("file_save_content")):
+        meta_data, content = get_file_content_by_path(path, user)
+    elif converter.is_markdown(path):
+        parser = MarkdownParser(path)
+        meta_data = convert_dic_to_json(parser.fm)
+        content = None
+    else:
+        meta_data = {}
+        content = None
+    dic["meta"] = meta_data
+
+    abstract = None
+    if (dic['etype'] == 'note' and user.get("note_get_abstract")) or (dic['etype'] == 'file' and user.get("file_get_abstract")):
+        ret, detail = get_file_abstract(path, dic["user_id"])
+        if ret:
+            abstract = detail
+
+    return save_entry(dic, abstract, content)
+
+
+def filter_model_fields(data):
+    model_fields = {}
+    for f in StoreEntry._meta.get_fields():
+        max_length = getattr(f, 'max_length', None)
+        model_fields[f.name] = max_length
+
+    filtered_data = {}
+    for k, v in data.items():
+        if k in model_fields:
+            if isinstance(v, str) and model_fields[k] is not None:
+                if len(v) > model_fields[k]:
+                    logger.warning(f"Field '{k}' value too long ({len(v)}), truncating to {model_fields[k]} chars")
+                    v = v[:model_fields[k]]
+            filtered_data[k] = v         
+    return filtered_data
 
 
 def save_entry(dic, abstract, content, debug=False):
@@ -115,7 +152,8 @@ def save_entry(dic, abstract, content, debug=False):
         dic["raw"] = abstract
         if "created_time" not in dic:
             dic["created_time"] = timezone.now().astimezone(pytz.UTC)
-        StoreEntry.objects.create(**dic)
+        filtered_dic = filter_model_fields(dic)
+        StoreEntry.objects.create(**filtered_dic)
         if content:
             all_splits = EmbeddingTools.split(content)
             if len(all_splits) == 0:
@@ -137,7 +175,8 @@ def save_entry(dic, abstract, content, debug=False):
                     dic["embeddings"] = emb
                 elif "embeddings" in dic:
                     dic.pop("embeddings")
-                StoreEntry.objects.create(**dic)
+                filtered_dic = filter_model_fields(dic)
+                StoreEntry.objects.create(**filtered_dic)
             logger.info(f'save blocks {idx}')
         return True, ret_emb, _("add_success")
     except Exception as e:
@@ -166,8 +205,32 @@ def add_record(dic, use_llm=True):
     return ret, ret_emb, detail
 
 
-def process_ret(ret, dic):
-    detail = ""
+def add_web(dic, use_llm=True, debug=False):
+    """
+    Download the file from the URL, parse the file, and store the data from the file into the database;
+    This only handles plain web pages, does not consider files
+    """
+    user = UserManager.get_instance().get_user(dic["user_id"])
+    has_error = "error" in dic and dic["error"] is not None
+    # if it's not bookmark, need_download to get title...
+    need_download = dic["source"] != "bookmark" or user.get("bookmark_download_web") == True
+    if has_error or not need_download:
+        # insert to db directly
+        dic['ctype'] = DEFAULT_CATEGORY # if it has ctype, will not download web content
+        ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=False, debug=debug)
+        ret, ret_emb, detail = save_entry(dic, None, None, debug=debug)
+    else:
+        if user.get("web_get_abstract"):
+            abstract = get_web_abstract(dic['user_id'], dic["addr"])
+        else:
+            abstract = None
+        ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=use_llm, debug=debug)
+        if user.get("web_save_content"):
+            title, content = get_url_content(dic["addr"])
+            ret, ret_emb, detail = save_entry(dic, abstract, content)
+        else:
+            ret, ret_emb, detail = save_entry(dic, abstract, None)
+
     if ret:
         if "ctype" in dic and dic["ctype"] is not None:
             if "status" in dic and dic["status"] == "todo":
@@ -179,139 +242,8 @@ def process_ret(ret, dic):
         if dic.get("meta", {}).get("error"):
             detail = _("storage_successful_comma__found_url_exception_error_colon__{error}").format(
                 error=dic["meta"]["error"]
-            )
-    return ret, detail
-
-
-def process_metadata(dic):
-    """Metadata processing and configuration extraction"""
-    meta = {"error": dic.pop("error", None)}
-    if "resource_path" in dic:
-        meta.update({
-            "update_path":dic['resource_path'],
-            "resource_path": dic.pop("resource_path"),
-            "visit_history": dic.pop("visit_history", [dic["add_date"]]),
-            "add_date": dic.pop("add_date"),
-            # from bm navigate
-            "clicks":dic.pop("clicks", 1),
-            "weight": dic.pop("weight", 0.0),
-            "custom_order": dic.pop("custom_order", 0),
-        })
-        
-    dic["meta"] = meta
-    return dic
-
-def handle_resource_path(
-    dic, use_llm=True, debug=False
-):
-    dic = process_metadata(dic)
-    
-    ret, parsed_dic = EntryFeatureTool.get_instance().parse(
-        dic, dic["addr"], use_llm=use_llm
-    )
-    
-    if PARSE_CONTENT:
-        return process_and_save_entry(
-            dic, 
-            use_llm=use_llm,
-            debug=debug
-        )
-        
-    if ret:
-        ret, ret_emb, detail = save_entry(parsed_dic, None, None) 
-        ret, detail = process_ret(ret, dic)
-        return ret, ret_emb, detail
-
-
-def process_downloaded_file(dic, debug=False):
-    """
-    The downloaded file will extract the parsing information
-    """
-    dret, path = download_file(dic["addr"])
-    if dret:
-        try:
-            logger.debug(f'add_web: {dic["addr"]} {path}')
-            ret, md_path = convert_to_md(path)
-
-            if ret:
-                info = filecache.TmpFileManager.get_instance().get_file_info(path)
-                if (
-                    info is not None
-                    and "abstract" in info
-                    and len(info["abstract"]) > 0
-                ):
-                    abstract = info["abstract"]
-                else:
-                    abstract = None
-                content = read_md_content(md_path) 
-                if abstract is None:
-                    abstract = get_text_extract(dic["user_id"], content, debug=debug)
-                if debug:
-                    if abstract is not None:
-                        logger.info(f"abstract {len(abstract)}")
-                logger.info(f"content {len(content)}")
-                parser = MarkdownParser(md_path)
-                info = parser.fm
-                return info, abstract, content
-        except Exception as e:
-            logger.warning(f"parse_file: {path} failed {e}")
-            traceback.print_exc()
-        return False, True, _("run_failed")
-    else:
-        logger.debug(f'parse_url: failed {dic["addr"]}')
-        return False, True, f"parse_url: failed"
-
-
-def process_and_save_entry(dic, use_llm=True, debug=False):
-    """Process and save web page data"""
-    
-    temp_dic = dic.copy()
-    
-    info, abstract, content = process_downloaded_file(temp_dic, debug=debug)
-    if info == _("run_failed"):
-        return False, True, _("run_failed")
-        
-    if "meta" not in dic:
-        dic["meta"] = info
-    else:
-        dic["meta"].update(info)
-        
-    ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=use_llm)
-    
-    ret, ret_emb, detail = save_entry(dic, abstract, content)
-    if ret:
-        ret, detail = process_ret(ret, dic)
+            )        
     return ret, ret_emb, detail
-
-
-def add_web(dic, use_llm=True, debug=False):
-    """
-    Download the file from the URL, parse the file, and store the data from the file into the database;
-    This only handles plain web pages, does not consider files
-    """
-    if "error" in dic and dic["error"] is not None:
-        if "resource_path" in dic:
-            dic = process_metadata(dic)
-        if "error" in dic:
-            del dic["error"]
-        ret, ret_emb, detail = save_entry(dic, None, None)
-        if ret:
-            ret, detail = process_ret(ret, dic)
-        return ret, ret_emb, detail
-    if "resource_path" in dic:
-        return handle_resource_path(
-            dic, use_llm=use_llm
-        )
-    if PARSE_CONTENT:
-        return process_and_save_entry(dic, use_llm, debug)
-    else:
-        ret, dic = EntryFeatureTool.get_instance().parse(
-            dic, dic["addr"], use_llm=use_llm
-        )
-        ret, ret_emb, detail = save_entry(dic, None, None)
-        if ret:
-            ret, detail = process_ret(ret, dic)
-        return ret, ret_emb, detail
 
 
 def delete_entry(uid, filelist):

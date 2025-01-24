@@ -20,7 +20,7 @@
                 {{ $t('trans.noWordsAvailable') }}
             </div>
             <div class="translate-buttons">
-                <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
+                <el-button @click="setHint">{{ $t('trans.showHint') }}</el-button>
                 <el-button @click="markAsLearned">{{ $t('trans.markAsKnown') }}</el-button>
                 <el-button @click="markAsReview">{{ $t('trans.todayLearned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getExamples } from './WordLearningSupport';
 
 export default {
     data() {
@@ -46,7 +46,7 @@ export default {
         };
     },
     methods: {
-        toggleTranslation() {
+        setHint() {
             this.showTranslation += 1;
             if (this.showTranslation > 2) {
                 this.showTranslation = 0;
@@ -89,7 +89,7 @@ export default {
             });
             return showList
         },
-        nextWord() {
+        async nextWord() {
             if (this.getShowListLength() === 0) {
                 this.save(true);
                 return;
@@ -97,10 +97,10 @@ export default {
             const showList = this.getShowList();
             this.currentIndex = (this.currentIndex + 1) % showList.length;
             this.showTranslation = 0
-            this.updateWordDisplay();
+            await this.updateWordDisplay();
             //this.save(false);
         },
-        updateWordDisplay() {
+        async updateWordDisplay() {
             const showList = this.getShowList();
             if (this.currentIndex < showList.length) {
                 const item = showList[this.currentIndex]
@@ -109,7 +109,11 @@ export default {
                 if ("examples" in item.info && item.info.examples.length > 0) {
                     this.sentence = item.info.examples[0].sentence;
                 } else {
-                    this.sentence = '';
+                    const data = await getExamples(item.word);
+                    if (data && 'examples' in data && data.word === item.word && data.examples.length > 0) {
+                        this.sentence = data.examples[0].sentence;
+                        item.info.examples = data.examples;
+                    }
                 }
                 this.updateCount();
             }
@@ -138,7 +142,7 @@ export default {
             this.wordList = [...this.wordList].sort((a, b) => {
                 return new Date(b.updated_time) - new Date(a.updated_time);
             });
-            this.updateWordDisplay();
+            await this.updateWordDisplay();
         },     
     },
     mounted() {

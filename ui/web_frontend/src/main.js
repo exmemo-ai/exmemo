@@ -44,7 +44,7 @@ export function getLocale() {
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: DataManager },
+    { path: '/', component: ChatManager },
     { path: '/data', component: DataManager },
     { path: '/view_markdown', component: ViewMarkdown },
     { path: '/chat', component: ChatManager },

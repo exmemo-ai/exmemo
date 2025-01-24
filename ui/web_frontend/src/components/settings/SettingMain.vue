@@ -12,6 +12,12 @@
                     <el-menu-item index="dialog">
                         <span>{{ $t('dialogModel') }}</span>
                     </el-menu-item>
+                    <el-menu-item index="extract">
+                        <span>{{ $t('settings.extract') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="bookmark">
+                        <span>{{ $t('settings.bookmark') }}</span>
+                    </el-menu-item>
                     <el-menu-item index="privilege">
                         <span>{{ $t('privileges') }}</span>
                     </el-menu-item>
@@ -25,6 +31,14 @@
 
                     <div v-show="currentSection === 'dialog'" class="section-content">
                         <setting-l-l-m ref="llmSettings" />
+                    </div>
+
+                    <div v-show="currentSection === 'bookmark'" class="section-content">
+                        <setting-bookmark ref="bookmarkSettings" />
+                    </div>
+
+                    <div v-show="currentSection === 'extract'" class="section-content">
+                        <setting-extract ref="extractSettings" />
                     </div>
 
                     <div v-show="currentSection === 'privilege'" class="section-content">
@@ -56,12 +70,16 @@ import { useI18n } from 'vue-i18n';
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
+import SettingBookmark from './SettingBookmark.vue'
+import SettingExtract from './SettingExtract.vue'
 
 export default {
     components: {
         AppNavbar,
         SettingTTS,
-        SettingLLM
+        SettingLLM,
+        SettingBookmark,
+        SettingExtract
     },
     setup() {
         const { t } = useI18n();
@@ -98,6 +116,8 @@ export default {
                         engine_list: res.data.engine_list
                     });
                     this.$refs.llmSettings.updateSettings(res.data);
+                    this.$refs.bookmarkSettings.updateSettings(res.data);
+                    this.$refs.extractSettings.updateSettings(res.data.setting);
                 }
             }).catch((err) => {
                 parseBackendError(this, err);
@@ -143,6 +163,8 @@ export default {
             console.log(this.engine_value, this.language_value, this.speed_value);
             const ttsSettings = this.$refs.ttsSettings.getSettings();
             const llmSettings = this.$refs.llmSettings.getSettings();
+            const bookmarkSettings = this.$refs.bookmarkSettings.getSettings();
+            const extractSettings = this.$refs.extractSettings.getSettings();
             const formData = new FormData();
             formData.append('rtype', 'save');
             formData.append('tts_engine', ttsSettings.tts_engine);
@@ -155,6 +177,10 @@ export default {
             formData.append('llm_chat_show_count', llmSettings.llm_chat_show_count);
             formData.append('llm_chat_max_context_count', llmSettings.llm_chat_max_context_count);
             formData.append('llm_chat_memory_count', llmSettings.llm_chat_memory_count);
+            formData.append('bookmark_download_web', bookmarkSettings.bookmark_download_web);
+            Object.entries(extractSettings).forEach(([key, value]) => {
+                formData.append(key, value);
+            });
             axios.post(getURL() + 'api/setting/', formData).then((res) => {
                 console.log(res);
                 console.log(res.data);

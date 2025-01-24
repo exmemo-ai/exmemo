@@ -138,44 +138,51 @@ class SettingAPIView(APIView):
         return do_result(True, info)
 
     def save_settings(self, request, user):
-        engine_name = request.GET.get(
-            "tts_engine", request.POST.get("tts_engine", "xunfei")
-        )
-        voice_name = request.GET.get(
-            "tts_voice", request.POST.get("tts_voice", "default")
-        )
-        language_name = request.GET.get(
-            "tts_language", request.POST.get("tts_language", "mix")
-        )
-        logger.debug(f"language_name {language_name}")
-        speed_name = request.GET.get("tts_speed", request.POST.get("tts_speed", "1.0"))
-        llm_chat_model = request.GET.get(
-            "llm_chat_model", request.POST.get("llm_chat_model", "{}")
-        )
-        if llm_chat_model.startswith("{") and llm_chat_model.endswith("}"):
-            llm_chat_model = json.loads(llm_chat_model)
-        llm_tool_model = request.GET.get(
-            "llm_tool_model", request.POST.get("llm_tool_model", "{}")
-        )
-        if llm_tool_model.startswith("{") and llm_tool_model.endswith("}"):
-            llm_tool_model = json.loads(llm_tool_model)
-        llm_chat_prompt = request.GET.get("llm_chat_prompt", request.POST.get("llm_chat_prompt", DEFAULT_CHAT_LLM_PROMPT))
-        llm_chat_show_count = request.GET.get("llm_chat_show_count", request.POST.get("llm_chat_show_count", DEFAULT_CHAT_LLM_SHOW_COUNT))
-        llm_chat_max_context_count = request.GET.get("llm_chat_max_context_count", request.POST.get("llm_chat_max_context_count", DEFAULT_CHAT_MAX_CONTEXT_COUNT))
-        llm_chat_memory_count = request.GET.get("llm_chat_memory_count", request.POST.get("llm_chat_memory_count", DEFAULT_CHAT_LLM_MEMORY_COUNT))
-        user.set("tts_engine", engine_name, save=False)
-        user.set("tts_voice", voice_name, save=False)
-        user.set("tts_language", language_name, save=False)
-        user.set("tts_speed", speed_name, save=False)
-        user.set("llm_chat_model", llm_chat_model, save=False)
-        user.set("llm_tool_model", llm_tool_model, save=False)
-        user.set("llm_chat_prompt", llm_chat_prompt, save=False)
-        user.set("llm_chat_show_count", llm_chat_show_count, save=False)
-        user.set("llm_chat_max_context_count", llm_chat_max_context_count, save=False)
-        user.set("llm_chat_memory_count", llm_chat_memory_count, save=False)
-        user.save()
-        info = _("settings_were_applied_successfully")
-        return do_result(True, info)
+        settings = {}
+        req_params = {**request.GET.dict(), **request.POST.dict()}
+        
+        basic_settings = [
+            'tts_engine', 'tts_voice', 'tts_language', 'tts_speed',
+            'llm_chat_prompt', 'llm_chat_show_count',
+            'llm_chat_max_context_count', 'llm_chat_memory_count',
+            'truncate_max_length', 'truncate_mode'
+        ]
+        
+        boolean_settings = [
+            'batch_use_llm', 'bookmark_download_web', 
+            'web_save_content', 'web_get_category', 'web_get_abstract',
+            'file_save_content', 'file_get_category', 'file_get_abstract',
+            'note_save_content', 'note_get_category', 'note_get_abstract',
+            'truncate_content'
+        ]
+
+        # basic format
+        for key in basic_settings:
+            if key in req_params:
+                settings[key] = req_params[key]
+        
+        # boolean format
+        for key in boolean_settings:
+            if key in req_params:
+                value = req_params[key]
+                if isinstance(value, str):
+                    settings[key] = value.lower() in ('true', '1', 'yes', 'on')
+                else:
+                    settings[key] = bool(value)
+                
+        # json format
+        for model_key in ['llm_chat_model', 'llm_tool_model']:
+            if model_key in req_params:
+                value = req_params[model_key]
+                if value.startswith('{') and value.endswith('}'):
+                    try:
+                        settings[model_key] = json.loads(value)
+                    except json.JSONDecodeError:
+                        logger.warning(f"Invalid JSON for {model_key}")
+
+        if settings:
+            user.set_multiple(settings)
+        return do_result(True, _("settings_were_applied_successfully"))
 
     def reset_settings(self, request, user):
         user.reset_setting()

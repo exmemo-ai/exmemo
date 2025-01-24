@@ -60,3 +60,21 @@ export async function realUpdate(wordList) {
         });
     }
 }
+
+export async function getExamples(word) {
+    let func = 'api/translate/learn';
+    setDefaultAuthHeader();
+    const formData = new FormData();
+    formData.append('rtype', 'get_sentence');
+    formData.append('word', word);
+    
+    return axios.post(getURL() + func, formData)
+        .then((res) => {
+            console.log('Response data:', res.data);
+            return res.data;
+        })
+        .catch((err) => {
+            console.error('Error fetching examples:', err);
+            throw err;
+        });
+}

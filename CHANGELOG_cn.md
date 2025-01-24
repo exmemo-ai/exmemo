@@ -51,6 +51,7 @@
 - 书签来源字段调整（web_chrome_bm → bookmark）
 - 修改书签删除逻辑，改为伪删除
 - 书签编辑后，更新的路径分别存储在 mata 和外部 path 中
+- 修改 `docker-compose.yml`, 去掉自动启动微信相关服务
 
 ### 3.3 Fixed
 

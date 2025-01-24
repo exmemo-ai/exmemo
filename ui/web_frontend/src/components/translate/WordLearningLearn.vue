@@ -37,9 +37,7 @@
 
 <script>
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
-import axios from 'axios';
-import { getURL, setDefaultAuthHeader } from '@/components/support/conn';
-import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getExamples } from './WordLearningSupport';
 import { getLocale } from '@/main.js'
 
 export default {
@@ -117,27 +115,20 @@ export default {
                 this.transStrInSentence = '';
                 if ('examples' in this.wordList[this.currentIndex].info) {
                     const examples = this.wordList[this.currentIndex].info.examples;
-                    if (examples.length > 0) {
+                    if (examples.length > 0 && 'sentence' in examples[0]) {
                         this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
+                        this.updateCount();
+                        return;
                     }
-                } else {
-                    let func = 'api/translate/learn';
-                    setDefaultAuthHeader();
-                    const formData = new FormData();
-                    formData.append('rtype', 'get_sentence');
-                    formData.append('word', this.wordList[this.currentIndex].word);
-                    await axios.post(getURL() + func, formData).then((res) => {
-                        if ('examples' in res.data) {
-                            this.wordList[this.currentIndex].info.examples = res.data.examples;
-                            if (this.wordList[this.currentIndex].info.examples.length > 0) {
-                                this.updateExample(this.wordList[this.currentIndex].info.examples[Math.floor(Math.random() * this.wordList[this.currentIndex].info.examples.length)]);
-                            }
-                        }
-                    }).catch((err) => {
-                        console.error(err);
-                    });
                 }
-                this.updateCount();
+                const data = await getExamples(this.wordList[this.currentIndex].word);
+                if (data && 'examples' in data && data.word === this.wordList[this.currentIndex].word) {
+                    this.wordList[this.currentIndex].info.examples = data.examples;
+                    if (this.wordList[this.currentIndex].info.examples.length > 0) {
+                        this.updateExample(this.wordList[this.currentIndex].info.examples[Math.floor(Math.random() * this.wordList[this.currentIndex].info.examples.length)]);
+                        this.updateCount();
+                    }
+                }
             }
         },
         updateExample(data) {
@@ -150,7 +141,7 @@ export default {
         },
         async fetch() {
             this.wordList = await fetchWordList('learning');
-            this.updateWordDisplay();
+            await this.updateWordDisplay();
         },
         speakWord() {
             if (this.isSpeaking) {

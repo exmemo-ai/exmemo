@@ -10,7 +10,7 @@ from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, D
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
 from app_dataforge.models import StoreEntry
-from app_dataforge.feature import TITLE_LENGTH, DEFAULT_CATEGORY, EntryFeatureTool
+from app_dataforge.feature import TITLE_MAX_LENGTH, DEFAULT_CATEGORY, EntryFeatureTool
 from backend.common.files.utils_file import count_tokens
 
 MAX_SESSIONS = 1000
@@ -111,8 +111,8 @@ class Session:
                 title = info_title
             else:
                 title = self.get_name()
-            if len(title) > TITLE_LENGTH:
-                title = title[:TITLE_LENGTH] + "..."
+            if len(title) > TITLE_MAX_LENGTH:
+                title = title[:TITLE_MAX_LENGTH] + "..."
         else:
             title = self.get_name()
             ctype = obj.get("ctype")

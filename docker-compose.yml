@@ -115,7 +115,7 @@ services:
         cd /opt/chatgpt-on-wechat/
         python app.py
     #profiles: if you don't want to start this service, you can open these
-    #  - ewechat   
+      - ewechat   
   eminio:
     image: bitnami/minio:2024.3.3
     container_name: eminio

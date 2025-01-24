@@ -252,25 +252,34 @@ class TranslateLearnView(APIView):
             stored_example = StoreTranslateWord.objects.get(word=word)
             examples = stored_example.examples
             logger.error(f'examples {examples}')
-            if isinstance(examples, list) and len(examples) > 0:
-                return do_result(True, {"examples": examples})
-        except StoreTranslateWord.DoesNotExist:
-            ret, example = translate.generate_sentence_example(args['user_id'], word)
+            if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
+                return do_result(True, {"word": word, "examples": examples})
+            ret, example = self.make_sentence(args['user_id'], word)
             if ret:
-                ret, en_regular, freq, translation = translate.TranslateWord.get_instance().get_word_info(word, True, args['user_id'], False)
-                StoreTranslateWord.objects.create(
-                    user_id=args['user_id'],
-                    word=word,
-                    regular = en_regular,
-                    freq=freq,
-                    translation=translation,
-                    examples=[example],
-                    created_time=timezone.now()
-                )                
-                return do_result(True, {"examples": [example]})
+                return do_result(True, {"word": word, "examples": [example]})            
+        except StoreTranslateWord.DoesNotExist:
+            ret, example = self.make_sentence(args['user_id'], word)
+            if ret:
+                return do_result(True, {"word": word, "examples": [example]})
         except Exception as e:
             logger.warning(f"get_sentence {e}")
         return do_result(False, "generate sentence error")
+
+    def make_sentence(self, user_id, word):
+        ret, example = translate.generate_sentence_example(user_id, word)
+        if ret:
+            ret, en_regular, freq, translation = translate.TranslateWord.get_instance().get_word_info(word, True, user_id, False)
+            StoreTranslateWord.objects.create(
+                user_id=user_id,
+                word=word,
+                regular = en_regular,
+                freq=freq,
+                translation=translation,
+                examples=[example],
+                created_time=timezone.now()
+            )
+        return ret, example
+
 
     def summary(self, args, request):
         dateStr = request.GET.get("date", request.POST.get("date", None))

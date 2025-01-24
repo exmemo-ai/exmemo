@@ -48,6 +48,7 @@
 - The bookmark source field has been changed from `web_chrome_bm` to `bookmark`.
 - Changed the bookmark deletion logic to soft deletion (softly marks bookmarks as deleted).
 - After editing bookmarks, the updated paths are now stored separately in both `mata` and `external path`.  
+- Modify `docker-compose.yml` to remove the auto-start for `chatgpt-on-wechat` services.
 
 ### 3.3 Fixed
 

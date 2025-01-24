@@ -105,13 +105,11 @@ def convert_to_md(base_path, md_path=None, force=False, use_ocr=False):
     return ret, md_path
 
 
-def get_file_content(data):
+def get_file_content(path):
     """
     Get file content
     """
-    if not isinstance(data, tuple):
-        return False, None, None, None
-    base_path = data[0]
+    base_path = path
     if base_path is None:
         return False, None, None, None
     ret, md_path = convert_to_md(base_path)
@@ -126,11 +124,11 @@ def get_file_content(data):
         return False, base_path, None, None
 
 
-def get_file_abstract(data, uid):
+def get_file_abstract(base_path, uid):
     """
     Summary of file content, retrieved from cache, mainly used for file summary in WeChat
     """
-    ret, path, title, content = get_file_content(data)
+    ret, path, title, content = get_file_content(base_path)
     logger.info(f"get_file_abstract: {ret}, {path}, {title}")
     if ret:
         info = filecache.TmpFileManager.get_instance().get_file_info(path)
