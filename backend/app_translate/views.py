@@ -191,8 +191,10 @@ class TranslateLearnView(APIView):
         rtype = request.GET.get("rtype", request.POST.get("rtype", "get_unknown"))
         if rtype == "get_words":
             return self.get_words(args, request)
-        elif rtype == "get_review":
+        elif rtype == "review":
             return self.get_review(args)
+        elif rtype == "dictation":
+            return self.get_dictation(args)
         elif rtype == "update":
             return self.update(request)
         elif rtype == "get_sentence":
@@ -219,6 +221,52 @@ class TranslateLearnView(APIView):
         data = serializer.data
         json_data = json.loads(json.dumps(data))
         return do_result(True, {"list": json_data})
+
+    def get_review(self, args):
+        if args['user_id'] is None:
+            return do_result(False, {"list": []})
+        status = "review"
+        limit = 100
+        queryset = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status=status
+            ).order_by("freq").all()[:limit]
+        serializer = StoreTranslateSerializer(queryset, many=True)
+        data = serializer.data
+        date = timezone.now().strftime("%Y-%m-%d")
+        ret = []
+        for item in data:
+            info = item.get("info", None)
+            if info is None:
+                ret.append(item)
+                continue
+            learn_date = info.get("learn_date", None)
+            if learn_date is None or learn_date != date:
+                ret.append(item)
+        json_data = json.loads(json.dumps(ret))
+        return do_result(True, {"list": json_data})
+
+    def get_dictation(self, args):
+        if args['user_id'] is None:
+            return do_result(False, {"list": []})
+        status = "review"
+        limit = 100
+        queryset = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status=status
+            ).order_by("freq").all()[:limit]
+        serializer = StoreTranslateSerializer(queryset, many=True)
+        data = serializer.data
+        date = timezone.now().strftime("%Y-%m-%d")
+        ret = []
+        for item in data:
+            info = item.get("info", None)
+            if info is None:
+                continue
+            learn_date = info.get("learn_date", None)
+            if learn_date == date:
+                ret.append(item)
+        json_data = json.loads(json.dumps(ret))
+        return do_result(True, {"list": json_data})
+
 
     def update(self, request):
         listData = request.GET.get("list", request.POST.get("list", None))

@@ -1,10 +1,9 @@
 <template>
     <div>
-        <div class="translate-header">
-            <h1>{{ $t('trans.summary') }}</h1>
-        </div>
-        <div class="content word-learning translate-common-style">
-            <pre>{{ summaryStr }}</pre>
+        <div class="translate-common-style">
+            <div style="font-size: 14px; margin-top: 10px;">
+                <pre>{{ summaryStr }}</pre>
+            </div>
         </div>
     </div>
 </template>

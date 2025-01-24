@@ -270,7 +270,7 @@
     },
     "settings": {
         "bookmark": "Bookmark",
-        "extract": "AI extract",
+        "extract": "AI extract", 
         "batchSetting": "Batch processing",
         "batchUseLLM": "Allow LLM usage in batch processing",
         "webContent": "Web content",
@@ -280,13 +280,14 @@
         "getCategory": "Get category",
         "getAbstract": "Get abstract",
         "truncateSettings": "Truncate settings",
-        "truncateContent": "Truncate content",
+        "truncateContent": "Truncate content", 
         "truncateMaxLength": "Maximum length",
         "truncateMode": "Truncate mode",
         "truncateFirst": "Keep beginning only",
         "truncateTitleContent": "Title and content",
         "truncateFirstLast": "Keep beginning and end",
-        "bookmarkDownloadWeb": "Download webpage when importing bookmarks"
+        "bookmarkDownloadWeb": "Download webpage when importing bookmarks",
+        "truncateDesc": "When processing long texts with LLM, truncate if content exceeds maximum length"
     },
     "bookmarkManager": "Bookmark manager",
     "bookmarkTree": "Bookmark directory",

@@ -1,12 +1,11 @@
 <template>
     <div>
         <div class="translate-header">
-            <h1>{{ $t('trans.selectWord') }}</h1>
             <div class="translate-counter">
                 {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
-        <div class="content word-learning translate-common-style">
+        <div class="translate-common-style">
             <div v-if="wordList.length > 0" class="translate-word-display">
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
                 <p>{{ $t('trans.freq') }}: {{ freqStr }}</p>
@@ -86,7 +85,7 @@ export default {
         },
         async fetch() {
             try {
-                this.wordList = await fetchWordList('not_learned');
+                this.wordList = await fetchWordList('get_words', 'not_learned');
                 this.updateWordDisplay();
             } catch (err) {
                 console.error(err);

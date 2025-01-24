@@ -1,9 +1,9 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <div style="display: flex; flex-direction: column;">
+    <div class="full-container">
+        <el-container style="flex: 0; width: 100%;">
             <app-navbar :title="navTitle" :info="navInfo" />
-        </div>
-        <el-container>
+        </el-container>
+        <el-container style="flex: 1; width: 100%; overflow: hidden;">
             <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
                 <el-menu :default-active="activeMenu" @select="handleSelect">
                     <el-menu-item index="reader">
@@ -20,9 +20,9 @@
                     </el-menu-item>
                 </el-menu>
             </el-aside>
-            <el-main>
+            <el-container class="right-content">
                 <component :is="currentComponent" ref="currentView"></component>
-            </el-main>
+            </el-container>
         </el-container>
     </div>
 </template>
@@ -93,18 +93,16 @@ export default {
 </script>
 
 <style scoped>
-.full-width {
-    width: 100%;
+.right-content {
+    padding: 20px;
+    overflow: auto;
+    display: flex; 
+    flex-direction: column;  
 }
 
-.desktop-width {
-    max-width: 100%;
-    margin: 0 auto;
-}
-
-@media (max-width: 767px) {
-    .desktop-width {
-        max-width: 100%;
+@media screen and (max-width: 768px) {
+    .right-content {
+        padding: 10px;
     }
 }
 </style>

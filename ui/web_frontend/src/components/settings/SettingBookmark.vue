@@ -1,11 +1,16 @@
 <template>
-  <div class="section-content">
     <el-form>
-      <el-form-item :label="$t('settings.bookmarkDownloadWeb')">
-        <el-switch v-model="bookmark_download_web" />
-      </el-form-item>
+        <div class="settings-section">
+            <div class="settings-section-header">
+                {{ $t('settings.bookmark') }}
+            </div>
+            <div class="settings-section-content">
+              <el-form-item :label="$t('settings.bookmarkDownloadWeb')">
+                <el-switch v-model="bookmark_download_web" />
+              </el-form-item>
+            </div>
+        </div>
     </el-form>
-  </div>
 </template>
 
 <script>

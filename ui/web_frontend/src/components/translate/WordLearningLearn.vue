@@ -1,12 +1,11 @@
 <template>
     <div>
         <div class="translate-header">
-            <h1>{{ $t('trans.wordLearning') }}</h1>
             <div class="translate-counter" v-if="wordList.length">
                 {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}
             </div>
         </div>
-        <div class="content word-learning translate-common-style">
+        <div class="translate-common-style">
             <div v-if="wordList.length > 0" class="translate-word-display">
                 <p class="word">
                     {{ $t('trans.word') }}: {{ wordStr }}
@@ -103,7 +102,7 @@ export default {
                 this.needSave = false;
             }
             if (nextStep) {
-                this.$emit('update-status', 'review');
+                this.$emit('update-status', 'write');
             }
         },
         async updateWordDisplay() {
@@ -140,7 +139,7 @@ export default {
             this.finishCount = this.wordList.filter(word => word.status === 'review').length;
         },
         async fetch() {
-            this.wordList = await fetchWordList('learning');
+            this.wordList = await fetchWordList('get_words', 'learning');
             await this.updateWordDisplay();
         },
         speakWord() {

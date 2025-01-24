@@ -1,5 +1,5 @@
 <template>
-    <el-container class="navbar-container nav-container">
+    <el-container class="nav-container">
         <div class="top-row">
             <div class="title-container">
                 <img :src="logo" class="nav-avatar" />
@@ -80,7 +80,7 @@ export default {
             isLogin: false,
             login_user: '',
             activeTab: 'DataManager',
-            userAvatar: '', // 可以在这里设置默认头像URL
+            userAvatar: '',
         };
     },
     methods: {
@@ -249,10 +249,9 @@ export default {
     font-weight: bold;
 }
 
-/* 添加移动设备适配样式 */
 @media screen and (max-width: 768px) {
     .username {
-        display: none; /* 在移动端隐藏用户名 */
+        display: none;
     }
 
     .user-dropdown-trigger {

@@ -1,23 +1,18 @@
 <template>
     <div>
-        <div class="custom-options" style="display: flex; flex-direction: column;">
-            <div class="header-buttons" style="display: flex; align-items: center;">
-                <div style="flex-shrink: 1;">
-                    <el-text>{{ $t('search') }}</el-text>
-                </div>
-                <div style="flex-grow: 1;">
-                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"></el-input>
-                </div>
-                <div style="flex-shrink: 1;">
-                    <el-button class="icon-button"  @click="searchKeyword">
-                        <el-icon><Search /></el-icon>
-                    </el-button>
-                </div>
+        <div class="list-options" style="display: flex; flex-direction: column;">
+            <div class="header-buttons" style="display: flex; align-items: center; gap: 0px; margin-bottom: 10px;">
+                <el-text style="white-space: nowrap;">{{ $t('search') }}</el-text>
+                <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1;"></el-input>
+                <el-button class="icon-button" @click="searchKeyword">
+                    <el-icon><Search /></el-icon>
+                </el-button>
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                <el-table-column prop="title" :label="$t('title')"></el-table-column>
-                <el-table-column prop="created_time" :label="$t('time')" :width=100></el-table-column>
+                <el-table-column prop="title" :label="$t('title')" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="created_time" :label="$t('time')" :width=100 show-overflow-tooltip></el-table-column>
             </el-table>
+
             <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                 :current-page="currentPage" :page-sizes="[10]" :page-size="10"
                 layout="total, sizes, prev, pager, next, jumper" :total="total">
@@ -110,23 +105,8 @@ export default {
     text-overflow: ellipsis;
 }
 
-.custom-options {
-    font-size: 12px;
-    --el-input-font-size: 12px;
-}
-
 .full-width {
     width: 100%;
 }
 
-.desktop-width {
-    max-width: 100%;
-    margin: 0 auto;
-}
-
-@media (max-width: 767px) {
-    .desktop-width {
-        max-width: 100%;
-    }
-}
 </style>

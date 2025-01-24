@@ -1,10 +1,10 @@
 <template>
-  <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-    <div style="display: flex; flex-direction: column;">
+  <div class="full-container">
+    <el-container style="flex: 0; width: 100%;">
       <app-navbar :title="$t('toolTitle')" :info="'SupportTools'" />
-    </div>
+    </el-container>
     
-    <el-container>
+    <el-container style="flex: 1; width: 100%; overflow: hidden;">
       <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
         <el-menu
           :default-active="activeView"
@@ -84,9 +84,4 @@ export default {
   word-wrap: break-word;
 }
 
-@media (max-width: 767px) {
-  .desktop-width {
-    max-width: 100%;
-  }
-}
 </style>

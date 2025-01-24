@@ -1,10 +1,10 @@
 <template>
     <el-form>
         <div class="settings-section">
-            <div class="section-header">
+            <div class="settings-section-header">
                 {{ $t('chatSettings') }}
             </div>
-            <div class="section-content">
+            <div class="settings-section-content">
                 <el-form-item :label="$t('prompt')">
                     <el-input v-model="llm_chat_prompt" placeholder="提示词" style="width: 300px;"></el-input>
                 </el-form-item>
@@ -52,10 +52,10 @@
         </div>
 
         <div class="settings-section">
-            <div class="section-header">
+            <div class="settings-section-header">
                 {{ $t('toolSettings') }}
             </div>
-            <div class="section-content">
+            <div class="settings-section-content">
                 <el-form-item :label="$t('modelType')">
                     <el-radio-group v-model="llm_tool_type">
                         <el-radio value="default">{{ $t('defaultModel') }}</el-radio>
@@ -146,23 +146,4 @@ export default {
 </script>
 
 <style scoped>
-.settings-section {
-    margin-bottom: 20px;
-    border: 1px solid #e4e7ed;
-    border-radius: 4px;
-    background-color: #fff;
-}
-
-.section-header {
-    padding: 12px 20px;
-    border-bottom: 1px solid #e4e7ed;
-    font-size: 16px;
-    font-weight: 500;
-    color: #303133;
-    background-color: #f5f7fa;
-}
-
-.section-content {
-    padding: 20px;
-}
 </style>

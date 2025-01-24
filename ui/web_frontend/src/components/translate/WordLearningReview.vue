@@ -1,12 +1,11 @@
 <template>
     <div>
         <div class="translate-header">
-            <h1>{{ $t('trans.reviewWords') }}</h1>
             <div class="translate-counter">
                 {{ $t('trans.remainToReview', { count: getShowListLength() }) }}
             </div>
         </div>
-        <div class="content word-learning translate-common-style">
+        <div class="translate-common-style">
             <div v-if="getShowListLength() > 0" class="translate-word-display">
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
                 <p v-if="showTranslation >= 1">
@@ -127,7 +126,7 @@ export default {
                 this.needSave = false;
             }
             if (nextStep) {
-                this.$emit('update-status', 'review');
+                this.$emit('update-status', 'summary');
             }
         },
         async fetch() {
