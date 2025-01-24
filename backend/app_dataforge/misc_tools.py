@@ -1,5 +1,4 @@
 import os
-from loguru import logger
 from django.utils.translation import gettext as _
 from app_dataforge.entry import add_data
 from backend.common.utils.web_tools import download_file
@@ -59,7 +58,6 @@ def add_url(url, args, status):
         wtype, detail = test_url_valid(url)
     else:
         wtype, detail = get_web_type(url)
-    # logger.info(f"test_url_valid: {wtype}, {detail}")
 
     if wtype in ["html", "error"]:
         dic = create_dic(url, args, status)

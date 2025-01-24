@@ -148,7 +148,7 @@
 
 <script>
 import Sortable from 'sortablejs'
-import { Histogram, Search, Edit, Delete } from '@element-plus/icons-vue'  // 添加 Delete 图标导入
+import { Histogram, Search, Edit, Delete } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
 
