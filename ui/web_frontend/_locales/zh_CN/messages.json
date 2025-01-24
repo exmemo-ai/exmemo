@@ -287,7 +287,8 @@
         "truncateFirst": "仅保留开头",
         "truncateTitleContent": "标题加正文",
         "truncateFirstLast": "保留首尾",
-        "bookmarkDownloadWeb": "导入书签时下载网页"
+        "bookmarkDownloadWeb": "导入书签时下载网页",
+        "truncateDesc": "在调用大型处理文本时，如果内容过长做截断处理"
     },
     "bookmarkManager": "书签管理",
     "bookmarkTree": "书签目录",

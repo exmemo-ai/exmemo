@@ -1,6 +1,10 @@
 <template>
-    <div class="section-content">
-        <el-form>
+    <el-form>
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('voiceSynthesis') }}
+          </div>
+          <div class="settings-section-content">
             <el-form-item :label="$t('engine')">
                 <el-select v-model="engine_value" style="width: 300px;" @change="engineChangeFunc">
                     <el-option v-for="item in engineOptions" :key="item.value" :label="item.label" :value="item.value">
@@ -25,8 +29,9 @@
                     </el-option>
                 </el-select>
             </el-form-item>
-        </el-form>
-    </div>
+          </div>
+        </div>
+    </el-form>
 </template>
 
 <script>

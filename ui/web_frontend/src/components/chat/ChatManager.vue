@@ -1,20 +1,27 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }" class="chat-container">
-        <div class="header">
-            <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
-            <div class="header-buttons">
-                <el-button @click="clearSession">{{ $t('session.clearSession') }}</el-button>
-                <el-button @click="newSession">{{ $t('session.newSession') }}</el-button>
-            </div>
-        </div>
-        <div class="chat-area">
-            <vue-advanced-chat height="100%" :current-user-id="chat.getCurrentUserId()" :room-id="activeRoomId"
-                :rooms="JSON.stringify(sessions)" :messages="JSON.stringify(messages)" :rooms-loaded="sessionsLoaded"
-                :room-actions="JSON.stringify(roomActions)" @room-action-handler="roomActionHandler($event.detail[0])"
-                :messages-loaded="messagesLoaded" @send-message="sendMessage($event.detail[0])"
-                @fetch-messages="fetchMessages($event.detail[0])"
-                :show-audio=false />
-        </div>
+    <div class="full-container">
+        <el-container style="flex: 0; width: 100%;">
+          <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
+        </el-container>
+        <el-container style="flex: 1; width: 100%; overflow: hidden;">
+          <div class="chat-container">
+            <vue-advanced-chat 
+            height="100%" 
+            width="100%"
+            :current-user-id="chat.getCurrentUserId()" 
+            :room-id="activeRoomId"
+            :rooms="JSON.stringify(sessions)" 
+            :messages="JSON.stringify(messages)" 
+            :rooms-loaded="sessionsLoaded"
+            :room-actions="JSON.stringify(roomActions)" 
+            @room-action-handler="roomActionHandler($event.detail[0])"
+            :messages-loaded="messagesLoaded" 
+            @send-message="sendMessage($event.detail[0])"
+            @fetch-messages="fetchMessages($event.detail[0])"
+            @add-room="newSession"
+            :show-audio=false />
+          </div>
+        </el-container>
     </div>
 </template>
 
@@ -115,6 +122,7 @@ export default ({
         },
 
         async newSession() {
+            console.log('aaaa')
             try {
                 await this.chat.newSession()
             } catch (error) {
@@ -170,33 +178,24 @@ export default ({
 })
 </script>
 
-<style lang="scss">
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
-
+<style scoped>
 .header {
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
+    flex: none;
 }
 
-.chat-area {
-    flex: 1;
-    min-height: 0;
-}
-
-html,
-body {
-    margin: 0;
+.chat-container {
+    overflow: hidden;
     height: 100%;
-    font-family: 'Quicksand', sans-serif;
+    width: 100%; 
 }
 
-#app {
-    margin: 0;
-    text-align: left;
+.header-buttons {
+    padding: 5px;
+}
+
+@media screen and (max-width: 768px) {
+    .chat-container {
+        height: 100%;
+    }
 }
 </style>

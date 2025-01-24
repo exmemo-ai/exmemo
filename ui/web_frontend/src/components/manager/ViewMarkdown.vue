@@ -1,7 +1,7 @@
 <template>
     <el-container class="app-container">
         <el-header :class="{ 'scroll-header': !isPortrait, 'fixed-header': isPortrait }" height="auto">
-            <el-container class="navbar-container nav-container">
+            <el-container class="nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
                         <img :src="logo" class="nav-avatar" />
@@ -534,15 +534,6 @@ onBeforeUnmount(() => {
 :deep(.el-textarea__inner) {
     height: calc(100% - 41px) !important;
     font-family: monospace;
-}
-
-.full-width {
-    width: 100%;
-}
-
-.desktop-width {
-    max-width: 100%;
-    margin: 0 auto;
 }
 
 .button-group {

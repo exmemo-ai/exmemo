@@ -1,68 +1,100 @@
 <template>
-  <div class="section-content">
-    <el-form class="compact-form">
-      <h3>{{ $t('settings.batchSetting') }}</h3>
-      <el-form-item :label="$t('settings.batchUseLLM')">
-        <el-switch v-model="batch_use_llm" />
-      </el-form-item>
+    <el-form>
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('settings.batchSetting') }}
+          </div>
+          <div class="settings-section-content">
+            <el-form-item :label="$t('settings.batchUseLLM')">
+              <el-switch v-model="batch_use_llm" />
+            </el-form-item>
+          </div>
+        </div>
 
-      <h3>{{ $t('settings.webContent') }}</h3>
-      <el-form-item :label="$t('settings.saveContent')">
-        <el-switch v-model="web_save_content" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.getCategory')">
-        <el-switch v-model="web_get_category" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.getAbstract')">
-        <el-switch v-model="web_get_abstract" />
-      </el-form-item>
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('settings.webContent') }}
+          </div>
+          <div class="settings-section-content">
+            <el-form-item :label="$t('settings.saveContent')">
+              <el-switch v-model="web_save_content" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.getCategory')">
+              <el-switch v-model="web_get_category" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.getAbstract')">
+              <el-switch v-model="web_get_abstract" />
+            </el-form-item>
+          </div>
+        </div>
 
-      <h3>{{ $t('settings.fileContent') }}</h3>
-      <el-form-item :label="$t('settings.saveContent')">
-        <el-switch v-model="file_save_content" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.getCategory')">
-        <el-switch v-model="file_get_category" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.getAbstract')">
-        <el-switch v-model="file_get_abstract" />
-      </el-form-item>
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('settings.fileContent') }}
+          </div>
+          <div class="settings-section-content">
+            <el-form-item :label="$t('settings.saveContent')">
+              <el-switch v-model="file_save_content" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.getCategory')">
+              <el-switch v-model="file_get_category" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.getAbstract')">
+              <el-switch v-model="file_get_abstract" />
+            </el-form-item>
+          </div>
+        </div>
 
-      <h3>{{ $t('settings.noteContent') }}</h3>
-      <el-form-item :label="$t('settings.saveContent')">
-        <el-switch v-model="note_save_content" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.getCategory')">
-        <el-switch v-model="note_get_category" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.getAbstract')">
-        <el-switch v-model="note_get_abstract" />
-      </el-form-item>
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('settings.noteContent') }}
+          </div>
+          <div class="settings-section-content">
+            <el-form-item :label="$t('settings.saveContent')">
+              <el-switch v-model="note_save_content" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.getCategory')">
+              <el-switch v-model="note_get_category" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.getAbstract')">
+              <el-switch v-model="note_get_abstract" />
+            </el-form-item>
+          </div>
+        </div>
 
-      <h3>{{ $t('settings.truncateSettings') }}</h3>
-      <el-form-item :label="$t('settings.truncateContent')">
-        <el-switch v-model="truncate_content" />
-      </el-form-item>
-      <el-form-item :label="$t('settings.truncateMaxLength')">
-        <el-input-number 
-          v-model="truncate_max_length" 
-          :min="100" 
-          :max="10000"
-          :disabled="!truncate_content"
-        />
-      </el-form-item>
-      <el-form-item :label="$t('settings.truncateMode')">
-        <el-select 
-          v-model="truncate_mode"
-          :disabled="!truncate_content"
-        >
-          <el-option :label="$t('settings.truncateFirst')" value="first" />
-          <el-option :label="$t('settings.truncateTitleContent')" value="title_content" />
-          <el-option :label="$t('settings.truncateFirstLast')" value="first_last" />
-        </el-select>
-      </el-form-item>
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('settings.truncateSettings') }}
+          </div>
+          <div class="settings-section-content">
+            <div class="section-description">
+              {{ $t('settings.truncateDesc') }}
+            </div>
+            <el-form-item :label="$t('settings.truncateContent')">
+              <el-switch v-model="truncate_content" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.truncateMaxLength')">
+              <el-input-number 
+                v-model="truncate_max_length" 
+                :min="100" 
+                :max="10000"
+                :disabled="!truncate_content"
+              />
+            </el-form-item>
+            <el-form-item :label="$t('settings.truncateMode')">
+              <el-select 
+                v-model="truncate_mode"
+                :disabled="!truncate_content"
+              >
+                <el-option :label="$t('settings.truncateFirst')" value="first" />
+                <el-option :label="$t('settings.truncateTitleContent')" value="title_content" />
+                <el-option :label="$t('settings.truncateFirstLast')" value="first_last" />
+              </el-select>
+            </el-form-item>            
+          </div>
+        </div>
+
     </el-form>
-  </div>
 </template>
 
 <script>
@@ -129,15 +161,9 @@ export default {
 </script>
 
 <style scoped>
-.compact-form :deep(.el-form-item) {
-  margin-bottom: 8px;
-}
-
-.compact-form h3 {
-  margin: 16px 0 8px 0;
-}
-
-.compact-form h3:first-child {
-  margin-top: 0;
+.section-description {
+  color: #999 !important;
+  font-size: 12px;
+  margin-bottom: 10px;
 }
 </style>

@@ -1,12 +1,12 @@
 <template>
     <div>
-        <div class="top-button">
+        <el-button-group class="basic-buttons" style="margin-right: 5px; margin-bottom: 10px;">
             <el-button :type="selectType" @click="handleSelectClick">{{ $t('trans.selectWord') }}</el-button>
             <el-button :type="learnType" @click="handleLearnClick">{{ $t('trans.wordLearning') }}</el-button>
-            <el-button :type="reviewType" @click="handleReviewClick">{{ $t('trans.reviewWords') }}</el-button>
             <el-button :type="writeType" @click="handleWriteClick">{{ $t('trans.writeFromMemory') }}</el-button>
+            <el-button :type="reviewType" @click="handleReviewClick">{{ $t('trans.reviewWords') }}</el-button>
             <el-button :type="summaryType" @click="handleSummaryClick">{{ $t('trans.summary') }}</el-button>
-        </div>
+        </el-button-group>
         <component :is="currentComponent" ref="currentComponent" @update-status="updateStatus"></component>
     </div>
 </template>
@@ -94,8 +94,4 @@ export default {
 </script>
 
 <style scoped>
-.top-button {
-    top: 20px;
-    right: 20px;
-}
 </style>

@@ -1,9 +1,10 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }">
-        <div class="column-flex">
-            <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
-        </div>
-        <el-main class="main-container custom-options">
+    <div class="full-container">
+      <el-container style="flex: 0; width: 100%;">
+        <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
+      </el-container>
+      <el-container style="flex: 1; width: 100%; overflow: hidden;">
+        <el-main class="main-container list-options">
             <div class="header-buttons">
                 <div class="search-section">
                     <div class="label-container">
@@ -74,40 +75,43 @@
                     </el-button>
                 </div>
             </div>
-            <el-table :data="fileList" @row-click="handleRowClick" class="full-width" stripe>
-                <el-table-column prop="title" :label="t('title')">
-                    <template v-slot="scope">
-                        <div class="ellipsis-container nowrap">{{ scope.row.title }}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="etype" :label="t('data')" :width=70>
-                    <template v-slot="scope">
-                        <div class="nowrap">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="ctype" :label="t('type')" :width=100>
-                    <template v-slot="scope">
-                        <div class="nowrap">{{ scope.row.ctype }}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100 v-if="!isMobile">
-                    <template v-slot="scope">
-                        <div class="nowrap">{{ scope.row.updated_time }}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="status" :label="t('status')" :width=70 v-if="!isMobile">
-                    <template v-slot="scope">
-                        <div class="nowrap">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                layout="total, sizes, prev, pager, next, jumper" :total="total">
-            </el-pagination>
+            <el-container class="list-width" style="flex: 1; flex-direction: column; width: 100%;">
+                <el-table :data="fileList" @row-click="handleRowClick" stripe>
+                    <el-table-column prop="title" :label="t('title')">
+                        <template v-slot="scope">
+                            <div class="ellipsis-container nowrap">{{ scope.row.title }}</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="etype" :label="t('data')" :width=70>
+                        <template v-slot="scope">
+                            <div class="nowrap">{{ te(scope.row.etype) ? t(scope.row.etype) : scope.row.etype }}</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="ctype" :label="t('type')" :width=100>
+                        <template v-slot="scope">
+                            <div class="nowrap">{{ scope.row.ctype }}</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="updated_time" :label="t('lastUpdated')" :width=100 v-if="!isMobile">
+                        <template v-slot="scope">
+                            <div class="nowrap">{{ scope.row.updated_time }}</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" :label="t('status')" :width=70 v-if="!isMobile">
+                        <template v-slot="scope">
+                            <div class="nowrap">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                    :current-page="currentPage" :page-sizes="[10]" :page-size="10"
+                    layout="total, sizes, prev, pager, next, jumper" :total="total">
+                </el-pagination>
+            </el-container>
         </el-main>
-        <EditDialog ref="editDialog" />
-        <AddDialog ref="addDialog" />
+      </el-container>
+      <EditDialog ref="editDialog" />
+      <AddDialog ref="addDialog" />
     </div>
 </template>
 
@@ -249,21 +253,6 @@ export default {
     text-overflow: ellipsis;
 }
 
-.custom-options {
-    font-size: 12px;
-    --el-input-font-size: 12px;
-    align-items: center;
-}
-
-.full-width {
-    width: 100%;
-}
-
-.desktop-width {
-    max-width: 100%;
-    margin: 0 auto;
-}
-
 .select-dropdown {
     min-width: 100px !important;
 }
@@ -275,7 +264,7 @@ export default {
 }
 
 .main-container {
-    max-width: 80%;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -324,9 +313,9 @@ export default {
     width: 120px;
 }
 
-.column-flex {
-    display: flex;
-    flex-direction: column;
+.list-width {
+    max-width: 80%;
+    margin: 0 auto;  /* Add this line to center the table */
 }
 
 .nowrap {
@@ -334,7 +323,7 @@ export default {
 }
 
 @media (max-width: 767px) {
-    .desktop-width {
+    .list-width {
         max-width: 100%;
     }
 

@@ -1,12 +1,11 @@
 <template>
     <div>
         <div class="translate-header">
-            <h1>{{ $t('trans.writeFromMemory') }}</h1>
             <div class="translate-counter">
                 {{ finishCount }} / {{ wordList.length }}
             </div>
         </div>
-        <div class="content word-learning translate-common-style">
+        <div class="translate-common-style">
             <div v-if="wordList && wordList.length > 0" class="translate-word-display">
                 <p>{{ $t('trans.wordTranslation') }}: {{ transStr }}</p>
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
@@ -76,7 +75,7 @@ export default {
         async fetch() {
             this.wordList = []
             const dateStr = new Date().toISOString().slice(0, 10);
-            let tmpList = await fetchWordList('review', dateStr);
+            let tmpList = await fetchWordList('dictation', null, dateStr);
             for (let i = 0; i < tmpList.length; i++) {
                 this.wordList.push({'item':tmpList[i], 'flag':false});
             }

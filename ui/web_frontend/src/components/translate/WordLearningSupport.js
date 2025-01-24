@@ -29,12 +29,14 @@ export async function getSummary() {
     });
 }
 
-export async function fetchWordList(status='not_learned', date=null) {
+export async function fetchWordList(rtype, status=null, date=null) {
     let func = 'api/translate/learn';
     setDefaultAuthHeader();
     const formData = new FormData();
-    formData.append('rtype', 'get_words');
-    formData.append('status', status);
+    formData.append('rtype', rtype);
+    if (status) {
+       formData.append('status', status);
+    }
     if (date) {
         formData.append('date', date);
     }

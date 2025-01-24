@@ -1,29 +1,25 @@
 <template>
     <div style="display: flex; flex-direction: column;">
-        <div class="custom-options" style="display: flex;margin: 5px; flex-direction: column;">
+        <div class="list-options" style="display: flex;margin: 5px; flex-direction: column;">
             <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;"
                 v-if="!isMobile">
-                <div style="display: flex; align-items: center; flex: 1; min-width: 300px; gap: 10px;">
-                    <el-text style="white-space: nowrap;">{{ $t('search') }}</el-text>
-                    <div class="search-container">
-                        <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')"/>
-                    </div>
-                    <el-button class="icon-button" @click="searchKeyword">
+                <div style="display: flex; align-items: center; gap: 0; width: 100%;">
+                    <el-text class="no-shrink">{{ $t('search') }}</el-text>
+                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1;"/>
+                    <el-button class="no-shrink" @click="searchKeyword">
                         <el-icon>
                             <Search />
                         </el-icon>
                     </el-button>
-                </div>
-                <div style="text-align: right; margin-left: 20px;">
                     <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
                 </div>
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                <el-table-column prop="word" :label="$t('english')"></el-table-column>
-                <el-table-column prop="info.translate" :label="$t('translate')"></el-table-column>
-                <el-table-column prop="freq" :label="$t('frequency')" :width=70></el-table-column>
-                <el-table-column prop="times" :label="$t('recordCount')" :width=100></el-table-column>
-                <el-table-column :label="$t('status')" :width=100>
+                <el-table-column prop="word" :label="$t('english')" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="info.translate" :label="$t('translate')" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="freq" :label="$t('frequency')" :width=70 show-overflow-tooltip></el-table-column>
+                <el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>
+                <el-table-column :label="$t('status')" :width=100 show-overflow-tooltip>
                     <template v-slot="scope">
                         {{ $t("trans."+scope.row.status) }}
                     </template>
@@ -34,6 +30,7 @@
                     </template>
                 </el-table-column>
             </el-table>
+
             <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                 :current-page="currentPage" :page-sizes="[10]" :page-size="10"
                 layout="total, sizes, prev, pager, next, jumper" :total="total">
@@ -167,26 +164,6 @@ export default {
     max-height: 40px;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.custom-options {
-    font-size: 12px;
-    --el-input-font-size: 12px;
-}
-
-.full-width {
-    width: 100%;
-}
-
-.desktop-width {
-    max-width: 100%;
-    margin: 0 auto;
-}
-
-@media (max-width: 767px) {
-    .desktop-width {
-        max-width: 100%;
-    }
 }
 
 .search-icon {

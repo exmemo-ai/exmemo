@@ -1,10 +1,10 @@
 <template>
     <div style="display: flex; flex-direction: column;">
-        <div class="header-buttons">
-            <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
-            <el-button @click="handleSave">{{ $t('saveArticle') }}</el-button>
+        <el-button-group style="margin-right: 5px; margin-bottom: 10px;">
+            <el-button style="margin-right: 5px;" @click="searchWord">{{ $t('searchWord') }}</el-button>
+            <el-button style="margin-right: 5px;" @click="handleSave">{{ $t('saveArticle') }}</el-button>
             <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
-        </div>
+        </el-button-group>
 
         <div style="display: flex; flex-direction: column;">
             <el-text style="margin: 10px 0;">{{ $t('editArea') }}</el-text>

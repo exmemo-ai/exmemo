@@ -1,9 +1,9 @@
 <template>
-    <div :class="{ 'full-width': isMobile, 'desktop-width': !isMobile }" class="setting-page">
-        <div>
+    <div class="full-container">
+        <el-container style="flex: 0; width: 100%;">
             <app-navbar :title="$t('userSetting')" :info="'Setting'" />
-        </div>
-        <el-container>
+        </el-container>
+        <el-container style="flex: 1; width: 100%; overflow: hidden;">
             <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
                 <el-menu :default-active="currentSection" @select="handleSelect">
                     <el-menu-item index="voice">
@@ -23,36 +23,52 @@
                     </el-menu-item>
                 </el-menu>
             </el-aside>
-            <el-main>
+            <el-container style="flex: 1; width: 100%; flex-direction: column;">
                 <div class="settings-content">
-                    <div v-show="currentSection === 'voice'" class="section-content">
+                    <div v-show="currentSection === 'voice'">
                         <setting-t-t-s ref="ttsSettings" />
                     </div>
 
-                    <div v-show="currentSection === 'dialog'" class="section-content">
+                    <div v-show="currentSection === 'dialog'">
                         <setting-l-l-m ref="llmSettings" />
                     </div>
 
-                    <div v-show="currentSection === 'bookmark'" class="section-content">
+                    <div v-show="currentSection === 'bookmark'">
                         <setting-bookmark ref="bookmarkSettings" />
                     </div>
 
-                    <div v-show="currentSection === 'extract'" class="section-content">
+                    <div v-show="currentSection === 'extract'">
                         <setting-extract ref="extractSettings" />
                     </div>
 
-                    <div v-show="currentSection === 'privilege'" class="section-content">
-                        <div class="info-section">
-                            <h3 class="info-title">{{ $t('privileges') }}</h3>
-                            <pre class="file-content">{{ info_privilege }}</pre>
-                        </div>
-                        <div class="info-section">
-                            <h3 class="info-title">{{ $t('usage') }}</h3>
-                            <pre class="file-content">{{ info_usage }}</pre>
-                        </div>
+                    <div v-show="currentSection === 'privilege'">
+                        <el-form>
+                            <div class="settings-section">
+                                <div class="settings-section-header">
+                                    {{ $t('privileges') }}
+                                </div>
+                                <div class="settings-section-content">
+                                    <el-form-item class="info-description">
+                                        {{ info_privilege }}
+                                    </el-form-item>
+                                </div>
+                            </div>
+                        </el-form>
+                        <el-form>
+                            <div class="settings-section">
+                                <div class="settings-section-header">
+                                    {{ $t('usage') }}
+                                </div>
+                                <div class="settings-section-content">
+                                    <el-form-item class="info-description">
+                                        {{ info_usage }}
+                                    </el-form-item>
+                                </div>
+                            </div>
+                        </el-form>
                     </div>
                 </div>
-            </el-main>
+            </el-container>
         </el-container>
 
         <el-footer class="settings-footer">
@@ -216,18 +232,9 @@ export default {
 </script>
 
 <style scoped>
-.settings-container {
-    flex: 1;
-    overflow: auto;
-    min-height: 0;
-    padding: 20px;
-    gap: 20px;
-    display: flex;
-}
-
 .settings-content {
     flex: 1;
-    padding: 0 5px;
+    padding: 0px;
     overflow: auto;
 }
 
@@ -237,16 +244,6 @@ export default {
     padding: 16px;
     text-align: right;
     background: white;
-}
-
-.setting-page {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
-
-.section-content {
-    max-width: 800px;
 }
 
 .aside-menu {
@@ -262,16 +259,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-    .settings-container {
-        flex-direction: column;
-    }
-
-    .section-content {
-        min-width: 280px;
-        width: 100%;
-        padding: 0 5px;
-    }
-
     .el-input, .el-select {
         width: 100%;
         min-width: 260px;
@@ -280,30 +267,18 @@ export default {
     .aside-menu {
         width: 100% !important;
     }
-
-    .settings-content {
-        padding: 0 5px;
-    }
-}
-
-.info-section {
-    margin-bottom: 24px;
 }
 
 .info-title {
     font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
     color: #2c3e50;
 }
 
-.file-content {
-    background-color: #f8f9fa;
-    padding: 16px;
-    border-radius: 6px;
+.info-description {
+    margin-bottom: 5px;
     white-space: pre-wrap;
-    font-family: monospace;
-    margin: 0;
-    border: 1px solid #eaecef;
 }
+
 </style>
