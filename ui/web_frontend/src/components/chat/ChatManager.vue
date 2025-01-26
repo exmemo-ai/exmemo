@@ -1,10 +1,9 @@
 <template>
     <div class="full-container">
-        <el-container style="flex: 0; width: 100%;">
-          <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
+        <el-container ref="navbar" style="flex: 0; width: 100%;">
+            <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
         </el-container>
-        <el-container style="flex: 1; width: 100%; overflow: hidden;">
-          <div class="chat-container">
+        <div class="chat-container">
             <vue-advanced-chat 
             height="100%" 
             width="100%"
@@ -20,8 +19,7 @@
             @fetch-messages="fetchMessages($event.detail[0])"
             @add-room="newSession"
             :show-audio=false />
-          </div>
-        </el-container>
+        </div>
     </div>
 </template>
 
@@ -159,6 +157,9 @@ export default ({
 		},        
         handleResize() {
             this.isMobile = window.innerWidth < 768;
+            const visualHeight = window.innerHeight;
+            const navbarHeight = this.$refs.navbar.$el.offsetHeight;
+            document.documentElement.style.setProperty('--mainHeight', `${visualHeight - navbarHeight}px`);
         },
     },
     mounted() {
@@ -174,6 +175,7 @@ export default ({
     unmounted() {
         eventBus.off('session-updated', this.handleSessionUpdated)
         eventBus.off('message-updated', this.handleMessageUpdated)
+        window.removeEventListener('resize', this.handleResize);
     }
 })
 </script>
@@ -183,19 +185,14 @@ export default ({
     flex: none;
 }
 
+/*这里 height 必须是具体值，否则输入框位置不对，理论上可以与main-container合一*/
 .chat-container {
     overflow: hidden;
-    height: 100%;
+    height: calc(var(--mainHeight, 100%)) !important;
     width: 100%; 
 }
 
 .header-buttons {
     padding: 5px;
-}
-
-@media screen and (max-width: 768px) {
-    .chat-container {
-        height: 100%;
-    }
 }
 </style>

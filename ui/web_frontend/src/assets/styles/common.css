@@ -6,6 +6,8 @@
     font-family: Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;    
 }
 
 body {
@@ -15,11 +17,18 @@ body {
 
 /* overflow-y: hidden - Hide vertical overflow content that extends beyond viewport */
 .full-container {
+    flex: 1;
+    max-height:100vh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     width: 100%;
     overflow-y: auto;
+}
+
+.main_container {
+    overflow: hidden;
+    height: var(--mainHeight, 100%) !important;
+    width: 100%; 
 }
 
 .top-row {
@@ -154,12 +163,6 @@ body {
         padding: 3px;
         font-size: 14px;
         width: auto;
-    }
-
-    .full-container {
-        height: 90vh;
-        width: 100%;
-        overflow-y: auto;
     }
 
     .translate-header {

@@ -1,9 +1,10 @@
 <template>
     <div class="full-container">
-        <el-container style="flex: 0; width: 100%;">
+        <el-container ref="navbar" style="flex: 0; width: 100%;">
             <app-navbar :title="$t('userSetting')" :info="'Setting'" />
         </el-container>
-        <el-container style="flex: 1; width: 100%; overflow: hidden;">
+        <el-container class="main_container">
+          <el-container style="flex: 1; width: 100%; flex-direction: row;">
             <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
                 <el-menu :default-active="currentSection" @select="handleSelect">
                     <el-menu-item index="voice">
@@ -69,9 +70,10 @@
                     </div>
                 </div>
             </el-container>
+          </el-container>
         </el-container>
-
-        <el-footer class="settings-footer">
+        
+        <el-footer ref="footer" class="settings-footer">
             <el-button @click='saveFunc' type="primary">{{ $t('save') }}</el-button>
             <el-button @click='resetFunc'>{{ $t('reset') }}</el-button>
             <el-button @click='resetPassword'>{{ $t('set_password') }}</el-button>
@@ -114,6 +116,10 @@ export default {
     methods: {
         handleResize() {
             this.isMobile = window.innerWidth < 768;
+            const visualHeight = window.innerHeight;
+            const navbarHeight = this.$refs.navbar.$el.offsetHeight;
+            const footerHeight = this.$refs.footer.$el.offsetHeight;
+            document.documentElement.style.setProperty('--mainHeight', `${visualHeight - navbarHeight - footerHeight}px`);
         },
         resetPassword() {
             this.$router.push("/set_password?user_id=" + localStorage.getItem('username'));
