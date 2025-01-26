@@ -54,9 +54,10 @@ import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { MdPreview } from 'md-editor-v3'
 import { saveEntry, downloadFile } from './dataUtils';
+import { TextSpeaker } from '@/components/support/TextSpeaker'
 
 const { t } = useI18n()
 const isPortrait = ref(false)
@@ -64,12 +65,13 @@ const appName = 'ExMemo'
 const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
 const route = useRoute()
-const isSpeaking = ref(false)
+// const isSpeaking = ref(false)
 const isHighlightMode = ref(false)
-let speechUtterance = null
+// let speechUtterance = null
 const content = ref(null)
 const savedRanges = ref([])
 const form = ref({})
+const speaker = ref(null)
 
 const handleResize = () => {
     isPortrait.value = window.innerHeight > window.innerWidth
@@ -242,41 +244,34 @@ const copyContent = () => {
 }
 
 const readContent = () => {
-    if (isSpeaking.value) {
-        window.speechSynthesis.cancel()
-        isSpeaking.value = false
-        return
+    if (!speaker.value) return;
+
+    const status = speaker.value.getStatus();
+    if (status.isSpeaking) {
+        speaker.value.stop();
+        return;
     }
 
     try {
-        const selection = window.getSelection()
-        const text = selection.toString().trim()
-        const contentToRead = text
+        const selection = window.getSelection();
+        //const selection = '正在测试语音朗读功能， 正在测试';
+        const text = selection.toString().trim();
 
-        if (!contentToRead) {
-            ElMessage.warning(t('viewMarkdown.noTextSelected'))
-            return
+        if (!text) {
+            ElMessage.warning(t('viewMarkdown.noTextSelected'));
+            return;
         }
 
-        speechUtterance = new SpeechSynthesisUtterance(contentToRead)
-        speechUtterance.lang = getLocale()
-        
-        speechUtterance.onend = () => {
-            isSpeaking.value = false
-        }
-        speechUtterance.onerror = () => {
-            isSpeaking.value = false
-            console.error('TTS error:', speechUtterance)
-        }
-        console.log('speak', speechUtterance)
-        window.speechSynthesis.speak(speechUtterance)
-        isSpeaking.value = true
+        speaker.value.speak(text);
     } catch (error) {
-        console.error('TTS error:', error)
-        ElMessage.error(t('speakError') + error)
-        isSpeaking.value = false
+        console.error('TTS error:', error);
+        ElMessage.error(t('speakError') + error);
     }
 }
+
+const isSpeaking = computed(() => {
+    return speaker.value?.getStatus().isSpeaking || false;
+});
 
 watch(isHighlightMode, (newValue) => {
     if (content.value) {
@@ -442,12 +437,13 @@ onMounted(() => {
     handleResize()
     window.addEventListener('resize', handleResize)
     fetchContent(route.query.idx)
+    speaker.value = new TextSpeaker(getLocale())
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', handleResize)
-    if (isSpeaking.value) {
-        window.speechSynthesis.cancel()
+    if (speaker.value) {
+        speaker.value.stop();
     }
 })
 </script>
