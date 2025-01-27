@@ -212,6 +212,24 @@ body {
     width: 120px !important;
 }
 
+.list-options {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px;
+    width:100%;
+}
+
+.pagination-container {
+    margin-top: 0px;
+    width: 100%;
+    padding: 5px 0;
+    display: flex;
+    overflow-x: auto;
+    justify-content: left;
+    min-width: 0;
+}
+
 .translate-common-style {
     display: flex;
     justify-content: space-between;

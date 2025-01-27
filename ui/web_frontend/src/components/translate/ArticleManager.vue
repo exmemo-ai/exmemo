@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="list-options" style="display: flex; flex-direction: column;">
+        <div class="list-options">
             <div class="header-buttons" style="display: flex; align-items: center; gap: 0px; margin-bottom: 10px;">
                 <el-text style="white-space: nowrap;">{{ $t('search') }}</el-text>
                 <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1;"></el-input>
@@ -15,7 +15,8 @@
 
             <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                 :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                layout="total, sizes, prev, pager, next, jumper" :total="total">
+                layout="total, prev, pager, next" :total="total"
+                class="pagination-container">
             </el-pagination>
         </div>
         <el-dialog :title="selectedItem.title" v-model="dialogVisible" width="70%">
