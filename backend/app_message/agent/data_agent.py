@@ -83,7 +83,7 @@ class WebAgent(BaseAgent):
         self.agent_name = _("web_processing_agent")
 
     @agent_function(_("collect_webpage"))
-    def _afunc_web_collect(context_variables: dict = None, web_addr: str = None):
+    def _afunc_web_2_collect(context_variables: dict = None, web_addr: str = None):
         """Collect web page"""
         if context_variables is None or 'sdata' not in context_variables:
             return _("params_error")
@@ -100,7 +100,7 @@ class WebAgent(BaseAgent):
         return _("no_urls_dot_")
     
     @agent_function(_("collect_view"))
-    def _afunc_web_collect_view(context_variables: dict = None, web_addr: str = None):
+    def _afunc_web_1_collect_view(context_variables: dict = None, web_addr: str = None):
         """Collect web page, and open view"""
         ret = WebAgent._afunc_web_collect(context_variables, web_addr)
         if ret == _("no_urls_dot_"):
@@ -110,7 +110,7 @@ class WebAgent(BaseAgent):
         return search_data(sdata, dic={"addr": url})
 
     @agent_function(_("set_webpage_todo"))
-    def _afunc_web_todo(context_variables: dict = None, web_addr: str = None):
+    def _afunc_web_3_todo(context_variables: dict = None, web_addr: str = None):
         """Set web page to-do"""
         if context_variables is None or 'sdata' not in context_variables:
             return _("params_error")
@@ -127,7 +127,7 @@ class WebAgent(BaseAgent):
         return _("no_urls_dot_")
 
     @agent_function(_("summarize_webpage_content"))
-    def _afunc_web_extract(context_variables: dict = None):
+    def _afunc_web_4_extract(context_variables: dict = None):
         """Extract web content"""
         if context_variables is None or 'sdata' not in context_variables:
             return _("params_error")
@@ -141,22 +141,9 @@ class WebAgent(BaseAgent):
                 return detail
         return _("failed_to_fetch_webpages")
 
-    '''
-    @agent_function(_("get_text_content"))
-    def _afunc_web_content(context_variables: dict = None):
-        """Get web content"""
-        if context_variables is None or 'sdata' not in context_variables:
-            return _("params_error")
-        sdata = context_variables["sdata"]
-        url = sdata.get_cache("url")
-        title, content = get_url_content(url)
-        if content is not None:
-            return content
-        return _("no_content_found")
-    '''
     
     @agent_function(_("webpage_to_audio"))
-    def _afunc_web_audio(context_variables: dict = None):
+    def _afunc_web_5_audio(context_variables: dict = None): # 后面大概去掉
         """Web page to audio"""
         if context_variables is None or 'sdata' not in context_variables:
             return _("params_error")
