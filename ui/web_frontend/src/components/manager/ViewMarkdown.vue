@@ -1,6 +1,6 @@
 <template>
     <el-container class="app-container">
-        <el-header :class="{ 'scroll-header': !isPortrait, 'fixed-header': isPortrait }" height="auto">
+        <el-header :class="{ 'scroll-header': !isPortrait, 'fixed-header': isPortrait }" height="auto" style="padding: 0;">
             <el-container class="nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
@@ -14,11 +14,11 @@
                             <el-button-group class="basic-buttons" style="margin-right: 5px;">
                                 <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
                                 <el-button size="small" type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
-                                <el-button size="small" type="primary" @click="readContent">
-                                    {{ isSpeaking ? t('stopSpeak') : t('viewMarkdown.readSelected') }}
-                                </el-button>
                                 <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
                                 <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
+                                <el-button size="small" type="primary" @click="setPlayer">
+                                    {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
+                                </el-button>
                             </el-button-group>
                             <el-button-group class="highlight-buttons" style="margin-right: 5px;">
                                 <el-button size="small" type="primary" @click="highlightText">
@@ -39,8 +39,18 @@
                 </div>
             </el-container>
         </el-header>
-        <div class="preview-container" ref="content" @mouseup="highlightSelection" @touchend="highlightSelection" @contextmenu.prevent>
-            <MdPreview :id="previewId" :modelValue="markdownContent" />
+        <div class="preview-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
+            <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" />
+        </div>
+        
+        <div v-if="showPlayer" class="player-footer">
+            <TextSpeakerPlayer
+                :text="selectedText"
+                :lang="getLocale()"
+                :getContentCallback="getContent"
+                ref="speakerPlayer"
+                @onSpeak="handleSpeak"
+            />
         </div>
     </el-container>
 </template>
@@ -54,12 +64,12 @@ import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, markRaw } from 'vue'
 import { MdPreview } from 'md-editor-v3'
 import { saveEntry, downloadFile } from './dataUtils';
-import { TextSpeaker } from '@/components/support/TextSpeaker'
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import '@/assets/styles/markdown-view.css'
+import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
 
 const { t } = useI18n()
 const isPortrait = ref(false)
@@ -69,8 +79,13 @@ const previewId = 'preview-content'
 const route = useRoute()
 const content = ref(null)
 const form = ref({})
-const speaker = ref(null)
 const highlightManager = ref(null)
+const showPlayer = ref(true)
+const speakerPlayer = ref(null)
+const selectedText = ref('')
+const mdPreview = ref(null)
+
+const currentHighlight = ref(null)
 
 const handleResize = () => {
     isPortrait.value = window.innerHeight > window.innerWidth
@@ -178,35 +193,21 @@ const copyContent = () => {
     }
 }
 
-const readContent = () => {
-    if (!speaker.value) return;
-
-    const status = speaker.value.getStatus();
-    if (status.isSpeaking) {
-        speaker.value.stop();
-        return;
-    }
-
+const setPlayer = () => {
     try {
-        const selection = window.getSelection();
-        //const selection = '正在测试语音朗读功能， 正在测试';
-        const text = selection.toString().trim();
-
-        if (!text) {
-            ElMessage.warning(t('viewMarkdown.noTextSelected'));
+        if (showPlayer.value) {
+            if (speakerPlayer.value) {
+                speakerPlayer.value.stop();
+            }
+            showPlayer.value = false;
             return;
         }
-
-        speaker.value.speak(text);
+        showPlayer.value = true;
     } catch (error) {
         console.error('TTS error:', error);
         ElMessage.error(t('speakError') + error);
     }
 }
-
-const isSpeaking = computed(() => {
-    return speaker.value?.getStatus().isSpeaking || false;
-});
 
 const isHighlightMode = computed(() => highlightManager.value?.isHighlightMode || false)
 const savedRanges = computed(() => highlightManager.value?.savedRanges || [])
@@ -264,21 +265,145 @@ const saveHighLight = async () => {
     }
 }
 
+const handleMouseUp = (event) => {
+    highlightSelection()
+}
+
+const getContent = () => {
+    const selection = window.getSelection()
+    const text = selection.toString().trim()
+    const previewElement = document.getElementById(previewId)
+    
+    if (text && text.length > 0 && previewElement) {
+        const range = selection.getRangeAt(0)
+        const walker = document.createTreeWalker(
+            previewElement,
+            NodeFilter.SHOW_TEXT,
+            null
+        )
+        
+        let node
+        let found = false
+        let content = ''
+        while (node = walker.nextNode()) { // collect from select start
+            if (node === range.startContainer || found) {
+                if (!found) {
+                    content += node.textContent.substring(range.startOffset)
+                } else {
+                    content += node.textContent
+                }
+                found = true
+            }
+        }
+        return content
+    }    
+
+    // 当没有选中文本时，从当前可视区域开始读取
+    if (previewElement) {
+        const viewportTop = window.scrollY
+        const viewportBottom = viewportTop + window.innerHeight
+        const walker = document.createTreeWalker(
+            previewElement,
+            NodeFilter.SHOW_TEXT,
+            null
+        )
+        
+        let node
+        let content = ''
+        let foundVisible = false
+        
+        while (node = walker.nextNode()) {
+            const range = document.createRange()
+            range.selectNode(node)
+            const rect = range.getBoundingClientRect()
+            
+            const absoluteTop = rect.top + window.scrollY
+            const absoluteBottom = rect.bottom + window.scrollY
+            
+            if (!foundVisible) {
+                const isVisible = (absoluteTop < viewportBottom) && 
+                                (absoluteBottom > viewportTop) && 
+                                rect.height > 0 &&
+                                getComputedStyle(node.parentElement).display !== 'none'
+                
+                if (isVisible) {
+                    foundVisible = true
+                }
+            }
+            
+            if (foundVisible) {
+                content += node.textContent
+            }
+        }
+        return content.trim()
+    }
+    return ''
+}
+
+const handleSpeak = (text, index) => {
+    if (currentHighlight.value) {
+        currentHighlight.value.style.backgroundColor = ''
+    }
+
+    if (index == -1) {
+        return;
+    }
+
+    // 如果有完全重复的内容可能有问题，但是这里先不处理
+    const previewElement = document.getElementById(previewId)
+    if (previewElement) {
+        const walker = document.createTreeWalker(
+            previewElement,
+            NodeFilter.SHOW_TEXT,
+            null
+        )
+
+        let node
+        while (node = walker.nextNode()) {
+            const index = node.textContent.indexOf(text)
+            if (index !== -1) {
+                if (node.parentElement) {
+                    node.parentElement.style.backgroundColor = '#fffacd'
+                    currentHighlight.value = node.parentElement
+                    node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+                break
+            }
+        }
+    }
+}
+
+onBeforeUnmount(() => {
+    if (currentHighlight.value) {
+        currentHighlight.value.style.backgroundColor = ''
+    }
+})
+
 onMounted(() => {
     handleResize()
     window.addEventListener('resize', handleResize)
     fetchContent(route.query.idx)
-    speaker.value = new TextSpeaker(getLocale())
     highlightManager.value = new HighlightManager(content.value)
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', handleResize)
-    if (speaker.value) {
-        speaker.value.stop();
-    }
 })
 </script>
 
 <style scoped>
+.preview-container {
+    margin-bottom: 80px;
+}
+
+.player-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0px;
+    z-index: 1000;
+}
 </style>

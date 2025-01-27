@@ -266,7 +266,9 @@
         "downloadFile": "Download file",
         "summary": "Summary",
         "noTextSelected": "No text selected",
-        "detail": "Detail"
+        "detail": "Detail",
+        "showRead": "Show player",
+        "hideRead": "Hide player"
     },
     "settings": {
         "bookmark": "Bookmark",
@@ -288,6 +290,15 @@
         "truncateFirstLast": "Keep beginning and end",
         "bookmarkDownloadWeb": "Download webpage when importing bookmarks",
         "truncateDesc": "When processing long texts with LLM, truncate if content exceeds maximum length"
+    },
+    "player": {
+        "prevPara": "Prev Para",
+        "nextPara": "Next Para",
+        "play": "Play",
+        "pause": "Pause",
+        "stop": "Stop",
+        "prevSentence": "Prev Sent",
+        "nextSentence": "Next Sent"
     },
     "bookmarkManager": "Bookmark manager",
     "bookmarkTree": "Bookmark directory",

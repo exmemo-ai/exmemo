@@ -267,7 +267,9 @@
         "openWeb": "打开网页",
         "downloadFile": "下载文件",
         "noTextSelected": "未选中文本",
-        "detail": "详情"
+        "detail": "详情",
+        "showRead": "打开朗读模式",
+        "hideRead": "关闭朗读模式"
     },
     "settings": {
         "bookmark": "书签",
@@ -289,6 +291,15 @@
         "truncateFirstLast": "保留首尾",
         "bookmarkDownloadWeb": "导入书签时下载网页",
         "truncateDesc": "在调用大型处理文本时，如果内容过长做截断处理"
+    },
+    "player": {
+        "prevPara": "上一段",
+        "nextPara": "下一段",
+        "play":"播放",
+        "pause": "暂停",
+        "stop": "停止",
+        "prevSentence": "上一句",
+        "nextSentence": "下一句"
     },
     "bookmarkManager": "书签管理",
     "bookmarkTree": "书签目录",
