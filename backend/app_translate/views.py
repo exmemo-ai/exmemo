@@ -341,10 +341,19 @@ class TranslateLearnView(APIView):
             user_id=args['user_id'], status='learned').count()
         learning = StoreTranslate.objects.filter(
             user_id=args['user_id'], status='learning').count()
-        todayReview = StoreTranslate.objects.filter(
-            user_id=args['user_id'], status='review', updated_time__gte=dateStr).count()
         review = StoreTranslate.objects.filter(
             user_id=args['user_id'], status='review').count()
+
+        #todayReview = StoreTranslate.objects.filter(
+        #    user_id=args['user_id'], status='review', updated_time__gte=dateStr).count()        
+        queryset = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status='review', updated_time__gte=dateStr)
+        serializer = StoreTranslateSerializer(queryset, many=True)
+        todayReview = 0
+        for item in serializer.data:
+            info = item.get("info", None)
+            if info is not None and info.get("learn_date", None) == dateStr:
+                todayReview+=1
         
         return do_result(True, {"total_words": totalWords, "learned": learned, 
                                 "not_learned": not_learned, "today_review": todayReview, 

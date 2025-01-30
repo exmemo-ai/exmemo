@@ -248,7 +248,8 @@
         "summary": "统计",
         "remainToReview": "剩余: {count}",
         "todayLearn": "今日学习",
-        "options": "可选项"
+        "options": "可选项",
+        "noLongerWrite": "不再默写"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",

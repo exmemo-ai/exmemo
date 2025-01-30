@@ -17,6 +17,7 @@
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="goPrev">{{ $t('trans.goPrev') }}</el-button>
                 <el-button @click="goNext">{{ $t('trans.goNext') }}</el-button>
+                <el-button @click="noLonger">{{ $t('trans.noLongerWrite') }}</el-button>
             </div>
         </div>
     </div>
@@ -41,6 +42,13 @@ export default {
             this.hideStatus = this.hideStatus+1;
             if (this.hideStatus > 2) {
                 this.hideStatus = 0;
+            }
+            this.updateWordDisplay();
+        },
+        noLonger() {
+            this.wordList.splice(this.currentIndex, 1);
+            if (this.currentIndex >= this.wordList.length) {
+                this.currentIndex = 0;
             }
             this.updateWordDisplay();
         },
