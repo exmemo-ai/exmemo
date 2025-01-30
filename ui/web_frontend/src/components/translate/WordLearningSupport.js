@@ -24,6 +24,10 @@ export async function getSummary() {
         }
 
     }).catch((err) => {
+        if (err.response && err.response.status === 401) {
+            parseBackendError(null, err);
+            throw new Error('Token expired');
+        }
         console.error(err);
         return 'Error: ' + err
     });
@@ -43,6 +47,10 @@ export async function fetchWordList(rtype, status=null, date=null) {
     return await axios.post(getURL() + func, formData).then((res) => {
         return res.data.list;
     }).catch((err) => {
+        if (err.response && err.response.status === 401) {
+            parseBackendError(null, err);
+            throw new Error('Token expired');
+        }
         console.error(err);
         throw err;
     });
@@ -58,6 +66,10 @@ export async function realUpdate(wordList) {
         await axios.post(getURL() + func, formData).then((res) => {
             console.log('Word list updated successfully');
         }).catch((err) => {
+            if (err.response && err.response.status === 401) {
+                parseBackendError(null, err);
+                throw new Error('Token expired');
+            }    
             console.error('Error updating word list', err);
         });
     }
@@ -76,6 +88,10 @@ export async function getExamples(word) {
             return res.data;
         })
         .catch((err) => {
+            if (err.response && err.response.status === 401) {
+                parseBackendError(null, err);
+                throw new Error('Token expired');
+            }    
             console.error('Error fetching examples:', err);
             throw err;
         });

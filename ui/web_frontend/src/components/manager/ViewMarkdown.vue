@@ -59,7 +59,7 @@
 import 'md-editor-v3/lib/preview.css'
 import axios from 'axios';
 import logo from '@/assets/images/logo.png'
-import { setDefaultAuthHeader,getURL } from '@/components/support/conn'
+import { setDefaultAuthHeader,getURL,parseBackendError } from '@/components/support/conn'
 import { getLocale } from '@/main.js' 
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -140,16 +140,21 @@ const fallbackCopyTextToClipboard = (text) => {
 const fetchContent = async (idx) => {
     let table_name = 'data'
     setDefaultAuthHeader();
-    axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
-        .then(response => {
-            //console.log('response:', response.data);
-            form.value = { ...response.data };
-            if ('content' in response.data && response.data.content !== null) {
-                markdownContent.value = response.data.content;
-            } else {
-                markdownContent.value = t('notSupport');
-            }
-        });
+    try {
+        const response = await axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/');
+        form.value = { ...response.data };
+        if ('content' in response.data && response.data.content !== null) {
+            markdownContent.value = response.data.content;
+        } else {
+            markdownContent.value = t('notSupport');
+        }
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            parseBackendError(null, error);
+        } else {
+            ElMessage.error(t('fetchError'));
+        }
+    }
 }
 
 const loadHighlight = () => {
