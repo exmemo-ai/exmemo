@@ -6,17 +6,17 @@
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
             <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
                 <el-menu :default-active="activeMenu" @select="handleSelect">
-                    <el-menu-item index="reader">
-                        <span>{{ $t('englishReading') }}</span>
-                    </el-menu-item>
                     <el-menu-item index="word">
                         <span>{{ $t('vocabularyList') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="article">
-                        <span>{{ $t('articleList') }}</span>
-                    </el-menu-item>
                     <el-menu-item index="learn">
                         <span>{{ $t('learn') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="reader">
+                        <span>{{ $t('englishReading') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="article">
+                        <span>{{ $t('articleList') }}</span>
                     </el-menu-item>
                 </el-menu>
             </el-aside>

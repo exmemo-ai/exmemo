@@ -16,6 +16,8 @@ from . import translate
 from .models import StoreEnglishArticle, StoreTranslate, StoreTranslateWord
 from .serializer import StoreEnglishArticleSerializer, StoreTranslateSerializer
 from backend.common.llm.llm_hub import llm_query_json
+from app_translate import word_processor
+
 
 MSG_ROLE = _("you_are_a_middle_school_english_teacher")
 
@@ -201,22 +203,72 @@ class TranslateLearnView(APIView):
             return self.get_sentence(args, request)
         elif rtype == "summary":
             return self.summary(args, request)
+        elif rtype == "insert_wordlist":
+            return self.insert_wordlist(args, request)
+        elif rtype == "delete_wordlist":
+            return self.delete_wordlist(args, request)
+        elif rtype == "get_wordsfrom":
+            return self.get_wordsfrom(args)
         return do_result(False, f"not support {rtype}")
+    
+    def get_wordsfrom(self, args):
+        if args['user_id'] is None:
+            return do_result(False, {"list": []})
+        queryset = StoreTranslate.objects.values('wfrom').distinct()
+        wordsfrom = [item['wfrom'] for item in queryset]
+        wordsfrom = list(set(wordsfrom)) + ['ALL']
+        return do_result(True, {"list": wordsfrom})
+    
+    def insert_wordlist(self, args, request):
+        wfrom = request.GET.get("wfrom", request.POST.get("wfrom", None))
+        if wfrom is None:
+            return do_result(False, "no xfrom")
+        if args['user_id'] is None:
+            return do_result(False, "no user")
+        if wfrom == "JHSW_1600":
+            word_processor.insert_words(args['user_id'], wfrom = wfrom)
+        elif wfrom == "HSW_3500":
+            word_processor.insert_words(args['user_id'], wfrom = wfrom)
+        elif wfrom.startswith("BASE_"):
+            word_processor.insert_words(args['user_id'], wfrom = 'BASE', limit=int(wfrom[5:]))
+        else:
+            return do_result(False, f"no support wfrom {wfrom}")
+        return do_result(True, "ok")
+    
+    def delete_wordlist(self, args, request):
+        status = request.GET.get("status", request.POST.get("status", None))
+        if status is None:
+            return do_result(False, "no status")
+        if args['user_id'] is None:
+            return do_result(False, "no user")
+        if status == "not_learned":
+            StoreTranslate.objects.filter(user_id=args['user_id'], status='not_learned').delete()
+        elif status == "learned":
+            StoreTranslate.objects.filter(user_id=args['user_id'], status='learned').delete()
+        elif status == "all":
+            StoreTranslate.objects.filter(user_id=args['user_id']).delete()
+        else:
+            return do_result(False, f"no support status {status}")
+        return do_result(True, "ok")
     
     def get_words(self, args, request):
         if args['user_id'] is None:
             return do_result(False, {"list": []})
         status = request.GET.get("status", request.POST.get("status", "not_learned"))
         dateStr = request.GET.get("date", request.POST.get("date", None))
+        wfrom = request.GET.get("wfrom", request.POST.get("wfrom", None))
         limit = 100
         if dateStr is not None:
             queryset = StoreTranslate.objects.filter(
                 user_id=args['user_id'], status=status, 
-                updated_time__gte=dateStr).order_by("freq").all()[:limit]
+                updated_time__gte=dateStr)
         else:
             queryset = StoreTranslate.objects.filter(
                 user_id=args['user_id'], status=status
-                ).order_by("freq").all()[:limit]
+                )
+        if wfrom is not None and wfrom != "ALL":
+            queryset = queryset.filter(wfrom=wfrom)
+        queryset = queryset.order_by("freq").all()[:limit]
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
         json_data = json.loads(json.dumps(data))

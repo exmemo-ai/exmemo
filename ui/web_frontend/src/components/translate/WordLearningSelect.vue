@@ -1,11 +1,22 @@
 <template>
     <div>
+        <div>
+            <el-text>{{ $t('trans.selectWordList') }}</el-text>
+            <el-select v-model="selectedFreq" @change="fetch" style="width: 200px;">
+                <el-option 
+                    v-for="item in fromList" 
+                    :key="item"
+                    :label="$t('trans.' + item)"
+                    :value="item">
+                </el-option>
+            </el-select>
+        </div>
         <div class="translate-header">
             <div class="translate-counter">
                 {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
-        <div class="translate-common-style">
+        <div class="translate-common-style">            
             <div v-if="wordList.length > 0" class="translate-word-display">
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
                 <p>{{ $t('trans.freq') }}: {{ freqStr }}</p>
@@ -25,6 +36,7 @@
 
 <script>
 import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { getWordsFrom } from './TransFunction';
 
 export default {
     data() {
@@ -37,6 +49,8 @@ export default {
             selectCount: 0,
             showTranslation: false,
             needSave: false,
+            fromList: [],
+            selectedFreq: ''
         };
     },
     methods: {
@@ -83,9 +97,21 @@ export default {
             this.freqStr = this.wordList[this.currentIndex].freq;
             this.updateCount();
         },
+        saveSelectedFreq() {
+            localStorage.setItem('selectedWordFreq', this.selectedFreq);
+        },
         async fetch() {
             try {
-                this.wordList = await fetchWordList('get_words', 'not_learned');
+                this.fromList = await getWordsFrom(this);
+                const savedFreq = localStorage.getItem('selectedWordFreq');
+                
+                if (savedFreq && this.fromList.includes(savedFreq)) {
+                    this.selectedFreq = savedFreq;
+                } else if (this.fromList.length > 0) {
+                    this.selectedFreq = this.fromList[0];
+                }
+                
+                this.wordList = await fetchWordList('get_words', 'not_learned', null, this.selectedFreq);
                 this.updateWordDisplay();
             } catch (err) {
                 console.error(err);
@@ -100,6 +126,11 @@ export default {
             const notLearned = this.wordList.filter(word => word.status !== 'learned');
             return notLearned.length;
         },  
+    },
+    watch: {
+        selectedFreq(newValue) {
+            this.saveSelectedFreq();
+        }
     },
     mounted() {
         this.fetch();

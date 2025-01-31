@@ -11,6 +11,7 @@
                         </el-icon>
                     </el-button>
                     <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
+                    <el-button @click="optWordList">{{ $t('trans.processWordList') }}</el-button>
                 </div>
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
@@ -54,12 +55,14 @@
             </template>
         </el-dialog>
         <CheckDialog ref="checkDialog" />
+        <OptWordListDialog ref="optWordListDialog" />
     </div>
 </template>
 
 <script>
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
+import OptWordListDialog from './OptWordListDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
 import { Search } from '@element-plus/icons-vue';
 import { realUpdate } from './WordLearningSupport';
@@ -68,6 +71,7 @@ export default {
     name: 'WordManager',
     components: {
         CheckDialog,
+        OptWordListDialog,
         Search
     },
     data() {
@@ -149,6 +153,9 @@ export default {
         },
         searchWord() {
             this.$refs.checkDialog.openDialog(this);
+        },
+        optWordList() {
+            this.$refs.optWordListDialog.openDialog(this);
         }
     },
     mounted() {

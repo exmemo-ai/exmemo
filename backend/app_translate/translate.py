@@ -31,8 +31,9 @@ def find_word_local(word):
     return False, None, localdict.DEFAULT_FREQ, None
 
 
-def add_to_db(word, regular_word, dst, user_id, sentence=None, freq = localdict.DEFAULT_FREQ):
-    logger.info("now add_to_db inner", sentence)
+def add_to_db(word, regular_word, dst, user_id, sentence=None, freq = localdict.DEFAULT_FREQ, wfrom = "USER", debug=False):
+    if debug:
+        logger.info("now add_to_db inner", sentence)
     now = datetime.datetime.now()
     timestr = now.strftime("%Y-%m-%d %H:%M:%S")
     if freq == localdict.DEFAULT_FREQ:
@@ -42,17 +43,19 @@ def add_to_db(word, regular_word, dst, user_id, sentence=None, freq = localdict.
         arr = sentence.split(" ")
         if len(arr) > 3:
             info["sentence"] = sentence
-    logger.debug(f"info {info}")
+    if debug:
+        logger.debug(f"info {info}")
 
     db_word = regular_word
     if StoreTranslate.objects.filter(word=db_word, user_id=user_id).exists():
         obj = StoreTranslate.objects.filter(word=db_word, user_id=user_id).first()
         obj.times = obj.times + 1
         obj.info = info
+        obj.wfrom = wfrom
         obj.save()
     else:
         obj = StoreTranslate.objects.create(
-            word=db_word, info=info, freq=freq, user_id=user_id, times=1,
+            word=db_word, info=info, freq=freq, user_id=user_id, times=1, wfrom=wfrom,
             created_time=timestr
         )
     return True, obj

@@ -12,6 +12,7 @@ class StoreTranslate(models.Model):
     freq = models.IntegerField(default=-1)
     times = models.IntegerField(default=1)
     status = models.CharField(max_length=128, default="not_learned")
+    wfrom = models.CharField(max_length=128, default="USER")
     created_time = models.DateTimeField("date created")
     updated_time = models.DateTimeField(auto_now=True)
 

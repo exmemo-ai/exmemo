@@ -33,7 +33,7 @@ export async function getSummary() {
     });
 }
 
-export async function fetchWordList(rtype, status=null, date=null) {
+export async function fetchWordList(rtype, status=null, date=null, wfrom=null) {
     let func = 'api/translate/learn';
     setDefaultAuthHeader();
     const formData = new FormData();
@@ -43,6 +43,9 @@ export async function fetchWordList(rtype, status=null, date=null) {
     }
     if (date) {
         formData.append('date', date);
+    }
+    if (wfrom) {
+        formData.append('wfrom', wfrom);
     }
     return await axios.post(getURL() + func, formData).then((res) => {
         return res.data.list;
