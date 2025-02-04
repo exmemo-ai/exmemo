@@ -350,12 +350,22 @@ class TranslateLearnView(APIView):
         try: 
             stored_examples = StoreTranslate.objects.filter(word=word)
             if stored_examples.exists():
-                examples = stored_examples.first().info['base']['example_list']
-                logger.info(f'examples {examples}')
-                if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
-                    return do_result(True, {"word": word, "examples": examples})
+                obj = stored_examples.first()
+                examples = None
+                if 'base' in obj.info and 'example_list' in obj.info['base']:
+                    examples = obj.info['base']['example_list']
+                elif 'examples' in obj.info:
+                    examples = obj.info['examples']
+                if examples is not None:
+                    logger.info(f'examples {examples}')
+                    if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
+                        return do_result(True, {"word": word, "examples": examples})
         except Exception as e:
             logger.warning(f"get_example {e}")
+        wm = word_processor.WordManager.get_instance()
+        wordItem = wm.get_word(word)
+        if wordItem is not None and len(wordItem.example_list) > 0:
+            return do_result(True, {"word": word, "examples": wordItem.example_list})
         ret, example = translate.generate_sentence_example(args['user_id'], word)
         if ret:
             try:
