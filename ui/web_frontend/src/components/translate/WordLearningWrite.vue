@@ -73,7 +73,7 @@ export default {
                 } else {
                     this.wordStr = item.word;
                 }
-                if (item.info.base.meaning_dict) {
+                if (item.info.base && item.info.base.meaning_dict) {
                     if (this.savedFreq in item.info.base.meaning_dict) {
                         this.transStr = item.info.base.meaning_dict[this.savedFreq];
                     } else {

@@ -116,7 +116,7 @@ export default {
                 } else {
                     this.wordPhonetic = '';
                 }
-                if (this.wordList[this.currentIndex].info.base.meaning_dict) {
+                if (this.wordList[this.currentIndex].info && this.wordList[this.currentIndex].info.base && this.wordList[this.currentIndex].info.base.meaning_dict) {
                     if (this.savedFreq in this.wordList[this.currentIndex].info.base.meaning_dict) {
                         this.wordTranslation = this.wordList[this.currentIndex].info.base.meaning_dict[this.savedFreq];
                     } else {
@@ -128,7 +128,7 @@ export default {
                 this.exampleSentence = '';
                 this.sentenceMeaning = '';
                 this.transStrInSentence = '';
-                if (this.wordList[this.currentIndex].info.base.example_list) {
+                if (this.wordList[this.currentIndex].info && this.wordList[this.currentIndex].info.base && this.wordList[this.currentIndex].info.base.example_list) {
                     const examples = this.wordList[this.currentIndex].info.base.example_list;
                     if (examples.length > 0 && 'sentence' in examples[0]) {
                         this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
@@ -138,6 +138,9 @@ export default {
                 }
                 const data = await getExamples(this.wordList[this.currentIndex].word);
                 if (data && 'examples' in data && data.word === this.wordList[this.currentIndex].word) {
+                    if (this.wordList[this.currentIndex].info.base === undefined) {
+                        this.wordList[this.currentIndex].info.base = {}
+                    }
                     this.wordList[this.currentIndex].info.base.example_list = data.examples;
                     const examples = this.wordList[this.currentIndex].info.base.example_list;
                     if (examples.length > 0 && 'sentence' in examples[0]) {

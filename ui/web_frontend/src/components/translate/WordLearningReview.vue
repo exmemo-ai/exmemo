@@ -105,7 +105,7 @@ export default {
             if (this.currentIndex < showList.length) {
                 const item = showList[this.currentIndex]
                 this.wordStr = item.word;
-                if (item.info.base.meaning_dict) {
+                if (item.info.base && item.info.base.meaning_dict) {
                     if (this.savedFreq in item.info.base.meaning_dict) {
                         this.transStr = item.info.base.meaning_dict[this.savedFreq];
                     } else {
@@ -114,12 +114,15 @@ export default {
                 } else {
                     this.transStr = item.info.translate;
                 }
-                if (item.info.base.example_list || item.info.base.example_list.length > 0) {
+                if (item.info.base && item.info.base.example_list && item.info.base.example_list.length > 0) {
                     this.sentence = item.info.base.example_list[0].sentence;
                 } else {
                     const data = await getExamples(item.word);
                     if (data && 'examples' in data && data.word === item.word && data.examples.length > 0) {
                         this.sentence = data.examples[0].sentence;
+                        if (item.info.base == undefined) {
+                            item.info.base = {}
+                        }
                         item.info.base.example_list = data.examples;
                     }
                 }

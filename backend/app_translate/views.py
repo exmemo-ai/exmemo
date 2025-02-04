@@ -348,11 +348,12 @@ class TranslateLearnView(APIView):
         if args['user_id'] is None:
             return do_result(False, "no user")
         try: 
-            stored_example = StoreTranslate.objects.get(word=word)
-            examples = stored_example.info['base']['example_list']
-            logger.info(f'examples {examples}')
-            if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
-                return do_result(True, {"word": word, "examples": examples})
+            stored_examples = StoreTranslate.objects.filter(word=word)
+            if stored_examples.exists():
+                examples = stored_examples.first().info['base']['example_list']
+                logger.info(f'examples {examples}')
+                if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
+                    return do_result(True, {"word": word, "examples": examples})
         except Exception as e:
             logger.warning(f"get_example {e}")
         ret, example = translate.generate_sentence_example(args['user_id'], word)

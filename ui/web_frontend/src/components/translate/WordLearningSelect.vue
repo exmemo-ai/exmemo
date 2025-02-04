@@ -93,7 +93,7 @@ export default {
         },
         updateWordDisplay() {
             this.wordStr = this.wordList[this.currentIndex].word;
-            if (this.wordList[this.currentIndex].info.base.meaning_dict) {
+            if (this.wordList[this.currentIndex].info && this.wordList[this.currentIndex].info.base && this.wordList[this.currentIndex].info.base.meaning_dict) {
                 if (this.selectedFreq in this.wordList[this.currentIndex].info.base.meaning_dict) {
                     this.transStr = this.wordList[this.currentIndex].info.base.meaning_dict[this.selectedFreq];
                 } else {
