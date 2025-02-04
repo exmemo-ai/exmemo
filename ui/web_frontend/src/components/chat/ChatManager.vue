@@ -170,12 +170,21 @@ export default ({
         window.addEventListener('resize', this.handleResize);
         this.handleResize();
         this.fetchSessions();
+        window.addEventListener('unhandledrejection', event => {
+            console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', event)
+            if (event.reason?.toString().includes('Failed to fetch') && 
+                event.reason?.stack?.includes('vue-advanced-chat')) {
+                event.preventDefault();
+                console.debug('Suppressed vue-advanced-chat error:', event.reason);
+            }
+        });
     },
 
     unmounted() {
         eventBus.off('session-updated', this.handleSessionUpdated)
         eventBus.off('message-updated', this.handleMessageUpdated)
         window.removeEventListener('resize', this.handleResize);
+        window.removeEventListener('unhandledrejection', this.handleError);
     }
 })
 </script>
