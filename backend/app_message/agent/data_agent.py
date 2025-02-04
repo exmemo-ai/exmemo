@@ -102,7 +102,7 @@ class WebAgent(BaseAgent):
     @agent_function(_("collect_view"))
     def _afunc_web_1_collect_view(context_variables: dict = None, web_addr: str = None):
         """Collect web page, and open view"""
-        ret = WebAgent._afunc_web_collect(context_variables, web_addr)
+        ret = WebAgent._afunc_web_2_collect(context_variables, web_addr)
         if ret == _("no_urls_dot_"):
             return ret
         sdata = context_variables["sdata"]
