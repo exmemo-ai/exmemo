@@ -13,9 +13,8 @@ from backend.common.utils.net_tools import do_result
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from . import translate
-from .models import StoreEnglishArticle, StoreTranslate, StoreTranslateWord
+from .models import StoreEnglishArticle, StoreTranslate
 from .serializer import StoreEnglishArticleSerializer, StoreTranslateSerializer
-from backend.common.llm.llm_hub import llm_query_json
 from app_translate import word_processor
 
 
@@ -348,37 +347,25 @@ class TranslateLearnView(APIView):
             return do_result(False, "no word")
         if args['user_id'] is None:
             return do_result(False, "no user")
-        try:
-            stored_example = StoreTranslateWord.objects.get(word=word)
-            examples = stored_example.examples
-            logger.error(f'examples {examples}')
+        try: 
+            stored_example = StoreTranslate.objects.get(word=word)
+            examples = stored_example.info['base']['example_list']
+            logger.info(f'examples {examples}')
             if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
                 return do_result(True, {"word": word, "examples": examples})
-            ret, example = self.make_sentence(args['user_id'], word)
-            if ret:
-                return do_result(True, {"word": word, "examples": [example]})            
-        except StoreTranslateWord.DoesNotExist:
-            ret, example = self.make_sentence(args['user_id'], word)
-            if ret:
-                return do_result(True, {"word": word, "examples": [example]})
         except Exception as e:
-            logger.warning(f"get_sentence {e}")
-        return do_result(False, "generate sentence error")
-
-    def make_sentence(self, user_id, word):
-        ret, example = translate.generate_sentence_example(user_id, word)
+            logger.warning(f"get_example {e}")
+        ret, example = translate.generate_sentence_example(args['user_id'], word)
         if ret:
-            ret, en_regular, freq, translation = translate.TranslateWord.get_instance().get_word_info(word, True, user_id, False)
-            StoreTranslateWord.objects.create(
-                user_id=user_id,
-                word=word,
-                regular = en_regular,
-                freq=freq,
-                translation=translation,
-                examples=[example],
-                created_time=timezone.now()
-            )
-        return ret, example
+            try:
+                logger.info(f'add example to db {example}')
+                obj = StoreTranslate.objects.get(word=word)
+                obj.info['base']['example'] = [example]
+                obj.save()
+            except Exception as e:
+                logger.warning(f"get_example insert to db failed, {e}")
+            return do_result(True, {"word": word, "examples": [example]})
+        return do_result(False, "generate sentence error")
 
 
     def summary(self, args, request):

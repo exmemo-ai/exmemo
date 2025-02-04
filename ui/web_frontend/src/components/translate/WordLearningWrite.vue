@@ -35,6 +35,7 @@ export default {
             currentIndex: 0,
             finishCount: 0,
             hideStatus: 0,
+            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -72,7 +73,15 @@ export default {
                 } else {
                     this.wordStr = item.word;
                 }
-                this.transStr = item.info.translate;
+                if (item.info.base.meaning_dict) {
+                    if (this.savedFreq in item.info.base.meaning_dict) {
+                        this.transStr = item.info.base.meaning_dict[this.savedFreq];
+                    } else {
+                        this.transStr = item.info.base.meaning_dict['BASE'];
+                    }
+                } else {
+                    this.transStr = item.info.translate;
+                }                
                 this.transStr = this.transStr.replace(/\[.*?\]/g, '');
                 this.updateCount();
             }

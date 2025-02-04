@@ -42,6 +42,7 @@ export default {
             showTranslation: 0,
             finishCount: 0,
             needSave: false,
+            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -104,14 +105,22 @@ export default {
             if (this.currentIndex < showList.length) {
                 const item = showList[this.currentIndex]
                 this.wordStr = item.word;
-                this.transStr = item.info.translate;
-                if ("examples" in item.info && item.info.examples.length > 0) {
-                    this.sentence = item.info.examples[0].sentence;
+                if (item.info.base.meaning_dict) {
+                    if (this.savedFreq in item.info.base.meaning_dict) {
+                        this.transStr = item.info.base.meaning_dict[this.savedFreq];
+                    } else {
+                        this.transStr = item.info.base.meaning_dict['BASE'];
+                    }
+                } else {
+                    this.transStr = item.info.translate;
+                }
+                if (item.info.base.example_list || item.info.base.example_list.length > 0) {
+                    this.sentence = item.info.base.example_list[0].sentence;
                 } else {
                     const data = await getExamples(item.word);
                     if (data && 'examples' in data && data.word === item.word && data.examples.length > 0) {
                         this.sentence = data.examples[0].sentence;
-                        item.info.examples = data.examples;
+                        item.info.base.example_list = data.examples;
                     }
                 }
                 this.updateCount();

@@ -93,7 +93,15 @@ export default {
         },
         updateWordDisplay() {
             this.wordStr = this.wordList[this.currentIndex].word;
-            this.transStr = this.wordList[this.currentIndex].info.translate;
+            if (this.wordList[this.currentIndex].info.base.meaning_dict) {
+                if (this.selectedFreq in this.wordList[this.currentIndex].info.base.meaning_dict) {
+                    this.transStr = this.wordList[this.currentIndex].info.base.meaning_dict[this.selectedFreq];
+                } else {
+                    this.transStr = this.wordList[this.currentIndex].info.base.meaning_dict['BASE'];
+                }
+            } else {
+                this.transStr = this.wordList[this.currentIndex].info.translate;
+            }
             this.freqStr = this.wordList[this.currentIndex].freq;
             this.updateCount();
         },

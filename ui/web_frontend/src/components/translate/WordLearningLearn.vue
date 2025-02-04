@@ -17,6 +17,7 @@
                         </el-icon>
                     </el-button>
                 </p>
+                {{ $t('trans.phonetic') }}: {{ wordPhonetic }}
                 <p class="example-sentence">{{ $t('trans.exampleSentence') }}: {{ exampleSentence }}</p>
                 <p v-if="showTranslation" >{{ $t('trans.sentenceMeaning') }}: {{ sentenceMeaning }}</p>
                 <p v-if="showTranslation" >{{ $t('trans.wordMeaningInSentence') }}: {{ transStrInSentence }}</p>
@@ -47,6 +48,7 @@ export default {
     data() {
         return {
             wordStr: '',
+            wordPhonetic: '',
             wordTranslation: '',
             exampleSentence: '',
             sentenceMeaning: '',
@@ -58,6 +60,7 @@ export default {
             isSpeaking: false,
             speechUtterance: null,
             needSave: false,
+            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -108,12 +111,25 @@ export default {
         async updateWordDisplay() {
             if (this.wordList.length > 0) {
                 this.wordStr = this.wordList[this.currentIndex].word;
-                this.wordTranslation = this.wordList[this.currentIndex].info.translate;;
+                if (this.wordList[this.currentIndex].info.base) {
+                    this.wordPhonetic = this.wordList[this.currentIndex].info.base.phonetic;
+                } else {
+                    this.wordPhonetic = '';
+                }
+                if (this.wordList[this.currentIndex].info.base.meaning_dict) {
+                    if (this.savedFreq in this.wordList[this.currentIndex].info.base.meaning_dict) {
+                        this.wordTranslation = this.wordList[this.currentIndex].info.base.meaning_dict[this.savedFreq];
+                    } else {
+                        this.wordTranslation = this.wordList[this.currentIndex].info.base.meaning_dict['BASE'];
+                    }
+                } else {
+                    this.wordTranslation = this.wordList[this.currentIndex].info.translate;
+                }
                 this.exampleSentence = '';
                 this.sentenceMeaning = '';
                 this.transStrInSentence = '';
-                if ('examples' in this.wordList[this.currentIndex].info) {
-                    const examples = this.wordList[this.currentIndex].info.examples;
+                if (this.wordList[this.currentIndex].info.base.example_list) {
+                    const examples = this.wordList[this.currentIndex].info.base.example_list;
                     if (examples.length > 0 && 'sentence' in examples[0]) {
                         this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
                         this.updateCount();
@@ -122,10 +138,12 @@ export default {
                 }
                 const data = await getExamples(this.wordList[this.currentIndex].word);
                 if (data && 'examples' in data && data.word === this.wordList[this.currentIndex].word) {
-                    this.wordList[this.currentIndex].info.examples = data.examples;
-                    if (this.wordList[this.currentIndex].info.examples.length > 0) {
-                        this.updateExample(this.wordList[this.currentIndex].info.examples[Math.floor(Math.random() * this.wordList[this.currentIndex].info.examples.length)]);
+                    this.wordList[this.currentIndex].info.base.example_list = data.examples;
+                    const examples = this.wordList[this.currentIndex].info.base.example_list;
+                    if (examples.length > 0 && 'sentence' in examples[0]) {
+                        this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
                         this.updateCount();
+                        return;
                     }
                 }
             }
