@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { fetchWordList, getMeaning } from './WordLearningSupport';
 
 export default {
     data() {
@@ -73,20 +73,16 @@ export default {
                 } else {
                     this.wordStr = item.word;
                 }
-                if (item.info.base && item.info.base.meaning_dict) {
-                    if (this.savedFreq in item.info.base.meaning_dict) {
-                        this.transStr = item.info.base.meaning_dict[this.savedFreq];
-                    } else {
-                        this.transStr = item.info.base.meaning_dict['BASE'];
-                    }
-                } else {
-                    this.transStr = item.info.translate;
-                }                
+                this.transStr = getMeaning(item, this.savedFreq);
                 this.transStr = this.transStr.replace(/\[.*?\]/g, '');
                 this.updateCount();
             }
         },
         updateCount() {
+            if (this.wordList.length == 0) {
+                this.finishCount = 0;
+                return;
+            }
             this.finishCount = this.currentIndex + 1;
         },
         async fetch() {

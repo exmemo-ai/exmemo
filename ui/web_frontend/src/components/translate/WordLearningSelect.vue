@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getMeaning } from './WordLearningSupport';
 import { getWordsFrom } from './TransFunction';
 
 export default {
@@ -58,12 +58,18 @@ export default {
             this.showTranslation = !this.showTranslation;
         },
         markAsKnown() {
+            if (this.wordList.length === 0) {
+                return;
+            }
             this.wordList[this.currentIndex].status = 'learned';
             this.nextWord();
             this.updateCount();
             this.needSave = true;
         },
         learnToday() {
+            if (this.wordList.length === 0) {
+                return;
+            }
             this.wordList[this.currentIndex].status = 'learning';
             this.nextWord();
             this.updateCount();
@@ -93,15 +99,7 @@ export default {
         },
         updateWordDisplay() {
             this.wordStr = this.wordList[this.currentIndex].word;
-            if (this.wordList[this.currentIndex].info && this.wordList[this.currentIndex].info.base && this.wordList[this.currentIndex].info.base.meaning_dict) {
-                if (this.selectedFreq in this.wordList[this.currentIndex].info.base.meaning_dict) {
-                    this.transStr = this.wordList[this.currentIndex].info.base.meaning_dict[this.selectedFreq];
-                } else {
-                    this.transStr = this.wordList[this.currentIndex].info.base.meaning_dict['BASE'];
-                }
-            } else {
-                this.transStr = this.wordList[this.currentIndex].info.translate;
-            }
+            this.transStr = getMeaning(this.wordList[this.currentIndex].info, this.selectedFreq);
             this.freqStr = this.wordList[this.currentIndex].freq;
             this.updateCount();
         },

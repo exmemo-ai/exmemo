@@ -99,3 +99,20 @@ export async function getExamples(word) {
             throw err;
         });
 }
+
+export function getMeaning(info, savedFreq) {
+    let meaning = ''
+    if (info && info.base && info.base.meaning_dict) {
+        const meaning_dict = info.base.meaning_dict;
+        if (savedFreq in meaning_dict) {
+            meaning = meaning_dict[savedFreq];
+        } else if ('BASE' in meaning_dict) {
+            meaning = meaning_dict['BASE'];
+        } else if (Object.keys(meaning_dict).length > 0) {
+            meaning = meaning_dict[Object.keys(meaning_dict)[0]];
+        }
+    } else if (info.translate) {
+        meaning = info.translate;
+    }
+    return meaning;
+}

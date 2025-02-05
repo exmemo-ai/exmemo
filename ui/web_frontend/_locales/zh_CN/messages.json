@@ -262,6 +262,7 @@
         "BASE_2000": "高频2000词",
         "BASE_5000": "高频5000词",
         "processWordList": "编辑词表",
+        "processWordListSimple": "词表",
         "selectWordListPlaceholder": "请选择词表",
         "importWordList": "导入词表",
         "selectDeleteOption": "请选择删除选项",

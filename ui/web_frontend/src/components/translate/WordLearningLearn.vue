@@ -37,7 +37,7 @@
 
 <script>
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
-import { fetchWordList, realUpdate, getExamples } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
 import { getLocale } from '@/main.js'
 
 export default {
@@ -68,21 +68,33 @@ export default {
             this.showTranslation = true;
         },
         async learned() {
-            if ('learn_times' in this.wordList[this.currentIndex].info) {
-                this.wordList[this.currentIndex].info['learn_times'] += 1;
-            } else {
-                this.wordList[this.currentIndex].info['learn_times'] = 1;
+            if (this.wordList.length === 0) {
+                return;
             }
-            this.wordList[this.currentIndex].info['learn_date'] = new Date().toISOString().split('T')[0];
+            if (this.wordList[this.currentIndex].info.opt == undefined) {
+                this.wordList[this.currentIndex].info.opt = {}
+            }            
+            if ('learn_times' in this.wordList[this.currentIndex].info.opt) {
+                this.wordList[this.currentIndex].info.opt['learn_times'] += 1;
+            } else {
+                this.wordList[this.currentIndex].info.opt['learn_times'] = 1;
+            }
+            this.wordList[this.currentIndex].info.opt['learn_date'] = new Date().toISOString().split('T')[0];
             this.wordList[this.currentIndex].status = 'review';
             this.needSave = true;
             await this.nextWord();
         },
         async learnMore() {
-            if ('learn_times' in this.wordList[this.currentIndex].info) {
-                this.wordList[this.currentIndex].info['learn_times'] += 1;
+            if (this.wordList.length === 0) {
+                return;
+            }
+            if (this.wordList[this.currentIndex].info.opt == undefined) {
+                this.wordList[this.currentIndex].info.opt = {}
+            }            
+            if ('learn_times' in this.wordList[this.currentIndex].info.opt) {
+                this.wordList[this.currentIndex].info.opt['learn_times'] += 1;
             } else {
-                this.wordList[this.currentIndex].info['learn_times'] = 1;
+                this.wordList[this.currentIndex].info.opt['learn_times'] = 1;
             }
             await this.nextWord();
         },
@@ -116,15 +128,7 @@ export default {
                 } else {
                     this.wordPhonetic = '';
                 }
-                if (this.wordList[this.currentIndex].info && this.wordList[this.currentIndex].info.base && this.wordList[this.currentIndex].info.base.meaning_dict) {
-                    if (this.savedFreq in this.wordList[this.currentIndex].info.base.meaning_dict) {
-                        this.wordTranslation = this.wordList[this.currentIndex].info.base.meaning_dict[this.savedFreq];
-                    } else {
-                        this.wordTranslation = this.wordList[this.currentIndex].info.base.meaning_dict['BASE'];
-                    }
-                } else {
-                    this.wordTranslation = this.wordList[this.currentIndex].info.translate;
-                }
+                this.wordTranslation = getMeaning(this.wordList[this.currentIndex].info, this.savedFreq);
                 this.exampleSentence = '';
                 this.sentenceMeaning = '';
                 this.transStrInSentence = '';

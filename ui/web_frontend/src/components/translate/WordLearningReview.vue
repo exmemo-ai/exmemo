@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate, getExamples } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
 
 export default {
     data() {
@@ -54,27 +54,43 @@ export default {
         },
         addReviewTimes() {
             const showList = this.getShowList();
-            if ('learn_times' in showList[this.currentIndex].info) {
-                showList[this.currentIndex].info['learn_times'] += 1;
+            if (showList[this.currentIndex].info.opt == undefined) {
+                showList[this.currentIndex].info.opt = {}
+            }
+            if ('review_times' in showList[this.currentIndex].info.opt) {
+                showList[this.currentIndex].info.opt['review_times'] += 1;
             } else {
-                showList[this.currentIndex].info['learn_times'] = 1;
+                showList[this.currentIndex].info.opt['review_times'] = 1;
             }
         },
         markAsReview() {
-            this.addReviewTimes();
             const showList = this.getShowList();
-            showList[this.currentIndex].info['last_review_time'] = new Date().toISOString();
+            if (showList.length === 0) {
+                return;
+            }
+            this.addReviewTimes();
+            if (showList[this.currentIndex].info.opt == undefined) {
+                showList[this.currentIndex].info.opt = {}
+            }
+            showList[this.currentIndex].info.opt['last_review_time'] = new Date().toISOString();
             this.needSave = true;
             this.nextWord()
         },
         markAsLearned() {
-            this.addReviewTimes();
             const showList = this.getShowList();
+            if (showList.length === 0) {
+                return;
+            }
+            this.addReviewTimes();
             showList[this.currentIndex].status = 'learned';
             this.needSave = true;
             this.nextWord()
         },
         learnMore() {
+            const showList = this.getShowList();
+            if (showList.length === 0) {
+                return;
+            }
             this.addReviewTimes();
             this.nextWord()
         },
@@ -84,7 +100,12 @@ export default {
         getShowList() {
             const today = new Date().toDateString();
             const showList = this.wordList.filter(word => {
-                const lastReviewTime = word.info.last_review_time ? new Date(word.info.last_review_time).toDateString() : null;
+                let lastReviewTime = null;
+                if (word.info && word.info.opt && word.info.opt.last_review_time) {
+                    lastReviewTime = new Date(word.info.opt.last_review_time).toDateString();
+                } else if (word.info && word.info.last_review_time) {
+                    lastReviewTime = new Date(word.info.last_review_time).toDateString();
+                }
                 return lastReviewTime !== today && word.status === 'review';
             });
             return showList
@@ -105,15 +126,7 @@ export default {
             if (this.currentIndex < showList.length) {
                 const item = showList[this.currentIndex]
                 this.wordStr = item.word;
-                if (item.info.base && item.info.base.meaning_dict) {
-                    if (this.savedFreq in item.info.base.meaning_dict) {
-                        this.transStr = item.info.base.meaning_dict[this.savedFreq];
-                    } else {
-                        this.transStr = item.info.base.meaning_dict['BASE'];
-                    }
-                } else {
-                    this.transStr = item.info.translate;
-                }
+                this.transStr = getMeaning(item.info, this.savedFreq);
                 if (item.info.base && item.info.base.example_list && item.info.base.example_list.length > 0) {
                     this.sentence = item.info.base.example_list[0].sentence;
                 } else {

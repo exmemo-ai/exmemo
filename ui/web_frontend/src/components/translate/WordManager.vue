@@ -10,8 +10,12 @@
                             <Search />
                         </el-icon>
                     </el-button>
-                    <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
-                    <el-button @click="optWordList">{{ $t('trans.processWordList') }}</el-button>
+                    <el-button @click="searchWord">
+                        <el-icon>
+                            <Plus />
+                        </el-icon>
+                    </el-button>
+                    <el-button @click="optWordList">{{ $t('trans.processWordListSimple') }}</el-button>
                 </div>
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
@@ -64,15 +68,16 @@ import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import OptWordListDialog from './OptWordListDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
-import { Search } from '@element-plus/icons-vue';
-import { realUpdate } from './WordLearningSupport';
+import { Search, Plus } from '@element-plus/icons-vue';
+import { realUpdate, getMeaning } from './WordLearningSupport';
 
 export default {
     name: 'WordManager',
     components: {
         CheckDialog,
         OptWordListDialog,
-        Search
+        Search,
+        Plus
     },
     data() {
         return {
@@ -122,18 +127,7 @@ export default {
                             this.fileList[i].meaning = this.fileList[i].info.translate;
                         } else {
                             if (this.fileList[i].info && this.fileList[i].info.base) {
-                                if (this.fileList[i].info.base.meaning_dict) {
-                                    const meaning_dict = this.fileList[i].info.base.meaning_dict;
-                                    if (this.savedFreq in meaning_dict) {
-                                        this.fileList[i].meaning = meaning_dict[this.savedFreq];
-                                    } else if ('BASE' in meaning_dict) {
-                                        this.fileList[i].meaning = meaning_dict['BASE'];
-                                    } else if (Object.keys(meaning_dict).length > 0) {
-                                        this.fileList[i].meaning = meaning_dict[Object.keys(meaning_dict)[0]];
-                                    } else {
-                                        this.fileList[i].meaning = '';
-                                    }
-                                }
+                                this.fileList[i].meaning = getMeaning(this.fileList[i].info, this.savedFreq);
                             }
                         }
                     }

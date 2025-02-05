@@ -262,6 +262,7 @@
         "BASE_2000": "Freq top 2000", 
         "BASE_5000": "Freq top 5000",
         "processWordList": "Edit word list",
+        "processWordListSimple": "ord list",
         "selectWordListPlaceholder": "Please select word list",
         "importWordList": "Import word list",
         "selectDeleteOption": "Please select delete option",

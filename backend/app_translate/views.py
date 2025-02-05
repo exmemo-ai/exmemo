@@ -290,7 +290,11 @@ class TranslateLearnView(APIView):
             if info is None:
                 ret.append(item)
                 continue
-            learn_date = info.get("learn_date", None)
+            learn_date = None
+            if 'opt' in info:
+                learn_date = info['opt'].get("learn_date", None)
+            if learn_date is None:
+                learn_date = info.get("learn_date", None)
             if learn_date is None or learn_date != date:
                 ret.append(item)
         json_data = json.loads(json.dumps(ret))
@@ -312,7 +316,11 @@ class TranslateLearnView(APIView):
             info = item.get("info", None)
             if info is None:
                 continue
-            learn_date = info.get("learn_date", None)
+            learn_date = None
+            if 'opt' in info:
+                learn_date = info['opt'].get("learn_date", None)
+            if learn_date is None:
+                learn_date = info.get("learn_date", None)
             if learn_date == date:
                 ret.append(item)
         json_data = json.loads(json.dumps(ret))
