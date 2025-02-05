@@ -2,11 +2,13 @@ import json
 from loguru import logger
 import pandas as pd
 import os
-from app_translate import localdict, translate
+from app_translate import translate
 from backend.settings import BASE_DATA_DIR
 
+DEFAULT_FREQ = 99999
+
 class ItemWord:
-    def __init__(self, word, freq = localdict.DEFAULT_FREQ, phonetic = None, meaning = None, wfrom = None, example = None):
+    def __init__(self, word, freq = DEFAULT_FREQ, phonetic = None, meaning = None, wfrom = None, example = None):
         self.word = word
         self.phonetic = phonetic
         self.freq = freq
@@ -148,6 +150,7 @@ class ItemInfo:
                     wfrom='USER',
                     meaning=data["translate"],
                     example_list=examples)
+            return None
         else:
             return None
         if "opt" in data:
@@ -175,10 +178,10 @@ class WordManager:
     
     def __init__(self):
         self.word_dict = {}
-        self.path = os.path.join(BASE_DATA_DIR, "en_words.csv.gz")
+        self.path = os.path.join(BASE_DATA_DIR, "en_words.data")
         self.load()
         
-    def add_word(self, word, freq=localdict.DEFAULT_FREQ, phonetic=None, meaning=None, wfrom=None, example=None):
+    def add_word(self, word, freq=DEFAULT_FREQ, phonetic=None, meaning=None, wfrom=None, example=None):
         if word in self.word_dict:
             word_item = self.word_dict[word]
             if freq is not None and word_item.freq > freq:

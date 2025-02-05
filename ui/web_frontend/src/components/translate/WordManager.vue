@@ -16,7 +16,7 @@
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
                 <el-table-column prop="word" :label="$t('english')" show-overflow-tooltip></el-table-column>
-                <el-table-column prop="info.translate" :label="$t('translate')" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="meaning" :label="$t('translate')" show-overflow-tooltip></el-table-column>
                 <el-table-column prop="freq" :label="$t('frequency')" :width=70 show-overflow-tooltip></el-table-column>
                 <el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>
                 <el-table-column :label="$t('status')" :width=100 show-overflow-tooltip>
@@ -92,6 +92,7 @@ export default {
                 word: '',
                 status: ''
             },
+            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -116,6 +117,26 @@ export default {
                     console.log(response.data);
                     this.total = response.data['count'];
                     this.fileList = response.data['results'];
+                    for (let i = 0; i < this.fileList.length; i++) {
+                        if (this.fileList[i].info.translate) {
+                            this.fileList[i].meaning = this.fileList[i].info.translate;
+                        } else {
+                            if (this.fileList[i].info && this.fileList[i].info.base) {
+                                if (this.fileList[i].info.base.meaning_dict) {
+                                    const meaning_dict = this.fileList[i].info.base.meaning_dict;
+                                    if (this.savedFreq in meaning_dict) {
+                                        this.fileList[i].meaning = meaning_dict[this.savedFreq];
+                                    } else if ('BASE' in meaning_dict) {
+                                        this.fileList[i].meaning = meaning_dict['BASE'];
+                                    } else if (Object.keys(meaning_dict).length > 0) {
+                                        this.fileList[i].meaning = meaning_dict[Object.keys(meaning_dict)[0]];
+                                    } else {
+                                        this.fileList[i].meaning = '';
+                                    }
+                                }
+                            }
+                        }
+                    }
                 })
                 .catch(error => {
                     parseBackendError(this, error);

@@ -348,7 +348,7 @@ class TranslateLearnView(APIView):
         if args['user_id'] is None:
             return do_result(False, "no user")
         try: 
-            stored_examples = StoreTranslate.objects.filter(word=word)
+            stored_examples = StoreTranslate.objects.filter(word=word, user_id=args['user_id'])
             if stored_examples.exists():
                 obj = stored_examples.first()
                 examples = None
@@ -365,18 +365,28 @@ class TranslateLearnView(APIView):
         wm = word_processor.WordManager.get_instance()
         wordItem = wm.get_word(word)
         if wordItem is not None and len(wordItem.example_list) > 0:
+            self.update_db(args['user_id'], word, wordItem, None)
             return do_result(True, {"word": word, "examples": wordItem.example_list})
         ret, example = translate.generate_sentence_example(args['user_id'], word)
         if ret:
-            try:
-                logger.info(f'add example to db {example}')
-                obj = StoreTranslate.objects.get(word=word)
-                obj.info['base']['example'] = [example]
-                obj.save()
-            except Exception as e:
-                logger.warning(f"get_example insert to db failed, {e}")
+            self.update_db(args['user_id'], word, None, [example])
             return do_result(True, {"word": word, "examples": [example]})
         return do_result(False, "generate sentence error")
+    
+
+    def update_db(self, user_id, word, base, example_list):
+        try:
+            logger.info(f'add example to db {base}, {example_list}')
+            stored_examples = StoreTranslate.objects.filter(word=word, user_id=user_id)
+            if stored_examples.exists():
+                obj = stored_examples.first()
+                if base is not None:
+                    obj.info['base'] = base.serialize()
+                if example_list is not None:
+                    obj.info['base']['example_list'] = example_list
+                obj.save()
+        except Exception as e:
+            logger.warning(f"get_example insert to db failed, {e}")
 
 
     def summary(self, args, request):

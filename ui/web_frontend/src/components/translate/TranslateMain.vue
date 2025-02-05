@@ -37,8 +37,8 @@ import AppNavbar from '@/components/support/AppNavbar.vue'
 export default {
     name: 'TranslateMain',
     components: {
-        EnReader,
         WordManager,
+        EnReader,
         ArticleManager,
         AppNavbar,
         WordLearning
@@ -46,8 +46,8 @@ export default {
     data() {
         return {
             isMobile: false,
-            activeMenu: 'reader',
-            currentComponent: 'EnReader',
+            activeMenu: 'word',
+            currentComponent: 'WordManager',
             navTitle: this.$t('englishReading'),
             navInfo: 'ReadingTools'
         }

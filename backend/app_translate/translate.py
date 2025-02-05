@@ -12,15 +12,14 @@ from backend.common.user.user import *
 from backend.common.llm.llm_hub import llm_query, llm_query_json
 import simplemma
 
-from . import localdict
 from .models import StoreTranslate
-from .word_processor import ItemInfo, ItemOpt, WordManager, ItemWord
+from .word_processor import ItemInfo, ItemOpt, WordManager, ItemWord, DEFAULT_FREQ
 
 TRANS_DEFAULT = "NOT FOUND"
 MSG_ROLE = _("you_are_a_middle_school_english_teacher")
 
 
-def add_to_db(user_id, word, freq = localdict.DEFAULT_FREQ, wfrom = "USER", 
+def add_to_db(user_id, word, freq = DEFAULT_FREQ, wfrom = "USER", 
                     word_info = None, debug=False):
     """
     support add and update
@@ -163,7 +162,7 @@ class TranslateWord:
                     ret, en_regular, translation = False, None, None
             if ret:
                 word_item = ItemWord(
-                    en_regular, localdict.DEFAULT_FREQ, phonetic=phonetic, wfrom='USER', meaning=translation
+                    en_regular, DEFAULT_FREQ, phonetic=phonetic, wfrom='USER', meaning=translation
                 )
         return word_item
 
