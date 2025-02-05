@@ -420,7 +420,7 @@ class TranslateLearnView(APIView):
         todayReview = 0
         for item in serializer.data:
             info = item.get("info", None)
-            if info is not None and info.get("learn_date", None) == dateStr:
+            if info is not None and 'opt' in info and info['opt'].get("learn_date", None) == dateStr:
                 todayReview+=1
         
         return do_result(True, {"total_words": totalWords, "learned": learned, 
