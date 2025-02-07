@@ -36,8 +36,11 @@ export class TextPlayerManager {
                         text: sentence,
                         node: null,
                         globalIndex: this.paragraphs.reduce((acc, para) => acc + para.sentences.length, 0) + index
-                    }))
+                    }))  
                 };
+                if (this.paragraphs.length > 500) {
+                    break;
+                }
                 this.paragraphs.push(paragraph);
             }
         } else if (data instanceof Node) {
@@ -66,9 +69,13 @@ export class TextPlayerManager {
                     };
                     this.paragraphs.push(paragraph);
                 }
+                if (this.paragraphs.length > 500) {
+                    break;
+                }
                 node = walker.nextNode();
             }
         }
+        console.log("params", this.paragraphs.length, "sentence", this.getAllSentences().length);
         this.currentIndex = 0;
     }
 
