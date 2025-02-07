@@ -146,7 +146,8 @@ class SettingAPIView(APIView):
             'tts_engine', 'tts_voice', 'tts_language', 'tts_speed',
             'llm_chat_prompt', 'llm_chat_show_count',
             'llm_chat_max_context_count', 'llm_chat_memory_count',
-            'truncate_max_length', 'truncate_mode'
+            'truncate_max_length', 'truncate_mode',
+            'learn_word_voc'
         ]
         
         boolean_settings = [

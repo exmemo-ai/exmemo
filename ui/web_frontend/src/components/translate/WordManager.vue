@@ -4,7 +4,7 @@
             <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0; width: 100%;">
                     <el-text class="no-shrink">{{ $t('search') }}</el-text>
-                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1;"/>
+                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1; margin-left:5px"/>
                     <el-button class="no-shrink" @click="searchKeyword">
                         <el-icon>
                             <Search />
@@ -73,7 +73,6 @@ export default {
             pageSize: 10,
             search_text: '',
             fileList: [],
-            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -85,32 +84,31 @@ export default {
             this.currentPage = val;
             this.fetchData();
         },
-        fetchData() {
+        async fetchData() {
             console.log('fetchData');
             let func = 'api/translate/word/'
             let params = {
                 keyword: this.search_text,
                 page: this.currentPage, page_size: this.pageSize
             }
-            axios.get(getURL() + func, { params: params })
-                .then(response => {
-                    console.log('getList success');
-                    console.log(response.data);
-                    this.total = response.data['count'];
-                    this.fileList = response.data['results'];
-                    for (let i = 0; i < this.fileList.length; i++) {
-                        if (this.fileList[i].info.translate) {
-                            this.fileList[i].meaning = this.fileList[i].info.translate;
-                        } else {
-                            if (this.fileList[i].info && this.fileList[i].info.base) {
-                                this.fileList[i].meaning = getMeaning(this.fileList[i].info, this.savedFreq);
-                            }
+            try {
+                const response = await axios.get(getURL() + func, { params: params });
+                console.log('getList success', response.data);
+                this.total = response.data['count'];
+                this.fileList = response.data['results'];
+                
+                await Promise.all(this.fileList.map(async (item) => {
+                    if (item.info.translate) {
+                        item.meaning = item.info.translate;
+                    } else {
+                        if (item.info && item.info.base) {
+                            item.meaning = await getMeaning(item.info);
                         }
                     }
-                })
-                .catch(error => {
-                    parseBackendError(this, error);
-                });
+                }));
+            } catch (error) {
+                parseBackendError(this, error);
+            }
         },
         searchKeyword() {
             this.currentPage = 1;

@@ -60,7 +60,6 @@ export default {
             isSpeaking: false,
             speechUtterance: null,
             needSave: false,
-            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -128,7 +127,7 @@ export default {
                 } else {
                     this.wordPhonetic = '';
                 }
-                this.wordTranslation = getMeaning(this.wordList[this.currentIndex].info, this.savedFreq);
+                this.wordTranslation = await getMeaning(this.wordList[this.currentIndex].info);
                 this.exampleSentence = '';
                 this.sentenceMeaning = '';
                 this.transStrInSentence = '';

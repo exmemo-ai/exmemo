@@ -78,14 +78,14 @@ class SettingService {
         return response.data;
     }
 
-    getSetting(key) {
+    getSetting(key, defaultValue = null) {
         if (!this._settingCache) {
-            return null;
+            return defaultValue;
         }
         if (key in this._settingCache.setting) {
             return this._settingCache.setting[key];
         }
-        return null;
+        return defaultValue;
     }
 
     getPendingSetting(key) {

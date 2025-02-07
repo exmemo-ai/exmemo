@@ -2,7 +2,7 @@
     <div>
         <div>
             <el-text>{{ $t('trans.selectWordList') }}</el-text>
-            <el-select v-model="selectedFreq" @change="fetch" style="width: 200px;">
+            <el-select v-model="currentVOC" @change="handleVocChange" style="width: 200px; margin-left: 10px;">
                 <el-option 
                     v-for="item in fromList" 
                     :key="item"
@@ -35,8 +35,9 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate, getMeaning } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_BASE } from './WordLearningSupport';
 import { getWordsFrom } from './TransFunction';
+import SettingService from '@/components/settings/settingService';
 
 export default {
     data() {
@@ -50,7 +51,7 @@ export default {
             showTranslation: false,
             needSave: false,
             fromList: [],
-            selectedFreq: ''
+            currentVOC: '',
         };
     },
     methods: {
@@ -97,33 +98,43 @@ export default {
                 this.$emit('update-status', 'learn');
             }
         },
-        updateWordDisplay() {
-            this.wordStr = this.wordList[this.currentIndex].word;
-            this.transStr = getMeaning(this.wordList[this.currentIndex].info, this.selectedFreq);
-            this.freqStr = this.wordList[this.currentIndex].freq;
+        async updateWordDisplay() {
+            if (this.wordList.length > 0 && this.currentIndex < this.wordList.length) {
+                this.wordStr = this.wordList[this.currentIndex].word;
+                this.transStr = await getMeaning(this.wordList[this.currentIndex].info, this.currentVOC);
+                this.freqStr = this.wordList[this.currentIndex].freq;
+            } else {
+                this.wordStr = ""
+                this.transStr = ""
+                this.freqStr = ""
+            }
             this.updateCount();
-        },
-        saveSelectedFreq() {
-            localStorage.setItem('selectedWordFreq', this.selectedFreq);
         },
         async fetch() {
             try {
                 this.fromList = await getWordsFrom(this);
-                const savedFreq = localStorage.getItem('selectedWordFreq');
-                
-                if (savedFreq && this.fromList.includes(savedFreq)) {
-                    this.selectedFreq = savedFreq;
+                const settingService = SettingService.getInstance();
+                await settingService.loadSetting();
+                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_BASE);
+                if (currentVOC && this.fromList.includes(currentVOC)) {
+                    this.currentVOC = currentVOC;
                 } else if (this.fromList.length > 0) {
-                    this.selectedFreq = this.fromList[0];
+                    this.currentVOC = this.fromList[0];
                 }
                 
-                this.wordList = await fetchWordList('get_words', 'not_learned', null, this.selectedFreq);
+                this.wordList = await fetchWordList('get_words', 'not_learned', null, this.currentVOC);
                 this.updateWordDisplay();
             } catch (err) {
                 console.error(err);
                 this.wordStr = this.$t('trans.errorFetchingWords');
                 this.transStr = '';
             }
+        },
+        async handleVocChange(newValue) {
+            const settingService = SettingService.getInstance();
+            settingService.setSetting(LEARN_WORD_VOC, newValue);
+            await settingService.saveSetting();
+            await this.fetch();
         },
         updateCount() {
             this.selectCount = this.wordList.filter(word => word.status === 'learning').length;
@@ -132,11 +143,6 @@ export default {
             const notLearned = this.wordList.filter(word => word.status !== 'learned');
             return notLearned.length;
         },  
-    },
-    watch: {
-        selectedFreq(newValue) {
-            this.saveSelectedFreq();
-        }
     },
     mounted() {
         this.fetch();

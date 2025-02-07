@@ -42,7 +42,6 @@ export default {
             showTranslation: 0,
             finishCount: 0,
             needSave: false,
-            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -126,7 +125,7 @@ export default {
             if (this.currentIndex < showList.length) {
                 const item = showList[this.currentIndex]
                 this.wordStr = item.word;
-                this.transStr = getMeaning(item.info, this.savedFreq);
+                this.transStr = await getMeaning(item.info);
                 if (item.info.base && item.info.base.example_list && item.info.base.example_list.length > 0) {
                     this.sentence = item.info.base.example_list[0].sentence;
                 } else {

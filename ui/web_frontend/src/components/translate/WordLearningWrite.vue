@@ -35,7 +35,6 @@ export default {
             currentIndex: 0,
             finishCount: 0,
             hideStatus: 0,
-            savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
     methods: {
@@ -63,7 +62,7 @@ export default {
             this.hideStatus = 0;
             this.updateWordDisplay();
         },
-        updateWordDisplay() {
+        async updateWordDisplay() {
             if (this.currentIndex < this.wordList.length) {
                 const item = this.wordList[this.currentIndex]['item']
                 if (this.hideStatus == 0) {
@@ -73,7 +72,7 @@ export default {
                 } else {
                     this.wordStr = item.word;
                 }
-                this.transStr = getMeaning(item, this.savedFreq);
+                this.transStr = await getMeaning(item);
                 this.transStr = this.transStr.replace(/\[.*?\]/g, '');
                 this.updateCount();
             }
