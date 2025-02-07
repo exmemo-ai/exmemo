@@ -22,7 +22,7 @@
                 <el-table-column prop="word" :label="$t('english')" show-overflow-tooltip></el-table-column>
                 <el-table-column prop="meaning" :label="$t('translate')" show-overflow-tooltip></el-table-column>
                 <el-table-column prop="freq" :label="$t('frequency')" :width=70 show-overflow-tooltip></el-table-column>
-                <el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>
+                <!--<el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>-->
                 <el-table-column :label="$t('status')" :width=100 show-overflow-tooltip>
                     <template v-slot="scope">
                         {{ $t("trans."+scope.row.status) }}
@@ -40,24 +40,7 @@
                 class="pagination-container">
             </el-pagination>
         </div>
-        <el-dialog v-model="editDialogVisible" :title="$t('edit')" width="30%">
-            <el-form :model="editForm">
-                <el-form-item :label="$t('status')">
-                    <el-select v-model="editForm.status" style="width: 100%">
-                        <el-option :label="$t('trans.not_learned')" value="not_learned"/>
-                        <el-option :label="$t('trans.learned')" value="learned"/>
-                        <el-option :label="$t('trans.learning')" value="learning"/>
-                        <el-option :label="$t('trans.reviewing')" value="reviewing"/>
-                    </el-select>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button @click="editDialogVisible = false">{{ $t('cancel') }}</el-button>
-                    <el-button type="primary" @click="saveEdit">{{ $t('confirm') }}</el-button>
-                </span>
-            </template>
-        </el-dialog>
+        <WordEditorDialog ref="wordEditorDialog" @update="fetchData" />
         <CheckDialog ref="checkDialog" />
         <OptWordListDialog ref="optWordListDialog" />
     </div>
@@ -67,15 +50,17 @@
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
 import OptWordListDialog from './OptWordListDialog.vue';
+import WordEditorDialog from './WordEditorDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
 import { Search, Plus } from '@element-plus/icons-vue';
-import { realUpdate, getMeaning } from './WordLearningSupport';
+import { getMeaning } from './WordLearningSupport';
 
 export default {
     name: 'WordManager',
     components: {
         CheckDialog,
         OptWordListDialog,
+        WordEditorDialog,
         Search,
         Plus
     },
@@ -83,20 +68,11 @@ export default {
         return {
             isLogin: false,
             login_user: '',
-            // table page
             total: 0,
             currentPage: 1,
             pageSize: 10,
-            //
             search_text: '',
-            //
             fileList: [],
-            editDialogVisible: false,
-            editForm: {
-                idx: null,
-                word: '',
-                status: ''
-            },
             savedFreq: localStorage.getItem('selectedWordFreq')
         };
     },
@@ -153,18 +129,7 @@ export default {
                 });
         },
         handleRowClick(row, column, event) {
-            this.editForm = { ...row };
-            this.editDialogVisible = true;
-        },
-        async saveEdit() {
-            try {
-                await realUpdate([this.editForm]);
-                this.editDialogVisible = false;
-                this.fetchData();
-                this.$message.success(this.$t('updateSuccess'));
-            } catch (error) {
-                this.$message.error(this.$t('updateFailed'));
-            }
+            this.$refs.wordEditorDialog.openDialog(row);
         },
         searchWord() {
             this.$refs.checkDialog.openDialog(this);
