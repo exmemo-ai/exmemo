@@ -1,0 +1,100 @@
+.app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: white;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-header {
+    position: relative;
+    background-color: white;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (orientation: portrait) {
+    .preview-container {
+        margin-top: 130px;
+    }
+}
+
+.preview-container {
+    padding: 0px;
+    height: auto;    
+    border: 1px solid #dcdfe6;
+    background-color: white;
+}
+
+.preview-container mark.custom-highlight {
+    padding: 2px;
+    transition: background-color 0.3s;
+}
+
+.preview-container[data-highlight-mode="true"] mark.custom-highlight {
+    background-color: yellow !important;
+}
+
+.preview-container[data-highlight-mode="false"] mark.custom-highlight {
+    background-color: transparent !important;
+}
+
+.scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.editor-container {
+    height: calc(100vh - 140px);
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+}
+
+.editor-header, .preview-header {
+    padding: 10px;
+    background-color: #f5f7fa;
+    border-bottom: 1px solid #dcdfe6;
+}
+
+.markdown-body {
+    padding: 20px;
+    height: calc(100% - 41px);
+    overflow-y: auto;
+}
+
+.button-container {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.el-textarea__inner {
+    height: calc(100% - 41px) !important;
+    font-family: monospace;
+}
+
+.button-group {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+}
+
+.highlighted {
+    background-color: yellow;
+}
+
+.top-row-view {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
