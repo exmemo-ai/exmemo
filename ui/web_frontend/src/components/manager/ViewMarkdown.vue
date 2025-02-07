@@ -1,6 +1,6 @@
 <template>
     <el-container class="app-container">
-        <el-header :class="{ 'scroll-header': !isPortrait, 'fixed-header': isPortrait }" height="auto" style="padding: 0;">
+        <el-header class="fixed-header" height="auto" style="padding: 0;">
             <el-container class="nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
@@ -10,10 +10,11 @@
                 </div>
                 <div>
                     <div class="user-controls" style="margin-bottom: 5px">
-                        <div :class="{ 'mobile-buttons': isPortrait }" class="button-container-flex">
+                        <div class="button-container-flex">
                             <el-button-group class="basic-buttons" style="margin-right: 5px;">
                                 <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
                                 <el-button size="small" type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
+                                <el-button size="small" type="primary" @click="addBookmark">{{ t('viewMarkdown.addBookmark') }}</el-button>
                                 <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
                                 <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
                                 <el-button size="small" type="primary" @click="setPlayer">
@@ -39,7 +40,7 @@
                 </div>
             </el-container>
         </el-header>
-        <div class="preview-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
+        <div class="preview-container preview-with-fixed-header" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
             <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" />
         </div>
         
@@ -64,7 +65,7 @@ import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onBeforeUnmount, computed, nextTick, markRaw } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { MdPreview } from 'md-editor-v3'
 import { saveEntry, downloadFile } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
@@ -72,7 +73,6 @@ import '@/assets/styles/markdown-view.css'
 import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
 
 const { t } = useI18n()
-const isPortrait = ref(false)
 const appName = 'ExMemo'
 const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
@@ -86,10 +86,6 @@ const selectedText = ref('')
 const mdPreview = ref(null)
 
 const currentHighlight = ref(null)
-
-const handleResize = () => {
-    isPortrait.value = window.innerHeight > window.innerWidth
-}
 
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
@@ -145,6 +141,14 @@ const fetchContent = async (idx) => {
         form.value = { ...response.data };
         if ('content' in response.data && response.data.content !== null) {
             markdownContent.value = response.data.content;
+            setTimeout(() => {
+                if (form.value.meta?.bookmark?.position) {
+                    window.scrollTo({
+                        top: form.value.meta.bookmark.position,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
         } else {
             markdownContent.value = t('notSupport');
         }
@@ -195,6 +199,43 @@ const copyContent = () => {
             });
     } else {
         fallbackCopyTextToClipboard(markdownContent.value)
+    }
+}
+
+const addBookmark = async () => {
+    const scrollPosition = window.scrollY || window.pageYOffset
+
+    if (!form.value.meta) {
+        form.value.meta = {}
+    }
+    
+    if (typeof form.value.meta === 'string') {
+        try {
+            form.value.meta = JSON.parse(form.value.meta)
+        } catch (error) {
+            console.error('Failed to parse meta:', error)
+            form.value.meta = {}
+        }
+    }
+    
+    form.value.meta.bookmark = {
+        position: scrollPosition,
+        timestamp: new Date().toISOString()
+    }
+
+    try {
+        const result = await saveEntry({
+            parentObj: null,
+            form: form.value,
+            file: null,
+            onProgress: null
+        })
+        if (result) {
+            ElMessage.success(t('viewMarkdown.addBookmarkSuccess'))
+        }
+    } catch (error) {
+        console.error(t('viewMarkdown.addBookmarkFail'), error)
+        ElMessage.error(t('viewMarkdown.addBookmarkFail'))
     }
 }
 
@@ -271,6 +312,17 @@ const saveHighLight = async () => {
 }
 
 const handleMouseUp = (event) => {
+    const isPlaying = speakerPlayer.value?.getStatus().isPlaying || false
+    if (isPlaying) {
+        const selection = window.getSelection()
+        const node = selection.anchorNode
+        if (node && speakerPlayer.value) {
+            speakerPlayer.value.stop()
+            speakerPlayer.value.setContent(node)
+            speakerPlayer.value.resume()
+        }
+        return
+    }
     highlightSelection()
 }
 
@@ -281,32 +333,11 @@ const getContent = () => {
     
     if (text && text.length > 0 && previewElement) {
         const range = selection.getRangeAt(0)
-        const walker = document.createTreeWalker(
-            previewElement,
-            NodeFilter.SHOW_TEXT,
-            null
-        )
-        
-        let node
-        let found = false
-        let content = ''
-        while (node = walker.nextNode()) { // collect from select start
-            if (node === range.startContainer || found) {
-                if (!found) {
-                    content += node.textContent.substring(range.startOffset)
-                } else {
-                    content += node.textContent
-                }
-                found = true
-            }
-        }
-        return content
-    }    
-
-    // 当没有选中文本时，从当前可视区域开始读取
+        return range.startContainer
+    }
+    
     if (previewElement) {
         const viewportTop = window.scrollY
-        const viewportBottom = viewportTop + window.innerHeight
         const walker = document.createTreeWalker(
             previewElement,
             NodeFilter.SHOW_TEXT,
@@ -314,8 +345,8 @@ const getContent = () => {
         )
         
         let node
-        let content = ''
-        let foundVisible = false
+        let bestNode = null
+        let bestDistance = Infinity
         
         while (node = walker.nextNode()) {
             const range = document.createRange()
@@ -323,57 +354,63 @@ const getContent = () => {
             const rect = range.getBoundingClientRect()
             
             const absoluteTop = rect.top + window.scrollY
-            const absoluteBottom = rect.bottom + window.scrollY
+            const isVisible = getComputedStyle(node.parentElement).display !== 'none' && 
+                            rect.height > 0 &&
+                            node.textContent.trim().length > 0
             
-            if (!foundVisible) {
-                const isVisible = (absoluteTop < viewportBottom) && 
-                                (absoluteBottom > viewportTop) && 
-                                rect.height > 0 &&
-                                getComputedStyle(node.parentElement).display !== 'none'
-                
-                if (isVisible) {
-                    foundVisible = true
+            if (isVisible) {
+                const distanceToTop = Math.abs(absoluteTop - viewportTop)
+                if (distanceToTop < bestDistance && absoluteTop >= viewportTop) {
+                    bestDistance = distanceToTop
+                    bestNode = node
                 }
             }
-            
-            if (foundVisible) {
-                content += node.textContent
-            }
         }
-        return content.trim()
+        
+        return bestNode
     }
-    return ''
+    return null
 }
 
-const handleSpeak = (text, index) => {
+const handleSpeak = (text, index, node) => {
     if (currentHighlight.value) {
         currentHighlight.value.style.backgroundColor = ''
     }
 
-    if (index == -1) {
-        return;
+    if (index === -1) {
+        return
     }
 
-    // 如果有完全重复的内容可能有问题，但是这里先不处理
-    const previewElement = document.getElementById(previewId)
-    if (previewElement) {
-        const walker = document.createTreeWalker(
-            previewElement,
-            NodeFilter.SHOW_TEXT,
-            null
-        )
-
-        let node
-        while (node = walker.nextNode()) {
-            const index = node.textContent.indexOf(text)
-            if (index !== -1) {
-                if (node.parentElement) {
-                    node.parentElement.style.backgroundColor = '#fffacd'
-                    currentHighlight.value = node.parentElement
-                    node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (!node) {
+        const previewElement = document.getElementById(previewId)
+        if (previewElement) {
+            const walker = document.createTreeWalker(
+                previewElement,
+                NodeFilter.SHOW_TEXT,
+                null
+            )
+            let foundNode
+            while (foundNode = walker.nextNode()) {
+                if (foundNode.textContent.includes(text)) {
+                    node = foundNode
+                    break
                 }
-                break
             }
+        }
+    }
+    
+    if (node?.parentElement) {
+        node.parentElement.style.backgroundColor = '#fffacd'
+        currentHighlight.value = node.parentElement
+        
+        const rect = node.parentElement.getBoundingClientRect()
+        const isVisible = (
+            rect.top >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+        )
+        
+        if (!isVisible) {
+            node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
     }
 }
@@ -385,20 +422,25 @@ onBeforeUnmount(() => {
 })
 
 onMounted(() => {
-    handleResize()
-    window.addEventListener('resize', handleResize)
     fetchContent(route.query.idx)
     highlightManager.value = new HighlightManager(content.value)
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener('resize', handleResize)
 })
 </script>
 
 <style scoped>
-.preview-container {
-    margin-bottom: 80px;
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.preview-with-fixed-header {
+    margin-top: 80px;
+    padding-bottom: 50px !important;
 }
 
 .player-footer {
@@ -410,5 +452,11 @@ onBeforeUnmount(() => {
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
     padding: 0px;
     z-index: 1000;
+}
+
+@media screen and (max-width: 768px) {
+    .preview-with-fixed-header {
+        margin-top: 110px;
+    }
 }
 </style>

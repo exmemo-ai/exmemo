@@ -271,7 +271,14 @@
         "deleteAllWords": "删除全部",
         "deleteWordList": "删除词表",
         "importSuccess": "导入成功",
-        "deleteSuccess": "删除成功"
+        "deleteSuccess": "删除成功",
+        "meaning": "词意",
+        "wfrom": "来源",
+        "learnTimes": "学习次数",
+        "learnDate": "学习时间",
+        "reviewTimes": "复习次数",
+        "lastReviewTime": "上次复习时间",
+        "null": "无"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",
@@ -292,7 +299,10 @@
         "noTextSelected": "未选中文本",
         "detail": "详情",
         "showRead": "打开朗读模式",
-        "hideRead": "关闭朗读模式"
+        "hideRead": "关闭朗读模式",
+        "addBookmark": "添加书签",
+        "addBookmarkFail": "添加书签失败",
+        "addBookmarkSuccess": "添加书签成功"
     },
     "settings": {
         "bookmark": "书签",
@@ -313,7 +323,8 @@
         "truncateTitleContent": "标题加正文",
         "truncateFirstLast": "保留首尾",
         "bookmarkDownloadWeb": "导入书签时下载网页",
-        "truncateDesc": "在调用大型处理文本时，如果内容过长做截断处理"
+        "truncateDesc": "在调用大型处理文本时，如果内容过长做截断处理",
+        "browserTTS": "浏览器TTS"
     },
     "player": {
         "prevPara": "上一段",

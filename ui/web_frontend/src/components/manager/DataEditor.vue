@@ -139,7 +139,9 @@ export default {
                 form: this.form,
                 file: this.file,
                 onProgress: (progress) => {
-                    this.saveProgress = progress;
+                    if (this.file) {
+                        this.saveProgress = progress;
+                    }
                 },
                 onUploadStart: (cancelTokenSource) => {
                     this.cancelTokenSource = cancelTokenSource;

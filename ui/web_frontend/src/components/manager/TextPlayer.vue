@@ -13,14 +13,23 @@
       <el-button :icon="DocumentParagraph" @click="player?.nextParagraph()"
         :disabled="!playerStatus.canGoNextPara"> {{t("player.nextPara")}} </el-button>
       <el-button @click="player?.stop()">{{t("player.stop")}}</el-button>
-      <!--
-      <el-button :icon="Setting" @click="showSettings = true">设置</el-button>
-      -->
+      <el-button :icon="Setting" @click="showSettingDialog"></el-button>
     </el-button-group>
-    <!--
-    <span class="progress-text">{{ formatProgress() }}</span>
-    -->
   </div>
+
+  <el-dialog
+    v-model="showSettings"
+    width="66%"
+    :close-on-click-modal="false"
+  >
+    <setting-t-t-s ref="settingsRef" />
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="cancelSettings">{{ t('cancel') }}</el-button>
+        <el-button type="primary" @click="confirmSettings">{{ t('confirm') }}</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -28,6 +37,8 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { DocumentParagraph, ArrowLeft, ArrowRight, VideoPlay, VideoPause, Setting } from '@element-plus/icons-vue'
 import { TextPlayerManager } from './TextPlayerManager'
 import { useI18n } from 'vue-i18n'
+import SettingTTS from '@/components/settings/SettingTTS.vue'
+import SettingService from '@/components/settings/settingService'
 
 const { t } = useI18n()
 const props = defineProps({
@@ -83,8 +94,8 @@ watch(() => props.text, () => {
 
 onMounted(() => {
   player.value = new TextPlayerManager(props.text, props.lang)
-  player.value.setOnSpeakCallback((text, index) => {
-    emit('onSpeak', text, index)
+  player.value.setOnSpeakCallback((text, index, node) => {
+    emit('onSpeak', text, index, node)
   })
   updateStatus()
 
@@ -104,25 +115,44 @@ const togglePlay = () => {
       const currentText = player.value.getText()
       console.log("resume", currentText)
       if (!currentText || currentText.length === 0) {
-        setText()
+        playSetText()
       }
       player.value.resume()
     }
   }
 }
 
-const setText = () => {
-  const text = props.getContentCallback()
-  if (text && player.value) {
-    player.value.setText(text)
+const playSetText = () => {
+  const content = props.getContentCallback() || {}
+  if (content && player.value) {
+    player.value.setContent(content)
   }
+}
+
+const showSettingDialog = () => {
+  showSettings.value = true
+  settingsRef.value?.reload();
+}
+
+const settingsRef = ref(null)
+
+const cancelSettings = () => {
+  showSettings.value = false
+  SettingService.getInstance().resetPendingSetting()
+}
+
+const confirmSettings = async () => {
+  await SettingService.getInstance().saveSetting()
+  showSettings.value = false
 }
 
 defineExpose({
   speak: (index) => player.value?.speak(index),
   stop: () => player.value?.stop(),
   togglePlay: () => player.value?.togglePlay(),
-  getStatus: () => player.value?.getStatus()
+  getStatus: () => player.value?.getStatus(),
+  setText: (content) => player.value?.setText(content),
+  resume: () => player.value?.resume()
 })
 </script>
 
@@ -145,5 +175,11 @@ defineExpose({
   color: #606266;
   font-size: 14px;
   min-width: 45px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style>

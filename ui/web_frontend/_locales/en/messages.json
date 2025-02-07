@@ -271,7 +271,14 @@
         "deleteAllWords": "Delete all",
         "deleteWordList": "Delete word list",
         "importSuccess": "Import successful",
-        "deleteSuccess": "Delete successful"
+        "deleteSuccess": "Delete successful",
+        "meaning": "Meaning",
+        "wfrom": "From",
+        "learnTimes": "Learn times",
+        "learnDate": "Learn date",
+        "reviewTimes": "Review times",
+        "lastReviewTime": "Last review time",
+        "null": "Null"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",
@@ -293,7 +300,10 @@
         "noTextSelected": "No text selected",
         "detail": "Detail",
         "showRead": "Show player",
-        "hideRead": "Hide player"
+        "hideRead": "Hide player",
+        "addBookmark": "Add bookmark",
+        "addBookmarkFail": "Add bookmark failed",
+        "addBookmarkSuccess": "Add bookmark successful"
     },
     "settings": {
         "bookmark": "Bookmark",
@@ -314,7 +324,8 @@
         "truncateTitleContent": "Title and content",
         "truncateFirstLast": "Keep beginning and end",
         "bookmarkDownloadWeb": "Download webpage when importing bookmarks",
-        "truncateDesc": "When processing long texts with LLM, truncate if content exceeds maximum length"
+        "truncateDesc": "When processing long texts with LLM, truncate if content exceeds maximum length",
+        "browserTTS": "Browser TTS"
     },
     "player": {
         "prevPara": "Prev Para",
