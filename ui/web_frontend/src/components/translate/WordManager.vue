@@ -1,24 +1,28 @@
 <template>
-    <div style="display: flex; flex-direction: column;">
-        <div class="list-options" style="display: flex;margin: 5px; flex-direction: column;">
-            <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;"
-                v-if="!isMobile">
+    <div style="display: flex; flex-direction: column;  width:100%;">
+        <div class="list-options">
+            <div class="header-buttons" style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0; width: 100%;">
                     <el-text class="no-shrink">{{ $t('search') }}</el-text>
-                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1;"/>
+                    <el-input v-model="search_text" :placeholder="$t('searchPlaceholder')" style="flex: 1; margin-left:5px"/>
                     <el-button class="no-shrink" @click="searchKeyword">
                         <el-icon>
                             <Search />
                         </el-icon>
                     </el-button>
-                    <el-button @click="searchWord">{{ $t('searchWord') }}</el-button>
+                    <el-button @click="searchWord">
+                        <el-icon>
+                            <Plus />
+                        </el-icon>
+                    </el-button>
+                    <el-button @click="optWordList">{{ $t('trans.processWordListSimple') }}</el-button>
                 </div>
             </div>
             <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
                 <el-table-column prop="word" :label="$t('english')" show-overflow-tooltip></el-table-column>
-                <el-table-column prop="info.translate" :label="$t('translate')" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="meaning" :label="$t('translate')" show-overflow-tooltip></el-table-column>
                 <el-table-column prop="freq" :label="$t('frequency')" :width=70 show-overflow-tooltip></el-table-column>
-                <el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>
+                <!--<el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>-->
                 <el-table-column :label="$t('status')" :width=100 show-overflow-tooltip>
                     <template v-slot="scope">
                         {{ $t("trans."+scope.row.status) }}
@@ -30,66 +34,45 @@
                     </template>
                 </el-table-column>
             </el-table>
-
             <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                 :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                layout="total, sizes, prev, pager, next, jumper" :total="total">
+                layout="total, prev, pager, next, jumper" :total="total" 
+                class="pagination-container">
             </el-pagination>
         </div>
-        <el-dialog v-model="editDialogVisible" :title="$t('edit')" width="30%">
-            <el-form :model="editForm">
-                <el-form-item :label="$t('status')">
-                    <el-select v-model="editForm.status" style="width: 100%">
-                        <el-option :label="$t('trans.not_learned')" value="not_learned"/>
-                        <el-option :label="$t('trans.learned')" value="learned"/>
-                        <el-option :label="$t('trans.learning')" value="learning"/>
-                        <el-option :label="$t('trans.reviewing')" value="reviewing"/>
-                    </el-select>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button @click="editDialogVisible = false">{{ $t('cancel') }}</el-button>
-                    <el-button type="primary" @click="saveEdit">{{ $t('confirm') }}</el-button>
-                </span>
-            </template>
-        </el-dialog>
+        <WordEditorDialog ref="wordEditorDialog" @update="fetchData" />
         <CheckDialog ref="checkDialog" />
+        <OptWordListDialog ref="optWordListDialog" />
     </div>
 </template>
 
 <script>
 import axios from 'axios';
 import CheckDialog from './CheckDialog.vue';
+import OptWordListDialog from './OptWordListDialog.vue';
+import WordEditorDialog from './WordEditorDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
-import { Search } from '@element-plus/icons-vue';
-import { realUpdate } from './WordLearningSupport';
+import { Search, Plus } from '@element-plus/icons-vue';
+import { getMeaning } from './WordLearningSupport';
 
 export default {
     name: 'WordManager',
     components: {
         CheckDialog,
-        Search
+        OptWordListDialog,
+        WordEditorDialog,
+        Search,
+        Plus
     },
     data() {
         return {
-            isMobile: false,
             isLogin: false,
             login_user: '',
-            // table page
             total: 0,
             currentPage: 1,
             pageSize: 10,
-            //
             search_text: '',
-            //
             fileList: [],
-            editDialogVisible: false,
-            editForm: {
-                idx: null,
-                word: '',
-                status: ''
-            },
         };
     },
     methods: {
@@ -101,23 +84,31 @@ export default {
             this.currentPage = val;
             this.fetchData();
         },
-        fetchData() {
+        async fetchData() {
             console.log('fetchData');
             let func = 'api/translate/word/'
             let params = {
                 keyword: this.search_text,
                 page: this.currentPage, page_size: this.pageSize
             }
-            axios.get(getURL() + func, { params: params })
-                .then(response => {
-                    console.log('getList success');
-                    console.log(response.data);
-                    this.total = response.data['count'];
-                    this.fileList = response.data['results'];
-                })
-                .catch(error => {
-                    parseBackendError(this, error);
-                });
+            try {
+                const response = await axios.get(getURL() + func, { params: params });
+                console.log('getList success', response.data);
+                this.total = response.data['count'];
+                this.fileList = response.data['results'];
+                
+                await Promise.all(this.fileList.map(async (item) => {
+                    if (item.info.translate) {
+                        item.meaning = item.info.translate;
+                    } else {
+                        if (item.info && item.info.base) {
+                            item.meaning = await getMeaning(item.info);
+                        }
+                    }
+                }));
+            } catch (error) {
+                parseBackendError(this, error);
+            }
         },
         searchKeyword() {
             this.currentPage = 1;
@@ -136,21 +127,13 @@ export default {
                 });
         },
         handleRowClick(row, column, event) {
-            this.editForm = { ...row };
-            this.editDialogVisible = true;
-        },
-        async saveEdit() {
-            try {
-                await realUpdate([this.editForm]);
-                this.editDialogVisible = false;
-                this.fetchData();
-                this.$message.success(this.$t('updateSuccess'));
-            } catch (error) {
-                this.$message.error(this.$t('updateFailed'));
-            }
+            this.$refs.wordEditorDialog.openDialog(row);
         },
         searchWord() {
             this.$refs.checkDialog.openDialog(this);
+        },
+        optWordList() {
+            this.$refs.optWordListDialog.openDialog(this);
         }
     },
     mounted() {

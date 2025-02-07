@@ -33,6 +33,9 @@ export default {
             this.txtAnswer = "";
         },
         handleClose(done) {
+            if (this.parent_obj) {
+                this.parent_obj.fetchData();
+            }
             this.dialogVisible = false;
             done();
         },

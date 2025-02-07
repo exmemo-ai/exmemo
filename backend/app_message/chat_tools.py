@@ -22,6 +22,7 @@ class ChatEngine:
         else:
             from openai import OpenAI
             self.llm = OpenAI(api_key=self.llm_info.api_key, base_url=self.llm_info.url)
+            logger.info(f"ChatEngine init: url {self.llm_info.url}")
 
     def predict(self, input):
         ret = True
@@ -50,6 +51,7 @@ class ChatEngine:
                 messages=messages,
                 model=self.llm_info.model_name
             )
+            logger.info(f"chat by model: {self.llm_info.model_name}")
             return response.choices[0].message.content, response.usage.total_tokens
 
 def do_chat(sdata, debug=False):

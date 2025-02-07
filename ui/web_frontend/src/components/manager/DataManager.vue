@@ -6,73 +6,74 @@
       <el-container style="flex: 1; width: 100%; overflow: hidden;">
         <el-main class="main-container list-options">
             <div class="header-buttons">
-                <div class="search-section">
-                    <div class="label-container">
-                        <el-text>{{ t('search') }}</el-text>
+                <div class="mobile-row">
+                    <div class="filter-section">
+                        <div class="filter-item">
+                            <div class="label-container">
+                                <el-text>{{ t('data') }}</el-text>
+                            </div>
+                            <div class="select-container">
+                                <el-select v-if="mounted && etype_options.length" 
+                                    v-model="etype_value"
+                                    :placeholder="t('selectPlaceholder')">
+                                    <el-option v-for="item in etype_options" :key="item.value" 
+                                        :label="item.label" :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
                     </div>
-                    <div :class="{'mobile-input': isMobile}">
-                        <el-input v-model="search_text" :placeholder="t('searchPlaceholder')"></el-input>
+                    <div class="filter-section">
+                        <div class="filter-item">
+                            <div class="label-container">
+                                <el-text>{{ t('type') }}</el-text>
+                            </div>
+                            <div class="select-container">
+                                <el-select v-if="mounted && ctype_options && ctype_options.length > 0" 
+                                    v-model="ctype_value"
+                                    :placeholder="t('selectPlaceholder')" 
+                                    popper-class="select-dropdown">
+                                    <el-option v-for="item in ctype_options" :key="item.value" 
+                                        :label="item.label" :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="filter-section">
-                    <div class="filter-item">
+                <div class="mobile-row">
+                    <div class="filter-section" v-if="!isMobile">
+                        <div class="filter-item">
+                            <div class="label-container">
+                                <el-text>{{ t('status') }}</el-text>
+                            </div>
+                            <div class="select-container">
+                                <el-select v-if="mounted && status_options.length" 
+                                    v-model="status_value"
+                                    :placeholder="t('selectPlaceholder')">
+                                    <el-option v-for="item in status_options" :key="item.value" 
+                                        :label="item.label" :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-section">
                         <div class="label-container">
-                            <el-text>{{ t('data') }}</el-text>
+                            <el-text>{{ t('search') }}</el-text>
                         </div>
-                        <div class="select-container">
-                            <el-select v-if="mounted && etype_options.length" 
-                                v-model="etype_value"
-                                :placeholder="t('selectPlaceholder')">
-                                <el-option v-for="item in etype_options" :key="item.value" 
-                                    :label="item.label" :value="item.value">
-                                </el-option>
-                            </el-select>
+                        <div :class="{'mobile-input': isMobile}">
+                            <el-input v-model="search_text" :placeholder="t('searchPlaceholder')"></el-input>
                         </div>
                     </div>
-                </div>
-                <div class="filter-section" v-if="!isMobile">
-                    <div class="filter-item">
-                        <div class="label-container">
-                            <el-text>{{ t('type') }}</el-text>
-                        </div>
-                        <div class="select-container">
-                            <el-select v-if="mounted && ctype_options && ctype_options.length > 0" 
-                                v-model="ctype_value"
-                                :placeholder="t('selectPlaceholder')" 
-                                popper-class="select-dropdown">
-                                <el-option v-for="item in ctype_options" :key="item.value" 
-                                    :label="item.label" :value="item.value">
-                                </el-option>
-                            </el-select>
-                        </div>
+                    <div class="action-section">
+                        <el-button class="icon-button" @click="searchKeyword">
+                            <el-icon><Search /></el-icon>
+                        </el-button>
+                        <el-button class="icon-button" @click="openAddDialog">
+                            <el-icon><Plus /></el-icon>
+                        </el-button>
                     </div>
-                </div>
-
-                <div class="filter-section" v-if="!isMobile">
-                    <div class="filter-item">
-                        <div class="label-container">
-                            <el-text>{{ t('status') }}</el-text>
-                        </div>
-                        <div class="select-container">
-                            <el-select v-if="mounted && status_options.length" 
-                                v-model="status_value"
-                                :placeholder="t('selectPlaceholder')">
-                                <el-option v-for="item in status_options" :key="item.value" 
-                                    :label="item.label" :value="item.value">
-                                </el-option>
-                            </el-select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="action-section">
-                    <el-button class="icon-button" @click="searchKeyword">
-                        <el-icon><Search /></el-icon>
-                    </el-button>
-                    <el-button class="icon-button" @click="openAddDialog">
-                        <el-icon><Plus /></el-icon>
-                    </el-button>
                 </div>
             </div>
             <el-container class="list-width" style="flex: 1; flex-direction: column; width: 100%;">
@@ -105,7 +106,8 @@
                 </el-table>
                 <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                     :current-page="currentPage" :page-sizes="[10]" :page-size="10"
-                    layout="total, sizes, prev, pager, next, jumper" :total="total">
+                    layout="total, prev, pager, next" :total="total"
+                    class="pagination-container">
                 </el-pagination>
             </el-container>
         </el-main>
@@ -190,32 +192,45 @@ export default {
             this.currentPage = 1;
             this.fetchData();
         },
+        parseOptions(data) {
+            const options = [{ value: this.t('all'), label: this.t('all') }];
+            data.forEach(item => {
+                const hasTranslation = this.te(item);
+                options.push({
+                    value: item,
+                    label: hasTranslation ? this.t(item) : item
+                });
+            });
+            return options;
+        },
         async getOptions(obj, ctype) {
             let func = 'api/entry/tool/'
             try {
                 const response = await axios.get(getURL() + func, {
                     params: { ctype: ctype, rtype: 'feature' }
                 });
-
                 console.log('getOptions success');
-                let ret = response.data;
-                const options = [{ value: this.t('all'), label: this.t('all') }];
 
-                ret.forEach(item => {
-                    const hasTranslation = this.te(item);
-                    options.push({
-                        value: item,
-                        label: hasTranslation ? this.t(item) : item
-                    });
-                });
-
-                await this.$nextTick();
-                if (ctype === 'ctype') {
-                    this.ctype_options = options;
-                } else if (ctype === 'status') {
-                    this.status_options = options;
-                } else if (ctype === 'etype') {
-                    this.etype_options = options;
+                if (ctype == 'all') {
+                    if ('ctype' in response.data) {
+                        this.ctype_options = this.parseOptions(response.data['ctype']);
+                    }
+                    if ('status' in response.data) {
+                        this.status_options = this.parseOptions(response.data['status']);
+                    }
+                    if ('etype' in response.data) {
+                        this.etype_options = this.parseOptions(response.data['etype']);
+                    }
+                } else {
+                    const options = this.parseOptions(response.data);
+                    await this.$nextTick();
+                    if (ctype === 'ctype') {
+                        this.ctype_options = options;
+                    } else if (ctype === 'status') {
+                        this.status_options = options;
+                    } else if (ctype === 'etype') {
+                        this.etype_options = options;
+                    }
                 }
             } catch (error) {
                 console.log('getOptions error', error);
@@ -237,9 +252,12 @@ export default {
         this.isMobile = window.innerWidth < 768;
         window.addEventListener('resize', this.handleResize);
         this.handleResize();
+        /*
         await this.getOptions(this, "ctype");
         await this.getOptions(this, "status");
         await this.getOptions(this, "etype");
+        */
+        await this.getOptions(this, "all");
         await this.$nextTick();
         this.fetchData();
     }
@@ -278,10 +296,10 @@ export default {
 }
 
 .search-section {
+    margin-right: auto;
     display: flex;
     align-items: center;
     gap: 5px;
-    flex-shrink: 0;
 }
 
 .filter-section {
@@ -310,7 +328,8 @@ export default {
 }
 
 .mobile-input {
-    width: 120px;
+    width: 100%;
+    flex-grow: 1;
 }
 
 .list-width {
@@ -320,6 +339,12 @@ export default {
 
 .nowrap {
     white-space: nowrap;
+}
+
+.mobile-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
 }
 
 @media (max-width: 767px) {
@@ -332,15 +357,60 @@ export default {
     }
 
     .header-buttons {
-        gap: 2px;
+        flex-direction: column;
+        gap: 5px;
+        margin-bottom: 0px;
     }
 
-    :deep(.el-main) {
-        padding: 5px;
+    .mobile-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .search-section {
+        width: 100%;
+    }
+
+    .filter-section {
+        width: 60%;
+    }
+
+    .mobile-input {
+        width: 100%;
+    }
+
+    .action-section {
+        width: auto;
+        margin-left: auto;
+        display: flex;
+        gap: 5px;
+    }
+
+    .select-container {
+        width: 100%;
+    }
+
+    :deep(.el-input) {
+        width: 100%;
+    }
+
+    :deep(.el-select) {
+        width: 100%;
+    }
+
+    .label-container {
+        min-width: 40px;
+    }
+
+    :deep(.el-text) {
+        font-size: 13px;
     }
 
     :deep(.icon-button.el-button) {
-        margin: 0 !important;
-    }    
+        padding: 4px;
+        margin: 0 0 0 5px !important;
+    }
 }
 </style>

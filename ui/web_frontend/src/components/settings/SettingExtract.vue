@@ -99,6 +99,8 @@
 
 <script>
 import { useI18n } from 'vue-i18n';
+import { watch } from 'vue';
+import SettingService from '@/components/settings/settingService';
 
 export default {
   name: 'SettingExtract',
@@ -123,39 +125,24 @@ export default {
       truncate_mode: 'first'
     }
   },
-  methods: {
-    updateSettings(settings) {
-      this.batch_use_llm = settings.batch_use_llm;
-      this.web_save_content = settings.web_save_content;
-      this.web_get_category = settings.web_get_category;
-      this.web_get_abstract = settings.web_get_abstract;
-      this.file_save_content = settings.file_save_content;
-      this.file_get_category = settings.file_get_category;
-      this.file_get_abstract = settings.file_get_abstract;
-      this.note_save_content = settings.note_save_content;
-      this.note_get_category = settings.note_get_category;
-      this.note_get_abstract = settings.note_get_abstract;
-      this.truncate_content = settings.truncate_content;
-      this.truncate_max_length = settings.truncate_max_length;
-      this.truncate_mode = settings.truncate_mode;
-    },
-    getSettings() {
-      return {
-        batch_use_llm: this.batch_use_llm,
-        web_save_content: this.web_save_content,
-        web_get_category: this.web_get_category,
-        web_get_abstract: this.web_get_abstract,
-        file_save_content: this.file_save_content,
-        file_get_category: this.file_get_category,
-        file_get_abstract: this.file_get_abstract,
-        note_save_content: this.note_save_content,
-        note_get_category: this.note_get_category,
-        note_get_abstract: this.note_get_abstract,
-        truncate_content: this.truncate_content,
-        truncate_max_length: this.truncate_max_length,
-        truncate_mode: this.truncate_mode
+  async created() {
+    const settings = await SettingService.getInstance().loadSetting();
+    Object.keys(this.$data).forEach(key => {
+      if (settings.setting) {
+        if (key in settings.setting) {
+          this[key] = settings.setting[key];
+        }
       }
-    }
+    });
+
+    Object.keys(this.$data).forEach(key => {
+      watch(
+        () => this[key],
+        (newVal) => {
+          SettingService.getInstance().setSetting(key, newVal);
+        }
+      );
+    });
   }
 }
 </script>

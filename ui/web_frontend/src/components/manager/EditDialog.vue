@@ -21,7 +21,7 @@
             <div style="flex: 3;margin-right: 5px;" width="100%">
                 <div v-if="form.etype === 'web'" width="100%">
                     <div width="100%">
-                        <a :href="form.addr"
+                        <a :href="form.addr" target="_blank"
                             style="display: block; word-break: break-all; max-height: 6em; overflow: hidden; text-overflow: ellipsis;"
                             width="100%">{{ form.addr }}</a>
                     </div>

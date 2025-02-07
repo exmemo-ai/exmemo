@@ -81,6 +81,8 @@
 
 <script>
 import { useI18n } from 'vue-i18n';
+import { watch } from 'vue';
+import SettingService from '@/components/settings/settingService';
 
 export default {
     setup() {
@@ -104,43 +106,60 @@ export default {
             llm_tool_model: '',
         }
     },
-    methods: {
-        updateSettings(settings) {
+    async created() {
+        const settings = await SettingService.getInstance().loadSetting();
+        if (settings.setting) {
             this.llm_chat_prompt = settings.setting.llm_chat_prompt;
             this.llm_chat_show_count = settings.setting.llm_chat_show_count;
             this.llm_chat_memory_count = settings.setting.llm_chat_memory_count;
             this.llm_chat_max_context_count = settings.setting.llm_chat_max_context_count || '1024';
-            let chat_info = settings.setting.llm_chat_model;
+            
+            const chat_info = settings.setting.llm_chat_model || {};
             this.llm_chat_type = chat_info.type || 'default';
             this.llm_chat_apikey = chat_info.apikey || '';
             this.llm_chat_url = chat_info.url || '';
             this.llm_chat_model = chat_info.model || '';
-            let tool_info = settings.setting.llm_tool_model;
+            
+            const tool_info = settings.setting.llm_tool_model || {};
             this.llm_tool_type = tool_info.type || 'default';
             this.llm_tool_apikey = tool_info.apikey || '';
             this.llm_tool_url = tool_info.url || '';
             this.llm_tool_model = tool_info.model || '';
-        },
-        getSettings() {
-            return {
-                llm_chat_model: JSON.stringify({
+        }
+
+        const basicSettings = ['llm_chat_prompt', 'llm_chat_show_count', 
+                             'llm_chat_memory_count', 'llm_chat_max_context_count'];
+        basicSettings.forEach(key => {
+            watch(() => this[key], (newVal) => {
+                SettingService.getInstance().setSetting(key, newVal);
+            });
+        });
+
+        const chatModelKeys = ['llm_chat_type', 'llm_chat_apikey', 'llm_chat_url', 'llm_chat_model'];
+        chatModelKeys.forEach(key => {
+            watch(() => this[key], () => {
+                const modelInfo = JSON.stringify({
                     type: this.llm_chat_type,
                     apikey: this.llm_chat_apikey,
                     url: this.llm_chat_url,
                     model: this.llm_chat_model
-                }),
-                llm_tool_model: JSON.stringify({
+                });
+                SettingService.getInstance().setSetting('llm_chat_model', modelInfo);
+            });
+        });
+
+        const toolModelKeys = ['llm_tool_type', 'llm_tool_apikey', 'llm_tool_url', 'llm_tool_model'];
+        toolModelKeys.forEach(key => {
+            watch(() => this[key], () => {
+                const modelInfo = JSON.stringify({
                     type: this.llm_tool_type,
                     apikey: this.llm_tool_apikey,
                     url: this.llm_tool_url,
                     model: this.llm_tool_model
-                }),
-                llm_chat_prompt: this.llm_chat_prompt,
-                llm_chat_show_count: this.llm_chat_show_count,
-                llm_chat_memory_count: this.llm_chat_memory_count,
-                llm_chat_max_context_count: this.llm_chat_max_context_count,
-            }
-        }
+                });
+                SettingService.getInstance().setSetting('llm_tool_model', modelInfo);
+            });
+        });
     }
 }
 </script>

@@ -134,18 +134,20 @@ class SettingAPIView(APIView):
         )
         logger.debug(f"engine_name {engine_name}")
         voice_list = tts_get_voice_list(engine_name)
-        info = {"voice_list": voice_list, "voice_settings": user.settings.tts_voice}
+        info = {"voice_list": voice_list}
         return do_result(True, info)
 
     def save_settings(self, request, user):
         settings = {}
         req_params = {**request.GET.dict(), **request.POST.dict()}
         
+        #logger.error(f"params {req_params}")
         basic_settings = [
             'tts_engine', 'tts_voice', 'tts_language', 'tts_speed',
             'llm_chat_prompt', 'llm_chat_show_count',
             'llm_chat_max_context_count', 'llm_chat_memory_count',
-            'truncate_max_length', 'truncate_mode'
+            'truncate_max_length', 'truncate_mode',
+            'learn_word_voc'
         ]
         
         boolean_settings = [

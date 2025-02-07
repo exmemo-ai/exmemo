@@ -966,12 +966,11 @@ msgstr "You are a middle school English teacher"
 
 #: app_translate/translate.py:162
 #, python-brace-format
-msgid ""
-"word_colon__{src}_enter_translation_colon__{dst}_enter_freq_colon__{freq}"
-"_enter_count_colon__{times}"
+msgid "word_{src}_translation_{dst}_phonetic_{phonetic}_freq_{freq}_count_{times}"
 msgstr ""
 "Word: {src}\n"
 "Translation: {dst}\n"
+"Phonetic: {phonetic}\n"
 "Freq: {freq}\n"
 "Count: {times}"
 

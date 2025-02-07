@@ -6,6 +6,8 @@
     font-family: Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;    
 }
 
 body {
@@ -15,11 +17,18 @@ body {
 
 /* overflow-y: hidden - Hide vertical overflow content that extends beyond viewport */
 .full-container {
+    flex: 1;
+    max-height:100vh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     width: 100%;
     overflow-y: auto;
+}
+
+.main_container {
+    overflow: hidden;
+    height: var(--mainHeight, 100%) !important;
+    width: 100%; 
 }
 
 .top-row {
@@ -156,12 +165,6 @@ body {
         width: auto;
     }
 
-    .full-container {
-        height: 90vh;
-        width: 100%;
-        overflow-y: auto;
-    }
-
     .translate-header {
         flex-direction: column;
     }
@@ -170,6 +173,11 @@ body {
         flex-direction: column;
         padding: 0px;
     }    
+
+    .nav-container {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
 }
 
 .el-button {
@@ -202,6 +210,24 @@ body {
 
 .mobile-aside {
     width: 120px !important;
+}
+
+.list-options {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px;
+    width:100%;
+}
+
+.pagination-container {
+    margin-top: 0px;
+    width: 100%;
+    padding: 5px 0;
+    display: flex;
+    overflow-x: auto;
+    justify-content: left;
+    min-width: 0;
 }
 
 .translate-common-style {

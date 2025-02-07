@@ -1,11 +1,22 @@
 <template>
     <div>
+        <div>
+            <el-text>{{ $t('trans.selectWordList') }}</el-text>
+            <el-select v-model="currentVOC" @change="handleVocChange" style="width: 200px; margin-left: 10px;">
+                <el-option 
+                    v-for="item in fromList" 
+                    :key="item"
+                    :label="$t('trans.' + item)"
+                    :value="item">
+                </el-option>
+            </el-select>
+        </div>
         <div class="translate-header">
             <div class="translate-counter">
                 {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
-        <div class="translate-common-style">
+        <div class="translate-common-style">            
             <div v-if="wordList.length > 0" class="translate-word-display">
                 <p>{{ $t('trans.word') }}: {{ wordStr }}</p>
                 <p>{{ $t('trans.freq') }}: {{ freqStr }}</p>
@@ -24,7 +35,9 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_BASE } from './WordLearningSupport';
+import { getWordsFrom } from './TransFunction';
+import SettingService from '@/components/settings/settingService';
 
 export default {
     data() {
@@ -37,6 +50,8 @@ export default {
             selectCount: 0,
             showTranslation: false,
             needSave: false,
+            fromList: [],
+            currentVOC: '',
         };
     },
     methods: {
@@ -44,12 +59,18 @@ export default {
             this.showTranslation = !this.showTranslation;
         },
         markAsKnown() {
+            if (this.wordList.length === 0) {
+                return;
+            }
             this.wordList[this.currentIndex].status = 'learned';
             this.nextWord();
             this.updateCount();
             this.needSave = true;
         },
         learnToday() {
+            if (this.wordList.length === 0) {
+                return;
+            }
             this.wordList[this.currentIndex].status = 'learning';
             this.nextWord();
             this.updateCount();
@@ -77,21 +98,43 @@ export default {
                 this.$emit('update-status', 'learn');
             }
         },
-        updateWordDisplay() {
-            this.wordStr = this.wordList[this.currentIndex].word;
-            this.transStr = this.wordList[this.currentIndex].info.translate;
-            this.freqStr = this.wordList[this.currentIndex].freq;
+        async updateWordDisplay() {
+            if (this.wordList.length > 0 && this.currentIndex < this.wordList.length) {
+                this.wordStr = this.wordList[this.currentIndex].word;
+                this.transStr = await getMeaning(this.wordList[this.currentIndex].info, this.currentVOC);
+                this.freqStr = this.wordList[this.currentIndex].freq;
+            } else {
+                this.wordStr = ""
+                this.transStr = ""
+                this.freqStr = ""
+            }
             this.updateCount();
         },
         async fetch() {
             try {
-                this.wordList = await fetchWordList('get_words', 'not_learned');
+                this.fromList = await getWordsFrom(this);
+                const settingService = SettingService.getInstance();
+                await settingService.loadSetting();
+                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_BASE);
+                if (currentVOC && this.fromList.includes(currentVOC)) {
+                    this.currentVOC = currentVOC;
+                } else if (this.fromList.length > 0) {
+                    this.currentVOC = this.fromList[0];
+                }
+                
+                this.wordList = await fetchWordList('get_words', 'not_learned', null, this.currentVOC);
                 this.updateWordDisplay();
             } catch (err) {
                 console.error(err);
                 this.wordStr = this.$t('trans.errorFetchingWords');
                 this.transStr = '';
             }
+        },
+        async handleVocChange(newValue) {
+            const settingService = SettingService.getInstance();
+            settingService.setSetting(LEARN_WORD_VOC, newValue);
+            await settingService.saveSetting();
+            await this.fetch();
         },
         updateCount() {
             this.selectCount = this.wordList.filter(word => word.status === 'learning').length;
