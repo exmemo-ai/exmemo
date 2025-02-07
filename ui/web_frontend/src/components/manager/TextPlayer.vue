@@ -151,7 +151,7 @@ defineExpose({
   stop: () => player.value?.stop(),
   togglePlay: () => player.value?.togglePlay(),
   getStatus: () => player.value?.getStatus(),
-  setText: (content) => player.value?.setText(content),
+  setContent: (content) => player.value?.setContent(content),
   resume: () => player.value?.resume()
 })
 </script>
