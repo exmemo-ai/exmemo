@@ -24,7 +24,7 @@ export async function getSummary() {
             desc = desc + t('trans.to_review_today') + ': ' + res.data.today_review + '\n';
             desc = desc + t('trans.to_learn_today') + ': ' + res.data.today_learning + '\n';
             desc = desc + t('trans.to_review') + ': ' +  res.data.to_review;
-            return desc
+            return [desc, res.data.learn_data, res.data.review_data];
         }
 
     }).catch((err) => {
@@ -33,7 +33,7 @@ export async function getSummary() {
             throw new Error('Token expired');
         }
         console.error(err);
-        return 'Error: ' + err
+        return ['Error: ' + err, null];
     });
 }
 

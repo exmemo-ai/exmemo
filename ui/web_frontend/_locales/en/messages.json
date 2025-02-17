@@ -278,7 +278,10 @@
         "learnDate": "Learn date",
         "reviewTimes": "Review times",
         "lastReviewTime": "Last review time",
-        "null": "Null"
+        "null": "Null",
+        "learnWordCount": "Learned words",
+        "reviewWordCount": "Reviewed words",
+        "wordCount": "Count"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",

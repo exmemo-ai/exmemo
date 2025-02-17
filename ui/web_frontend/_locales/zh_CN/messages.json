@@ -278,7 +278,10 @@
         "learnDate": "学习时间",
         "reviewTimes": "复习次数",
         "lastReviewTime": "上次复习时间",
-        "null": "无"
+        "null": "无",
+        "learnWordCount": "学习单词数",
+        "reviewWordCount": "复习单词数",
+        "wordCount": "单词个数"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",
