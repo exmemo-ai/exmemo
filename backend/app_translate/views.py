@@ -417,11 +417,12 @@ class TranslateLearnView(APIView):
         grp = df.groupby('last_review_time').size()
         grp = grp.sort_index()
         review_date_list = df['review_date_list'].tolist()
+        review_date_list = [item for item in review_date_list if item]
         review_date_list = [item for sublist in review_date_list for item in sublist]
         review_date_list = [str(item).split('T')[0] for item in review_date_list]
-        review_date_list = list(set(review_date_list))
+        review_date_list_unique = list(set(review_date_list))
         dic_count = {}
-        for item in review_date_list:
+        for item in review_date_list_unique:
             dic_count[item] = review_date_list.count(item)
         for key in dic_count:
             if key in grp:

@@ -1,11 +1,11 @@
 <template>
     <div>
-        <div class="translate-common-style">
-            <div style="font-size: 14px; margin-top: 10px; margin-bottom: 20px;">
+        <div class="summary-container">
+            <div style="font-size: 14px; margin-top: 10px;">
                 <pre>{{ summaryStr }}</pre>
             </div>
             <div id="learnChart" style="width: 100%; height: 300px;"></div>
-            <div id="reviewChart" style="width: 100%; height: 300px; margin-top: 20px;"></div>
+            <div id="reviewChart" style="width: 100%; height: 300px;"></div>
         </div>
     </div>
 </template>
@@ -123,5 +123,12 @@ pre {
     word-wrap: break-word;
     margin: 0;
     font-family: inherit;
+}
+
+.summary-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
 }
 </style>

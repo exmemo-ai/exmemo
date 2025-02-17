@@ -72,7 +72,7 @@ export default {
                 } else {
                     this.wordStr = item.word;
                 }
-                this.transStr = await getMeaning(item);
+                this.transStr = await getMeaning(item.info);
                 this.transStr = this.transStr.replace(/\[.*?\]/g, '');
                 this.updateCount();
             }
@@ -88,6 +88,7 @@ export default {
             this.wordList = []
             const dateStr = new Date().toISOString().slice(0, 10);
             let tmpList = await fetchWordList('dictation', null, dateStr);
+            console.log(tmpList)
             for (let i = 0; i < tmpList.length; i++) {
                 this.wordList.push({'item':tmpList[i], 'flag':false});
             }

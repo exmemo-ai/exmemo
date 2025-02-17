@@ -64,7 +64,7 @@ export default {
             if (showList[this.currentIndex].info.opt['review_date_list'] == undefined) {
                 showList[this.currentIndex].info.opt['review_date_list'] = []
             }
-            showList[this.currentIndex].info.opt['review_date_list'].push(new Date().toISOString());
+            showList[this.currentIndex].info.opt['review_date_list'].push(new Date().toISOString().split('T')[0]);
         },
         markAsReview() {
             const showList = this.getShowList();
