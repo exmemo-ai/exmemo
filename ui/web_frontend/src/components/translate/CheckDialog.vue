@@ -34,7 +34,9 @@ export default {
         },
         handleClose(done) {
             if (this.parent_obj) {
-                this.parent_obj.fetchData();
+                if (this.parent_obj.fetchData) {
+                    this.parent_obj.fetchData();
+                }
             }
             this.dialogVisible = false;
             done();
