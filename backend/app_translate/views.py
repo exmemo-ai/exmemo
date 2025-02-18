@@ -1,5 +1,6 @@
 from loguru import logger
 import json
+import pandas as pd
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -209,7 +210,7 @@ class TranslateLearnView(APIView):
         elif rtype == "get_wordsfrom":
             return self.get_wordsfrom(args)
         return do_result(False, f"not support {rtype}")
-    
+
     def get_wordsfrom(self, args):
         if args['user_id'] is None:
             return do_result(False, {"list": []})
@@ -396,6 +397,41 @@ class TranslateLearnView(APIView):
         except Exception as e:
             logger.warning(f"get_example insert to db failed, {e}")
 
+    
+    def get_learn_data(self, args):
+        words = StoreTranslate.objects.all().filter(user_id=args['user_id']).values()
+        df = pd.DataFrame(list(words))
+        df['learn_date'] = df['info'].apply(lambda x: x['opt']['learn_date'] if 'opt' in x and 'learn_date' in x['opt'] else None)
+        grp = df.groupby('learn_date').size()
+        grp = grp.sort_index()
+        grp = grp.tail(30)
+        #logger.error(f'@@@@ {grp}')
+        return grp.to_dict()
+
+    def get_review_data(self, args):
+        words = StoreTranslate.objects.all().filter(user_id=args['user_id']).values()
+        df = pd.DataFrame(list(words))
+        df['last_review_time'] = df['info'].apply(lambda x: x['opt']['last_review_time'] if 'opt' in x and 'last_review_time' in x['opt'] else None)
+        df['last_review_time'] = df['last_review_time'].apply(lambda x: str(x).split('T')[0] if x else None)
+        df['review_date_list'] = df['info'].apply(lambda x: x['opt']['review_date_list'] if 'opt' in x and 'review_date_list' in x['opt'] else [])
+        grp = df.groupby('last_review_time').size()
+        grp = grp.sort_index()
+        review_date_list = df['review_date_list'].tolist()
+        review_date_list = [item for item in review_date_list if item]
+        review_date_list = [item for sublist in review_date_list for item in sublist]
+        review_date_list = [str(item).split('T')[0] for item in review_date_list]
+        review_date_list_unique = list(set(review_date_list))
+        dic_count = {}
+        for item in review_date_list_unique:
+            dic_count[item] = review_date_list.count(item)
+        for key in dic_count:
+            if key in grp:
+                grp[key] = dic_count[key]
+            else:
+                grp[key] = dic_count[key]
+        grp = grp.tail(30)
+        #logger.error(f'@@@@ {grp}')
+        return grp.to_dict()
 
     def summary(self, args, request):
         dateStr = request.GET.get("date", request.POST.get("date", None))
@@ -423,7 +459,11 @@ class TranslateLearnView(APIView):
             if info is not None and 'opt' in info and info['opt'].get("learn_date", None) == dateStr:
                 todayReview+=1
         
+        learn_data = self.get_learn_data(args)
+        review_data = self.get_review_data(args)
+
         return do_result(True, {"total_words": totalWords, "learned": learned, 
                                 "not_learned": not_learned, "today_review": todayReview, 
-                                "today_learning": learning, "to_review": review})
+                                "today_learning": learning, "to_review": review,
+                                "learn_data": learn_data, "review_data": review_data})
 

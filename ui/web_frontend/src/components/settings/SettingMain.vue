@@ -5,8 +5,14 @@
         </el-container>
         <el-container class="main_container">
           <el-container style="flex: 1; width: 100%; flex-direction: row;">
-            <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
-                <el-menu :default-active="currentSection" @select="handleSelect">
+            <el-aside class="aside-menu" :class="{ 'collapse-aside': isCollapse, 'mobile-aside': isMobile }">
+                <div class="toggle-button-collapse" @click="toggleCollapse">
+                    <el-icon>
+                        <Fold v-if="!isCollapse"/>
+                        <Expand v-else/>
+                    </el-icon>
+                </div>
+                <el-menu :default-active="currentSection" @select="handleSelect" :collapse="isCollapse">
                     <el-menu-item index="voice">
                         <span>{{ $t('voiceSynthesis') }}</span>
                     </el-menu-item>
@@ -90,6 +96,7 @@ import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
 import SettingBookmark from './SettingBookmark.vue'
 import SettingExtract from './SettingExtract.vue'
+import { Fold, Expand } from '@element-plus/icons-vue'
 
 export default {
     components: {
@@ -97,7 +104,9 @@ export default {
         SettingTTS,
         SettingLLM,
         SettingBookmark,
-        SettingExtract
+        SettingExtract,
+        Fold,
+        Expand
     },
     setup() {
         const { t } = useI18n();
@@ -110,10 +119,14 @@ export default {
             login_user: '',
             info_privilege: '',
             info_usage: '',
-            currentSection: 'voice'
+            currentSection: 'voice',
+            isCollapse: false,
         };
     },
     methods: {
+        toggleCollapse() {
+            this.isCollapse = !this.isCollapse;
+        },        
         handleResize() {
             this.isMobile = window.innerWidth < 768;
             const visualHeight = window.innerHeight;
@@ -209,26 +222,10 @@ export default {
     background: white;
 }
 
-.aside-menu {
-    width: 200px !important;
-}
-
-.aside-menu :deep(.el-menu) {
-    border-right: none;
-}
-
-.aside-menu :deep(.el-menu-item) {
-    padding: 0 15px !important;
-}
-
 @media (max-width: 768px) {
     .el-input, .el-select {
         width: 100%;
         min-width: 260px;
-    }
-
-    .aside-menu {
-        width: 100% !important;
     }
 }
 

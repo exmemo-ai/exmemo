@@ -144,7 +144,7 @@ body {
         padding: 3px;
     }
 
-    .aside-menu.mobile-aside {
+    .aside-menu {
         width: 120px !important;
     }
 
@@ -212,6 +212,47 @@ body {
     width: 120px !important;
 }
 
+.aside-menu.collapse-aside {
+    width: 36px !important;
+    padding: 0;
+    overflow: hidden;  
+}
+
+.collapse-aside .el-menu {
+    width: 0;
+    overflow: hidden;
+}
+
+.el-menu--collapse {
+transition: none !important;
+}
+  
+.aside-menu {
+transition: none !important;
+}
+
+.el-aside {
+transition: none !important;
+}
+
+.el-menu {
+transition: none !important;
+}
+
+.toggle-button-collapse {
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    background: #f4f4f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toggle-button-collapse:hover {
+    background: #e6e6e6;
+}
+ 
 .list-options {
     display: flex;
     flex-direction: column;

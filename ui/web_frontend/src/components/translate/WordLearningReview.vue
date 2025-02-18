@@ -61,6 +61,10 @@ export default {
             } else {
                 showList[this.currentIndex].info.opt['review_times'] = 1;
             }
+            if (showList[this.currentIndex].info.opt['review_date_list'] == undefined) {
+                showList[this.currentIndex].info.opt['review_date_list'] = []
+            }
+            showList[this.currentIndex].info.opt['review_date_list'].push(new Date().toISOString().split('T')[0]);
         },
         markAsReview() {
             const showList = this.getShowList();

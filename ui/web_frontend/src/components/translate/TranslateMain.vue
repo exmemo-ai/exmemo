@@ -4,8 +4,14 @@
             <app-navbar :title="navTitle" :info="navInfo" />
         </el-container>
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
-            <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
-                <el-menu :default-active="activeMenu" @select="handleSelect">
+            <el-aside class="aside-menu" :class="{ 'collapse-aside': isCollapse, 'mobile-aside': isMobile }">
+                <div class="toggle-button-collapse" @click="toggleCollapse">
+                    <el-icon>
+                        <Fold v-if="!isCollapse"/>
+                        <Expand v-else/>
+                    </el-icon>
+                </div>
+                <el-menu :default-active="activeMenu" @select="handleSelect" :collapse="isCollapse">
                     <el-menu-item index="word">
                         <span>{{ $t('vocabularyList') }}</span>
                     </el-menu-item>
@@ -28,6 +34,7 @@
 </template>
 
 <script>
+import { Fold, Expand } from '@element-plus/icons-vue'
 import EnReader from './EnReader.vue'
 import WordManager from './WordManager.vue'
 import ArticleManager from './ArticleManager.vue'
@@ -41,7 +48,9 @@ export default {
         EnReader,
         ArticleManager,
         AppNavbar,
-        WordLearning
+        WordLearning,
+        Fold,
+        Expand        
     },
     data() {
         return {
@@ -49,10 +58,14 @@ export default {
             activeMenu: 'word',
             currentComponent: 'WordManager',
             navTitle: this.$t('englishReading'),
-            navInfo: 'ReadingTools'
+            navInfo: 'ReadingTools',
+            isCollapse: false,
         }
     },
     methods: {
+        toggleCollapse() {
+            this.isCollapse = !this.isCollapse;
+        },
         handleSelect(key) {
             this.activeMenu = key;
             switch(key) {
