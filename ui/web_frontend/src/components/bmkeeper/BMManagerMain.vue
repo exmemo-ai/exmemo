@@ -4,8 +4,17 @@
       <app-navbar :title="navTitle" :info="navInfo" />
     </div>
     <el-container>
-      <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
-        <el-menu :default-active="activeMenu" @select="handleSelect">
+      <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile, 'collapse-aside': isCollapse }">
+        <div class="toggle-button-collapse" @click="toggleCollapse">
+          <el-icon>
+            <Fold v-if="!isCollapse"/>
+            <Expand v-else/>
+          </el-icon>
+        </div>
+        <el-menu 
+          :default-active="activeMenu" 
+          :collapse="isCollapse"
+          @select="handleSelect">
           <el-menu-item index="navigation">
             <span>{{ $t('quickNavigation') }}</span>
           </el-menu-item>
@@ -33,6 +42,7 @@ import SearchManager from './BMSearch.vue'
 import NavigationManager from './BMNavigation.vue'
 import ReadLaterManager from './BMReadLater.vue'
 import BookmarkTree from './BMBookmarkTree.vue'
+import { Fold, Expand } from '@element-plus/icons-vue'
 import './BMManagerStyles.css'
 
 export default {
@@ -42,11 +52,14 @@ export default {
     SearchManager,
     NavigationManager,
     ReadLaterManager,
-    BookmarkTree
+    BookmarkTree,
+    Fold,
+    Expand
   },
   data() {
     return {
       isMobile: false,
+      isCollapse: false,
       activeMenu: 'navigation',
       currentComponent: 'NavigationManager',
       navTitle: this.$t('quickNavigation'),
@@ -77,6 +90,9 @@ export default {
     },
     handleResize() {
       this.isMobile = window.innerWidth < 768;
+    },
+    toggleCollapse() {
+      this.isCollapse = !this.isCollapse;
     }
   },
   mounted() {
