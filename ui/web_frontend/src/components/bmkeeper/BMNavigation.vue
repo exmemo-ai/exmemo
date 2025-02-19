@@ -1,7 +1,6 @@
 <template>
   <div class="section">
-    <div class="section-header">
-      <h3>{{ $t('quickNavigation') }}</h3>
+    <div class="common-header">
       <div class="controls">
         <el-select v-model="bookmarkLimit" size="small" @change="refreshBookmarks">
           <template #prefix>
@@ -16,9 +15,17 @@
     </div>
     
     <div class="bookmark-list" ref="bookmarkList">
-      <div v-for="bookmark in sortedBookmarks" :key="bookmark.id" class="bookmark-card" :data-id="bookmark.id">
+      <div v-for="bookmark in sortedBookmarks" 
+           :key="bookmark.id" 
+           class="bookmark-card" 
+           :class="{ 'is-dragging': isDragging }"
+           :data-id="bookmark.id">
         <div class="bookmark-content">
           <div class="link-container">
+            <!-- 添加拖拽手柄 -->
+            <div class="drag-handle">
+              <el-icon><Operation /></el-icon>
+            </div>
             <img 
               :src="getFavicon(bookmark.url)" 
               class="favicon" 
@@ -66,7 +73,8 @@
     <el-dialog
       :title="$t('customizeBookmarks')"
       v-model="customizeDialogVisible"
-      width="800px"
+      width="90%"
+      :max-width="1200"
       class="customize-dialog"
       @close="handleCustomizeDialogClose"
     >
@@ -148,7 +156,7 @@
 
 <script>
 import Sortable from 'sortablejs'
-import { Histogram, Search, Edit, Delete } from '@element-plus/icons-vue'
+import { Histogram, Search, Edit, Delete, Operation } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
 
@@ -159,6 +167,7 @@ export default {
     Search,
     Edit,
     Delete,
+    Operation,
   },
   data() {
     return {
@@ -179,17 +188,18 @@ export default {
         title: '',
       },
       maxTitleLength: 40, 
+      isDragging: false,
     }
   },
   computed: {
     titleMaxLength() {
-      const width = window.innerWidth
-      const zoom = window.devicePixelRatio || 1
-      const baseLength = width < 768 ? 15 : 
-                        width < 1024 ? 30 :
-                        width < 1440 ? 30 : 40
+      const width = window.innerWidth;
+      const zoom = window.devicePixelRatio || 1;
+
+      let baseLength;
+      baseLength = 50;
       
-      return Math.floor(baseLength / zoom)
+      return Math.floor(baseLength / zoom);
     },
     
     formatTitle() {
@@ -209,32 +219,54 @@ export default {
           param: this.bookmarkLimit.toString()
         }
         
-        console.log('Fetching bookmarks with params:', params)
-        
         const customBookmarks = this.selectedBookmarks.map(b => b.id)
         if (customBookmarks.length > 0) {
           params.custom_ids = customBookmarks.join(',')
         }
         
         const response = await axios.get(getURL() + 'api/keeper/', { params })
-        console.log('API Response:', response.data)
         
         if(response.data.code === 200 && Array.isArray(response.data.data)) {
           const bookmarks = JSON.parse(JSON.stringify(response.data.data))
-          console.log('Bookmarks before sorting:', bookmarks)
           
-          const sorted = this.sortBookmarks(bookmarks)
-          console.log('Bookmarks after sorting:', sorted)
-
+          const dragOrder = JSON.parse(localStorage.getItem('bookmarkOrder') || '[]')
+          
+          const customOrder = this.selectedBookmarks.map(b => b.id)
+          
+          const sorted = this.applySortingPriority(bookmarks, dragOrder, customOrder)
+          
           this.$nextTick(() => {
             this.sortedBookmarks = sorted
-            console.log('Final sortedBookmarks:', this.sortedBookmarks)
+            this.initSortable()
           })
         }
       } catch (error) {
         console.error('Error fetching bookmarks:', error)
         parseBackendError(this, error)
       }
+    },
+
+    applySortingPriority(bookmarks, dragOrder, customOrder) {
+      // setup a map for quick lookup
+      const bookmarkMap = new Map(bookmarks.map(b => [b.id, b]))
+      
+      // 1. dragged bookmarks
+      const draggedBookmarks = dragOrder
+        .filter(id => bookmarkMap.has(id))
+        .map(id => bookmarkMap.get(id))
+      
+      const remainingAfterDrag = bookmarks.filter(b => !dragOrder.includes(b.id))
+      
+      // 2. custom bookmarks
+      const customBookmarks = customOrder
+        .filter(id => !dragOrder.includes(id) && bookmarkMap.has(id))
+        .map(id => bookmarkMap.get(id))
+      
+      // 3. default bookmarks
+      const defaultBookmarks = remainingAfterDrag.filter(b => !customOrder.includes(b.id))
+      
+      // concat all bookmarks
+      return [...draggedBookmarks, ...customBookmarks, ...defaultBookmarks]
     },
 
     async incrementClickCount(bookmarkId) {
@@ -484,7 +516,7 @@ export default {
         return;
       }
 
-      this.selectedBookmarks.push({
+      this.selectedBookmarks.unshift({
         ...bookmark,
         title: bookmark.title.length > 20 ? 
           bookmark.title.substring(0, 20) + '...' : 
@@ -494,8 +526,11 @@ export default {
       try {
         await axios.post(getURL() + 'api/keeper/custom-order/', {
           singleBookmark: true, 
-          bookmarkId: bookmark.id
+          bookmarkId: bookmark.id,
+          position: 'first'
         });
+        
+        await this.fetchBookmarks()
       } catch (error) {
         parseBackendError(this, error);
 
@@ -567,12 +602,45 @@ export default {
     },
 
     initSortable() {
-      if (this.$refs.bookmarkList) {
-        this.sortable = Sortable.create(this.$refs.bookmarkList, {
-          animation: 150,
-          onEnd: this.handleDragEnd
-        })
+      if (this.sortable) {
+        this.sortable.destroy()
       }
+
+      const el = this.$refs.bookmarkList
+      if (!el) return
+
+      const isMobile = 'ontouchstart' in window
+      
+      this.sortable = Sortable.create(el, {
+        animation: 150,
+        handle: '.drag-handle', 
+        delayOnTouchOnly: true,
+        delay: isMobile ? 150 : 0, 
+        touchStartThreshold: 3, 
+        fallbackTolerance: 5,
+        scrollSpeed: 20,
+        supportPointer: true,
+        forceFallback: isMobile, 
+        ghostClass: 'is-dragging',
+        dragClass: 'is-moving',
+        onStart: (evt) => {
+          this.isDragging = true
+          document.body.style.overflow = 'hidden'
+          evt.item.classList.add('being-dragged')
+        },
+        onEnd: (evt) => {
+          this.isDragging = false
+          document.body.style.overflow = ''
+          evt.item.classList.remove('being-dragged')
+          if (evt.oldIndex !== evt.newIndex) {
+            this.handleDragEnd(evt)
+          }
+        },
+
+        scroll: true,
+        scrollSensitivity: 30,
+        bubbleScroll: true,
+      })
     },
 
     handleDragEnd(evt) {
@@ -673,36 +741,29 @@ export default {
   },
   
   async mounted() {
-    await this.loadSelectedBookmarks() 
-    await this.fetchBookmarks()
+    await this.loadSelectedBookmarks();
+    await this.fetchBookmarks();
+    
     this.$nextTick(() => {
-      this.initSortable()
-    })
-
+      requestAnimationFrame(() => {
+        this.initSortable();
+      });
+    });
     window.addEventListener('resize', this.handleResize)
-    window.matchMedia('(resolution)').addListener(this.handleResize)
-    this.handleResize()
   },
-  
-  beforeUnmount() {
+
+  beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
-    window.matchMedia('(resolution)').removeListener(this.handleResize)
-  },
-  
-  updated() {
-    this.$nextTick(() => {
-      this.initSortable()
-    })
+    if (this.sortable) {
+      this.sortable.destroy()
+    }
   }
 }
 </script>
 
 <style scoped>
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.common-header {
+  justify-content: flex-end;
 }
 
 .controls {
@@ -711,132 +772,53 @@ export default {
   align-items: center;
 }
 
-.selected-text {
-  margin-right: 8px;
-  color: #606266;
-  font-size: 14px;
-}
 
-.customize-container {
-  display: flex;
-  gap: 20px;
-  height: 500px;
-}
-
-.left-panel, .right-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
-  padding: 10px;
-}
-
-.bookmark-search-list, .selected-list {
-  flex: 1;
-  overflow-y: auto;
-  margin-top: 10px;
-}
-
-.search-item, .selected-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-  margin: 4px 0;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.search-item:hover {
-  background-color: var(--el-fill-color-light);
-}
-
-.bookmark-title {
-  font-size: 14px;
-  color: var(--el-text-color-primary);
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: calc(14px / var(--zoom-ratio, 1));
-}
-
-.bookmark-url {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-left: 8px;
-}
-
-.selected-item {
-  background-color: var(--el-fill-color-lighter);
-}
-
-.customize-dialog :deep(.el-dialog__body) {
-  padding: 20px;
-}
-
-.customize-container {
+.bookmark-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  height: 500px;
-}
-
-.search-panel,
-.selected-panel {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
-  padding: 15px;
-}
-
-.search-panel .el-input {
-  margin-bottom: 15px;
-}
-
-search-results,
-.selected-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 0;
-}
-
-.search-item,
-.selected-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  margin: 4px 0;
-  border-radius: 4px;
-  background-color: var(--el-fill-color-light);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.search-item:hover {
-  background-color: var(--el-fill-color);
-}
-
-.bookmark-title {
-  flex: 1;
-  font-size: 14px;
-  color: var(--el-text-color-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.selected-panel h4 {
-  margin: 0 0 15px 0;
-  color: var(--el-text-color-primary);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+  padding: 0;
 }
 
 .bookmark-card {
   cursor: move;
+}
+
+.bookmark-card.is-dragging {
+  opacity: 0.8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+  background: var(--el-color-primary-light-9);
+  z-index: 1;
+}
+
+
+.link-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+}
+
+.bookmark-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 8px;
+}
+
+.bookmark-title {
+  display: block;
+  width: 100%;
+  font-size: calc(14px / var(--zoom-ratio, 1));
+  line-height: 1.2;
+  color: var(--el-text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: all 0.3s ease;
 }
 
 .search-count {
@@ -872,5 +854,181 @@ search-results,
 
 .edit-button:hover :deep(.el-icon) {
   color: var(--el-color-primary);
+}
+
+.click-count-container {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  margin-left: auto;
+  margin-right: 8px;
+
+}
+
+.click-icon {
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+  margin-left: auto;
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+/* --- defind setting--- */
+.left-panel, .right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.search-item:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+.selected-item {
+  background-color: var(--el-fill-color-lighter);
+}
+
+.customize-dialog :deep(.el-dialog) {
+  max-width: 1200px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.customize-dialog :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.search-panel .el-input {
+  margin-bottom: 15px;
+}
+
+.selected-panel h4 {
+  margin: 0 0 15px 0;
+  color: var(--el-text-color-primary);
+}
+
+.link-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+}
+
+.bookmark-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 8px;
+}
+
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  margin-right: 4px;
+  color: var(--el-text-color-secondary);
+  cursor: move;
+  touch-action: none;
+}
+
+.drag-handle :deep(.el-icon) {
+  font-size: 16px;
+}
+
+
+.bookmark-card.being-dragged {
+  background: var(--el-color-primary-light-9);
+  opacity: 0.8;
+}
+
+.bookmark-card.is-dragging {
+  background: var(--el-color-primary-light-8);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+  .bookmark-list {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .bookmark-info {
+    margin-right: 4px;
+  }
+
+  .bookmark-title {
+    font-size: 13px;
+    margin-right: 2px;
+    padding-right: 4px;
+  }
+
+  .link-container {
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .action-buttons {
+    gap: 2px;
+  }
+
+  .edit-button {
+    padding: 2px;
+  }
+
+  .click-count-container {
+    margin-right: 2px;
+  }
+
+  .favicon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .drag-handle {
+    padding: 8px;
+    margin: -4px 0;
+  }
+
+  .drag-handle :deep(.el-icon) {
+    font-size: 18px;
+  }
+
+  .bookmark-card {
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .bookmark-card.being-dragged {
+    transform: scale(1.02);
+    opacity: 0.9;
+    z-index: 10;
+  }
+
+  .is-dragging * {
+    pointer-events: none !important;
+  }
+
+  .bookmark-list:has(.being-dragged) .bookmark-card:not(.being-dragged) {
+    transform: scale(0.98);
+    opacity: 0.8;
+    transition: all 0.2s ease;
+  }
 }
 </style>

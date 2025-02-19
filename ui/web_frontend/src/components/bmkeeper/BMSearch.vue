@@ -1,7 +1,6 @@
 <template>
   <div class="section search-section">
-    <div class="search-header">
-      <h3 class="search-title">{{ $t('searchTitle') }}</h3>
+    <div class="common-header">
       <el-input
         v-model="searchQuery"
         :placeholder="$t('search')"
@@ -16,23 +15,23 @@
       </el-input>
     </div>
 
-    <!-- 搜索结果部分 -->
+    <!-- result part -->
     <div v-if="searchResults.length > 0 || hasSearched" class="search-results">
-      <ul v-if="searchResults.length > 0" class="result-list">
-        <li v-for="item in processedResults" :key="item.id" class="result-item">
-          <div class="result-content">
-            <div class="result-header">
+      <ul v-if="searchResults.length > 0" class="search-result-list">
+        <li v-for="item in processedResults" :key="item.id" class="search-result-item">
+          <div class="search-result-content">
+            <div class="search-result-header">
               <img :src="getFavicon(item.url)" class="favicon" @error="handleFaviconError" :data-url="item.url">
-              <a :href="item.url" target="_blank" class="result-title" v-html="highlightKeyword(item.title)"></a>
+              <a :href="item.url" target="_blank" class="search-result-title" v-html="highlightKeyword(item.title)"></a>
             </div>
-            <div class="result-details">
-              <span class="result-domain">{{ item.domain }}</span>
-              <p v-if="item.description" class="result-description">{{ item.description }}</p>
+            <div class="search-result-details">
+              <span class="search-result-domain">{{ item.domain }}</span>
+              <p v-if="item.description" class="search-result-description">{{ item.description }}</p>
             </div>
           </div>
         </li>
       </ul>
-      <div v-else class="no-results">
+      <div v-else class="search-no-results">
         {{ $t('noResults') }}
       </div>
     </div>
@@ -173,190 +172,24 @@ export default {
 </script>
 
 <style>
-.link-container a.result-title {
-  color: #333;
-  text-decoration: none;
-}
 
-/* 关键词高亮样式 */
-.link-container a.result-title span.highlight-keyword {
-  color: #409EFF;
-  font-weight: bold;
-}
-
-/* 搜索结果容器 */
-.search-results-container {
-  margin-top: 20px;
-  background: var(--el-bg-color);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-/* 搜索结果列表 */
-.search-results-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-/* 搜索结果项 */
-.search-result-item {
-  padding: 12px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  transition: background-color 0.2s ease;
-}
-
-.search-result-item:last-child {
-  border-bottom: none;
-}
-
-.search-result-item:hover {
-  background-color: var(--el-fill-color-light);
-}
-
-/* 结果内容布局 */
-.result-content {
+.search-result-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.result-header {
+.search-result-header {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.result-title {
-  font-size: 15px;
-  color: var(--el-text-color-primary);
-  text-decoration: none;
-  line-height: 1.4;
-}
-
-.result-description {
-  margin: 0;
-  font-size: 13px;
-  color: var(--el-text-color-regular);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.result-url {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.result-title span.highlight-keyword {
-  color: var(--el-color-primary);
-  font-weight: bold;
-}
-
-.no-results {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-}
-
-.favicon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  border-radius: 2px;
-}
-
-.search-results {
-  margin-top: 20px;
-  padding: 16px;
-  background: var(--el-bg-color);
-  border-radius: 8px;
-}
-
-.result-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.result-item {
-  padding: 12px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.result-item:last-child {
-  border-bottom: none;
-}
-
-.result-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.result-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.result-title {
-  font-size: 15px;
-  color: var(--el-text-color-primary);
-  text-decoration: none;
-  line-height: 1.4;
-}
-
-.result-title:hover {
-  text-decoration: underline;
-}
-
-.result-title span.highlight-keyword {
-  color: var(--el-color-primary);
-  font-weight: bold;
-}
-
-.result-details {
+.search-result-details {
   margin-left: 26px;
 }
 
-.result-domain {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  display: block;
-  margin-bottom: 4px;
-}
-
-.result-description {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--el-text-color-regular);
-  line-height: 1.5;
-}
-
-.favicon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  border-radius: 2px;
-}
-
-.no-results {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-}
-
-.result-title {
-  color: #333333 !important;
-  text-decoration: none;
-}
-
-.result-title span.highlight-keyword {
+.search-result-title span.highlight-keyword {
   color: var(--el-color-primary);
   font-weight: bold;
 }

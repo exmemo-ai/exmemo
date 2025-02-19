@@ -385,5 +385,6 @@
     "selectFolder": "Select Folder",
     "customOrder": "Custom Order",
     "foundResults": "Results",
-    "webSource": "Data sources include all read-later pages uploaded through the 'Bookmark Sync' browser extension, WeChat client, or web frontend."
+    "webSource": "Data sources include all read-later pages uploaded through the 'Bookmark Sync' browser extension, WeChat client, or web frontend.",
+    "noResults": "No results"
 }

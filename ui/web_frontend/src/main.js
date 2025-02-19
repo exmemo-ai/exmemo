@@ -21,6 +21,7 @@ import enMessages from '../_locales/en/messages.json';
 import zhCNMessages from '../_locales/zh_CN/messages.json';
 import config from './components/support/config';
 import './assets/styles/common.css'
+import './assets/styles/bm_common.css'
 
 const messages = {
   en: enMessages,

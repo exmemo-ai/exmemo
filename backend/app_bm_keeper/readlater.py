@@ -16,10 +16,12 @@ def get_readlater_bookmarks(user_id, page=1, page_size=10):
 
 def update_readlater_title_and_ctype(request, bookmark):
     """Update bookmark title and tags in read later view"""
-    return (BookmarkUpdateService(bookmark)
-            .update_title(request.data.get('title'))
-            .update_tags(request.data.get('tags'))
-            .save())
+    service = BookmarkUpdateService(bookmark)
+    if "title" in request.data:
+        service.update_title(request.data.get('title'))
+    tags = request.data.get('tags', '')
+    service.update_tags(tags)
+    return service.save() 
 
 def update_readlater_move(request, bookmark):
     """Move read later bookmark to a different folder"""
