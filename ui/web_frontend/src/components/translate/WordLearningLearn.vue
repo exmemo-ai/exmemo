@@ -17,6 +17,7 @@
                         </el-icon>
                     </el-button>
                 </p>
+                {{ $t('trans.phonetic') }}: {{ wordPhonetic }}
                 <p class="example-sentence">{{ $t('trans.exampleSentence') }}: {{ exampleSentence }}</p>
                 <p v-if="showTranslation" >{{ $t('trans.sentenceMeaning') }}: {{ sentenceMeaning }}</p>
                 <p v-if="showTranslation" >{{ $t('trans.wordMeaningInSentence') }}: {{ transStrInSentence }}</p>
@@ -36,7 +37,7 @@
 
 <script>
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
-import { fetchWordList, realUpdate, getExamples } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
 import { getLocale } from '@/main.js'
 
 export default {
@@ -47,6 +48,7 @@ export default {
     data() {
         return {
             wordStr: '',
+            wordPhonetic: '',
             wordTranslation: '',
             exampleSentence: '',
             sentenceMeaning: '',
@@ -65,21 +67,33 @@ export default {
             this.showTranslation = true;
         },
         async learned() {
-            if ('learn_times' in this.wordList[this.currentIndex].info) {
-                this.wordList[this.currentIndex].info['learn_times'] += 1;
-            } else {
-                this.wordList[this.currentIndex].info['learn_times'] = 1;
+            if (this.wordList.length === 0) {
+                return;
             }
-            this.wordList[this.currentIndex].info['learn_date'] = new Date().toISOString().split('T')[0];
+            if (this.wordList[this.currentIndex].info.opt == undefined) {
+                this.wordList[this.currentIndex].info.opt = {}
+            }            
+            if ('learn_times' in this.wordList[this.currentIndex].info.opt) {
+                this.wordList[this.currentIndex].info.opt['learn_times'] += 1;
+            } else {
+                this.wordList[this.currentIndex].info.opt['learn_times'] = 1;
+            }
+            this.wordList[this.currentIndex].info.opt['learn_date'] = new Date().toISOString().split('T')[0];
             this.wordList[this.currentIndex].status = 'review';
             this.needSave = true;
             await this.nextWord();
         },
         async learnMore() {
-            if ('learn_times' in this.wordList[this.currentIndex].info) {
-                this.wordList[this.currentIndex].info['learn_times'] += 1;
+            if (this.wordList.length === 0) {
+                return;
+            }
+            if (this.wordList[this.currentIndex].info.opt == undefined) {
+                this.wordList[this.currentIndex].info.opt = {}
+            }            
+            if ('learn_times' in this.wordList[this.currentIndex].info.opt) {
+                this.wordList[this.currentIndex].info.opt['learn_times'] += 1;
             } else {
-                this.wordList[this.currentIndex].info['learn_times'] = 1;
+                this.wordList[this.currentIndex].info.opt['learn_times'] = 1;
             }
             await this.nextWord();
         },
@@ -108,12 +122,17 @@ export default {
         async updateWordDisplay() {
             if (this.wordList.length > 0) {
                 this.wordStr = this.wordList[this.currentIndex].word;
-                this.wordTranslation = this.wordList[this.currentIndex].info.translate;;
+                if (this.wordList[this.currentIndex].info.base) {
+                    this.wordPhonetic = this.wordList[this.currentIndex].info.base.phonetic;
+                } else {
+                    this.wordPhonetic = '';
+                }
+                this.wordTranslation = await getMeaning(this.wordList[this.currentIndex].info);
                 this.exampleSentence = '';
                 this.sentenceMeaning = '';
                 this.transStrInSentence = '';
-                if ('examples' in this.wordList[this.currentIndex].info) {
-                    const examples = this.wordList[this.currentIndex].info.examples;
+                if (this.wordList[this.currentIndex].info && this.wordList[this.currentIndex].info.base && this.wordList[this.currentIndex].info.base.example_list) {
+                    const examples = this.wordList[this.currentIndex].info.base.example_list;
                     if (examples.length > 0 && 'sentence' in examples[0]) {
                         this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
                         this.updateCount();
@@ -122,10 +141,15 @@ export default {
                 }
                 const data = await getExamples(this.wordList[this.currentIndex].word);
                 if (data && 'examples' in data && data.word === this.wordList[this.currentIndex].word) {
-                    this.wordList[this.currentIndex].info.examples = data.examples;
-                    if (this.wordList[this.currentIndex].info.examples.length > 0) {
-                        this.updateExample(this.wordList[this.currentIndex].info.examples[Math.floor(Math.random() * this.wordList[this.currentIndex].info.examples.length)]);
+                    if (this.wordList[this.currentIndex].info.base === undefined) {
+                        this.wordList[this.currentIndex].info.base = {}
+                    }
+                    this.wordList[this.currentIndex].info.base.example_list = data.examples;
+                    const examples = this.wordList[this.currentIndex].info.base.example_list;
+                    if (examples.length > 0 && 'sentence' in examples[0]) {
+                        this.updateExample(examples[Math.floor(Math.random() * examples.length)]);
                         this.updateCount();
+                        return;
                     }
                 }
             }

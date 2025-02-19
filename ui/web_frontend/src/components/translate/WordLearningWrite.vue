@@ -17,13 +17,14 @@
                 <el-button @click="toggleTranslation">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="goPrev">{{ $t('trans.goPrev') }}</el-button>
                 <el-button @click="goNext">{{ $t('trans.goNext') }}</el-button>
+                <el-button @click="noLonger">{{ $t('trans.noLongerWrite') }}</el-button>
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { fetchWordList, realUpdate } from './WordLearningSupport';
+import { fetchWordList, getMeaning } from './WordLearningSupport';
 
 export default {
     data() {
@@ -44,6 +45,13 @@ export default {
             }
             this.updateWordDisplay();
         },
+        noLonger() {
+            this.wordList.splice(this.currentIndex, 1);
+            if (this.currentIndex >= this.wordList.length) {
+                this.currentIndex = 0;
+            }
+            this.updateWordDisplay();
+        },
         goPrev() {
             this.currentIndex = (this.currentIndex - 1 + this.wordList.length) % this.wordList.length;
             this.hideStatus = 0;
@@ -54,7 +62,7 @@ export default {
             this.hideStatus = 0;
             this.updateWordDisplay();
         },
-        updateWordDisplay() {
+        async updateWordDisplay() {
             if (this.currentIndex < this.wordList.length) {
                 const item = this.wordList[this.currentIndex]['item']
                 if (this.hideStatus == 0) {
@@ -64,18 +72,23 @@ export default {
                 } else {
                     this.wordStr = item.word;
                 }
-                this.transStr = item.info.translate;
+                this.transStr = await getMeaning(item.info);
                 this.transStr = this.transStr.replace(/\[.*?\]/g, '');
                 this.updateCount();
             }
         },
         updateCount() {
+            if (this.wordList.length == 0) {
+                this.finishCount = 0;
+                return;
+            }
             this.finishCount = this.currentIndex + 1;
         },
         async fetch() {
             this.wordList = []
             const dateStr = new Date().toISOString().slice(0, 10);
             let tmpList = await fetchWordList('dictation', null, dateStr);
+            console.log(tmpList)
             for (let i = 0; i < tmpList.length; i++) {
                 this.wordList.push({'item':tmpList[i], 'flag':false});
             }

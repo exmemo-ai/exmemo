@@ -5,9 +5,16 @@
     </el-container>
     
     <el-container style="flex: 1; width: 100%; overflow: hidden;">
-      <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
+      <el-aside class="aside-menu" :class="{ 'collapse-aside': isCollapse, 'mobile-aside': isMobile }">
+        <div class="toggle-button-collapse" @click="toggleCollapse">
+          <el-icon>
+            <Fold v-if="!isCollapse"/>
+            <Expand v-else/>
+          </el-icon>
+        </div>
         <el-menu
           :default-active="activeView"
+          :collapse="isCollapse"
           @select="handleMenuSelect">
           <el-menu-item index="paper">
             <span>{{ $t('paperAnalysis') }}</span>
@@ -39,6 +46,7 @@
 </template>
 
 <script>
+import { Fold, Expand } from '@element-plus/icons-vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import VoiceReader from './VoiceReader.vue'
 import PaperAnalysis from './PaperAnalysis.vue'
@@ -49,7 +57,9 @@ export default {
     AppNavbar,
     VoiceReader,
     PaperAnalysis,
-    WebTools
+    WebTools,
+    Fold,
+    Expand
   },
   data() {
     return {
@@ -57,11 +67,15 @@ export default {
       isLogin: true,
       activeView: 'paper',
       login_user: '',
+      isCollapse: false,
     };
   },
   methods: {
     handleMenuSelect(key) {
       this.activeView = key;
+    },
+    toggleCollapse() {
+      this.isCollapse = !this.isCollapse;
     },
     handleResize() {
       this.isMobile = window.innerWidth < 768;

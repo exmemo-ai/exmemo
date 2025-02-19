@@ -361,13 +361,25 @@ def get_entry_list(keywords, query_args, max_count, fields = None):
 
 def get_type_options(ctype):
     try:
-        unique_values = StoreEntry.objects.values_list(
-            ctype, flat=True
-        ).distinct()  # pgsql not support distinct
-        unique_values = list(set(unique_values))
-        unique_values = [x for x in unique_values if x is not None and len(x) > 0]
-        logger.debug(f"unique_values {unique_values}")
-        return HttpResponse(json.dumps(unique_values))
+        if ctype != 'all':
+            unique_values = StoreEntry.objects.values_list(
+                ctype, flat=True
+            ).distinct()  # pgsql not support distinct
+            unique_values = list(set(unique_values))
+            unique_values = [x for x in unique_values if x is not None and len(x) > 0]
+            logger.debug(f"unique_values {unique_values}")
+            return HttpResponse(json.dumps(unique_values))
+        else:
+            ret_dict = {}
+            for field in ["ctype", "etype", "status"]:
+                unique_values = StoreEntry.objects.values_list(
+                    field, flat=True
+                ).distinct()
+                unique_values = list(set(unique_values))
+                unique_values = [x for x in unique_values if x is not None and len(x) > 0]
+                logger.debug(f"unique_values {unique_values}")
+                ret_dict[field] = unique_values
+            return HttpResponse(json.dumps(ret_dict))
     except Exception as e:
         logger.warning(f"record get failed {e}")
         return HttpResponse(json.dumps([]))

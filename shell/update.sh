@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DATE_STR=`date +%y%m%d`
-PROXY_ADDR=http://192.168.10.168:12346
+PROXY_ADDR=http://192.168.10.166:12346
 NO_PROXY="192.168.10.166,192.168.10.169,192.168.10.168,192.168.10.165"
 
 cd /exports/exmemo/code/exmemo/

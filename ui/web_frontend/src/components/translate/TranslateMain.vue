@@ -4,19 +4,25 @@
             <app-navbar :title="navTitle" :info="navInfo" />
         </el-container>
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
-            <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
-                <el-menu :default-active="activeMenu" @select="handleSelect">
-                    <el-menu-item index="reader">
-                        <span>{{ $t('englishReading') }}</span>
-                    </el-menu-item>
+            <el-aside class="aside-menu" :class="{ 'collapse-aside': isCollapse, 'mobile-aside': isMobile }">
+                <div class="toggle-button-collapse" @click="toggleCollapse">
+                    <el-icon>
+                        <Fold v-if="!isCollapse"/>
+                        <Expand v-else/>
+                    </el-icon>
+                </div>
+                <el-menu :default-active="activeMenu" @select="handleSelect" :collapse="isCollapse">
                     <el-menu-item index="word">
                         <span>{{ $t('vocabularyList') }}</span>
                     </el-menu-item>
-                    <el-menu-item index="article">
-                        <span>{{ $t('articleList') }}</span>
-                    </el-menu-item>
                     <el-menu-item index="learn">
                         <span>{{ $t('learn') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="reader">
+                        <span>{{ $t('englishReading') }}</span>
+                    </el-menu-item>
+                    <el-menu-item index="article">
+                        <span>{{ $t('articleList') }}</span>
                     </el-menu-item>
                 </el-menu>
             </el-aside>
@@ -28,6 +34,7 @@
 </template>
 
 <script>
+import { Fold, Expand } from '@element-plus/icons-vue'
 import EnReader from './EnReader.vue'
 import WordManager from './WordManager.vue'
 import ArticleManager from './ArticleManager.vue'
@@ -37,22 +44,28 @@ import AppNavbar from '@/components/support/AppNavbar.vue'
 export default {
     name: 'TranslateMain',
     components: {
-        EnReader,
         WordManager,
+        EnReader,
         ArticleManager,
         AppNavbar,
-        WordLearning
+        WordLearning,
+        Fold,
+        Expand        
     },
     data() {
         return {
             isMobile: false,
-            activeMenu: 'reader',
-            currentComponent: 'EnReader',
+            activeMenu: 'word',
+            currentComponent: 'WordManager',
             navTitle: this.$t('englishReading'),
-            navInfo: 'ReadingTools'
+            navInfo: 'ReadingTools',
+            isCollapse: false,
         }
     },
     methods: {
+        toggleCollapse() {
+            this.isCollapse = !this.isCollapse;
+        },
         handleSelect(key) {
             this.activeMenu = key;
             switch(key) {

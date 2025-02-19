@@ -1,11 +1,18 @@
 <template>
     <div class="full-container">
-        <el-container style="flex: 0; width: 100%;">
+        <el-container ref="navbar" style="flex: 0; width: 100%;">
             <app-navbar :title="$t('userSetting')" :info="'Setting'" />
         </el-container>
-        <el-container style="flex: 1; width: 100%; overflow: hidden;">
-            <el-aside class="aside-menu" :class="{ 'mobile-aside': isMobile }">
-                <el-menu :default-active="currentSection" @select="handleSelect">
+        <el-container class="main_container">
+          <el-container style="flex: 1; width: 100%; flex-direction: row;">
+            <el-aside class="aside-menu" :class="{ 'collapse-aside': isCollapse, 'mobile-aside': isMobile }">
+                <div class="toggle-button-collapse" @click="toggleCollapse">
+                    <el-icon>
+                        <Fold v-if="!isCollapse"/>
+                        <Expand v-else/>
+                    </el-icon>
+                </div>
+                <el-menu :default-active="currentSection" @select="handleSelect" :collapse="isCollapse">
                     <el-menu-item index="voice">
                         <span>{{ $t('voiceSynthesis') }}</span>
                     </el-menu-item>
@@ -69,9 +76,10 @@
                     </div>
                 </div>
             </el-container>
+          </el-container>
         </el-container>
-
-        <el-footer class="settings-footer">
+        
+        <el-footer ref="footer" class="settings-footer">
             <el-button @click='saveFunc' type="primary">{{ $t('save') }}</el-button>
             <el-button @click='resetFunc'>{{ $t('reset') }}</el-button>
             <el-button @click='resetPassword'>{{ $t('set_password') }}</el-button>
@@ -80,14 +88,15 @@
 </template>
 
 <script>
-import { getURL, parseBackendError } from '@/components/support/conn'
-import axios from 'axios';
+import { parseBackendError } from '@/components/support/conn'
+import SettingService from '@/components/settings/settingService';
 import { useI18n } from 'vue-i18n';
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
 import SettingBookmark from './SettingBookmark.vue'
 import SettingExtract from './SettingExtract.vue'
+import { Fold, Expand } from '@element-plus/icons-vue'
 
 export default {
     components: {
@@ -95,7 +104,9 @@ export default {
         SettingTTS,
         SettingLLM,
         SettingBookmark,
-        SettingExtract
+        SettingExtract,
+        Fold,
+        Expand
     },
     setup() {
         const { t } = useI18n();
@@ -108,112 +119,76 @@ export default {
             login_user: '',
             info_privilege: '',
             info_usage: '',
-            currentSection: 'voice'
+            currentSection: 'voice',
+            isCollapse: false,
         };
     },
     methods: {
+        toggleCollapse() {
+            this.isCollapse = !this.isCollapse;
+        },        
         handleResize() {
             this.isMobile = window.innerWidth < 768;
+            const visualHeight = window.innerHeight;
+            const navbarHeight = this.$refs.navbar.$el.offsetHeight;
+            const footerHeight = this.$refs.footer.$el.offsetHeight;
+            document.documentElement.style.setProperty('--mainHeight', `${visualHeight - navbarHeight - footerHeight}px`);
         },
         resetPassword() {
             this.$router.push("/set_password?user_id=" + localStorage.getItem('username'));
         },
-        loadSetting() {
-            const formData = new FormData();
-            formData.append('rtype', 'get_setting');
-            axios.post(getURL() + 'api/setting/', formData).then((res) => {
-                console.log(res);
-                console.log(res.data);
-                if (res.data.status == "success") {
-                    this.info_privilege = res.data.privilege;
-                    this.info_usage = res.data.usage;
-                    this.$refs.ttsSettings.updateSettings({
-                        ...res.data.setting,
-                        engine_list: res.data.engine_list
-                    });
-                    this.$refs.llmSettings.updateSettings(res.data);
-                    this.$refs.bookmarkSettings.updateSettings(res.data);
-                    this.$refs.extractSettings.updateSettings(res.data.setting);
+        async loadSetting() {
+            try {
+                const settingService = SettingService.getInstance();
+                const data = await settingService.loadSetting();
+                if (data.status === "success") {
+                    this.info_privilege = data.privilege;
+                    this.info_usage = data.usage;
                 }
-            }).catch((err) => {
+            } catch (err) {
                 parseBackendError(this, err);
-            });
+            }
         },
-        resetFunc() {
-            this.$confirm(this.$t('confirmResetSettings'), this.$t('hint'), {
-                confirmButtonText: this.$t('confirm'),
-                cancelButtonText: this.$t('cancel'),
-                type: 'warning'
-            }).then(() => {
-                this.realReset();
-            }).catch(() => {
-                this.$message({
-                    type: 'info',
-                    message: this.$t('operationCancelled')
-                });
-            });
-        },
-        realReset() {
-            const formData = new FormData();
-            formData.append('rtype', 'reset');
-            axios.post(getURL() + 'api/setting/', formData).then((res) => {
-                console.log(res);
-                console.log(res.data);
-                if (res.data.status == "success") {
+
+        async realReset() {
+            try {
+                const settingService = SettingService.getInstance();
+                const data = await settingService.resetSetting();
+                if (data.status === "success") {
                     this.$message({
-                        message: res.data.info,
+                        message: data.info,
                         type: 'success'
                     });
                     this.loadSetting();
                 } else {
                     this.$message({
-                        message: res.data.info,
+                        message: data.info,
                         type: 'warning'
                     });
                 }
-            }).catch((err) => {
+            } catch (err) {
                 parseBackendError(this, err);
-            });
+            }
         },
-        saveFunc() {
-            console.log(this.engine_value, this.language_value, this.speed_value);
-            const ttsSettings = this.$refs.ttsSettings.getSettings();
-            const llmSettings = this.$refs.llmSettings.getSettings();
-            const bookmarkSettings = this.$refs.bookmarkSettings.getSettings();
-            const extractSettings = this.$refs.extractSettings.getSettings();
-            const formData = new FormData();
-            formData.append('rtype', 'save');
-            formData.append('tts_engine', ttsSettings.tts_engine);
-            formData.append('tts_voice', ttsSettings.tts_voice);
-            formData.append('tts_language', ttsSettings.tts_language);
-            formData.append('tts_speed', ttsSettings.tts_speed);
-            formData.append('llm_chat_model', llmSettings.llm_chat_model);
-            formData.append('llm_tool_model', llmSettings.llm_tool_model);
-            formData.append('llm_chat_prompt', llmSettings.llm_chat_prompt);
-            formData.append('llm_chat_show_count', llmSettings.llm_chat_show_count);
-            formData.append('llm_chat_max_context_count', llmSettings.llm_chat_max_context_count);
-            formData.append('llm_chat_memory_count', llmSettings.llm_chat_memory_count);
-            formData.append('bookmark_download_web', bookmarkSettings.bookmark_download_web);
-            Object.entries(extractSettings).forEach(([key, value]) => {
-                formData.append(key, value);
-            });
-            axios.post(getURL() + 'api/setting/', formData).then((res) => {
-                console.log(res);
-                console.log(res.data);
-                if (res.data.status == "success") {
+
+        async saveFunc() {
+            try {                
+                const settingService = SettingService.getInstance();
+                const data = await settingService.saveSetting();
+                if (data.status === "success") {
                     this.$message({
-                        message: res.data.info,
+                        message: data.info,
                         type: 'success'
                     });
                 } else {
                     this.$message({
-                        message: res.data.info,
+                        message: data.info,
                         type: 'warning'
                     });
                 }
-            }).catch((err) => {
+            } catch (err) {
                 parseBackendError(this, err);
-            });
+            }
         },
         handleSelect(key) {
             this.currentSection = key;
@@ -227,6 +202,7 @@ export default {
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.handleResize);
+        SettingService.getInstance().resetPendingSetting();
     },
 }
 </script>
@@ -246,26 +222,10 @@ export default {
     background: white;
 }
 
-.aside-menu {
-    width: 200px !important;
-}
-
-.aside-menu :deep(.el-menu) {
-    border-right: none;
-}
-
-.aside-menu :deep(.el-menu-item) {
-    padding: 0 15px !important;
-}
-
 @media (max-width: 768px) {
     .el-input, .el-select {
         width: 100%;
         min-width: 260px;
-    }
-
-    .aside-menu {
-        width: 100% !important;
     }
 }
 

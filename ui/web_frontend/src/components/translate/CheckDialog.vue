@@ -33,6 +33,11 @@ export default {
             this.txtAnswer = "";
         },
         handleClose(done) {
+            if (this.parent_obj) {
+                if (this.parent_obj.fetchData) {
+                    this.parent_obj.fetchData();
+                }
+            }
             this.dialogVisible = false;
             done();
         },

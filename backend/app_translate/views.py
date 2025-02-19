@@ -1,5 +1,6 @@
 from loguru import logger
 import json
+import pandas as pd
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -13,9 +14,10 @@ from backend.common.utils.net_tools import do_result
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from . import translate
-from .models import StoreEnglishArticle, StoreTranslate, StoreTranslateWord
+from .models import StoreEnglishArticle, StoreTranslate
 from .serializer import StoreEnglishArticleSerializer, StoreTranslateSerializer
-from backend.common.llm.llm_hub import llm_query_json
+from app_translate import word_processor
+
 
 MSG_ROLE = _("you_are_a_middle_school_english_teacher")
 
@@ -201,22 +203,72 @@ class TranslateLearnView(APIView):
             return self.get_sentence(args, request)
         elif rtype == "summary":
             return self.summary(args, request)
+        elif rtype == "insert_wordlist":
+            return self.insert_wordlist(args, request)
+        elif rtype == "delete_wordlist":
+            return self.delete_wordlist(args, request)
+        elif rtype == "get_wordsfrom":
+            return self.get_wordsfrom(args)
         return do_result(False, f"not support {rtype}")
+
+    def get_wordsfrom(self, args):
+        if args['user_id'] is None:
+            return do_result(False, {"list": []})
+        queryset = StoreTranslate.objects.values('wfrom').distinct()
+        wordsfrom = [item['wfrom'] for item in queryset]
+        wordsfrom = list(set(wordsfrom)) + ['ALL']
+        return do_result(True, {"list": wordsfrom})
+    
+    def insert_wordlist(self, args, request):
+        wfrom = request.GET.get("wfrom", request.POST.get("wfrom", None))
+        if wfrom is None:
+            return do_result(False, "no xfrom")
+        if args['user_id'] is None:
+            return do_result(False, "no user")
+        if wfrom == "JHSW_1600":
+            word_processor.insert_words(args['user_id'], wfrom = wfrom)
+        elif wfrom == "HSW_3500":
+            word_processor.insert_words(args['user_id'], wfrom = wfrom)
+        elif wfrom.startswith("BASE_"):
+            word_processor.insert_words(args['user_id'], wfrom = 'BASE', limit=int(wfrom[5:]))
+        else:
+            return do_result(False, f"no support wfrom {wfrom}")
+        return do_result(True, "ok")
+    
+    def delete_wordlist(self, args, request):
+        status = request.GET.get("status", request.POST.get("status", None))
+        if status is None:
+            return do_result(False, "no status")
+        if args['user_id'] is None:
+            return do_result(False, "no user")
+        if status == "not_learned":
+            StoreTranslate.objects.filter(user_id=args['user_id'], status='not_learned').delete()
+        elif status == "learned":
+            StoreTranslate.objects.filter(user_id=args['user_id'], status='learned').delete()
+        elif status == "all":
+            StoreTranslate.objects.filter(user_id=args['user_id']).delete()
+        else:
+            return do_result(False, f"no support status {status}")
+        return do_result(True, "ok")
     
     def get_words(self, args, request):
         if args['user_id'] is None:
             return do_result(False, {"list": []})
         status = request.GET.get("status", request.POST.get("status", "not_learned"))
         dateStr = request.GET.get("date", request.POST.get("date", None))
+        wfrom = request.GET.get("wfrom", request.POST.get("wfrom", None))
         limit = 100
         if dateStr is not None:
             queryset = StoreTranslate.objects.filter(
                 user_id=args['user_id'], status=status, 
-                updated_time__gte=dateStr).order_by("freq").all()[:limit]
+                updated_time__gte=dateStr)
         else:
             queryset = StoreTranslate.objects.filter(
                 user_id=args['user_id'], status=status
-                ).order_by("freq").all()[:limit]
+                )
+        if wfrom is not None and wfrom != "ALL":
+            queryset = queryset.filter(wfrom=wfrom)
+        queryset = queryset.order_by("freq").all()[:limit]
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
         json_data = json.loads(json.dumps(data))
@@ -239,7 +291,11 @@ class TranslateLearnView(APIView):
             if info is None:
                 ret.append(item)
                 continue
-            learn_date = info.get("learn_date", None)
+            learn_date = None
+            if 'opt' in info:
+                learn_date = info['opt'].get("learn_date", None)
+            if learn_date is None:
+                learn_date = info.get("learn_date", None)
             if learn_date is None or learn_date != date:
                 ret.append(item)
         json_data = json.loads(json.dumps(ret))
@@ -261,7 +317,11 @@ class TranslateLearnView(APIView):
             info = item.get("info", None)
             if info is None:
                 continue
-            learn_date = info.get("learn_date", None)
+            learn_date = None
+            if 'opt' in info:
+                learn_date = info['opt'].get("learn_date", None)
+            if learn_date is None:
+                learn_date = info.get("learn_date", None)
             if learn_date == date:
                 ret.append(item)
         json_data = json.loads(json.dumps(ret))
@@ -296,38 +356,82 @@ class TranslateLearnView(APIView):
             return do_result(False, "no word")
         if args['user_id'] is None:
             return do_result(False, "no user")
-        try:
-            stored_example = StoreTranslateWord.objects.get(word=word)
-            examples = stored_example.examples
-            logger.error(f'examples {examples}')
-            if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
-                return do_result(True, {"word": word, "examples": examples})
-            ret, example = self.make_sentence(args['user_id'], word)
-            if ret:
-                return do_result(True, {"word": word, "examples": [example]})            
-        except StoreTranslateWord.DoesNotExist:
-            ret, example = self.make_sentence(args['user_id'], word)
-            if ret:
-                return do_result(True, {"word": word, "examples": [example]})
+        try: 
+            stored_examples = StoreTranslate.objects.filter(word=word, user_id=args['user_id'])
+            if stored_examples.exists():
+                obj = stored_examples.first()
+                examples = None
+                if 'base' in obj.info and 'example_list' in obj.info['base']:
+                    examples = obj.info['base']['example_list']
+                elif 'examples' in obj.info:
+                    examples = obj.info['examples']
+                if examples is not None:
+                    logger.info(f'examples {examples}')
+                    if isinstance(examples, list) and len(examples) > 0 and 'sentence' in examples[0]:
+                        return do_result(True, {"word": word, "examples": examples})
         except Exception as e:
-            logger.warning(f"get_sentence {e}")
-        return do_result(False, "generate sentence error")
-
-    def make_sentence(self, user_id, word):
-        ret, example = translate.generate_sentence_example(user_id, word)
+            logger.warning(f"get_example {e}")
+        wm = word_processor.WordManager.get_instance()
+        wordItem = wm.get_word(word)
+        if wordItem is not None and len(wordItem.example_list) > 0:
+            self.update_db(args['user_id'], word, wordItem, None)
+            return do_result(True, {"word": word, "examples": wordItem.example_list})
+        ret, example = translate.generate_sentence_example(args['user_id'], word)
         if ret:
-            ret, en_regular, freq, translation = translate.TranslateWord.get_instance().get_word_info(word, True, user_id, False)
-            StoreTranslateWord.objects.create(
-                user_id=user_id,
-                word=word,
-                regular = en_regular,
-                freq=freq,
-                translation=translation,
-                examples=[example],
-                created_time=timezone.now()
-            )
-        return ret, example
+            self.update_db(args['user_id'], word, None, [example])
+            return do_result(True, {"word": word, "examples": [example]})
+        return do_result(False, "generate sentence error")
+    
 
+    def update_db(self, user_id, word, base, example_list):
+        try:
+            logger.info(f'add example to db {base}, {example_list}')
+            stored_examples = StoreTranslate.objects.filter(word=word, user_id=user_id)
+            if stored_examples.exists():
+                obj = stored_examples.first()
+                if base is not None:
+                    obj.info['base'] = base.serialize()
+                if example_list is not None:
+                    obj.info['base']['example_list'] = example_list
+                obj.save()
+        except Exception as e:
+            logger.warning(f"get_example insert to db failed, {e}")
+
+    
+    def get_learn_data(self, args):
+        words = StoreTranslate.objects.all().filter(user_id=args['user_id']).values()
+        df = pd.DataFrame(list(words))
+        df['learn_date'] = df['info'].apply(lambda x: x['opt']['learn_date'] if 'opt' in x and 'learn_date' in x['opt'] else None)
+        grp = df.groupby('learn_date').size()
+        grp = grp.sort_index()
+        grp = grp.tail(30)
+        #logger.error(f'@@@@ {grp}')
+        return grp.to_dict()
+
+    def get_review_data(self, args):
+        words = StoreTranslate.objects.all().filter(user_id=args['user_id']).values()
+        df = pd.DataFrame(list(words))
+        df['last_review_time'] = df['info'].apply(lambda x: x['opt']['last_review_time'] if 'opt' in x and 'last_review_time' in x['opt'] else None)
+        df['last_review_time'] = df['last_review_time'].apply(lambda x: str(x).split('T')[0] if x else None)
+        df['review_date_list'] = df['info'].apply(lambda x: x['opt']['review_date_list'] if 'opt' in x and 'review_date_list' in x['opt'] else [])
+        grp = df.groupby('last_review_time').size()
+        grp = grp.sort_index()
+        review_date_list = df['review_date_list'].tolist()
+        review_date_list = [item for item in review_date_list if item]
+        review_date_list = [item for sublist in review_date_list for item in sublist]
+        review_date_list = [str(item).split('T')[0] for item in review_date_list]
+        review_date_list_unique = list(set(review_date_list))
+        dic_count = {}
+        for item in review_date_list_unique:
+            dic_count[item] = review_date_list.count(item)
+        for key in dic_count:
+            if key in grp:
+                grp[key] = dic_count[key]
+            else:
+                grp[key] = dic_count[key]
+        grp = grp.tail(30)
+        #logger.error(f'@@@@ {grp}')
+        return grp.to_dict()
 
     def summary(self, args, request):
         dateStr = request.GET.get("date", request.POST.get("date", None))
@@ -341,12 +445,25 @@ class TranslateLearnView(APIView):
             user_id=args['user_id'], status='learned').count()
         learning = StoreTranslate.objects.filter(
             user_id=args['user_id'], status='learning').count()
-        todayReview = StoreTranslate.objects.filter(
-            user_id=args['user_id'], status='review', updated_time__gte=dateStr).count()
         review = StoreTranslate.objects.filter(
             user_id=args['user_id'], status='review').count()
+
+        #todayReview = StoreTranslate.objects.filter(
+        #    user_id=args['user_id'], status='review', updated_time__gte=dateStr).count()        
+        queryset = StoreTranslate.objects.filter(
+            user_id=args['user_id'], status='review', updated_time__gte=dateStr)
+        serializer = StoreTranslateSerializer(queryset, many=True)
+        todayReview = 0
+        for item in serializer.data:
+            info = item.get("info", None)
+            if info is not None and 'opt' in info and info['opt'].get("learn_date", None) == dateStr:
+                todayReview+=1
         
+        learn_data = self.get_learn_data(args)
+        review_data = self.get_review_data(args)
+
         return do_result(True, {"total_words": totalWords, "learned": learned, 
                                 "not_learned": not_learned, "today_review": todayReview, 
-                                "today_learning": learning, "to_review": review})
+                                "today_learning": learning, "to_review": review,
+                                "learn_data": learn_data, "review_data": review_data})
 
