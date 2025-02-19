@@ -1,82 +1,74 @@
 <template>
   <div class="bookmark-tree-container">
-    <div class="tree-header">
-      <div class="header-left">
-        <h3>{{ $t('bookmarkTree') }}</h3>
-        <!--
-        <el-button-group>
-          <el-button @click="expandAll">
-            <el-icon><ArrowDown /></el-icon>
-          </el-button>
-          <el-button @click="collapseAll">
-            <el-icon><ArrowUp /></el-icon>
-          </el-button>
-        </el-button-group>
-        -->
-      </div>
-      <el-button type="primary" @click="refreshTree">
-        <el-icon><Refresh /></el-icon>
-      </el-button>
-    </div>
-
-    <el-tree
-      ref="bookmarkTreeRef"
-      :data="treeData"
-      :props="defaultProps"
-      node-key="id"
-      :expand-on-click-node="true"
-      :default-expanded-keys="['bookmarkBar']"
-      v-model:expanded-keys="expandedKeys"
-      :indent="16"
-      draggable
-      :allow-drop="handleAllowDrop"
-      :allow-drag="handleAllowDrag"
-      @node-drop="handleDrop"
-      @node-drag-start="handleDragStart"
-      @node-drag-end="handleDragEnd"
-      @node-click="handleNodeClick"
-      @node-drag-over="handleDragOver"
-      @node-drag-leave="handleDragLeave">
-      <template #default="{ node, data }">
-        <div class="tree-node" 
-             :class="{ 'drag-over': isDraggingOver === node.data.id }"
-             :style="{ paddingLeft: node.level * 16 + 'px' }">
-          <template v-if="data.type === 'folder'">
-            <el-icon><Folder /></el-icon>
-            <span class="folder-name">
-              {{ formatLabel(data.title) }}
-            </span>
-            <span class="bookmark-count">({{ data.children?.length || 0 }})</span>
-          </template>
-          <template v-else>
-            <img :src="getFavicon(data.url)" class="favicon" @error="handleFaviconError">
-            <a :href="data.url" 
-               target="_blank" 
-               class="bookmark-link"
-               :title="`${data.title}\n${data.url}`"
-               @click.stop>
-              {{ formatLabel(data.title) }}
-            </a>
-            <div class="bookmark-actions">
-              <el-tooltip :content="$t('editBookmark')" placement="top">
-                <el-button size="small" @click.stop="handleEdit(data)">
-                  <el-icon><Edit /></el-icon>
-                </el-button>
-              </el-tooltip>
-              <el-tooltip :content="$t('deleteBookmark')" placement="top">
-                <el-button size="small" type="danger" @click.stop="handleDelete(node, data)">
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-              </el-tooltip>
+    <div class="common-header">
+      <div class="header-content">
+        <el-tree
+          ref="bookmarkTreeRef"
+          :data="treeData"
+          :props="defaultProps"
+          node-key="id"
+          :expand-on-click-node="false"
+          :default-expanded-keys="['bookmarkBar']"
+          v-model:expanded-keys="expandedKeys"
+          :indent="16"
+          draggable
+          :allow-drop="handleAllowDrop"
+          :allow-drag="handleAllowDrag"
+          @node-drop="handleDrop"
+          @node-drag-start="handleDragStart"
+          @node-drag-end="handleDragEnd"
+          @node-click="handleNodeClick"
+          @node-drag-over="handleDragOver"
+          @node-drag-leave="handleDragLeave">
+          <template #default="{ node, data }">
+            <div class="tree-node" 
+                 :class="{ 
+                   'drag-over': isDraggingOver === node.data.id,
+                   'is-dragging': isDragging && node.data.id === draggedNodeId,
+                   'can-drag': data.id !== 'bookmarkBar'
+                 }"
+                 :data-id="data.id">
+              <template v-if="data.type === 'folder'">
+                <el-icon><Folder /></el-icon>
+                <span class="tree-folder-name">
+                  {{ formatLabel(data.title) }}
+                </span>
+                <span class="bookmark-count">({{ data.children?.length || 0 }})</span>
+              </template>
+              <template v-else>
+                <img :src="getFavicon(data.url)" class="favicon" @error="handleFaviconError">
+                <a :href="data.url" 
+                   target="_blank" 
+                   class="bookmark-link"
+                   :title="`${data.title}\n${data.url}`"
+                   @click.stop>
+                  {{ formatLabel(data.title) }}
+                </a>
+                <div class="bookmark-actions">
+                  <el-tooltip :content="$t('editBookmark')" placement="top">
+                    <el-button size="small" @click.stop="handleEdit(data)">
+                      <el-icon><Edit /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip :content="$t('deleteBookmark')" placement="top">
+                    <el-button size="small" type="danger" @click.stop="handleDelete(node, data)">
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                </div>
+              </template>
             </div>
           </template>
-        </div>
-      </template>
-    </el-tree>
+        </el-tree>
+        <el-button type="primary" class="refresh-button" @click="refreshTree">
+          <el-icon><Refresh /></el-icon>
+        </el-button>
+      </div>
+    </div>
 
     <!-- add drag -->
     <div v-if="dragTip.show" 
-         class="drag-tip" 
+         class="tree-drag-tip" 
          :style="{ left: dragTip.x + 'px', top: dragTip.y + 'px' }">
       {{ dragTip.text }}
     </div>
@@ -149,6 +141,17 @@ export default {
         text: '',
         x: 0,
         y: 0
+      },
+      draggedNodeId: null,
+      longPressTimer: null,
+      isLongPress: false,
+      touchData: {
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        currentTarget: null,
+        dragElement: null,
+        dropTarget: null
       }
     }
   },
@@ -160,7 +163,6 @@ export default {
     },
 
     convertToTree(flatData) {
-      // console.log('Original flat data:', flatData);
       
       const folderMap = new Map();
       const root = {
@@ -550,14 +552,19 @@ export default {
       }
     },
 
-    handleDragStart() {
-      this.isDragging = true;
+    handleDragStart(node) {
+      this.isDragging = true
+      this.draggedNodeId = node.data.id
+      this.isLongPress = false
+      document.body.classList.add('is-dragging')
     },
 
     handleDragEnd() {
-      this.isDragging = false;
-      this.isDraggingOver = null;
-      this.dragTip.show = false;
+      this.isDragging = false
+      this.draggedNodeId = null
+      this.isDraggingOver = null
+      this.dragTip.show = false
+      document.body.classList.remove('is-dragging')
     },
 
     handleDragOver(draggingNode, dropNode, ev) {
@@ -599,12 +606,18 @@ export default {
       return oldPath.replace(oldFolderId, newFolderId);
     },
 
-    handleNodeClick(data, node) {
+    handleNodeClick(data, node, e) {
+      if (this.isLongPress) {
+        this.isLongPress = false
+        return
+      }
 
-      if (this.isDragging) return;
+      if (this.isDragging) return
       
       if (data.type === 'bookmark') {
         window.open(data.url, '_blank')
+      } else {
+        node.expanded = !node.expanded
       }
     },
 
@@ -621,95 +634,219 @@ export default {
       console.log('Edit form data:', this.editForm)
       this.editDialogVisible = true
     },
+
+    initTouchEvents() {
+      const tree = this.$refs.bookmarkTreeRef.$el
+      
+      this.removeTouchEvents()
+      
+      tree.addEventListener('touchstart', this.handleTouchStart, { passive: false })
+      document.addEventListener('touchmove', this.handleTouchMove, { passive: false })
+      document.addEventListener('touchend', this.handleTouchEnd)
+      document.addEventListener('touchcancel', this.handleTouchEnd)
+    },
+
+    removeTouchEvents() {
+      const tree = this.$refs.bookmarkTreeRef.$el
+      if (!tree) return
+
+      tree.removeEventListener('touchstart', this.handleTouchStart)
+      document.removeEventListener('touchmove', this.handleTouchMove)
+      document.removeEventListener('touchend', this.handleTouchEnd)
+      document.removeEventListener('touchcancel', this.handleTouchEnd)
+    },
+
+    handleTouchStart(e) {
+      if (e.touches.length !== 1) return
+
+
+      const target = e.target.closest('.tree-node')
+      if (!target || target.classList.contains('no-drag')) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const touch = e.touches[0]
+      this.touchData = {
+        isDragging: true,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        currentTarget: target,
+        dragElement: null,
+        dropTarget: null
+      }
+
+      setTimeout(() => {
+        if (this.touchData.isDragging) {
+          this.createDragElement(target)
+        }
+      }, 100)
+    },
+
+    handleTouchMove(e) {
+      if (!this.touchData.isDragging) return
+      e.preventDefault()
+
+      const touch = e.touches[0]
+      const dragElement = this.touchData.dragElement
+
+      if (dragElement) {
+        const deltaX = touch.clientX - this.touchData.startX
+        const deltaY = touch.clientY - this.touchData.startY
+        
+        dragElement.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`
+
+        const dropTarget = this.findDropTarget(touch.clientX, touch.clientY)
+        if (dropTarget !== this.touchData.dropTarget) {
+          this.updateDropTarget(dropTarget)
+        }
+      }
+    },
+
+    handleTouchEnd() {
+      if (!this.touchData.isDragging) return
+
+      if (this.touchData.dragElement && this.touchData.dropTarget) {
+        const dragNode = this.findTreeNode(this.touchData.currentTarget.dataset.id)
+        const dropNode = this.findTreeNode(this.touchData.dropTarget.dataset.id)
+        
+        if (dragNode && dropNode) {
+          this.handleDrop(dragNode, dropNode, 'inner')
+        }
+      }
+
+      this.cleanupDragState()
+    },
+
+    createDragElement(target) {
+      const rect = target.getBoundingClientRect()
+      const dragElement = target.cloneNode(true)
+      
+      Object.assign(dragElement.style, {
+        position: 'fixed',
+        left: rect.left + 'px',
+        top: rect.top + 'px',
+        width: rect.width + 'px',
+        backgroundColor: 'var(--el-color-primary-light-9)',
+        opacity: '0.8',
+        zIndex: '9999',
+        pointerEvents: 'none',
+        transition: 'transform 0.1s'
+      })
+
+      document.body.appendChild(dragElement)
+      this.touchData.dragElement = dragElement
+      target.classList.add('is-dragging')
+    },
+
+    findDropTarget(x, y) {
+      const elements = document.elementsFromPoint(x, y)
+      return elements.find(el => {
+        return el.classList.contains('tree-node') && 
+               el !== this.touchData.currentTarget
+      })
+    },
+
+    updateDropTarget(newTarget) {
+      if (this.touchData.dropTarget) {
+        this.touchData.dropTarget.classList.remove('drag-over')
+      }
+      if (newTarget) {
+        newTarget.classList.add('drag-over')
+      }
+      this.touchData.dropTarget = newTarget
+    },
+
+    findTreeNode(id) {
+      let result = null
+      const traverse = (node) => {
+        if (node.data.id === id) {
+          result = node
+          return true
+        }
+        if (node.childNodes) {
+          for (const child of node.childNodes) {
+            if (traverse(child)) return true
+          }
+        }
+        return false
+      }
+      
+      traverse(this.bookmarkTreeRef.value.store.root)
+      return result
+    },
+
+    cleanupDragState() {
+      if (this.touchData.dragElement) {
+        this.touchData.dragElement.remove()
+      }
+      if (this.touchData.currentTarget) {
+        this.touchData.currentTarget.classList.remove('is-dragging')
+      }
+      if (this.touchData.dropTarget) {
+        this.touchData.dropTarget.classList.remove('drag-over')
+      }
+      
+      this.touchData = {
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        currentTarget: null,
+        dragElement: null,
+        dropTarget: null
+      }
+    }
   },
 
   mounted() {
     this.fetchBookmarks()
+    this.initTouchEvents()
+  },
+
+  beforeDestroy() {
+    this.removeTouchEvents()
   }
 }
 </script>
 
 <style scoped>
-.bookmark-tree-container {
-  padding: 20px;
-}
-
-.tree-header {
-  display: flex;
+.common-header {
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
 }
 
 .tree-node {
   display: flex;
-  align-items: center;
   gap: 8px;
-  width: 100%;
-  min-height: 28px;
-}
-
-.favicon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-}
-
-.bookmark-link {
-  color: #606266;
-  text-decoration: none;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(100% - 100px);
-}
-
-.bookmark-link:hover {
-  color: #409EFF;
+  width: 70%;
 }
 
 
-.bookmark-count {
-  color: #909399;
-  font-size: 12px;
-  margin-left: 4px;
-}
+.tree-node:hover .bookmark-actions {
+    opacity: 1;
+  }
 
 .bookmark-actions {
   opacity: 0;
-  transition: opacity 0.3s;
 }
 
-.tree-node:hover .bookmark-actions {
-  opacity: 1;
-}
-
-.folder-name {
+.tree-folder-name {
   font-weight: 500;
 }
 
+
 .el-tree-node__content {
   height: auto !important;
-  padding: 4px 0;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
 
 .el-tree :deep(.is-dragging) {
   opacity: 0.5;
 }
 
-.el-tree :deep(.el-tree-node__drop-prev),
-.el-tree :deep(.el-tree-node__drop-next),
 .el-tree :deep(.el-tree-node__drop-inner) {
   border: 2px dashed #409EFF;
-  margin: 4px 0;
 }
+
 
 .tree-node.drag-over {
   background-color: var(--el-color-primary-light-8);
@@ -717,11 +854,13 @@ export default {
   transition: background-color 0.2s ease;
 }
 
-.tree-node.drag-over .folder-name {
+
+.tree-node.drag-over .tree-folder-name {
   color: var(--el-color-primary);
 }
 
-.drag-tip {
+
+.tree-drag-tip {
   position: fixed;
   z-index: 9999;
   background: rgba(0, 0, 0, 0.8);
@@ -731,5 +870,131 @@ export default {
   font-size: 12px;
   pointer-events: none;
   white-space: nowrap;
+}
+
+.header-content {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  position: relative;
+}
+
+.refresh-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+
+@media screen and (max-width: 768px) {
+  .bookmark-tree-container {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .common-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .common-header h3 {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  :deep(.el-tree) {
+    padding: 0 8px;
+  }
+
+  .tree-node {
+    padding: 12px 8px;
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .tree-node.can-drag::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+  }
+
+  :global(body.is-dragging) {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  :global(body.is-dragging *) {
+    pointer-events: none;
+  }
+
+  .tree-node.is-dragging {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  :deep(.el-tree-node__children):has(.is-dragging) .tree-node:not(.is-dragging) {
+    opacity: 0.6;
+    transform: scale(0.98);
+    transition: all 0.2s ease;
+  }
+
+  :deep(.el-button) {
+    padding: 4px;
+    font-size: 12px;
+  }
+
+  :deep(.el-button + .el-button) {
+    margin-left: 4px;
+  }
+  
+  .favicon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .bookmark-actions {
+    gap: 4px;
+  }
+
+  .tree-node {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+
+  .tree-node.is-dragging {
+    opacity: 0.3;
+  }
+
+  .tree-node.drag-over {
+    border: 2px dashed var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+    margin: 4px 0;
+  }
+}
+
+.tree-node.can-drag {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.tree-node.is-dragging {
+  opacity: 0.8;
+  background: var(--el-color-primary-light-9);
+  transform: scale(1.02);
+  z-index: 10;
+}
+
+.tree-node.drag-over {
+  border: 2px dashed var(--el-color-primary);
+  background: var(--el-color-primary-light-8);
 }
 </style>

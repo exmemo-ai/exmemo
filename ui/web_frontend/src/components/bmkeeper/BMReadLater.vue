@@ -58,12 +58,12 @@
       />
     </div>
 
-    <!-- 添加编辑对话框 -->
+    <!-- add edit dialog-->
     <el-dialog
       v-model="editDialogVisible"
       :title="$t('editBookmark')"
       width="500px"
-      class="bookmark-edit-dialog"
+      class="bm-dialog bookmark-edit-dialog"
       append-to-body
     >
       <el-form :model="editForm" label-width="100px">
@@ -100,13 +100,13 @@
       </template>
     </el-dialog>
 
-    <!-- 添加文件夹选择对话框 -->
+    <!-- add files dialog -->
     <el-dialog
       v-if="showFolderDialog"
       v-model="showFolderDialog"
       :title="$t('selectFolder')"
       width="500px"
-      class="folder-select-dialog"
+      class="bm-dialog folder-select-dialog"
     >
       <el-input
         v-model="folderSearchInput"
@@ -434,67 +434,6 @@ export default {
   margin-left: 4px;
 }
 
-/* 添加新的样式 */
-.bookmark-edit-dialog :deep(.el-select) {
-  width: 100%;
-}
-
-.bookmark-edit-dialog :deep(.tags-form-item) {
-  margin-bottom: 50px;
-}
-
-:deep(.tags-select-dropdown) {
-  max-height: 200px;
-}
-
-.bookmark-edit-dialog :deep(.el-dialog__body) {
-  padding-bottom: 0;
-}
-
-.bookmark-edit-dialog :deep(.el-form-item:last-child) {
-  margin-bottom: 20px;
-}
-
-.title-and-tags {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.bookmark-tag {
-  margin-right: 4px;
-  font-size: 11px;
-  padding: 0 6px;
-  height: 20px;
-  line-height: 18px;
-}
-
-.bookmark-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  flex: 1;
-}
-
-.bookmark-summary {
-  font-size: 13px;
-  color: var(--el-text-color-regular);
-  margin: 0;
-  line-height: 1.5;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
 .bookmark-list {
   display: flex;
   flex-direction: column;
@@ -525,13 +464,6 @@ export default {
   min-width: 0;
 }
 
-.favicon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
 .bookmark-content {
   flex: 1;
   min-width: 0;
@@ -560,12 +492,6 @@ export default {
   gap: 6px;
 }
 
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
 .bookmark-tag {
   font-size: 11px;
   padding: 0 6px;
@@ -576,9 +502,27 @@ export default {
   border: none;
 }
 
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.title-and-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .bookmark-summary {
   font-size: 13px;
-  color: var(--el-text-color-secondary);
+  color: var(--el-text-color-regular);
   margin: 0;
   line-height: 1.5;
   overflow: hidden;
@@ -586,96 +530,6 @@ export default {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-.bookmark-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.bookmark-actions :deep(.el-button) {
-  padding: 6px;
-}
-
-.bookmark-actions :deep(.el-icon) {
-  font-size: 14px;
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-}
-
-.bookmark-edit-dialog :deep(.el-select) {
-  width: 100%;
-}
-
-.bookmark-edit-dialog :deep(.el-dialog__footer) {
-  padding: 20px;
-  border-top: 1px solid var(--el-border-color-lighter);
-  margin-top: 20px;
-}
-
-.bookmark-edit-dialog :deep(.el-dialog__body) {
-  padding: 20px;
-}
-
-.bookmark-edit-dialog :deep(.el-form-item:last-child) {
-  margin-bottom: 0;
-}
-
-:deep(.tags-select-dropdown) {
-  max-height: 200px;
-  overflow-y: auto;
-  position: absolute;
-  z-index: 3000;
-}
-
-.dialog-footer {
-  position: relative;
-  z-index: 2001; 
-}
-
-.bookmark-edit-dialog :deep(.el-select__popper),
-.bookmark-edit-dialog :deep(.el-select-dropdown),
-.bookmark-edit-dialog :deep(.el-select-dropdown__empty),
-.bookmark-edit-dialog :deep(.el-select__dropdown),
-.bookmark-edit-dialog :deep(.el-select__empty),
-.bookmark-edit-dialog :deep(.el-empty),
-.bookmark-edit-dialog :deep(.el-select-dropdown__list),
-.bookmark-edit-dialog :deep(.el-scrollbar),
-.bookmark-edit-dialog :deep(.el-select-dropdown__wrap) {
-  display: none !important;
-}
-
-.bookmark-edit-dialog :deep(.el-select) {
-  width: 100%;
-}
-
-.bookmark-edit-dialog :deep(.el-select input) {
-  cursor: text;
-}
-
-.bookmark-edit-dialog :deep(.el-input__wrapper) {
-  box-shadow: none !important;
-}
-
-.bookmark-edit-dialog :deep(.el-form-item:last-child) {
-  margin-bottom: 0;
-}
-
-.dialog-footer {
-  margin-top: 20px;
-}
-
-
-.bookmark-edit-dialog :deep(.el-select__popper),
-.bookmark-edit-dialog :deep(.el-select-dropdown),
-.bookmark-edit-dialog :deep(.el-select__dropdown),
-.bookmark-edit-dialog :deep(.el-select__empty),
-.bookmark-edit-dialog :deep(.el-empty) {
-  display: none !important;
 }
 
 .tag-input-container {
@@ -699,27 +553,51 @@ export default {
   width: 100%;
 }
 
-.folder-select-dialog :deep(.el-dialog__body) {
-  padding: 20px;
-}
-
-.folder-list {
-  margin-top: 20px;
-}
-
-.folder-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.folder-item:hover {
-  background-color: var(--el-color-primary-light-9);
-}
-
 .web-source {
   color: var(--el-text-color-secondary);
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+.bookmark-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+/* add moble */
+@media (max-width: 768px) {
+  .link-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bookmark-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+    max-height: 2.8em;
+    word-break: break-word;
+  }
+
+  .bookmark-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+
+  .bookmark-actions .el-button {
+    flex: 0;
+    padding: 6px; 
+    min-width: auto; 
+    max-width: none; 
+  }
+
+  .bookmark-actions .el-button :deep(.el-icon) {
+    font-size: 14px;
+  }
 }
 </style>
