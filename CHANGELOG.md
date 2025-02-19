@@ -48,3 +48,23 @@
 ### 3.3 Fixed
 
 - Fixed bookmark batch processing notification during import
+
+
+## 4 [1.1.3] - 2025-02-20
+
+### 4.1 Added
+
+- Support for TTS (Text to speech) in the data viewing interface and adding bookmarks
+- Support for the browser's built-in speech synthesis engine
+- Ability to add Chinese junior high school, high school, and high-frequency words to the vocabulary list
+
+### 4.2 Changed
+
+- Adjusted the frontend layout on mobile devices
+- Fine-tuned the logic of the learning interface and the corresponding database, pre-installed example sentences for 5000 common words
+- Modified the settings logic to allow any frontend interface to read cached settings
+
+### 4.3 Fixed
+
+- 401 error not redirecting to the re-login interface
+- Fixed error in the word lookup interface
