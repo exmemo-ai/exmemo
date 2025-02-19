@@ -37,18 +37,18 @@
 </template>
 
 <script>
+import { Fold, Expand } from '@element-plus/icons-vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import SearchManager from './BMSearch.vue'
 import NavigationManager from './BMNavigation.vue'
 import ReadLaterManager from './BMReadLater.vue'
 import BookmarkTree from './BMBookmarkTree.vue'
-import { Fold, Expand } from '@element-plus/icons-vue'
-import './BMManagerStyles.css'
 
 export default {
   name: 'BMManagerMain',
   components: {
     AppNavbar,
+    SearchManager,
     SearchManager,
     NavigationManager,
     ReadLaterManager,
