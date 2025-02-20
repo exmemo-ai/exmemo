@@ -4,35 +4,13 @@
     flex-direction: column;
 }
 
-.fixed-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    background-color: white;
-    padding: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.scroll-header {
-    position: relative;
-    background-color: white;
-    padding: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-@media (orientation: portrait) {
-    .preview-container {
-        margin-top: 130px;
-    }
-}
-
 .preview-container {
     padding: 0px;
     height: auto;    
     border: 1px solid #dcdfe6;
     background-color: white;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .preview-container mark.custom-highlight {
@@ -54,9 +32,11 @@
 }
 
 .editor-container {
-    height: calc(100vh - 140px);
+    height: 100%;
     border: 1px solid #dcdfe6;
     border-radius: 4px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .editor-header, .preview-header {
@@ -71,11 +51,6 @@
     overflow-y: auto;
 }
 
-.button-container {
-    margin-top: 20px;
-    text-align: right;
-}
-
 .el-textarea__inner {
     height: calc(100% - 41px) !important;
     font-family: monospace;
@@ -88,13 +63,75 @@
     border-radius: 4px;
 }
 
-.highlighted {
-    background-color: yellow;
-}
-
 .top-row-view {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
+}
+
+.header {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+.player-footer {
+    background-color: white;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0px;
+}
+
+.main-content.content .preview-container {
+    flex: 1;
+    width: 100%;
+}
+
+.main-content.content .editor-container {
+    flex: 1;
+    width: 100%;
+}
+
+.main-content.content-note {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+}
+
+.main-content.content-note .preview-container {
+    flex-grow: 2;
+    height: 100%;
+    width: 100%;
+}
+
+.main-content.content-note .editor-container {
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+}
+
+.view-mode-icon {
+    margin-right: 4px;
+}
+
+.el-dropdown {
+    vertical-align: top;
+}
+
+@media screen and (max-width: 768px) {
+    .main-content.content-note {
+        flex-direction: column;
+    }    
+}
+
+.editor-toolbar {
+    padding: 5px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
 }

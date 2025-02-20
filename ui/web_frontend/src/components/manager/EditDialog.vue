@@ -12,7 +12,7 @@
             <el-button-group>
                 <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
                 <el-button size="small" @click="showDeleteConfirmation">{{ $t('delete') }}</el-button>
-                <el-button size="small" @click="viewContent">{{ $t('view') }}</el-button>
+                <el-button size="small" v-if="form.etype !== 'record'" @click="viewContent">{{ $t('view') }}</el-button>
                 <el-button size="small" v-if="form.etype === 'file'" @click="download">{{ $t('download') }}</el-button> 
             </el-button-group>
         </div>
@@ -59,7 +59,7 @@
             :form="form"
             :file_path="file_path"
             :file="file"
-            :parent_obj="parent_obj"
+            :onSuccess="onSuccess"
         />
         <span class="dialog-footer">
         </span>
@@ -95,11 +95,12 @@ export default {
                 status: '',
                 addr: '',
             },
+            onSuccess: null,
         };
     },
     methods: {
-        openDialog(parent_obj, row) {
-            this.parent_obj = parent_obj;
+        openDialog(onSuccess, row) {
+            this.onSuccess = onSuccess;
             this.form.idx = row.idx;
             this.form.ctype = row.ctype;
             this.form.etype = row.etype;
@@ -141,9 +142,7 @@ export default {
                     type: 'success',
                     message: this.$t('renameSuccess')
                 });
-                if (this.parent_obj) {
-                    this.parent_obj.fetchData();
-                }
+                this.onSuccess?.(response.data);
                 this.closeDialog();
                 return true;
             } else {
@@ -214,9 +213,7 @@ export default {
                             message: this.$t('deleteSuccess')
                         });
                         this.closeDialog();
-                        if (this.parent_obj) {
-                            this.parent_obj.fetchData();
-                        }
+                        this.onSuccess?.(response.data);
                     } else {
                         this.$message({
                             type: 'error',

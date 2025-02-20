@@ -4,11 +4,13 @@ import { getURL, parseBackendError, parseBlobData } from '@/components/support/c
 import { t } from '@/utils/i18n'
 
 export async function saveEntry({
-    parentObj,
+    onSuccess,
     form,
+    path,
     file,
     onProgress,
-    onUploadStart
+    onUploadStart, 
+    showMessage = true
 }) {
     let func = 'api/entry/data/';
     const formData = new FormData();
@@ -19,12 +21,12 @@ export async function saveEntry({
             return false;
         }
         formData.append('raw', form.raw);
-    } else if (form.etype === 'file' && form.idx === null) {
+    } else if ((form.etype === 'file'||form.etype === 'note') && form.idx === null) {
         if (!file) {
             ElMessage.error(t('selectFileError'));
             return false;
         }
-        formData.append('etype', 'file');
+        formData.append('etype', form.etype);
         formData.append('files', file);
         let fileName = file.name;
         if (form.title !== '') {
@@ -41,7 +43,15 @@ export async function saveEntry({
             }
         }
         formData.append('filenames', fileName);
-        formData.append('filepaths', `${fileName}`);
+        if (path && path.length > 0) {
+            if (path[path.length - 1] !== '/') {
+                formData.append('filepaths', `${path}`);
+            } else {
+                formData.append('filepaths', `${path}${fileName}`);
+            }
+        } else {
+            formData.append('filepaths', `${fileName}`);
+        }
     } else if (form.etype === 'web') {
         if (form.addr === '') {
             ElMessage.error(t('inputWebAddressError'));
@@ -60,7 +70,7 @@ export async function saveEntry({
         formData.append('meta', JSON.stringify(form.meta));
     }
 
-    if (form.idx !== null) {
+    if (form.idx && form.idx !== null) {
         formData.append('idx', form.idx);
     }
 
@@ -68,12 +78,12 @@ export async function saveEntry({
     onUploadStart?.(cancelTokenSource);
 
     try {
-        if (form.idx !== null) {
+        if (form.idx && form.idx !== null) {
             func += form.idx + '/';
             const response = await axios.put(getURL() + func, formData);
             if (response.data.status === 'success') {
-                ElMessage({ type: 'success', message: t('updateSuccess') });
-                parentObj?.fetchData();
+                if (showMessage) ElMessage({ type: 'success', message: t('updateSuccess') });
+                onSuccess?.(response.data);
             } else {
                 ElMessage({ type: 'error', message: t('updateFail') });
             }
@@ -85,10 +95,14 @@ export async function saveEntry({
                 cancelToken: cancelTokenSource.token
             });
             if (response.data.status === 'success') {
-                ElMessage({ type: 'success', message: t('saveSuccess') });
-                parentObj?.fetchData();
+                if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
+                onSuccess?.(response.data);
             } else {
-                ElMessage({ type: 'error', message: t('saveFail') });
+                if (response.data.info) {
+                    ElMessage({ type: 'error', message: response.data.info });
+                } else {
+                    ElMessage({ type: 'error', message: t('saveFail') });
+                }
             }
         }
         return true;
@@ -96,7 +110,7 @@ export async function saveEntry({
         if (axios.isCancel(error)) {
             ElMessage({ type: 'info', message: t('operationCancelled') });
         } else {
-            parseBackendError(parentObj, error)
+            parseBackendError(null, error)
         }
         return false;
     }

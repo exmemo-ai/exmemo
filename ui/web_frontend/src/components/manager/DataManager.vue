@@ -166,7 +166,7 @@ export default {
             this.currentPage = val;
             this.fetchData();
         },
-        fetchData() {
+        fetchData(data = {}) {
             console.log('##### fetchData', this);
             let func = 'api/entry/data/'
             let etype_value = this.etype_value === this.t('all') ? '' : this.etype_value;
@@ -237,11 +237,11 @@ export default {
             }
         },
         openAddDialog() {
-            this.$refs.addDialog.openDialog(this);
+            this.$refs.addDialog.openDialog(() => this.fetchData());
         },
         handleRowClick(row, column, event) {
             console.log(column, event)
-            this.$refs.editDialog.openDialog(this, row);
+            this.$refs.editDialog.openDialog(() => this.fetchData(), row);
         },
         handleResize() {
             this.isMobile = window.innerWidth < 768;

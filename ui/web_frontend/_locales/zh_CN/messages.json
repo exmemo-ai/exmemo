@@ -202,6 +202,11 @@
     "clipboardNotSupported": "不支持剪贴板API",
     "loading": "加载中",
     "learn": "学习",
+    "opt": {
+        "vault": "仓库",
+        "path": "路径",
+        "needVaultPath": "请输入仓库和路径"
+    },
     "session": {
         "newSession": "新建会话",
         "clearSession": "清空会话",
@@ -289,8 +294,8 @@
         "readSelected": "朗读选区",
         "saveHighlightSuccess": "高亮保存成功",
         "saveHighlightFail": "高亮保存失败",
-        "stopHighlight": "停止高亮",
-        "startHighlight": "开始高亮",
+        "stopHighlight": "不显示高亮",
+        "showHighlight": "显示高亮",
         "clearHighlight": "清除高亮",
         "copyHighlight": "复制高亮",
         "highlightModeOn": "高亮模式开启",
@@ -305,7 +310,22 @@
         "hideRead": "关闭朗读模式",
         "addBookmark": "添加书签",
         "addBookmarkFail": "添加书签失败",
-        "addBookmarkSuccess": "添加书签成功"
+        "addBookmarkSuccess": "添加书签成功",
+        "preview":"显示内容",
+        "editor": "编辑",
+        "split": "分屏",
+        "saveAsNote": "导出笔记",
+        "noteEmpty": "笔记内容为空",
+        "fileNote": "文件_笔记",
+        "chatNote": "聊天_笔记",
+        "webNote": "网页_笔记",
+        "openNote": "打开导出的新笔记？",
+        "openNoteTitle": "打开",
+        "contentOnly": "仅内容",
+        "contentWithNote": "内容+笔记",
+        "insertSelected": "插入选区",
+        "insertHighlight": "插入高亮",
+        "insertAll": "插入全部"
     },
     "settings": {
         "bookmark": "书签",

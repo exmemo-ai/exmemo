@@ -202,6 +202,11 @@
     "clipboardNotSupported": "Clipboard API not supported",
     "loading": "Loading",
     "learn": "Learn",
+    "opt": {
+        "vault": "Vault",
+        "path": "Path",
+        "needVaultPath": "Please select vault and path"
+    },
     "session": {
         "newSession": "New session",
         "clearSession": "Clear session",
@@ -289,8 +294,8 @@
         "readSelected": "Read selected",
         "saveHighlightSuccess": "Save highlight successful",
         "saveHighlightFail": "Save highlight failed",
-        "stopHighlight": "Stop highlight",
-        "startHighlight": "Start highlight",
+        "stopHighlight": "Hide highlight",
+        "showHighlight": "Show highlight",
         "clearHighlight": "Clear highlight",
         "copyHighlight": "Copy highlight",
         "highlightModeOn": "Highlight mode on",
@@ -306,7 +311,22 @@
         "hideRead": "Hide player",
         "addBookmark": "Add bookmark",
         "addBookmarkFail": "Add bookmark failed",
-        "addBookmarkSuccess": "Add bookmark successful"
+        "addBookmarkSuccess": "Add bookmark successful",
+        "preview":"Show content",
+        "editor": "Editor",
+        "split": "Split",
+        "saveAsNote": "Export as note",
+        "noteEmpty": "Note is empty",
+        "fileNote": "file_note",
+        "chatNote": "chat_note",
+        "webNote": "web_note",
+        "openNote": "Open exported note?",
+        "openNoteTitle": "Open",
+        "contentOnly": "Content only",
+        "contentWithNote": "Content with note",
+        "insertSelected": "Insert selected",
+        "insertHighlight": "Insert highlight",
+        "insertAll": "Insert all"
     },
     "settings": {
         "bookmark": "Bookmark",

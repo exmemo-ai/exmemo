@@ -32,7 +32,7 @@ export class HighlightManager {
     }
 
     loadHighlight(meta) {
-        if (!meta) return;
+        if (!meta || meta === 'null') return;
         
         if (typeof meta === 'string') {
             try {

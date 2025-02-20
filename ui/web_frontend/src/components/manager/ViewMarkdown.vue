@@ -1,6 +1,6 @@
 <template>
     <el-container class="app-container">
-        <el-header class="fixed-header" height="auto" style="padding: 0;">
+        <el-header class="header" height="auto" style="padding: 0;">
             <el-container class="nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
@@ -23,7 +23,7 @@
                             </el-button-group>
                             <el-button-group class="highlight-buttons" style="margin-right: 5px;">
                                 <el-button size="small" type="primary" @click="highlightText">
-                                    {{ isHighlightMode ? t('viewMarkdown.stopHighlight') : t('viewMarkdown.startHighlight') }}
+                                    {{ isHighlightMode ? t('viewMarkdown.stopHighlight') : t('viewMarkdown.showHighlight') }}
                                 </el-button>
                                 <el-button size="small" type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
                                     {{ t('viewMarkdown.clearHighlight') }}
@@ -31,17 +31,55 @@
                                 <el-button size="small" type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
                                     {{ t('viewMarkdown.copyHighlight') }}
                                 </el-button>
-                                <el-button size="small" type="primary" @click="saveHighLight" :disabled="!isHighlightMode || savedRanges.value?.length === 0">
-                                    {{ t('viewMarkdown.saveHighlight') }}
-                                </el-button>
                             </el-button-group>
+                            <el-dropdown 
+                                trigger="click" 
+                                @command="setViewMode"
+                                style="margin-right: 5px;">
+                                <el-button size="small" type="primary">
+                                    <el-icon class="view-mode-icon">
+                                        <component :is="viewModeIcon"/>
+                                    </el-icon>
+                                    <el-icon><ArrowDown /></el-icon>
+                                </el-button>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item 
+                                            command="content"
+                                            :icon="View">
+                                            {{ t('viewMarkdown.contentOnly') }}
+                                        </el-dropdown-item>
+                                        <el-dropdown-item 
+                                            command="content-note"
+                                            :icon="Edit">
+                                            {{ t('viewMarkdown.contentWithNote') }}
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
                         </div>
                     </div>
                 </div>
             </el-container>
         </el-header>
-        <div class="preview-container preview-with-fixed-header" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
-            <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" />
+        <div class="main-content" :class="viewMode">
+            <div class="preview-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
+                <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" style="height: 100%;"/>
+            </div>
+            <div v-show="viewMode === 'content-note'" class="editor-container">
+                <div class="editor-toolbar">
+                    <el-button-group>
+                        <el-button size="small" type="primary" @click="selectedToNote">{{ t('viewMarkdown.insertSelected') }}</el-button>
+                        <el-button size="small" type="primary" @click="highlightToNote">{{ t('viewMarkdown.insertHighlight') }}</el-button>
+                        <el-button size="small" type="primary" @click="allToNote">{{ t('viewMarkdown.insertAll') }}</el-button>
+                        <el-button size="small" type="primary" @click="saveAsNote">{{ t('viewMarkdown.saveAsNote') }}</el-button>
+                    </el-button-group>
+                </div>
+                <ViewNote 
+                    ref="viewNote"
+                    :form="form"
+                />
+            </div>
         </div>
         
         <div v-if="showPlayer" class="player-footer">
@@ -57,7 +95,8 @@
 </template>
 
 <script setup>
-import 'md-editor-v3/lib/preview.css'
+import 'md-editor-v3/lib/preview.css';
+import 'md-editor-v3/lib/style.css';
 import axios from 'axios';
 import logo from '@/assets/images/logo.png'
 import { setDefaultAuthHeader,getURL,parseBackendError } from '@/components/support/conn'
@@ -65,15 +104,18 @@ import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { MdPreview } from 'md-editor-v3'
 import { saveEntry, downloadFile } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import '@/assets/styles/markdown-view.css'
 import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
+import { View, Edit, ArrowDown } from '@element-plus/icons-vue'
+import ViewNote from '@/components/manager/ViewNote.vue'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
+const HEADER_HEIGHT = 80
 const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
 const route = useRoute()
@@ -86,9 +128,14 @@ const selectedText = ref('')
 const mdPreview = ref(null)
 
 const currentHighlight = ref(null)
+const highlightChanged = ref(false)
+const viewNote = ref(null)
+const highlightSaveTimer = ref(null)
 
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
+    highlightChanged.value = true
+    scheduleHighlightSave()
 }
 
 const copyHighlight = () => {
@@ -139,26 +186,40 @@ const fetchContent = async (idx) => {
     try {
         const response = await axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/');
         form.value = { ...response.data };
-        if ('content' in response.data && response.data.content !== null) {
-            markdownContent.value = response.data.content;
-            setTimeout(() => {
-                if (form.value.meta?.bookmark?.position) {
-                    window.scrollTo({
-                        top: form.value.meta.bookmark.position,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 100);
-        } else {
-            markdownContent.value = t('notSupport');
-        }
+        resetContent();
     } catch (error) {
         if (error.response && error.response.status === 401) {
             parseBackendError(null, error);
         } else {
-            ElMessage.error(t('fetchError'));
+            console.error(error)
+            ElMessage.error(t('operationFailed'));
         }
     }
+}
+
+const resetContent = async () => {
+    if ('content' in form.value && form.value.content !== null) {
+        let content = form.value.content;
+        if (form.value.etype === 'note') {
+            content = content.replace(/^---\n[\s\S]*?\n---\n/, '');
+        }
+        markdownContent.value = content;
+        await nextTick();
+        viewNote.value?.loadNote();
+        loadHighlight();
+        setTimeout(() => {
+            if (form.value.meta?.bookmark?.position) {
+                window.scrollTo({
+                    top: form.value.meta.bookmark.position,
+                    behavior: 'smooth'
+                });
+            }
+        }, 100);
+    } else {
+        markdownContent.value = t('notSupport');
+    }
+    viewMode.value = 'content-note';
+    console.log("viewMode", viewMode.value, form.value.etype);
 }
 
 const loadHighlight = () => {
@@ -227,8 +288,10 @@ const addBookmark = async () => {
         const result = await saveEntry({
             parentObj: null,
             form: form.value,
+            path: null,
             file: null,
-            onProgress: null
+            onProgress: null,
+            showMessage: false
         })
         if (result) {
             ElMessage.success(t('viewMarkdown.addBookmarkSuccess'))
@@ -256,59 +319,19 @@ const setPlayer = () => {
 }
 
 const isHighlightMode = computed(() => highlightManager.value?.isHighlightMode || false)
-const savedRanges = computed(() => highlightManager.value?.savedRanges || [])
 
 const highlightText = () => {
     if (!highlightManager.value) return
     
     const newMode = highlightManager.value.toggleHighlightMode()
     ElMessage.success(newMode ? t('viewMarkdown.highlightModeOn') : t('viewMarkdown.highlightModeOff'))
-    if (newMode) {
-        loadHighlight()
-    }
+    loadHighlight();
 }
 
 const highlightSelection = () => {
     highlightManager.value?.handleSelection()
-}
-
-const saveHighLight = async () => {
-    if (!highlightManager.value?.hasHighlights()) {
-        ElMessage.warning(t('noHighlightToSave'))
-        return
-    }
-
-    if (!form.value.meta) {
-        form.value.meta = {}
-    }
-    
-    if (typeof form.value.meta === 'string') {
-        try {
-            form.value.meta = JSON.parse(form.value.meta)
-        } catch (error) {
-            console.error('Failed to parse meta:', error)
-            form.value.meta = {}
-        }
-    }
-    
-    const serializableHighlights = highlightManager.value.getSerializableHighlights()
-    form.value.meta.highlights = JSON.stringify(serializableHighlights)
-
-    try {
-        const result = await saveEntry({
-            parentObj: null,
-            form: form.value,
-            file: null,
-            onProgress: null
-        })
-        
-        if (result) {
-            console.log('saveHighlightSuccess')
-        }
-    } catch (error) {
-        console.error(t('saveHighlightFail'), error)
-        ElMessage.error(t('saveHighlightFail'))
-    }
+    highlightChanged.value = true
+    scheduleHighlightSave()
 }
 
 const handleMouseUp = (event) => {
@@ -338,6 +361,7 @@ const getContent = () => {
     
     if (previewElement) {
         const viewportTop = window.scrollY
+        const offsetTop = viewportTop + HEADER_HEIGHT
         const walker = document.createTreeWalker(
             previewElement,
             NodeFilter.SHOW_TEXT,
@@ -359,9 +383,9 @@ const getContent = () => {
                             node.textContent.trim().length > 0
             
             if (isVisible) {
-                const distanceToTop = Math.abs(absoluteTop - viewportTop)
-                if (distanceToTop < bestDistance && absoluteTop >= viewportTop) {
-                    bestDistance = distanceToTop
+                const distanceToOffset = Math.abs(absoluteTop - offsetTop)
+                if (distanceToOffset < bestDistance && absoluteTop >= offsetTop) {
+                    bestDistance = distanceToOffset
                     bestNode = node
                 }
             }
@@ -419,44 +443,118 @@ onBeforeUnmount(() => {
     if (currentHighlight.value) {
         currentHighlight.value.style.backgroundColor = ''
     }
+    if (highlightSaveTimer.value) {
+        clearTimeout(highlightSaveTimer.value)
+        saveMeta()
+    }
+    window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
 onMounted(() => {
     fetchContent(route.query.idx)
     highlightManager.value = new HighlightManager(content.value)
+    window.addEventListener('beforeunload', handleBeforeUnload)
 })
-</script>
 
-<style scoped>
-.fixed-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+const handleBeforeUnload = async (e) => {
+    if (highlightSaveTimer.value) {
+        clearTimeout(highlightSaveTimer.value)
+        await saveMeta()
+    }
+    e.preventDefault()
+    e.returnValue = ''
 }
 
-.preview-with-fixed-header {
-    margin-top: 80px;
-    padding-bottom: 50px !important;
+const viewMode = ref('content-note') // 'content' | 'content-note'
+
+const setViewMode = (mode) => {
+  viewMode.value = mode
 }
 
-.player-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    padding: 0px;
-    z-index: 1000;
-}
+const viewModeIcon = computed(() => {
+  switch (viewMode.value) {
+    case 'content':
+      return View
+    case 'content-note':
+      return Edit
+    default:
+      return View
+  }
+})
 
-@media screen and (max-width: 768px) {
-    .preview-with-fixed-header {
-        margin-top: 110px;
+const saveMeta = async () => {
+    if (!highlightChanged.value) return
+
+    if (!form.value.meta || form.value.meta === 'null') {
+        form.value.meta = {}
+    }
+    
+    if (typeof form.value.meta === 'string') {
+        try {
+            form.value.meta = JSON.parse(form.value.meta)
+        } catch (error) {
+            console.error('Failed to parse meta:', error)
+            form.value.meta = {}
+        }
+    }
+
+    if (highlightChanged.value && highlightManager.value?.hasHighlights()) {
+        const serializableHighlights = highlightManager.value.getSerializableHighlights()
+        form.value.meta.highlights = JSON.stringify(serializableHighlights)
+    }
+
+    try {
+        const result = await saveEntry({
+            parentObj: null,
+            form: form.value,
+            path: null,
+            file: null,
+            onProgress: null
+        })
+        
+        if (result) {
+            highlightChanged.value = false
+            console.log('saveSuccess')
+        }
+    } catch (error) {
+        console.error(t('viewMarkdown.saveHighlightFail'), error)
+        ElMessage.error(t('viewMarkdown.saveHighlightFail'))
     }
 }
+
+const scheduleHighlightSave = () => {
+    if (highlightSaveTimer.value) {
+        clearTimeout(highlightSaveTimer.value)
+    }
+    highlightSaveTimer.value = setTimeout(async () => {
+        await saveMeta()
+        highlightSaveTimer.value = null
+    }, 10000) // 15s
+}
+
+const highlightToNote = () => {
+    if (!highlightManager.value) return    
+    let text = highlightManager.value.getHighlightedText().join('\n')
+    text = text + "\n\n"
+    viewNote.value.editContent = viewNote.value.editContent + text
+};
+
+const selectedToNote = () => {
+    const selection = window.getSelection()
+    let text = selection.toString()
+    text = text + "\n\n"
+    viewNote.value.editContent = viewNote.value.editContent + text
+};
+
+const allToNote = () => {
+    viewNote.value.editContent = markdownContent.value
+};
+
+const saveAsNote = () => {
+    viewNote.value.saveAsNote();
+};
+
+</script>
+
+<style>
 </style>
