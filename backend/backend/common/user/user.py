@@ -48,6 +48,7 @@ class UserSettings:
     llm_chat_memory_count: int = DEFAULT_CHAT_LLM_MEMORY_COUNT
     llm_chat_max_context_count: int = DEFAULT_CHAT_MAX_CONTEXT_COUNT
     learn_word_voc: str = "BASE"
+    default_vault: str = _("default")
     batch_use_llm: bool = False
     bookmark_download_web: bool = False
     web_save_content: bool = False

@@ -45,6 +45,8 @@ def date_handler(obj):
 
 
 def convert_dic_to_json(dic):
+    if dic is None:
+        return None
     try:
         return json.dumps(dic, default=date_handler)
     except Exception as e:

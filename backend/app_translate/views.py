@@ -308,7 +308,7 @@ class TranslateLearnView(APIView):
         limit = 100
         queryset = StoreTranslate.objects.filter(
             user_id=args['user_id'], status=status
-            ).order_by("freq").all()[:limit]
+            ).order_by("freq").all()
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
         date = timezone.now().strftime("%Y-%m-%d")
@@ -324,6 +324,8 @@ class TranslateLearnView(APIView):
                 learn_date = info.get("learn_date", None)
             if learn_date == date:
                 ret.append(item)
+            if len(ret) >= limit:
+                break
         json_data = json.loads(json.dumps(ret))
         return do_result(True, {"list": json_data})
 

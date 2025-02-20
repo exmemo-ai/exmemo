@@ -112,6 +112,8 @@ def add_file(dic, path, use_llm=True):
     else:
         meta_data = {}
         content = None
+    if meta_data is None:
+        meta_data = {}
     dic["meta"] = meta_data
 
     abstract = None
@@ -326,11 +328,14 @@ def get_entry_list(keywords, query_args, max_count, fields = None):
     if keywords is not None and len(keywords) > 0:
         keywords = regular_keyword(keywords)
         keyword_arr = keywords.split(" ")
-        # find by title
-        q_obj = Q()
-        for keyword in keyword_arr:
-            q_obj &= Q(title__iregex=keyword)
-        queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
+        queryset = StoreEntry.objects.filter(addr__iregex=keywords, **query_args).values(*fields)[:max_count]
+
+        if len(queryset) == 0:
+            # find by title
+            q_obj = Q()
+            for keyword in keyword_arr:
+                q_obj &= Q(title__iregex=keyword)
+            queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
         
         if len(queryset) == 0:
             # find by raw

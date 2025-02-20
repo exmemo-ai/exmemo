@@ -347,7 +347,9 @@ def get_html_content(path, format):
                             # Convert HTML in JSON to markdown
                             markdown_dic = {}
                             for k, v in visited_dic.items():
-                                markdown_dic[k] = h.handle(v) if isinstance(v, str) else v
+                                str1 = h.handle(v) if isinstance(v, str) else v
+                                str1 = re.sub(r"\n+", "\n\n", str1)
+                                markdown_dic[k] = str1
                             ret.update(markdown_dic)
                         else:
                             ret.update(visited_dic)
@@ -361,7 +363,6 @@ def get_html_content(path, format):
             ret_string += f"{value}\n\n"
         else:
             ret_string += f"{key}\n{value}\n\n"
-    
     return ret_string
 
 # for test
