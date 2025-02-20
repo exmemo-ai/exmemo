@@ -30,9 +30,7 @@
                  :data-id="data.id">
               <template v-if="data.type === 'folder'">
                 <el-icon><Folder /></el-icon>
-                <span class="tree-folder-name">
-                  {{ formatLabel(data.title) }}
-                </span>
+                <span class="tree-folder-name">{{ formatLabel(data.title) }}</span>
                 <span class="bookmark-count">({{ data.children?.length || 0 }})</span>
               </template>
               <template v-else>
@@ -98,15 +96,15 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Folder, Edit, Delete, Refresh/*, ArrowDown, ArrowUp*/ } from '@element-plus/icons-vue'
+import { ref } from 'vue'
+import { Folder, Edit, Delete, Refresh} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { getURL, parseBackendError } from '@/components/support/conn'
 
 export default {
   name: 'BookmarkTree',
-  components: { Folder, Edit, Delete, Refresh/*, ArrowDown, ArrowUp*/ },
+  components: { Folder, Edit, Delete, Refresh},
   
   setup() {
     const bookmarkTreeRef = ref(null)
@@ -130,9 +128,6 @@ export default {
         url: '',
         folder: ''
       },
-      faviconCache: new Map(),
-      faviconQueue: [],
-      faviconLoading: new Set(),
       defaultFavicon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23909399" d="M17,3H7A2,2 0 0,0 5,5V21L12,18L19,21V5C19,3.89 18.1,3 17,3Z"/></svg>',
       isDragging: false, 
       isDraggingOver: null, 
@@ -143,15 +138,16 @@ export default {
         y: 0
       },
       draggedNodeId: null,
-      longPressTimer: null,
-      isLongPress: false,
       touchData: {
         isDragging: false,
         startX: 0,
         startY: 0,
         currentTarget: null,
         dragElement: null,
-        dropTarget: null
+        dropTarget: null,
+        lastX: 0,
+        lastY: 0,
+        sourceNode: null
       }
     }
   },
@@ -430,29 +426,6 @@ export default {
       return label.length > 50 ? label.substring(0, 47) + '...' : label;
     },
 
-    /*
-    expandAll() {
-      const allKeys = [];
-      const collectKeys = (nodes) => {
-        nodes.forEach(node => {
-          if (node.type === 'folder') {
-            allKeys.push(node.id);
-            if (node.children?.length) {
-              collectKeys(node.children);
-            }
-          }
-        });
-      };
-      
-      collectKeys(this.treeData);
-      this.expandedKeys = allKeys;
-    },
-
-    collapseAll() {
-      this.expandedKeys = ['bookmarkBar'];
-    },
-    */
-
     getAllFolderKeys(nodes) {
       const keys = new Set(['bookmarkBar']);
       const addFolderKeys = (items) => {
@@ -605,10 +578,6 @@ export default {
       return bookmarks;
     },
 
-    calculateNewPath(oldPath, oldFolderId, newFolderId) {
-      return oldPath.replace(oldFolderId, newFolderId);
-    },
-
     handleNodeClick(data, node, e) {
       if (this.isLongPress) {
         this.isLongPress = false
@@ -638,91 +607,165 @@ export default {
       this.editDialogVisible = true
     },
 
+    findTreeNode(id) {
+      if (!id || !this.treeData || !this.treeData.length) {
+        console.warn('Invalid input for findTreeNode:', { id, treeData: this.treeData })
+        return null
+      }
+
+      const traverse = (nodes, parent = null) => {
+        for (const node of nodes) {
+          if (node.id === id) {
+            return {
+              data: node,
+              parent: parent,
+              children: node.children || [],
+              level: parent ? parent.level + 1 : 0
+            }
+          }
+          if (node.children && node.children.length > 0) {
+            const found = traverse(node.children, {
+              data: node,
+              children: node.children,
+              level: parent ? parent.level + 1 : 0
+            })
+            if (found) return found
+          }
+        }
+        return null
+      }
+
+      const result = traverse(this.treeData)
+      console.log('findTreeNode result:', { id, result })
+      return result
+    },
+
     initTouchEvents() {
-      const tree = this.$refs.bookmarkTreeRef.$el
-      
-      this.removeTouchEvents()
-      
-      tree.addEventListener('touchstart', this.handleTouchStart, { passive: false })
-      document.addEventListener('touchmove', this.handleTouchMove, { passive: false })
-      document.addEventListener('touchend', this.handleTouchEnd)
-      document.addEventListener('touchcancel', this.handleTouchEnd)
+      const treeEl = this.$refs.bookmarkTreeRef?.$el
+      if (treeEl) {
+        treeEl.addEventListener('touchstart', this.onTouchStart, { passive: false })
+        treeEl.addEventListener('touchmove', this.onTouchMove, { passive: false })
+        treeEl.addEventListener('touchend', this.onTouchEnd)
+      }
     },
-
     removeTouchEvents() {
-      const tree = this.$refs.bookmarkTreeRef.$el
-      if (!tree) return
-
-      tree.removeEventListener('touchstart', this.handleTouchStart)
-      document.removeEventListener('touchmove', this.handleTouchMove)
-      document.removeEventListener('touchend', this.handleTouchEnd)
-      document.removeEventListener('touchcancel', this.handleTouchEnd)
+      const treeEl = this.$refs.bookmarkTreeRef?.$el
+      if (treeEl) {
+        treeEl.removeEventListener('touchstart', this.onTouchStart)
+        treeEl.removeEventListener('touchmove', this.onTouchMove)
+        treeEl.removeEventListener('touchend', this.onTouchEnd)
+      }
     },
-
-    handleTouchStart(e) {
+    onTouchStart(e) {
       if (e.touches.length !== 1) return
-
-
-      const target = e.target.closest('.tree-node')
-      if (!target || target.classList.contains('no-drag')) return
-
+      
       const touch = e.touches[0]
+      const target = e.target.closest('.tree-node')
+      if (!target || target.dataset.id === 'bookmarkBar') return
+      
+      const nodeId = target.dataset.id
+      const foundNode = this.findTreeNode(nodeId)
+      
+      if (!foundNode) {
+        console.error('Node not found:', nodeId)
+        return
+      }
+      
+      console.log('Found node:', foundNode)
+      
       this.touchData = {
         isDragging: true,
         startX: touch.clientX,
         startY: touch.clientY,
         currentTarget: target,
-        dragElement: null,
-        dropTarget: null
+        sourceNode: foundNode,
+        dragElement: this.createDragPreview(target),
+        dropTarget: null,
+        lastX: touch.clientX,
+        lastY: touch.clientY
       }
 
-      setTimeout(() => {
-        if (this.touchData.isDragging) {
-          this.createDragElement(target)
-        }
-      }, 100)
+      target.classList.add('is-dragging')
+      document.body.classList.add('is-dragging')
+      e.preventDefault()
     },
 
-    handleTouchMove(e) {
+    
+    onTouchMove(e) {
       if (!this.touchData.isDragging) return
       e.preventDefault()
 
       const touch = e.touches[0]
-      const dragElement = this.touchData.dragElement
+      const { dragElement, startX, startY } = this.touchData
 
-      if (dragElement) {
-        const deltaX = touch.clientX - this.touchData.startX
-        const deltaY = touch.clientY - this.touchData.startY
-        
-        dragElement.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`
+      const deltaX = touch.clientX - startX
+      const deltaY = touch.clientY - startY
+      dragElement.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`
 
-        const dropTarget = this.findDropTarget(touch.clientX, touch.clientY)
-        if (dropTarget !== this.touchData.dropTarget) {
-          this.updateDropTarget(dropTarget)
+      const elementsAtPoint = document.elementsFromPoint(touch.clientX, touch.clientY)
+      const dropTarget = elementsAtPoint.find(el => 
+        el.classList.contains('tree-node') && 
+        el !== this.touchData.currentTarget
+      )
+
+      if (dropTarget) {
+        if (this.touchData.dropTarget) {
+          this.touchData.dropTarget.classList.remove('drag-over')
         }
+        dropTarget.classList.add('drag-over')
+        this.touchData.dropTarget = dropTarget
       }
+
+      this.touchData.lastX = touch.clientX
+      this.touchData.lastY = touch.clientY
     },
 
-    handleTouchEnd() {
+    onTouchEnd() {
       if (!this.touchData.isDragging) return
 
-      if (this.touchData.dragElement && this.touchData.dropTarget) {
-        const dragNode = this.findTreeNode(this.touchData.currentTarget.dataset.id)
-        const dropNode = this.findTreeNode(this.touchData.dropTarget.dataset.id)
-        
-        if (dragNode && dropNode) {
-          this.handleDrop(dragNode, dropNode, 'inner')
+      const { currentTarget, dropTarget, sourceNode, dragElement } = this.touchData
+
+      if (dropTarget) {
+        const targetId = dropTarget.dataset.id
+        const targetNode = this.findTreeNode(targetId)
+
+        if (targetNode && sourceNode && sourceNode.data) { 
+
+          const dropType = this.determineDropType(dropTarget, targetNode.data, this.touchData.lastY)
+          
+          if (this.handleAllowDrop(sourceNode, targetNode, dropType)) {
+            this.handleDrop(sourceNode, targetNode, dropType)
+          }
         }
+
+        dropTarget.classList.remove('drag-over')
       }
 
-      this.cleanupDragState()
+      if (dragElement) {
+        dragElement.remove()
+      }
+      currentTarget.classList.remove('is-dragging')
+      document.body.classList.remove('is-dragging')
+
+      // 重置触摸数据
+      this.touchData = {
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        currentTarget: null,
+        dragElement: null,
+        dropTarget: null,
+        lastX: 0,
+        lastY: 0,
+        sourceNode: null
+      }
     },
 
-    createDragElement(target) {
+    createDragPreview(target) {
+      const clone = target.cloneNode(true)
       const rect = target.getBoundingClientRect()
-      const dragElement = target.cloneNode(true)
       
-      Object.assign(dragElement.style, {
+      Object.assign(clone.style, {
         position: 'fixed',
         left: rect.left + 'px',
         top: rect.top + 'px',
@@ -734,74 +777,27 @@ export default {
         transition: 'transform 0.1s'
       })
 
-      document.body.appendChild(dragElement)
-      this.touchData.dragElement = dragElement
-      target.classList.add('is-dragging')
+      document.body.appendChild(clone)
+      return clone
     },
 
-    findDropTarget(x, y) {
-      const elements = document.elementsFromPoint(x, y)
-      return elements.find(el => {
-        return el.classList.contains('tree-node') && 
-               el !== this.touchData.currentTarget
-      })
-    },
+    determineDropType(dropTarget, targetData, y) {
+      const rect = dropTarget.getBoundingClientRect()
+      const relativeY = y - rect.top
+      const threshold = rect.height * 0.3
 
-    updateDropTarget(newTarget) {
-      if (this.touchData.dropTarget) {
-        this.touchData.dropTarget.classList.remove('drag-over')
-      }
-      if (newTarget) {
-        newTarget.classList.add('drag-over')
-      }
-      this.touchData.dropTarget = newTarget
-    },
-
-    findTreeNode(id) {
-      let result = null
-
-      if (!this.bookmarkTreeRef?.value?.store?.root) {
-        console.warn('Tree reference not initialized');
-        return null;
+      if (targetData.type === 'folder' && targetData.id !== 'bookmarkBar') {
+        return 'inner'
       }
       
-      const traverse = (node) => {
-        if (node.data.id === id) {
-          result = node
-          return true
-        }
-        if (node.childNodes) {
-          for (const child of node.childNodes) {
-            if (traverse(child)) return true
-          }
-        }
-        return false
+      if (relativeY < threshold) {
+        return 'before'
+      } else if (relativeY > rect.height - threshold) {
+        return 'after'
       }
-      
-      traverse(this.bookmarkTreeRef.value.store.root)
-      return result
-    },
 
-    cleanupDragState() {
-      if (this.touchData.dragElement) {
-        this.touchData.dragElement.remove()
-      }
-      if (this.touchData.currentTarget) {
-        this.touchData.currentTarget.classList.remove('is-dragging')
-      }
-      if (this.touchData.dropTarget) {
-        this.touchData.dropTarget.classList.remove('drag-over')
-      }
-      
-      this.touchData = {
-        isDragging: false,
-        startX: 0,
-        startY: 0,
-        currentTarget: null,
-        dragElement: null,
-        dropTarget: null
-      }
-    }
+      return 'inner'
+    },
   },
 
   mounted() {
