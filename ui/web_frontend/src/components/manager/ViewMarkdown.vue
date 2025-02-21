@@ -1,6 +1,6 @@
 <template>
-    <el-container class="app-container">
-        <el-header class="header" height="auto" style="padding: 0;">
+    <div class="app-container">
+        <div ref="navbar" class="header">
             <el-container class="nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
@@ -14,7 +14,6 @@
                             <el-button-group class="basic-buttons" style="margin-right: 5px;">
                                 <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
                                 <el-button size="small" type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
-                                <el-button size="small" type="primary" @click="addBookmark">{{ t('viewMarkdown.addBookmark') }}</el-button>
                                 <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
                                 <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
                                 <el-button size="small" type="primary" @click="setPlayer">
@@ -61,10 +60,10 @@
                     </div>
                 </div>
             </el-container>
-        </el-header>
+        </div>
         <div class="main-content" :class="viewMode">
             <div class="preview-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
-                <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" style="height: 100%;"/>
+                <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" style="height: 100%; padding: 0px;"/>
             </div>
             <div v-show="viewMode === 'content-note'" class="editor-container">
                 <div class="editor-toolbar">
@@ -82,7 +81,7 @@
             </div>
         </div>
         
-        <div v-if="showPlayer" class="player-footer">
+        <div v-if="showPlayer" class="player-footer" style="flex-shrink: 1">
             <TextSpeakerPlayer
                 :text="selectedText"
                 :lang="getLocale()"
@@ -91,7 +90,7 @@
                 @onSpeak="handleSpeak"
             />
         </div>
-    </el-container>
+    </div>
 </template>
 
 <script setup>
@@ -208,11 +207,12 @@ const resetContent = async () => {
         viewNote.value?.loadNote();
         loadHighlight();
         setTimeout(() => {
+            console.log('@@@', form.value.meta)
             if (form.value.meta?.bookmark?.position) {
-                window.scrollTo({
-                    top: form.value.meta.bookmark.position,
-                    behavior: 'smooth'
-                });
+                const mdPreviewContent = document.querySelector('.md-editor-preview');
+                if (mdPreviewContent) {
+                    mdPreviewContent.scrollTop = form.value.meta.bookmark.position;
+                }
             }
         }, 100);
     } else {
@@ -260,45 +260,6 @@ const copyContent = () => {
             });
     } else {
         fallbackCopyTextToClipboard(markdownContent.value)
-    }
-}
-
-const addBookmark = async () => {
-    const scrollPosition = window.scrollY || window.pageYOffset
-
-    if (!form.value.meta) {
-        form.value.meta = {}
-    }
-    
-    if (typeof form.value.meta === 'string') {
-        try {
-            form.value.meta = JSON.parse(form.value.meta)
-        } catch (error) {
-            console.error('Failed to parse meta:', error)
-            form.value.meta = {}
-        }
-    }
-    
-    form.value.meta.bookmark = {
-        position: scrollPosition,
-        timestamp: new Date().toISOString()
-    }
-
-    try {
-        const result = await saveEntry({
-            parentObj: null,
-            form: form.value,
-            path: null,
-            file: null,
-            onProgress: null,
-            showMessage: false
-        })
-        if (result) {
-            ElMessage.success(t('viewMarkdown.addBookmarkSuccess'))
-        }
-    } catch (error) {
-        console.error(t('viewMarkdown.addBookmarkFail'), error)
-        ElMessage.error(t('viewMarkdown.addBookmarkFail'))
     }
 }
 
@@ -363,7 +324,7 @@ const getContent = () => {
         const viewportTop = window.scrollY
         const offsetTop = viewportTop + HEADER_HEIGHT
         const walker = document.createTreeWalker(
-            previewElement,
+            previewElement.querySelector('.md-editor-preview'),  // 只搜索 preview 区域
             NodeFilter.SHOW_TEXT,
             null
         )
@@ -439,28 +400,33 @@ const handleSpeak = (text, index, node) => {
     }
 }
 
+const handleResize = () => {
+    const visualHeight = window.innerHeight;
+    console.log('visualHeight', visualHeight);
+    document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
+}
+
 onBeforeUnmount(() => {
     if (currentHighlight.value) {
         currentHighlight.value.style.backgroundColor = ''
     }
-    if (highlightSaveTimer.value) {
-        clearTimeout(highlightSaveTimer.value)
-        saveMeta()
-    }
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.removeEventListener('resize', handleResize);
 })
 
 onMounted(() => {
     fetchContent(route.query.idx)
     highlightManager.value = new HighlightManager(content.value)
     window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('resize', handleResize);
+    handleResize();
 })
 
 const handleBeforeUnload = async (e) => {
     if (highlightSaveTimer.value) {
         clearTimeout(highlightSaveTimer.value)
-        await saveMeta()
     }
+    await saveMeta(true)
     e.preventDefault()
     e.returnValue = ''
 }
@@ -482,8 +448,12 @@ const viewModeIcon = computed(() => {
   }
 })
 
-const saveMeta = async () => {
-    if (!highlightChanged.value) return
+const saveMeta = async (force) => {
+    await nextTick();    
+    const mdPreviewContent = document.querySelector('.md-editor-preview');
+    const scrollPosition = mdPreviewContent ? mdPreviewContent.scrollTop : 0;
+        
+    if (force == false && !highlightChanged.value)  return
 
     if (!form.value.meta || form.value.meta === 'null') {
         form.value.meta = {}
@@ -503,13 +473,21 @@ const saveMeta = async () => {
         form.value.meta.highlights = JSON.stringify(serializableHighlights)
     }
 
+    form.value.meta.bookmark = {
+        position: scrollPosition,
+        timestamp: new Date().toISOString()
+    }
+
+    form.value.meta.note = viewNote.value.editContent
+
     try {
         const result = await saveEntry({
             parentObj: null,
             form: form.value,
             path: null,
             file: null,
-            onProgress: null
+            onProgress: null,
+            showMessage: false
         })
         
         if (result) {
@@ -517,8 +495,8 @@ const saveMeta = async () => {
             console.log('saveSuccess')
         }
     } catch (error) {
-        console.error(t('viewMarkdown.saveHighlightFail'), error)
-        ElMessage.error(t('viewMarkdown.saveHighlightFail'))
+        console.error(t('saveFail'), error)
+        ElMessage.error(t('saveFail'))
     }
 }
 
@@ -527,7 +505,7 @@ const scheduleHighlightSave = () => {
         clearTimeout(highlightSaveTimer.value)
     }
     highlightSaveTimer.value = setTimeout(async () => {
-        await saveMeta()
+        await saveMeta(false)
         highlightSaveTimer.value = null
     }, 10000) // 15s
 }
@@ -556,5 +534,14 @@ const saveAsNote = () => {
 
 </script>
 
-<style>
+<style scoped>
+/*为知为啥，只能写这里*/ 
+:deep(.md-editor-preview) {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding: 0px 10px;
+}
+:deep(.md-editor-preview-wrapper) {
+    padding: 0px;
+}
 </style>

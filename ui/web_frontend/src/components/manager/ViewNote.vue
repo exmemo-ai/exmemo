@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MdEditor } from 'md-editor-v3'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -24,6 +24,17 @@ import { saveEntry } from './dataUtils';
 const { t } = useI18n()
 const editContent = ref('')
 const addDialog = ref(null)
+
+const props = defineProps({
+    form: {
+        type: Object,
+        required: true
+    }
+})
+
+const hasNoteChanged = ref(false)
+const originalNote = ref('')
+const saveTimer = ref(null)
 
 const getDefaultPath = () => {
     let path = null;
@@ -149,17 +160,6 @@ const saveAsNote = async () => {
     });
 };
 
-const props = defineProps({
-    form: {
-        type: Object,
-        required: true
-    }
-})
-
-const hasNoteChanged = ref(false)
-const originalNote = ref('')
-const saveTimer = ref(null)
-
 const loadNote = () => {
     if (props.form.meta && props.form.meta.note) {
         editContent.value = props.form.meta.note
@@ -225,7 +225,6 @@ const saveMeta = async () => {
 onBeforeUnmount(() => {
     if (saveTimer.value) {
         clearTimeout(saveTimer.value)
-        saveMeta()
     }
 })
 
