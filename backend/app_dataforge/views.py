@@ -267,8 +267,27 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         logger.debug(f"The object before update: {instance}")
-        # Extract the "addr" parameter from request.data
-        if "addr" in request.data and instance.etype == "file":  # file rename
+        
+        if instance.etype in ["file", "note"] and request.FILES:
+            try:
+                utils_filemanager.get_file_manager().delete_file(
+                    instance.user_id, 
+                    instance.path
+                )                
+                file = request.FILES['files']
+                tmp_path = filecache.get_tmpfile(get_ext(instance.path))
+                with open(tmp_path, "wb") as f:
+                    f.write(file.read())
+                utils_filemanager.get_file_manager().save_file(
+                    instance.user_id,
+                    instance.path,
+                    tmp_path
+                )
+            except Exception as e:
+                logger.error(f"File update failed: {str(e)}")
+                return do_result(False, _("file_update_failed"))
+
+        if "addr" in request.data and instance.etype == "file":
             new_addr = request.data["addr"]
             logger.info(f"request.addr: {new_addr}")
             logger.info(f"instance.addr: {instance.addr}")

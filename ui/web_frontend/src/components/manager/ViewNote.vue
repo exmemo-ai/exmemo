@@ -128,7 +128,7 @@ const showConfirm = (idx) => {
             type: 'info',
         }
     ).then(() => {
-        window.open(`${window.location.origin}/view_markdown?idx=${idx}`, '_blank');
+        window.open(`${window.location.origin}/edit_markdown?idx=${idx}`, '_blank');
     }).catch(() => {
     });
 };

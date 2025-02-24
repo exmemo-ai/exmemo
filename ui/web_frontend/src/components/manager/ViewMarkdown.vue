@@ -96,16 +96,14 @@
 <script setup>
 import 'md-editor-v3/lib/preview.css';
 import 'md-editor-v3/lib/style.css';
-import axios from 'axios';
 import logo from '@/assets/images/logo.png'
-import { setDefaultAuthHeader,getURL,parseBackendError } from '@/components/support/conn'
 import { getLocale } from '@/main.js' 
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { MdPreview } from 'md-editor-v3'
-import { saveEntry, downloadFile } from './dataUtils';
+import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import '@/assets/styles/markdown-view.css'
 import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
@@ -180,19 +178,10 @@ const fallbackCopyTextToClipboard = (text) => {
 }
 
 const fetchContent = async (idx) => {
-    let table_name = 'data'
-    setDefaultAuthHeader();
-    try {
-        const response = await axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/');
-        form.value = { ...response.data };
+    const result = await fetchItem(idx);
+    if (result.success) {
+        form.value = { ...result.data };
         resetContent();
-    } catch (error) {
-        if (error.response && error.response.status === 401) {
-            parseBackendError(null, error);
-        } else {
-            console.error(error)
-            ElMessage.error(t('operationFailed'));
-        }
     }
 }
 

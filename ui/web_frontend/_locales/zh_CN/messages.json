@@ -122,6 +122,7 @@
     "inputRecordContent": "请输入记录内容",
     "selectFileError": "请选择要上传的文件",
     "inputWebAddressError": "请输入网页地址",
+    "noChanges": "没有任何更改",
     "updateSuccess": "更新成功!",
     "updateFail": "更新失败!",
     "deleteConfirmation": "此操作将永久删除数据, 是否继续?",

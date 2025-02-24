@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { getURL, parseBackendError, parseBlobData } from '@/components/support/conn'
+import { getURL, parseBackendError, parseBlobData, setDefaultAuthHeader } from '@/components/support/conn'
 import { t } from '@/utils/i18n'
 
 export async function saveEntry({
@@ -21,12 +21,11 @@ export async function saveEntry({
             return false;
         }
         formData.append('raw', form.raw);
-    } else if ((form.etype === 'file'||form.etype === 'note') && form.idx === null) {
+    } else if (form.etype === 'file'||form.etype === 'note') {
         if (!file) {
             ElMessage.error(t('selectFileError'));
             return false;
         }
-        formData.append('etype', form.etype);
         formData.append('files', file);
         let fileName = file.name;
         if (form.title !== '') {
@@ -125,4 +124,27 @@ export function downloadFile(idx, filename) {
         .then(response => {
             parseBlobData(response, filename);
         });
+}
+
+export async function fetchItem(idx) {
+    let table_name = 'data';
+    setDefaultAuthHeader();
+    try {
+        const response = await axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/');
+        return {
+            success: true,
+            data: response.data
+        };
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            parseBackendError(null, error);
+        } else {
+            console.error(error);
+            ElMessage.error(t('operationFailed'));
+        }
+        return {
+            success: false,
+            error
+        };
+    }
 }

@@ -122,6 +122,7 @@
     "inputRecordContent": "Please enter the record content",
     "selectFileError": "Please select a file to upload",
     "inputWebAddressError": "Please enter the web address",
+    "noChanges": "No changes made",
     "updateSuccess": "Update successful!",
     "updateFail": "Update failed!",
     "deleteConfirmation": "This action will permanently delete the data, do you want to continue?",

@@ -13,6 +13,7 @@
                 <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
                 <el-button size="small" @click="showDeleteConfirmation">{{ $t('delete') }}</el-button>
                 <el-button size="small" v-if="form.etype !== 'record'" @click="viewContent">{{ $t('view') }}</el-button>
+                <el-button size="small" v-if="form.etype === 'note'" @click="editNote">{{ $t('edit') }}</el-button>
                 <el-button size="small" v-if="form.etype === 'file'" @click="download">{{ $t('download') }}</el-button> 
             </el-button-group>
         </div>
@@ -185,6 +186,10 @@ export default {
             console.log(this.$t('view', { idx: this.form.idx }));
             window.open(`${window.location.origin}/view_markdown?idx=${this.form.idx}`, '_blank');
             //window.location.href = `${window.location.origin}/view_markdown?idx=${this.form.idx}`;
+        },
+        editNote() {
+            this.closeDialog();
+            window.open(`${window.location.origin}/edit_markdown?idx=${this.form.idx}`, '_blank');
         },
         showDeleteConfirmation() {
             this.$confirm(this.$t('deleteConfirmation'), this.$t('promptTitle'), {
