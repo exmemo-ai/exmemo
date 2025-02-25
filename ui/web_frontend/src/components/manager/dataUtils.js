@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { getURL, parseBackendError, parseBlobData, setDefaultAuthHeader } from '@/components/support/conn'
 import { t } from '@/utils/i18n'
 
@@ -23,8 +23,11 @@ export async function saveEntry({
         formData.append('raw', form.raw);
     } else if (form.etype === 'file'||form.etype === 'note') {
         if (!file) {
-            ElMessage.error(t('selectFileError'));
-            return false;
+            if (form.etype === 'file') {
+                ElMessage.error(t('selectFileError'));
+                return false;
+            }
+            file = new File([''], 'empty.txt', { type: 'text/plain' });
         }
         formData.append('files', file);
         let fileName = file.name;
@@ -83,6 +86,7 @@ export async function saveEntry({
             if (response.data.status === 'success') {
                 if (showMessage) ElMessage({ type: 'success', message: t('updateSuccess') });
                 onSuccess?.(response.data);
+                return response.data;
             } else {
                 ElMessage({ type: 'error', message: t('updateFail') });
             }
@@ -96,6 +100,7 @@ export async function saveEntry({
             if (response.data.status === 'success') {
                 if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
                 onSuccess?.(response.data);
+                return response.data;
             } else {
                 if (response.data.info) {
                     ElMessage({ type: 'error', message: response.data.info });
@@ -104,7 +109,7 @@ export async function saveEntry({
                 }
             }
         }
-        return true;
+        return false;
     } catch (error) {
         if (axios.isCancel(error)) {
             ElMessage({ type: 'info', message: t('operationCancelled') });
@@ -148,3 +153,40 @@ export async function fetchItem(idx) {
         };
     }
 }
+
+export const confirmOpenNote = (data) => {
+    if (data && data.list && data.list.length > 0) {
+        const addr = data.list[0];
+        let func = 'api/entry/data/'
+        let params = {
+            keyword: addr, 
+            etype: 'note',
+            max_count: 1
+        }
+        axios.get(getURL() + func, { params: params })
+            .then(response => {
+                const results = response.data['results'];
+                if (results && results.length > 0) {
+                    showConfirm(results[0].idx);
+                }
+            })
+            .catch(error => {
+                parseBackendError(null, error);
+            });
+    }
+};
+
+const showConfirm = (idx) => {
+    ElMessageBox.confirm(
+        t('viewMarkdown.openNote'), 
+        t('viewMarkdown.openNoteTitle'), 
+        {
+            confirmButtonText: t('confirm'),
+            cancelButtonText: t('cancel'),
+            type: 'info',
+        }
+    ).then(() => {
+        window.open(`${window.location.origin}/edit_markdown?idx=${idx}`, '_blank');
+    }).catch(() => {
+    });
+};

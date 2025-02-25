@@ -22,10 +22,28 @@ export class TextPlayerManager {
     }
 
     setContent(data) {
-        console.log("setText", data);
+        //console.log("setText", data);
         this.paragraphs = [];
         
-        if (typeof(data) === 'string') {
+        if (Array.isArray(data)) {
+            for (const node of data) {
+                if (node.textContent.trim()) {
+                    const sentences = this.textSplitter.splitParagraphIntoSentences(node.textContent);
+                    const paragraph = {
+                        text: node.textContent,
+                        sentences: sentences.map((sentence, index) => ({
+                            text: sentence,
+                            node: node,
+                            globalIndex: this.paragraphs.reduce((acc, para) => acc + para.sentences.length, 0) + index
+                        }))
+                    };
+                    this.paragraphs.push(paragraph);
+                }
+                if (this.paragraphs.length > 500) {
+                    break;
+                }
+            }
+        } else if (typeof(data) === 'string') {
             const paragraphs = data.split('\n');
             for (let i = 0; i < paragraphs.length; i++) {
                 const paragraphText = paragraphs[i];
@@ -53,25 +71,6 @@ export class TextPlayerManager {
             );
             let node = walker.currentNode;
             while (node && node !== startNode) {
-                node = walker.nextNode();
-            }
-            while (node) {
-                const nodeText = node.textContent;
-                if (nodeText.trim()) {
-                    const sentences = this.textSplitter.splitParagraphIntoSentences(nodeText);
-                    const paragraph = {
-                        text: nodeText,
-                        sentences: sentences.map((sentence, index) => ({
-                            text: sentence,
-                            node: node,
-                            globalIndex: this.paragraphs.reduce((acc, para) => acc + para.sentences.length, 0) + index
-                        }))
-                    };
-                    this.paragraphs.push(paragraph);
-                }
-                if (this.paragraphs.length > 500) {
-                    break;
-                }
                 node = walker.nextNode();
             }
         }

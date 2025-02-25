@@ -31,31 +31,16 @@
                                     {{ t('viewMarkdown.copyHighlight') }}
                                 </el-button>
                             </el-button-group>
-                            <el-dropdown 
-                                trigger="click" 
-                                @command="setViewMode"
+                            <el-button
+                                size="small"
+                                type="primary"
+                                @click="toggleViewMode"
                                 style="margin-right: 5px;">
-                                <el-button size="small" type="primary">
-                                    <el-icon class="view-mode-icon">
-                                        <component :is="viewModeIcon"/>
-                                    </el-icon>
-                                    <el-icon><ArrowDown /></el-icon>
-                                </el-button>
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item 
-                                            command="content"
-                                            :icon="View">
-                                            {{ t('viewMarkdown.contentOnly') }}
-                                        </el-dropdown-item>
-                                        <el-dropdown-item 
-                                            command="content-note"
-                                            :icon="Edit">
-                                            {{ t('viewMarkdown.contentWithNote') }}
-                                        </el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
+                                <el-icon class="view-mode-icon">
+                                    <component :is="viewModeIcon"/>
+                                </el-icon>
+                                {{ viewMode === 'content' ? t('viewMarkdown.contentWithNote') : t('viewMarkdown.contentOnly') }}
+                            </el-button>
                         </div>
                     </div>
                 </div>
@@ -109,10 +94,10 @@ import '@/assets/styles/markdown-view.css'
 import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
 import { View, Edit, ArrowDown } from '@element-plus/icons-vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
+import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 
 const { t } = useI18n()
 const appName = 'ExMemo'
-const HEADER_HEIGHT = 80
 const markdownContent = ref(t('loading'))
 const previewId = 'preview-content'
 const route = useRoute()
@@ -124,7 +109,6 @@ const speakerPlayer = ref(null)
 const selectedText = ref('')
 const mdPreview = ref(null)
 
-const currentHighlight = ref(null)
 const highlightChanged = ref(false)
 const viewNote = ref(null)
 const highlightSaveTimer = ref(null)
@@ -288,10 +272,12 @@ const handleMouseUp = (event) => {
     const isPlaying = speakerPlayer.value?.getStatus().isPlaying || false
     if (isPlaying) {
         const selection = window.getSelection()
-        const node = selection.anchorNode
-        if (node && speakerPlayer.value) {
+        const startNode = selection.anchorNode
+        if (startNode && speakerPlayer.value) {
+            const previewElement = document.querySelector('.md-editor-preview');
+            const nodeList = getVisibleNodeList(previewElement, startNode)
             speakerPlayer.value.stop()
-            speakerPlayer.value.setContent(node)
+            speakerPlayer.value.setContent(nodeList)
             speakerPlayer.value.resume()
         }
         return
@@ -300,93 +286,17 @@ const handleMouseUp = (event) => {
 }
 
 const getContent = () => {
-    const selection = window.getSelection()
-    const text = selection.toString().trim()
-    const previewElement = document.getElementById(previewId)
-    
-    if (text && text.length > 0 && previewElement) {
-        const range = selection.getRangeAt(0)
-        return range.startContainer
+    const previewElement = document.querySelector('.md-editor-preview');
+    const selectedNodeList = getSelectedNodeList(previewElement);    
+    if (selectedNodeList.length > 0) {
+        return selectedNodeList;
     }
-    
-    if (previewElement) {
-        const viewportTop = window.scrollY
-        const offsetTop = viewportTop + HEADER_HEIGHT
-        const walker = document.createTreeWalker(
-            previewElement.querySelector('.md-editor-preview'),  // 只搜索 preview 区域
-            NodeFilter.SHOW_TEXT,
-            null
-        )
-        
-        let node
-        let bestNode = null
-        let bestDistance = Infinity
-        
-        while (node = walker.nextNode()) {
-            const range = document.createRange()
-            range.selectNode(node)
-            const rect = range.getBoundingClientRect()
-            
-            const absoluteTop = rect.top + window.scrollY
-            const isVisible = getComputedStyle(node.parentElement).display !== 'none' && 
-                            rect.height > 0 &&
-                            node.textContent.trim().length > 0
-            
-            if (isVisible) {
-                const distanceToOffset = Math.abs(absoluteTop - offsetTop)
-                if (distanceToOffset < bestDistance && absoluteTop >= offsetTop) {
-                    bestDistance = distanceToOffset
-                    bestNode = node
-                }
-            }
-        }
-        
-        return bestNode
-    }
-    return null
+    return getVisibleNodeList(previewElement);
 }
 
 const handleSpeak = (text, index, node) => {
-    if (currentHighlight.value) {
-        currentHighlight.value.style.backgroundColor = ''
-    }
-
-    if (index === -1) {
-        return
-    }
-
-    if (!node) {
-        const previewElement = document.getElementById(previewId)
-        if (previewElement) {
-            const walker = document.createTreeWalker(
-                previewElement,
-                NodeFilter.SHOW_TEXT,
-                null
-            )
-            let foundNode
-            while (foundNode = walker.nextNode()) {
-                if (foundNode.textContent.includes(text)) {
-                    node = foundNode
-                    break
-                }
-            }
-        }
-    }
-    
-    if (node?.parentElement) {
-        node.parentElement.style.backgroundColor = '#fffacd'
-        currentHighlight.value = node.parentElement
-        
-        const rect = node.parentElement.getBoundingClientRect()
-        const isVisible = (
-            rect.top >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-        )
-        
-        if (!isVisible) {
-            node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-    }
+    const previewElement = document.getElementById(previewId)
+    setHighlight(text, index, node, previewElement)
 }
 
 const handleResize = () => {
@@ -396,9 +306,6 @@ const handleResize = () => {
 }
 
 onBeforeUnmount(() => {
-    if (currentHighlight.value) {
-        currentHighlight.value.style.backgroundColor = ''
-    }
     window.removeEventListener('beforeunload', handleBeforeUnload)
     window.removeEventListener('resize', handleResize);
 })
@@ -422,8 +329,8 @@ const handleBeforeUnload = async (e) => {
 
 const viewMode = ref('content-note') // 'content' | 'content-note'
 
-const setViewMode = (mode) => {
-  viewMode.value = mode
+const toggleViewMode = () => {
+  viewMode.value = viewMode.value === 'content' ? 'content-note' : 'content'
 }
 
 const viewModeIcon = computed(() => {

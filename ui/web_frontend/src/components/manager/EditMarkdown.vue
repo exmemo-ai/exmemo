@@ -27,7 +27,7 @@
                                     type="primary" 
                                     @click="toggleViewMode"
                                     :icon="viewModeIcon">
-                                    {{ viewMode === 'edit' ? t('editMarkdown.previewMode') : t('editMarkdown.editMode') }}
+                                    {{ viewMode === 'edit' ? t('viewMarkdown.previewMode') : t('viewMarkdown.editMode') }}
                                 </el-button>
                             </el-button-group>
                         </div>
@@ -41,6 +41,7 @@
                 { 'hidden': !isLandscape && viewMode === 'preview' }
             ]">
                 <MdEditor
+                    ref="mdEditor"
                     v-model="markdownContent"
                     :showCodeRowNumber="true"
                     @onChange="handleContentChange"
@@ -52,7 +53,10 @@
             </div>
             <div v-if="!isLandscape" 
                 :class="['preview-container', { 'hidden': viewMode === 'edit' }]" 
-                ref="content">
+                ref="content"
+                @mouseup="handleMouseUp" 
+                @touchend="handleMouseUp"
+                @contextmenu.prevent>
                 <MdPreview 
                     :modelValue="markdownContent" 
                     :id="previewId"
@@ -81,16 +85,16 @@ import { getLocale } from '@/main.js';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { MdEditor, MdPreview } from 'md-editor-v3';
 import { saveEntry, fetchItem } from './dataUtils';
 import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue';
 import { View, Edit, Document } from '@element-plus/icons-vue';
 import { useWindowSize } from '@vueuse/core';
+import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 
 const { t } = useI18n();
 const appName = 'ExMemo';
-const HEADER_HEIGHT = 80;
 const markdownContent = ref('');
 const previewId = 'preview-content';
 const route = useRoute();
@@ -104,6 +108,7 @@ const viewMode = ref('edit');
 const { width } = useWindowSize();
 const isLandscape = computed(() => width.value >= 768);
 const isContentModified = ref(false);
+const mdEditor = ref(null);
 
 const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
@@ -156,7 +161,7 @@ const handleContentChange = () => {
 
 const saveContent = async () => {
     if (!isContentModified.value) {
-        ElMessage.info(t('noChanges')); // 需要在i18n中添加对应的翻译
+        ElMessage.info(t('noChanges'));
         return;
     }
 
@@ -182,90 +187,38 @@ const saveContent = async () => {
 }
 
 const handleSpeak = (text, index, node) => {
-    if (index === -1) {
-        return;
-    }
-
-    if (!node) {
-        const previewElement = document.getElementById(previewId);
-        if (previewElement) {
-            const walker = document.createTreeWalker(
-                previewElement,
-                NodeFilter.SHOW_TEXT,
-                null
-            );
-            let foundNode;
-            while (foundNode = walker.nextNode()) {
-                if (foundNode.textContent.includes(text)) {
-                    node = foundNode;
-                    break;
-                }
-            }
-        }
-    }
-    
-    if (node?.parentElement) {
-        node.parentElement.style.backgroundColor = '#fffacd';
-        
-        const rect = node.parentElement.getBoundingClientRect();
-        const isVisible = (
-            rect.top >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-        );
-        
-        if (!isVisible) {
-            node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
+    const previewElement = isLandscape.value 
+        ? document.querySelector('.md-editor-preview')
+        : document.getElementById(previewId);
+    setHighlight(text, index, node, previewElement);
 }
 
 const getContent = () => {
-    const selection = window.getSelection();
-    const text = selection.toString().trim();
     const previewElement = isLandscape.value 
-        ? document.querySelector('.md-editor-preview')  // 横屏模式下查找编辑器内的预览区
-        : document.getElementById(previewId);           // 竖屏模式下查找独立预览区
-    
-    if (text && text.length > 0 && previewElement) {
-        const range = selection.getRangeAt(0);
-        return range.startContainer;
+        ? document.querySelector('.md-editor-preview')  
+        : document.getElementById(previewId);   
+    const selectedNodeList = getSelectedNodeList(previewElement);
+    if (selectedNodeList.length > 0) {
+        return selectedNodeList;
     }
-    
-    if (previewElement) {
-        const viewportTop = window.scrollY;
-        const offsetTop = viewportTop + HEADER_HEIGHT;
-        const walker = document.createTreeWalker(
-            isLandscape.value ? previewElement : previewElement.querySelector('.md-editor-preview'),
-            NodeFilter.SHOW_TEXT,
-            null
-        );
-        
-        let node;
-        let bestNode = null;
-        let bestDistance = Infinity;
-        
-        while (node = walker.nextNode()) {
-            const range = document.createRange();
-            range.selectNode(node);
-            const rect = range.getBoundingClientRect();
-            
-            const absoluteTop = rect.top + window.scrollY;
-            const isVisible = getComputedStyle(node.parentElement).display !== 'none' && 
-                            rect.height > 0 &&
-                            node.textContent.trim().length > 0;
-            
-            if (isVisible) {
-                const distanceToOffset = Math.abs(absoluteTop - offsetTop);
-                if (distanceToOffset < bestDistance && absoluteTop >= offsetTop) {
-                    bestDistance = distanceToOffset;
-                    bestNode = node;
-                }
-            }
+    return getVisibleNodeList(previewElement);
+}
+
+const handleMouseUp = (event) => {
+    const isPlaying = speakerPlayer.value?.getStatus().isPlaying || false
+    if (isPlaying) {
+        const selection = window.getSelection()
+        const startNode = selection.anchorNode
+        if (startNode && speakerPlayer.value) {
+            const previewElement = isLandscape.value 
+                ? document.querySelector('.md-editor-preview')
+                : document.getElementById(previewId);
+            const nodeList = getVisibleNodeList(previewElement, startNode)
+            speakerPlayer.value.stop()
+            speakerPlayer.value.setContent(nodeList)
+            speakerPlayer.value.resume()
         }
-        
-        return bestNode;
     }
-    return null;
 }
 
 onBeforeUnmount(() => {
@@ -276,7 +229,17 @@ onBeforeUnmount(() => {
 
 onMounted(() => {
     fetchContent(route.query.idx);
-})
+    nextTick(() => {
+        if (mdEditor.value?.$el) {
+            const previewElement = mdEditor.value.$el.querySelector('.md-editor-preview');
+            if (previewElement) {
+                previewElement.addEventListener('mouseup', handleMouseUp);
+                previewElement.addEventListener('touchend', handleMouseUp);
+                previewElement.addEventListener('contextmenu', (e) => e.preventDefault());
+            }
+        }
+    });
+});
 </script>
 
 <style scoped>
