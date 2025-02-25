@@ -26,8 +26,11 @@ export async function saveEntry({
             if (form.etype === 'file') {
                 ElMessage.error(t('selectFileError'));
                 return false;
+            } else { // ‘note'
+                if (form.idx === null || form.idx === undefined) {
+                    file = new File([''], 'empty.md', { type: 'text/markdown' });
+                }
             }
-            file = new File([''], 'empty.txt', { type: 'text/plain' });
         }
         formData.append('files', file);
         let fileName = file.name;
