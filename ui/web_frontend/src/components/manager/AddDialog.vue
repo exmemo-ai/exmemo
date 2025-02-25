@@ -65,6 +65,7 @@
 import { ElMessage } from 'element-plus';
 import DataEditor from './DataEditor.vue'
 import SettingService from '@/components/settings/settingService'
+import { confirmOpenNote } from './dataUtils';
 
 export default {
     components: {
@@ -168,8 +169,8 @@ export default {
                 }
             }
             await this.$nextTick();
-            const success = await this.$refs.dataEditor.realSave();
-            if (success) {
+            const ret = await this.$refs.dataEditor.realSave();
+            if (ret) {
                 if (this.form.etype === 'note' && this.input_vault && this.input_vault.length > 0) {
                     const settingService = SettingService.getInstance();
                     settingService.loadSetting();
@@ -177,6 +178,9 @@ export default {
                     settingService.saveSetting();
                 }
                 this.closeDialog();
+                if (this.form.etype === 'note') {
+                    confirmOpenNote(ret);
+                }
             }
         },
         calcTitle(path) {

@@ -14,10 +14,8 @@
 import { ref, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MdEditor } from 'md-editor-v3'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import AddDialog from '@/components/manager/AddDialog.vue'
-import axios from 'axios'
-import { getURL, parseBackendError } from '@/components/support/conn'
 import SettingService from '@/components/settings/settingService'
 import { saveEntry } from './dataUtils';
 
@@ -96,43 +94,6 @@ const updateFrontMatter = (content, newFields) => {
     return `---\n${frontMatter}\n---\n\n${content.trim()}`;
 };
 
-const saveSuccess = (data) => {
-    if (data && data.list && data.list.length > 0) {
-        const addr = data.list[0];
-        let func = 'api/entry/data/'
-        let params = {
-            keyword: addr, 
-            etype: 'note',
-            max_count: 1
-        }
-        axios.get(getURL() + func, { params: params })
-            .then(response => {
-                const results = response.data['results'];
-                if (results && results.length > 0) {
-                    showConfirm(results[0].idx);
-                }
-            })
-            .catch(error => {
-                parseBackendError(null, error);
-            });
-    }
-};
-
-const showConfirm = (idx) => {
-    ElMessageBox.confirm(
-        t('viewMarkdown.openNote'), 
-        t('viewMarkdown.openNoteTitle'), 
-        {
-            confirmButtonText: t('confirm'),
-            cancelButtonText: t('cancel'),
-            type: 'info',
-        }
-    ).then(() => {
-        window.open(`${window.location.origin}/edit_markdown?idx=${idx}`, '_blank');
-    }).catch(() => {
-    });
-};
-
 const saveAsNote = async () => {
     if (editContent.value.trim().length === 0) {
         ElMessage.error(t('viewMarkdown.noteEmpty'));
@@ -149,7 +110,7 @@ const saveAsNote = async () => {
     
     const vault = getDefaultVault();
     const path = getDefaultPath();
-    addDialog.value.openDialog(saveSuccess, {
+    addDialog.value.openDialog(null, {
         etype: 'note',
         content: editContent.value,
         vault: vault,

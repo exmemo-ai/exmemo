@@ -320,13 +320,15 @@
         "fileNote": "文件_笔记",
         "chatNote": "聊天_笔记",
         "webNote": "网页_笔记",
-        "openNote": "打开导出的新笔记？",
+        "openNote": "打开新笔记？",
         "openNoteTitle": "打开",
         "contentOnly": "仅内容",
         "contentWithNote": "内容+笔记",
         "insertSelected": "插入选区",
         "insertHighlight": "插入高亮",
-        "insertAll": "插入全部"
+        "insertAll": "插入全部",
+        "previewMode": "预览模式",
+        "editMode": "编辑模式"
     },
     "settings": {
         "bookmark": "书签",

@@ -321,13 +321,15 @@
         "fileNote": "file_note",
         "chatNote": "chat_note",
         "webNote": "web_note",
-        "openNote": "Open exported note?",
+        "openNote": "Open new note?",
         "openNoteTitle": "Open",
         "contentOnly": "Content only",
         "contentWithNote": "Content with note",
         "insertSelected": "Insert selected",
         "insertHighlight": "Insert highlight",
-        "insertAll": "Insert all"
+        "insertAll": "Insert all",
+        "previewMode": "Preview mode",
+        "editMode": "Edit mode"
     },
     "settings": {
         "bookmark": "Bookmark",
