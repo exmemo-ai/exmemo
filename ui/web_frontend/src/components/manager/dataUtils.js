@@ -21,15 +21,13 @@ export async function saveEntry({
             return false;
         }
         formData.append('raw', form.raw);
-    } else if (form.etype === 'file'||form.etype === 'note') {
+    } else if ((form.etype === 'file'||form.etype === 'note') && (form.idx === null || form.idx === undefined)) {
         if (!file) {
             if (form.etype === 'file') {
                 ElMessage.error(t('selectFileError'));
                 return false;
             } else { // ‘note'
-                if (form.idx === null || form.idx === undefined) {
-                    file = new File([''], 'empty.md', { type: 'text/markdown' });
-                }
+                file = new File([''], 'empty.md', { type: 'text/markdown' });
             }
         }
         formData.append('files', file);
