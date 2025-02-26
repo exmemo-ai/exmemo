@@ -203,6 +203,7 @@
     "clipboardNotSupported": "Clipboard API not supported",
     "loading": "Loading",
     "learn": "Learn",
+    "continue": "Continue",
     "opt": {
         "vault": "Vault",
         "path": "Path",
@@ -329,7 +330,9 @@
         "insertHighlight": "Insert highlight",
         "insertAll": "Insert all",
         "previewMode": "Preview mode",
-        "editMode": "Edit mode"
+        "editMode": "Edit mode",
+        "insertSuccess": "Inserted to note",
+        "ai": "AI"
     },
     "settings": {
         "bookmark": "Bookmark",
@@ -362,6 +365,39 @@
         "prevSentence": "Prev Sent",
         "nextSentence": "Next Sent"
     },
+    "aiDialog": {
+        "title": "AI Assistant",
+        "questionPlaceholder": "Please enter prompt",
+        "submit": "Submit",
+        "referenceAll": "All",
+        "referenceSelection": "Selection",
+        "referenceScreen": "Screen text",
+        "referenceNone": "No reference",
+        "copyAnswer": "Copy answer",
+        "insertToNote": "Insert to note",
+        "warning": "Warning",
+        "textLengthWarning": "Text length exceeds limit {length}, please reduce the text length",
+        "usePartial": "Use partial",
+        "referenceIsNull": "Reference is empty",
+        "commonQuestions": {
+            "translate": "Translate",
+            "polish": "Polish",
+            "correct": "Correct",
+            "summary": "Summary",
+            "conclusion": "Conclusion",
+            "abstract": "Abstract",
+            "generate": "Generate",
+            "outline": "Outline",
+            "styleWechat": "WeChat",
+            "styleXiaohongshu": "Rednote",
+            "styleTechnical": "Technical",
+            "styleConcise": "Concise",
+            "styleElegant": "Elegant",
+            "styleEmotional": "Emotional",
+            "styleObjective": "Objective",
+            "style": "Style"
+        }
+    },    
     "bookmarkManager": "Bookmark",
     "bookmarkTree": "Bookmark directory",
     "clearSession": "Clear session",

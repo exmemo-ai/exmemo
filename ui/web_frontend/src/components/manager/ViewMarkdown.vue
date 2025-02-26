@@ -41,6 +41,14 @@
                                 </el-icon>
                                 {{ viewMode === 'content' ? t('viewMarkdown.contentWithNote') : t('viewMarkdown.contentOnly') }}
                             </el-button>
+                            <el-button
+                                size="small"
+                                type="primary"
+                                @click="showAIDialog"
+                                style="margin-right: 5px;">
+                                <el-icon><ChatDotRound /></el-icon>
+                                {{ t('viewMarkdown.ai') }}
+                            </el-button>
                         </div>
                     </div>
                 </div>
@@ -75,6 +83,14 @@
                 @onSpeak="handleSpeak"
             />
         </div>
+        <AIDialog
+            v-model="aiDialogVisible"
+            :full-content="markdownContent"
+            :selected-content="getSelectedContent()"
+            :screen-content="getScreenContent()"
+            :common-questions="predefinedQuestions"
+            @insertNote="handleInsertAIAnswer"
+        />
     </div>
 </template>
 
@@ -92,9 +108,11 @@ import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import '@/assets/styles/markdown-view.css'
 import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
-import { View, Edit, ArrowDown } from '@element-plus/icons-vue'
+import { View, Edit, ArrowDown, ChatDotRound } from '@element-plus/icons-vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
+import AIDialog from './AIDialog.vue'
+import { getBasicQuestions } from './predefinedQuestions'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -180,7 +198,7 @@ const resetContent = async () => {
         viewNote.value?.loadNote();
         loadHighlight();
         setTimeout(() => {
-            console.log('@@@', form.value.meta)
+            //console.log('@@@', form.value.meta)
             if (form.value.meta?.bookmark?.position) {
                 const mdPreviewContent = document.querySelector('.md-editor-preview');
                 if (mdPreviewContent) {
@@ -428,6 +446,61 @@ const saveAsNote = () => {
     viewNote.value.saveAsNote();
 };
 
+const aiDialogVisible = ref(false)
+
+const showAIDialog = () => {
+  aiDialogVisible.value = true
+}
+
+const getSelectedContent = () => {
+  const selection = window.getSelection()
+  return selection.toString()
+}
+
+const getScreenContent = () => {
+  const preview = document.querySelector('.md-editor-preview')
+  if (!preview) return ''
+  
+  const visibleHeight = preview.clientHeight
+  const previewRect = preview.getBoundingClientRect()
+  const walker = document.createTreeWalker(
+    preview,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: (node) => {
+        if (node.textContent?.trim() === '') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  )
+  
+  let visibleText = ''
+  let node
+  while (node = walker.nextNode()) {
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    const rect = range.getBoundingClientRect()
+    const elementTop = rect.top - previewRect.top
+    const elementBottom = rect.bottom - previewRect.top
+    
+    if (elementTop >= 0 && elementTop <= visibleHeight && elementBottom >= 0) {
+      visibleText += node.textContent.trim() + '\n'
+    }
+  }
+  
+  return visibleText.trim()
+}
+
+const handleInsertAIAnswer = (text) => {
+  if (!text) return
+  text = text + "\n\n"
+  viewNote.value.editContent = viewNote.value.editContent + text
+  ElMessage.success(t('viewMarkdown.insertSuccess'))
+}
+
+const predefinedQuestions = getBasicQuestions(t)
 </script>
 
 <style scoped>

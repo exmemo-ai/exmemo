@@ -30,6 +30,20 @@
                                     {{ viewMode === 'edit' ? t('viewMarkdown.previewMode') : t('viewMarkdown.editMode') }}
                                 </el-button>
                             </el-button-group>
+                            <el-button-group style="margin-right: 5px;">
+                                <el-button size="small" type="primary" @click="handlePolish">
+                                    {{ t('aiDialog.commonQuestions.polish') }}
+                                </el-button>
+                                <el-button size="small" type="primary" @click="handleSummarize">
+                                    {{ t('aiDialog.commonQuestions.summary') }}
+                                </el-button>
+                                <el-button size="small" type="primary" @click="handleGenerate">
+                                    {{ t('aiDialog.commonQuestions.generate') }}
+                                </el-button>
+                                <el-button size="small" type="primary" @click="handleStyle">
+                                    {{ t('aiDialog.commonQuestions.style') }}
+                                </el-button>
+                            </el-button-group>
                         </div>
                     </div>
                 </div>
@@ -75,6 +89,15 @@
                 @onSpeak="handleSpeak"
             />
         </div>
+        <AIDialog
+            v-model="aiDialogVisible"
+            :full-content="markdownContent"
+            :selected-content="getSelectedContent()"
+            :screen-content="getScreenContent()"
+            :common-questions="predefinedQuestions"
+            :default-reference-type="defaultReferenceType"
+            @insertNote="handleInsertAIAnswer"
+        />
     </div>
 </template>
 
@@ -92,6 +115,8 @@ import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue';
 import { View, Edit, Document } from '@element-plus/icons-vue';
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
+import AIDialog from './AIDialog.vue';
+import { getPolishQuestions, getSummaryQuestions, getGenerateQuestions, getStyleQuestions } from './predefinedQuestions';
 
 const { t } = useI18n();
 const appName = 'ExMemo';
@@ -109,6 +134,9 @@ const { width } = useWindowSize();
 const isLandscape = computed(() => width.value >= 768);
 const isContentModified = ref(false);
 const mdEditor = ref(null);
+const aiDialogVisible = ref(false);
+const predefinedQuestions = ref([]);
+const defaultReferenceType = ref('');
 
 const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
@@ -219,6 +247,97 @@ const handleMouseUp = (event) => {
             speakerPlayer.value.resume()
         }
     }
+}
+
+const handleSummarize = () => {
+    predefinedQuestions.value = getSummaryQuestions(t);
+    defaultReferenceType.value = 'all';
+    nextTick(() => {
+        aiDialogVisible.value = true;
+    });
+}
+
+const handlePolish = () => {
+    predefinedQuestions.value = getPolishQuestions(t);
+    defaultReferenceType.value = getSelectedContent()?.trim() ? 'selection' : 'screen';
+    nextTick(() => {
+        aiDialogVisible.value = true;
+    });
+}
+
+const handleGenerate = () => {
+    predefinedQuestions.value = getGenerateQuestions(t);
+    defaultReferenceType.value = 'all';
+    nextTick(() => {
+        aiDialogVisible.value = true;
+    });
+}
+
+const handleStyle = () => {
+    predefinedQuestions.value = getStyleQuestions(t);
+    defaultReferenceType.value = 'all';
+    nextTick(() => {
+        aiDialogVisible.value = true;
+    });
+}
+
+const getSelectedContent = () => {
+    const selection = window.getSelection();
+    return selection.toString();
+}
+
+const getScreenContent = () => {
+    const previewElement = isLandscape.value 
+        ? document.querySelector('.md-editor-preview')
+        : document.getElementById(previewId);
+    if (!previewElement) return '';
+    
+    const visibleHeight = previewElement.clientHeight;
+    const previewRect = previewElement.getBoundingClientRect();
+    const walker = document.createTreeWalker(
+        previewElement,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: (node) => {
+                if (node.textContent?.trim() === '') {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }
+    );
+    
+    let visibleText = '';
+    let node;
+    while (node = walker.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rect = range.getBoundingClientRect();
+        const elementTop = rect.top - previewRect.top;
+        const elementBottom = rect.bottom - previewRect.top;
+        
+        if (elementTop >= 0 && elementTop <= visibleHeight && elementBottom >= 0) {
+            visibleText += node.textContent.trim() + '\n';
+        }
+    }
+    
+    return visibleText.trim();
+}
+
+const handleInsertAIAnswer = (text) => {
+    if (!text) return;
+    if (mdEditor.value) {
+        mdEditor.value?.insert(() => {
+            return {
+                targetValue: text + '\n\n',
+                select: true,
+                deviationStart: 0,
+                deviationEnd: 0
+            };
+        });
+        isContentModified.value = true;
+    }
+    ElMessage.success(t('viewMarkdown.insertSuccess'));
 }
 
 onBeforeUnmount(() => {
