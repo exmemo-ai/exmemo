@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_BASE } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_DEFAULT } from './WordLearningSupport';
 import { getWordsFrom } from './TransFunction';
 import SettingService from '@/components/settings/settingService';
 
@@ -115,7 +115,7 @@ export default {
                 this.fromList = await getWordsFrom(this);
                 const settingService = SettingService.getInstance();
                 await settingService.loadSetting();
-                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_BASE);
+                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_DEFAULT);
                 if (currentVOC && this.fromList.includes(currentVOC)) {
                     this.currentVOC = currentVOC;
                 } else if (this.fromList.length > 0) {

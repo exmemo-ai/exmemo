@@ -38,12 +38,15 @@ class StoreWordViewSet(viewsets.ModelViewSet):
 
         query_args = {"user_id": user_id}
         keywords = request.GET.get("keyword", "")
+        status = request.GET.get("status", "")
         keyword_arr = keywords.split(" ")
 
         q_obj = Q()
         for keyword in keyword_arr:
             if keyword:
                 q_obj &= Q(word__icontains=keyword)
+        if len(status) > 0:
+            q_obj &= Q(status=status)
 
         queryset = StoreTranslate.objects.filter(q_obj, **query_args).order_by("-times", "freq")
         serializer = StoreTranslateSerializer(queryset, many=True)
@@ -281,7 +284,7 @@ class TranslateLearnView(APIView):
         limit = 100
         queryset = StoreTranslate.objects.filter(
             user_id=args['user_id'], status=status
-            ).order_by("freq").all()[:limit]
+            ).order_by("freq").all()
         serializer = StoreTranslateSerializer(queryset, many=True)
         data = serializer.data
         date = timezone.now().strftime("%Y-%m-%d")
@@ -298,6 +301,8 @@ class TranslateLearnView(APIView):
                 learn_date = info.get("learn_date", None)
             if learn_date is None or learn_date != date:
                 ret.append(item)
+            if len(ret) >= limit:
+                break
         json_data = json.loads(json.dumps(ret))
         return do_result(True, {"list": json_data})
 

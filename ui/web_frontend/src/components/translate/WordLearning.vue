@@ -62,6 +62,11 @@ export default {
                 await this.$refs.currentComponent.save(false);
             }
         },
+        async handleBeforeUnload(e) {
+            await this.saveBeforeSwitch();
+            e.preventDefault();
+            e.returnValue = '';
+        },
         async handleSelectClick() {
             await this.saveBeforeSwitch();
             this.status = 'select';
@@ -86,9 +91,11 @@ export default {
             this.status = newStatus;
         }
     },
+    mounted() {
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
+    },
     beforeUnmount() {
-        console.log('component unmounting');
-        this.saveBeforeSwitch();
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
     }
 };
 </script>
