@@ -194,7 +194,7 @@
     "unlimited": "Unlimited",
     "selectAll": "Select all",
     "dataOperate": "Data operation",
-    "copySelected": "Copy selected",
+    "copy": "Copy",
     "speakError": "Speech error: ",
     "stopSpeak": "Stop speaking",
     "read": "Read",
@@ -288,12 +288,14 @@
         "null": "Null",
         "learnWordCount": "Learned words",
         "reviewWordCount": "Reviewed words",
-        "wordCount": "Count"
+        "wordCount": "Count",
+        "noWordsYet": "No words yet"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",
         "copiedAt": "Copied at",
         "readSelected": "Read selected",
+        "highlight": "Highlight",
         "saveHighlightSuccess": "Save highlight successful",
         "saveHighlightFail": "Save highlight failed",
         "stopHighlight": "Hide highlight",
@@ -305,7 +307,7 @@
         "saveHighlight": "Save highlight",
         "noHighlightToSave": "No highlight to save",
         "openWeb": "Open web",
-        "downloadFile": "Download file",
+        "downloadFile": "Download",
         "summary": "Summary",
         "noTextSelected": "No text selected",
         "detail": "Detail",
@@ -332,7 +334,8 @@
         "previewMode": "Preview mode",
         "editMode": "Edit mode",
         "insertSuccess": "Inserted to note",
-        "ai": "AI"
+        "ai": "AI",
+        "estreat": "Estreat"
     },
     "settings": {
         "bookmark": "Bookmark",

@@ -8,7 +8,7 @@
 .header {
     background-color: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 4px 0;
+    padding: 0;
     flex-shrink: 1;
 }
 
@@ -23,17 +23,8 @@
     flex-grow: 1;
 }
 
-.preview-container {
-    border: 1px solid #dcdfe6;
-    background-color: white;
-    flex: 1;
-    overflow-y: hidden;
-    position: relative;
-    height: 100%;    
-}
-
 .editor-container {
-    border: 1px solid #dcdfe6;
+    border: 0px solid #dcdfe6;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -43,15 +34,7 @@
 .editor-toolbar {
     padding: 5px;
     background-color: #f5f5f5;
-    border-bottom: 1px solid #ddd;
-    flex-shrink: 1;
-}
-
-.player-footer {
-    background-color: white;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    padding: 0;
-    min-height: 40px;
+    border-bottom: 0px solid #ddd;
     flex-shrink: 1;
 }
 

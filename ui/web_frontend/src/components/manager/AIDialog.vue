@@ -182,6 +182,7 @@ const handleSubmit = async () => {
 
     const content = reference ? `${question.value}\n\nContent:\n${reference}` : question.value
 
+    console.log('question length', checkTextLength(content)) // for debug
     if (checkTextLength(content) > 2500) {
         pendingContent.value = content
         confirmDialogVisible.value = true

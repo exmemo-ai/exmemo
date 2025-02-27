@@ -194,7 +194,7 @@
     "unlimited": "无限制",
     "selectAll": "全选",
     "dataOperate": "数据操作",
-    "copySelected": "复制选区",
+    "copy": "复制",
     "speakError": "语音错误：",
     "stopSpeak": "停止朗读",
     "read": "朗读",
@@ -288,12 +288,14 @@
         "null": "无",
         "learnWordCount": "学习单词数",
         "reviewWordCount": "复习单词数",
-        "wordCount": "单词个数"
+        "wordCount": "单词个数",
+        "noWordsYet": "暂无单词"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",
         "copiedAt": "复制于",
         "readSelected": "朗读选区",
+        "highlight": "高亮",
         "saveHighlightSuccess": "高亮保存成功",
         "saveHighlightFail": "高亮保存失败",
         "stopHighlight": "不显示高亮",
@@ -305,7 +307,7 @@
         "saveHighlight": "保存高亮",
         "noHighlightToSave": "没有高亮可保存",
         "openWeb": "打开网页",
-        "downloadFile": "下载文件",
+        "downloadFile": "下载",
         "noTextSelected": "未选中文本",
         "detail": "详情",
         "showRead": "打开朗读模式",
@@ -331,7 +333,8 @@
         "previewMode": "预览模式",
         "editMode": "编辑模式",
         "insertSuccess": "已插入到笔记",
-        "ai": "AI"
+        "ai": "AI",
+        "estreat": "摘抄"
     },
     "settings": {
         "bookmark": "书签",
