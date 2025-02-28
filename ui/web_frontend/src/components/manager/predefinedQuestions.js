@@ -2,22 +2,12 @@ export const getPolishQuestions = (t) => [
     {
         id: 'polish',
         label: t('aiDialog.commonQuestions.polish'),
-        question: '请帮我润色这段文字，要求：\n' +
-                    '1. 保持原意的基础上使表达更加优美\n' +
-                    '2. 调整句式使其更加通顺\n' +
-                    '3. 选用更恰当的词语\n' +
-                    '4. 改善语言的连贯性\n' +
-                    '5. 突出重点，清晰表达'
+        question: '请帮我润色这段文字。'
     },
     {
         id: 'correct',
         label: t('aiDialog.commonQuestions.correct'), 
-        question: '请检查这段文字中的问题：\n' +
-                    '1. 标点符号使用是否正确\n' +
-                    '2. 是否存在语法错误\n' +
-                    '3. 是否有不恰当的表达\n' +
-                    '4. 是否存在逻辑矛盾\n' +
-                    '5. 给出修改建议'
+        question: '请修改以下内容中的错别字、语法、标点等错误，使文档更为通顺，尽量不修改内容和风格。'
     }
 ];
 
@@ -25,12 +15,7 @@ export const getSummaryQuestions = (t) => [
     {
         id: 'summary',
         label: t('aiDialog.commonQuestions.summary'),
-        question: '请帮我总结这段内容：\n' +
-                    '1. 提取核心观点和主要论述\n' +
-                    '2. 概括文章的主要内容\n' +
-                    '3. 保持逻辑清晰，层次分明\n' +
-                    '4. 突出重点，简明扼要\n' +
-                    '5. 添加合适的小标题'
+        question: '请帮我用一句话总结以下内容'
     },
     { 
         id: 'conclusion',
@@ -51,6 +36,11 @@ export const getSummaryQuestions = (t) => [
                     '3. 突出创新点或主要发现\n' +
                     '4. 控制在300字以内\n' +
                     '5. 使用准确、简洁的语言'
+    },
+    {
+        id: 'abstract',
+        label: t('aiDialog.commonQuestions.makeTitle'),
+        question: '请帮我给这段内容起一个标题。'
     }
 ];
 
@@ -73,11 +63,10 @@ export const getGenerateQuestions = (t) => [
     {
         id: 'outline',
         label: t('aiDialog.commonQuestions.outline'),
-        question: '请基于内容生成一个详细的文章大纲，要求：\n' +
-                 '1. 使用markdown格式\n' +
-                 '2. 包含标题和副标题\n' +
-                 '3. 列出每个部分的主要内容要点\n' +
-                 '4. 按照故事叙述、分析、总结的逻辑展开'
+        question: '请基于以下内容生成给分文章分段并添加小标题，要求：\n' +
+                 '1. 最多两层标题，标题尽量简练\n' +
+                 '2. 如果需要，请添加吸引人的开头和结尾\n' + 
+                 '3. 使用markdown格式输出'
     }
 ];
 

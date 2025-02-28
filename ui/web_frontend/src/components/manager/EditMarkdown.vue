@@ -11,16 +11,21 @@
                 <div>
                     <div class="user-controls" style="margin-bottom: 5px">
                         <div class="button-container-flex">
-                            <el-button-group class="basic-buttons" style="margin-right: 5px;">
+                            <el-button-group class="basic-buttons">
                                 <el-button size="small" type="primary" @click="setPlayer">
                                     {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
                                 </el-button>
                             </el-button-group>
-                            <el-button-group style="margin-right: 5px;">
+                            <el-button-group>
                                 <el-button size="small" type="primary" @click="saveContent" :icon="Document">
                                     {{ t('save') }}
                                 </el-button>
                             </el-button-group>
+                            <el-button-group style="margin-right: 5px;">
+                                <el-button size="small" type="primary" @click="saveAs" :icon="Document">
+                                    {{ t('saveAs') }}
+                                </el-button>
+                            </el-button-group>                            
                             <el-button-group style="margin-right: 5px;" v-if="!isLandscape">
                                 <el-button 
                                     size="small" 
@@ -31,6 +36,9 @@
                                 </el-button>
                             </el-button-group>
                             <el-button-group style="margin-right: 5px;">
+                                <el-button size="small" type="primary" @click="handleAI">
+                                    {{ t('viewMarkdown.ai') }}
+                                </el-button>
                                 <el-button size="small" type="primary" @click="handlePolish">
                                     {{ t('aiDialog.commonQuestions.polish') }}
                                 </el-button>
@@ -43,6 +51,11 @@
                                 <el-button size="small" type="primary" @click="handleStyle">
                                     {{ t('aiDialog.commonQuestions.style') }}
                                 </el-button>
+                                <!--
+                                <el-button size="small" type="primary" @click="handleExtractStyle">
+                                    提取样式
+                                </el-button>
+                                -->
                             </el-button-group>
                         </div>
                     </div>
@@ -98,6 +111,7 @@
             :default-reference-type="defaultReferenceType"
             @insertNote="handleInsertAIAnswer"
         />
+        <AddDialog ref="addDialog" />
     </div>
 </template>
 
@@ -115,8 +129,9 @@ import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue';
 import { View, Edit, Document } from '@element-plus/icons-vue';
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
-import AIDialog from './AIDialog.vue';
 import { getPolishQuestions, getSummaryQuestions, getGenerateQuestions, getStyleQuestions } from './predefinedQuestions';
+import AIDialog from './AIDialog.vue';
+import AddDialog from '@/components/manager/AddDialog.vue'
 
 const { t } = useI18n();
 const appName = 'ExMemo';
@@ -137,6 +152,7 @@ const mdEditor = ref(null);
 const aiDialogVisible = ref(false);
 const predefinedQuestions = ref([]);
 const defaultReferenceType = ref('');
+const addDialog = ref(null)
 
 const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
@@ -187,6 +203,20 @@ const handleContentChange = () => {
     isContentModified.value = true;
 }
 
+const saveAs = async () => {
+    const vault = form.value.addr.split('/')[0];
+    const path = form.value.addr.split('/').slice(1).join('/');
+    addDialog.value.openDialog(null, {
+        etype: 'note',
+        content: markdownContent.value,
+        vault: vault,
+        path: path,
+        atype: form.value.atype,
+        ctype: form.value.ctype,
+        status: form.value.status
+    });
+}
+            
 const saveContent = async () => {
     if (!isContentModified.value) {
         ElMessage.info(t('noChanges'));
@@ -249,6 +279,14 @@ const handleMouseUp = (event) => {
     }
 }
 
+const handleAI = () => {
+    predefinedQuestions.value = [];
+    defaultReferenceType.value = 'all';
+    nextTick(() => {
+        aiDialogVisible.value = true;
+    });
+}
+
 const handleSummarize = () => {
     predefinedQuestions.value = getSummaryQuestions(t);
     defaultReferenceType.value = 'all';
@@ -280,6 +318,60 @@ const handleStyle = () => {
         aiDialogVisible.value = true;
     });
 }
+
+// for get style from clipboard
+const handleExtractStyle = async () => {
+    try {
+        const clipboardData = await navigator.clipboard.read();
+        for (const item of clipboardData) {
+            if (item.types.includes('text/html')) {
+                const blob = await item.getType('text/html');
+                const html = await blob.text();
+                
+                // 创建一个临时的 DOM 元素来解析 HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+
+                console.log(html)
+                
+                // 提取所有内联样式
+                const elementsWithStyle = tempDiv.querySelectorAll('[style]');
+                let styles = [];
+                
+                elementsWithStyle.forEach(element => {
+                    styles.push(element.getAttribute('style'));
+                });
+                
+                // 去重并格式化样式
+                const uniqueStyles = [...new Set(styles)];
+                const formattedStyles = uniqueStyles
+                    .map(style => `样式: ${style}`)
+                    .join('\n');
+                
+                // 插入到编辑器
+                if (mdEditor.value && formattedStyles) {
+                    mdEditor.value.insert(() => {
+                        return {
+                            targetValue: '\n提取的样式：\n```css\n' + formattedStyles + '\n```\n',
+                            select: true,
+                            deviationStart: 0,
+                            deviationEnd: 0
+                        };
+                    });
+                    isContentModified.value = true;
+                    ElMessage.success('样式提取成功');
+                } else {
+                    ElMessage.info('未发现样式');
+                }
+                return;
+            }
+        }
+        ElMessage.warning('剪贴板中没有富文本内容');
+    } catch (error) {
+        console.error('读取剪贴板失败:', error);
+        ElMessage.error('读取剪贴板失败: ' + error.message);
+    }
+};
 
 const getSelectedContent = () => {
     const selection = window.getSelection();

@@ -20,6 +20,7 @@
     "privileges": "Privileges",
     "usage": "Usage",
     "save": "Save",
+    "saveAs": "Save as",
     "reset": "Reset",
     "set_password": "Set password",
     "select_placeholder": "Please select",
@@ -282,7 +283,7 @@
         "meaning": "Meaning",
         "wfrom": "From",
         "learnTimes": "Learn times",
-        "learnDate": "Learn date",
+        "learnDate": "Learned date",
         "reviewTimes": "Review times",
         "lastReviewTime": "Last review time",
         "null": "Null",
@@ -398,7 +399,8 @@
             "styleElegant": "Elegant",
             "styleEmotional": "Emotional",
             "styleObjective": "Objective",
-            "style": "Style"
+            "style": "Style",
+            "makeTitle": "Make title"
         }
     },    
     "bookmarkManager": "Bookmark",

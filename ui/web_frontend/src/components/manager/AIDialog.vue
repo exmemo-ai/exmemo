@@ -234,7 +234,7 @@ const insertToNote = () => {
 watch(() => props.modelValue, (val) => {
     dialogVisible.value = val
     if (val) {
-        question.value = ''
+        //question.value = '' # save question
         answer.value = ''
         pendingContent.value = null
         referenceType.value = props.defaultReferenceType || (props.selectedContent?.trim() ? 'selection' : 'screen')

@@ -125,6 +125,7 @@
 import 'md-editor-v3/lib/preview.css';
 import 'md-editor-v3/lib/style.css';
 import '@/assets/styles/markdown-view.css'
+import '@/assets/styles/markdown-preview.css'
 import logo from '@/assets/images/logo.png'
 import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
@@ -576,9 +577,11 @@ onBeforeUnmount(() => {
 <style scoped>
 /*为知为啥，只能写这里*/
 :deep(.md-editor-preview) {
-    height: 100% !important;
+    height: auto;
     overflow-y: auto !important;
-    padding: 0px 10px;
+    padding: 10px 20px;
+    max-width: 960px;
+    margin: 0 auto;
 }
 
 :deep(.md-editor-preview-wrapper) {
@@ -636,7 +639,6 @@ onBeforeUnmount(() => {
 .preview-container-out {
     flex: 2;
     overflow: hidden;
-    position: relative;
     height: 100%;
     min-width: 0;
     display: flex;

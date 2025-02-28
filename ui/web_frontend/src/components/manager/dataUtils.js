@@ -21,8 +21,8 @@ export async function saveEntry({
             return false;
         }
         formData.append('raw', form.raw);
-    } else if ((form.etype === 'file'||form.etype === 'note') && (form.idx === null || form.idx === undefined)) {
-        if (!file) {
+    } else if (form.etype === 'file'||form.etype === 'note') {
+        if (!file && (form.idx === null || form.idx === undefined)) {
             if (form.etype === 'file') {
                 ElMessage.error(t('selectFileError'));
                 return false;
@@ -30,30 +30,32 @@ export async function saveEntry({
                 file = new File([''], 'empty.md', { type: 'text/markdown' });
             }
         }
-        formData.append('files', file);
-        let fileName = file.name;
-        if (form.title !== '') {
-            if (fileName.indexOf('.') > 0) {
-                const fileExt = fileName.split('.').pop();
-                const titleExt = form.title.split('.').pop();
-                if (fileExt !== titleExt) {
-                    fileName = `${form.title}.${fileExt}`;
+        if (file) {
+            formData.append('files', file);
+            let fileName = file.name;
+            if (form.title !== '') {
+                if (fileName.indexOf('.') > 0) {
+                    const fileExt = fileName.split('.').pop();
+                    const titleExt = form.title.split('.').pop();
+                    if (fileExt !== titleExt) {
+                        fileName = `${form.title}.${fileExt}`;
+                    } else {
+                        fileName = form.title;
+                    }
                 } else {
                     fileName = form.title;
                 }
-            } else {
-                fileName = form.title;
             }
-        }
-        formData.append('filenames', fileName);
-        if (path && path.length > 0) {
-            if (path[path.length - 1] !== '/') {
-                formData.append('filepaths', `${path}`);
+            formData.append('filenames', fileName);
+            if (path && path.length > 0) {
+                if (path[path.length - 1] !== '/') {
+                    formData.append('filepaths', `${path}`);
+                } else {
+                    formData.append('filepaths', `${path}${fileName}`);
+                }
             } else {
-                formData.append('filepaths', `${path}${fileName}`);
+                formData.append('filepaths', `${fileName}`);
             }
-        } else {
-            formData.append('filepaths', `${fileName}`);
         }
     } else if (form.etype === 'web') {
         if (form.addr === '') {
