@@ -290,7 +290,8 @@
         "learnWordCount": "学习单词数",
         "reviewWordCount": "复习单词数",
         "wordCount": "单词个数",
-        "noWordsYet": "暂无单词"
+        "noWordsYet": "暂无单词",
+        "current": "当前"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",

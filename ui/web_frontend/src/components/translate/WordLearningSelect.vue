@@ -13,7 +13,7 @@
         </div>
         <div class="translate-header">
             <div class="translate-counter">
-                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
+                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.learned') }}: {{ getLearnedCount() }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
         <div class="translate-common-style">            
@@ -140,9 +140,12 @@ export default {
             this.selectCount = this.wordList.filter(word => word.status === 'learning').length;
         },
         getTotalCount() {
-            const notLearned = this.wordList.filter(word => word.status !== 'learned');
+            const notLearned = this.wordList.filter(word => word.status === 'not_learned');
             return notLearned.length;
-        },  
+        },
+        getLearnedCount() {
+            return this.wordList.filter(word => word.status === 'learned').length;
+        }
     },
     mounted() {
         this.fetch();

@@ -2,7 +2,7 @@
     <div>
         <div class="translate-header">
             <div class="translate-counter" v-if="wordList.length">
-                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}
+                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}, {{$t('trans.current')}}: {{this.currentIndex+1}}/{{wordList.length-finishCount}}
             </div>
         </div>
         <div class="translate-common-style">
@@ -39,6 +39,7 @@
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
 import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
 import { getLocale } from '@/main.js'
+import { t } from '@/utils/i18n';
 
 export default {
     components: {
@@ -111,6 +112,9 @@ export default {
             this.save(true)
         },
         async save(nextStep = true) {
+            if (this.wordList.length > 0) {
+                localStorage.setItem('learning_word', this.wordList[this.currentIndex].word);
+            }
             if (this.needSave) {
                 await realUpdate(this.wordList);
                 this.needSave = false;
@@ -164,6 +168,13 @@ export default {
         },
         async fetch() {
             this.wordList = await fetchWordList('get_words', 'learning');
+            const savedWord = localStorage.getItem('learning_word');
+            if (savedWord) {
+                const savedWordIndex = this.wordList.findIndex(item => item.word === savedWord);
+                if (savedWordIndex !== -1) {
+                    this.currentIndex = savedWordIndex;
+                }
+            }
             await this.updateWordDisplay();
         },
         speakWord() {

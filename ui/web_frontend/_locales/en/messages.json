@@ -290,7 +290,8 @@
         "learnWordCount": "Learned words",
         "reviewWordCount": "Reviewed words",
         "wordCount": "Count",
-        "noWordsYet": "No words yet"
+        "noWordsYet": "No words yet",
+        "current": "Current"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",
