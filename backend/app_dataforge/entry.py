@@ -111,6 +111,7 @@ def add_file(dic, path, use_llm=True):
     if "created_time" not in dic:
         dic["created_time"] = mtime_datetime
 
+    meta_data = {}
     content = None
     if update_content:
         if (dic['etype'] == 'note' and user.get("note_save_content")) or (dic['etype'] == 'file' and user.get("file_save_content")):
