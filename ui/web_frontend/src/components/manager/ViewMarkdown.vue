@@ -236,7 +236,7 @@ const resetContent = async () => {
     } else {
         markdownContent.value = t('notSupport');
     }
-    viewMode.value = 'content-note';
+    viewMode.value = 'content';
     console.log("viewMode", viewMode.value, form.value.etype);
 }
 
@@ -377,7 +377,7 @@ const handleBeforeUnload = async (e) => {
     e.returnValue = ''
 }
 
-const viewMode = ref('content-note') // 'content' | 'content-note'
+const viewMode = ref('content') // 'content' | 'content-note'
 
 const toggleViewMode = () => {
     viewMode.value = viewMode.value === 'content' ? 'content-note' : 'content'

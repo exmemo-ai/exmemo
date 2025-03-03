@@ -167,7 +167,6 @@ export default {
                 }
                 const ret = await this.realRename(this.form.title);
                 if (!ret) {
-                    ELMessage.error(this.$t('renameFail'));
                     return;
                 }
             }
