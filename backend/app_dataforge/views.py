@@ -99,7 +99,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     filemd5s = [None] * len(files)
                 emb_status = "success"
                 for file, addr, md5 in zip(files, filepaths, filemd5s):
-                    ret, ret_emb, detail = self.update_file(dic, file, addr, md5, vault)
+                    ret, ret_emb, detail = self.update_file(dic, addr, file, md5, vault)
                     if not ret_emb:
                         emb_status = "failed"
                     if ret:
