@@ -128,6 +128,13 @@ def add_file(dic, path, use_llm=True):
     if 'meta' not in dic:
         dic["meta"] = meta_data
     else:
+        # 判断类型，如果是dict，就合并，如果为string转换为dict
+        if isinstance(dic["meta"], str):
+            try:
+                dic["meta"] = json.loads(dic["meta"])
+            except Exception as e:
+                logger.warning(f"parse meta failed {e}")
+                dic["meta"] = meta_data
         dic["meta"].update(meta_data)
 
     abstract = None
