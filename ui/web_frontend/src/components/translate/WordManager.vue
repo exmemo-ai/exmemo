@@ -10,6 +10,14 @@
                             <Search />
                         </el-icon>
                     </el-button>
+                    <el-select v-model="statusFilter" style="margin-left: 10px; width: 120px;" @change="searchKeyword">
+                        <el-option :label="$t('all')" value=""></el-option>
+                        <el-option v-for="status in statusOptions" 
+                                 :key="status" 
+                                 :label="$t('trans.' + status)" 
+                                 :value="status">
+                        </el-option>
+                    </el-select>
                     <el-button @click="searchWord">
                         <el-icon>
                             <Plus />
@@ -33,6 +41,15 @@
                         <el-button link @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
                     </template>
                 </el-table-column>
+                <template #empty>
+                    <div style="text-align: center; padding: 20px;">
+                        <el-empty :description="$t('trans.noWordsYet')">
+                            <el-button type="primary" @click="optWordList">
+                                {{ $t('trans.importWordList') }}
+                            </el-button>
+                        </el-empty>
+                    </div>
+                </template>
             </el-table>
             <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                 :current-page="currentPage" :page-sizes="[10]" :page-size="10"
@@ -73,6 +90,8 @@ export default {
             pageSize: 10,
             search_text: '',
             fileList: [],
+            statusFilter: '',
+            statusOptions: ['learned', 'learning', 'not_learned', 'review', 'to_review'],
         };
     },
     methods: {
@@ -89,7 +108,9 @@ export default {
             let func = 'api/translate/word/'
             let params = {
                 keyword: this.search_text,
-                page: this.currentPage, page_size: this.pageSize
+                page: this.currentPage, 
+                page_size: this.pageSize,
+                status: this.statusFilter
             }
             try {
                 const response = await axios.get(getURL() + func, { params: params });

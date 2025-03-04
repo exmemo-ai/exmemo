@@ -74,8 +74,8 @@ export default {
             type: Object,
             default: null
         },
-        parent_obj: {
-            type: Object,
+        onSuccess: {
+            type: Function,
             default: null
         }
     },
@@ -102,7 +102,7 @@ export default {
                 formData.append('raw', this.form.raw);
             } else if (this.form.etype === 'web') {
                 formData.append('addr', this.form.addr);
-            } else if (this.form.etype === 'file') {
+            } else if (this.form.etype === 'file' || this.form.etype === 'note') {
                 formData.append('addr', this.file_path);
             }
             axios.post(getURL() + func, formData).then(response => {
@@ -135,8 +135,9 @@ export default {
         },
         async realSave() {
             return await saveEntry({
-                parentObj: this.parent_obj,
+                onSuccess: this.onSuccess,
                 form: this.form,
+                path: this.file_path,
                 file: this.file,
                 onProgress: (progress) => {
                     if (this.file) {

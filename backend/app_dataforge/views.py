@@ -40,6 +40,22 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return ListSerializer
         return DetailSerializer
 
+    def update_file(self, dic, addr, file, md5, vault=None):
+        if addr.startswith("/"):
+            addr = addr[1:]
+        dic_item = dic.copy()
+        if vault is not None:
+            dic_item["addr"] = os.path.join(vault, addr)
+        else:
+            dic_item["addr"] = addr
+        dic_item["md5"] = md5
+        tmp_path = filecache.get_tmpfile(get_ext(addr))
+        data = file.file.read()
+        logger.debug("## save to db " + tmp_path + " len " + str(len(data)))
+        with open(tmp_path, "wb") as f:
+            f.write(data)
+        return add_data(dic_item, tmp_path)
+
     def create(self, request, *args, **kwargs):
         logger.info("now create instance")
         """
@@ -83,20 +99,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     filemd5s = [None] * len(files)
                 emb_status = "success"
                 for file, addr, md5 in zip(files, filepaths, filemd5s):
-                    if addr.startswith("/"):
-                        addr = addr[1:]
-                    dic_item = dic.copy()
-                    if vault is not None:
-                        dic_item["addr"] = os.path.join(vault, addr)
-                    else:
-                        dic_item["addr"] = addr
-                    dic_item["md5"] = md5
-                    tmp_path = filecache.get_tmpfile(get_ext(addr))
-                    data = file.file.read()
-                    logger.debug("## save to db " + tmp_path + " len " + str(len(data)))
-                    with open(tmp_path, "wb") as f:
-                        f.write(data)
-                    ret, ret_emb, detail = add_data(dic_item, tmp_path)
+                    ret, ret_emb, detail = self.update_file(dic, addr, file, md5, vault)
                     if not ret_emb:
                         emb_status = "failed"
                     if ret:
@@ -265,27 +268,38 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        logger.debug(f"The object before update: {instance}")
-        # Extract the "addr" parameter from request.data
-        if "addr" in request.data and instance.etype == "file":  # file rename
-            new_addr = request.data["addr"]
-            logger.info(f"request.addr: {new_addr}")
-            logger.info(f"instance.addr: {instance.addr}")
-            ret = rename_file(instance.user_id, instance.addr, new_addr)
-            if ret:
-                return do_result(True, _("upgrade_successfully"))
-            else:
-                return do_result(False, _("update_failed"))
-        else:
-            addr = instance.addr
-            instances = self.get_queryset().filter(addr=addr)
-            for item in instances:
-                serializer = self.get_serializer(item, data=request.data, partial=True)
-                serializer.is_valid(raise_exception=True)
-                self.perform_custom_logic(serializer.validated_data)
-                serializer.save()
-            return do_result(True, _("upgrade_successfully"))
+        instance = self.get_object() # base instance         
+        dic = {}
+        for key in instance.__dict__.keys():
+            if key == "_state":
+                continue
+            dic[key] = instance.__dict__[key]
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return do_result(False, str(serializer.errors))
+        dic.update(serializer.validated_data) # data: base + request
+        
+        if instance.etype in ["file", "note"]:
+            # check rename
+            if 'addr' in serializer.validated_data and instance.addr != serializer.validated_data['addr']:
+                logger.info(f"update instance addr {instance.addr} {serializer.validated_data['addr']}")
+                ret = rename_file(instance.user_id, instance.addr, serializer.validated_data['addr'], dic)
+                if not ret:
+                    return do_result(False, _("update_failed"))
+                else:
+                    return do_result(True, _("update_successfully"))
+            # check update file
+            if request.FILES:
+                ret, ret_emb, detail = self.update_file(dic, instance.addr, request.FILES['files'], None)
+                if not ret:
+                    return do_result(False, _("update_failed"))
+                return do_result(True, _("update_successfully"))
+        
+        ret, ret_emb, info = add_data(dic)
+        if not ret:
+            return do_result(False, _("update_failed"))
+        return do_result(True, _("update_successfully"))
 
     def perform_custom_logic(self, validated_data):
         # demo

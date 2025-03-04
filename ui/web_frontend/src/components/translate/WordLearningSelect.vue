@@ -13,7 +13,7 @@
         </div>
         <div class="translate-header">
             <div class="translate-counter">
-                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
+                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.learned') }}: {{ getLearnedCount() }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
         <div class="translate-common-style">            
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_BASE } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_DEFAULT } from './WordLearningSupport';
 import { getWordsFrom } from './TransFunction';
 import SettingService from '@/components/settings/settingService';
 
@@ -115,7 +115,7 @@ export default {
                 this.fromList = await getWordsFrom(this);
                 const settingService = SettingService.getInstance();
                 await settingService.loadSetting();
-                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_BASE);
+                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_DEFAULT);
                 if (currentVOC && this.fromList.includes(currentVOC)) {
                     this.currentVOC = currentVOC;
                 } else if (this.fromList.length > 0) {
@@ -140,9 +140,12 @@ export default {
             this.selectCount = this.wordList.filter(word => word.status === 'learning').length;
         },
         getTotalCount() {
-            const notLearned = this.wordList.filter(word => word.status !== 'learned');
+            const notLearned = this.wordList.filter(word => word.status === 'not_learned');
             return notLearned.length;
-        },  
+        },
+        getLearnedCount() {
+            return this.wordList.filter(word => word.status === 'learned').length;
+        }
     },
     mounted() {
         this.fetch();

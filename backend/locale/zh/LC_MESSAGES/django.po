@@ -90,7 +90,7 @@ msgid "uploading_failed"
 msgstr "上传失败"
 
 #: app_dataforge/views.py:277 app_dataforge/views.py:288
-msgid "upgrade_successfully"
+msgid "update_successfully"
 msgstr "更新成功"
 
 #: app_dataforge/views.py:279

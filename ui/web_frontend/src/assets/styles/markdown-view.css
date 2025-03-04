@@ -1,38 +1,41 @@
+
 .app-container {
-    height: 100vh;
     display: flex;
     flex-direction: column;
+    height: calc(var(--mainHeight, 100vh)) !important;
 }
 
-.fixed-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
+.header {
     background-color: white;
-    padding: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.scroll-header {
-    position: relative;
-    background-color: white;
     padding: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 1;
 }
 
-@media (orientation: portrait) {
-    .preview-container {
-        margin-top: 130px;
-    }
+.nav-container {
+    padding: 0 10px;
 }
 
-.preview-container {
-    padding: 0px;
-    height: auto;    
-    border: 1px solid #dcdfe6;
-    background-color: white;
+.main-content {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.editor-container {
+    border: 0px solid #dcdfe6;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.editor-toolbar {
+    padding: 5px;
+    background-color: #f5f5f5;
+    border-bottom: 0px solid #ddd;
+    flex-shrink: 1;
 }
 
 .preview-container mark.custom-highlight {
@@ -48,53 +51,22 @@
     background-color: transparent !important;
 }
 
-.scrollable-content {
-    flex: 1;
-    overflow-y: auto;
-}
-
-.editor-container {
-    height: calc(100vh - 140px);
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-}
-
-.editor-header, .preview-header {
-    padding: 10px;
-    background-color: #f5f7fa;
-    border-bottom: 1px solid #dcdfe6;
-}
-
-.markdown-body {
-    padding: 20px;
-    height: calc(100% - 41px);
-    overflow-y: auto;
-}
-
-.button-container {
-    margin-top: 20px;
-    text-align: right;
-}
-
-.el-textarea__inner {
-    height: calc(100% - 41px) !important;
-    font-family: monospace;
-}
-
-.button-group {
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #f5f7fa;
-    border-radius: 4px;
-}
-
-.highlighted {
-    background-color: yellow;
-}
-
-.top-row-view {
+.main-content.content-note {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+    position: relative;
+    flex-direction: row;
+}
+
+.main-content.content-note .preview-container {
+    flex-grow: 2;
+}
+
+.main-content.content-note .editor-container {
+    flex-grow: 1;
+}
+
+@media screen and (max-width: 768px) {
+    .main-content.content-note {
+        flex-direction: column;
+    }    
 }

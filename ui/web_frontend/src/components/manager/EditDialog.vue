@@ -12,7 +12,8 @@
             <el-button-group>
                 <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
                 <el-button size="small" @click="showDeleteConfirmation">{{ $t('delete') }}</el-button>
-                <el-button size="small" @click="viewContent">{{ $t('view') }}</el-button>
+                <el-button size="small" v-if="form.etype !== 'record'" @click="viewContent">{{ $t('view') }}</el-button>
+                <el-button size="small" v-if="form.etype === 'note'" @click="editNote">{{ $t('edit') }}</el-button>
                 <el-button size="small" v-if="form.etype === 'file'" @click="download">{{ $t('download') }}</el-button> 
             </el-button-group>
         </div>
@@ -59,7 +60,7 @@
             :form="form"
             :file_path="file_path"
             :file="file"
-            :parent_obj="parent_obj"
+            :onSuccess="onSuccess"
         />
         <span class="dialog-footer">
         </span>
@@ -95,11 +96,12 @@ export default {
                 status: '',
                 addr: '',
             },
+            onSuccess: null,
         };
     },
     methods: {
-        openDialog(parent_obj, row) {
-            this.parent_obj = parent_obj;
+        openDialog(onSuccess, row) {
+            this.onSuccess = onSuccess;
             this.form.idx = row.idx;
             this.form.ctype = row.ctype;
             this.form.etype = row.etype;
@@ -141,9 +143,7 @@ export default {
                     type: 'success',
                     message: this.$t('renameSuccess')
                 });
-                if (this.parent_obj) {
-                    this.parent_obj.fetchData();
-                }
+                this.onSuccess?.(response.data);
                 this.closeDialog();
                 return true;
             } else {
@@ -167,7 +167,6 @@ export default {
                 }
                 const ret = await this.realRename(this.form.title);
                 if (!ret) {
-                    ELMessage.error(this.$t('renameFail'));
                     return;
                 }
             }
@@ -186,6 +185,10 @@ export default {
             console.log(this.$t('view', { idx: this.form.idx }));
             window.open(`${window.location.origin}/view_markdown?idx=${this.form.idx}`, '_blank');
             //window.location.href = `${window.location.origin}/view_markdown?idx=${this.form.idx}`;
+        },
+        editNote() {
+            this.closeDialog();
+            window.open(`${window.location.origin}/edit_markdown?idx=${this.form.idx}`, '_blank');
         },
         showDeleteConfirmation() {
             this.$confirm(this.$t('deleteConfirmation'), this.$t('promptTitle'), {
@@ -214,9 +217,7 @@ export default {
                             message: this.$t('deleteSuccess')
                         });
                         this.closeDialog();
-                        if (this.parent_obj) {
-                            this.parent_obj.fetchData();
-                        }
+                        this.onSuccess?.(response.data);
                     } else {
                         this.$message({
                             type: 'error',

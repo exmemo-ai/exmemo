@@ -27,9 +27,9 @@ export class TextSplitter {
 
     splitParagraphIntoSentences(paragraph) {
         if (this.lang.startsWith('zh')) {
-            return paragraph.match(/[^。！？\n]+[。！？\n]+/g) || [paragraph];
+            return paragraph.match(/[^。！？\n]+([。！？\n]+|$)/g) || [paragraph];
         } else {
-            return paragraph.match(/[^.!?\n]+[.!?\n]+/g) || [paragraph];
+            return paragraph.match(/[^.!?\n]+([.!?\n]+|$)/g) || [paragraph];
         }
     }
 }

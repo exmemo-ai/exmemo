@@ -50,6 +50,7 @@ export default {
             if (this.currentIndex >= this.wordList.length) {
                 this.currentIndex = 0;
             }
+            this.hideStatus = 0;
             this.updateWordDisplay();
         },
         goPrev() {
