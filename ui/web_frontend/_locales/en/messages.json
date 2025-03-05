@@ -103,6 +103,7 @@
     "rename": "Rename",
     "title": "Title",
     "type": "Type",
+    "scene": "Scene",
     "all": "All",
     "source": "Source",
     "status": "Status",
@@ -205,6 +206,8 @@
     "loading": "Loading",
     "learn": "Learn",
     "continue": "Continue",
+    "editor": "Editor",
+    "validation_required": "Required",
     "opt": {
         "vault": "Vault",
         "path": "Path",
@@ -291,7 +294,8 @@
         "reviewWordCount": "Reviewed words",
         "wordCount": "Count",
         "noWordsYet": "No words yet",
-        "current": "Current"
+        "current": "Current",
+        "aiSupport": "AI support"
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",
@@ -337,7 +341,8 @@
         "editMode": "Edit mode",
         "insertSuccess": "Inserted to note",
         "ai": "AI",
-        "estreat": "Estreat"
+        "estreat": "Estreat",
+        "userDefine": "User define"
     },
     "settings": {
         "bookmark": "Bookmark",
@@ -370,13 +375,19 @@
         "prevSentence": "Prev Sent",
         "nextSentence": "Next Sent"
     },
-    "aiDialog": {
+    "ai": {
+        "resetPromptConfirm": "This action will delete all user-modified prompts, do you want to continue?",
+        "addPrompt": "Add prompt",
+        "savePrompt": "Save prompt",
+        "managePrompts": "Manage prompts",
+        "resetPrompt": "Reset prompt",
         "title": "AI Assistant",
         "questionPlaceholder": "Please enter prompt",
         "submit": "Submit",
         "referenceAll": "All",
         "referenceSelection": "Selection",
         "referenceScreen": "Screen text",
+        "referenceSpecific": "Specific",
         "referenceNone": "No reference",
         "copyAnswer": "Copy answer",
         "insertToNote": "Insert to note",

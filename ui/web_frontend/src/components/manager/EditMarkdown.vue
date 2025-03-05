@@ -11,11 +11,6 @@
                 <div>
                     <div class="user-controls" style="margin-bottom: 5px">
                         <div class="button-container-flex">
-                            <el-button-group class="basic-buttons">
-                                <el-button size="small" type="primary" @click="setPlayer">
-                                    {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
-                                </el-button>
-                            </el-button-group>
                             <el-button-group>
                                 <el-button size="small" type="primary" @click="saveContent" :icon="Document">
                                     {{ t('save') }}
@@ -36,26 +31,13 @@
                                 </el-button>
                             </el-button-group>
                             <el-button-group style="margin-right: 5px;">
-                                <el-button size="small" type="primary" @click="handleAI">
+                                <el-button 
+                                    size="small" 
+                                    type="primary" 
+                                    @click="handleAI"
+                                    :icon="ChatLineRound">
                                     {{ t('viewMarkdown.ai') }}
                                 </el-button>
-                                <el-button size="small" type="primary" @click="handlePolish">
-                                    {{ t('aiDialog.commonQuestions.polish') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handleSummarize">
-                                    {{ t('aiDialog.commonQuestions.summary') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handleGenerate">
-                                    {{ t('aiDialog.commonQuestions.generate') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handleStyle">
-                                    {{ t('aiDialog.commonQuestions.style') }}
-                                </el-button>
-                                <!--
-                                <el-button size="small" type="primary" @click="handleExtractStyle">
-                                    提取样式
-                                </el-button>
-                                -->
                             </el-button-group>
                         </div>
                     </div>
@@ -93,8 +75,8 @@
             </div>
         </div>
         
-        <div v-if="showPlayer" class="player-footer" style="flex-shrink: 1">
-            <TextSpeakerPlayer
+        <div style="flex-shrink: 1">
+            <TextSpeakPlayer
                 :text="selectedText"
                 :lang="getLocale()"
                 :getContentCallback="getContent"
@@ -107,9 +89,9 @@
             :full-content="markdownContent"
             :selected-content="getSelectedContent()"
             :screen-content="getScreenContent()"
-            :common-questions="predefinedQuestions"
+            :etype="etype"
             :default-reference-type="defaultReferenceType"
-            @insertNote="handleInsertAIAnswer"
+            @insert-note="handleInsertAIAnswer"
         />
         <AddDialog ref="addDialog" />
     </div>
@@ -125,12 +107,11 @@ import { ElMessage } from 'element-plus';
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { MdEditor, MdPreview } from 'md-editor-v3';
 import { saveEntry, fetchItem } from './dataUtils';
-import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue';
-import { View, Edit, Document } from '@element-plus/icons-vue';
+import TextSpeakPlayer from '@/components/manager/TextPlayer.vue';
+import { View, Edit, Document, ChatLineRound } from '@element-plus/icons-vue';
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
-import { getPolishQuestions, getSummaryQuestions, getGenerateQuestions, getStyleQuestions } from './predefinedQuestions';
-import AIDialog from './AIDialog.vue';
+import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/manager/AddDialog.vue'
 
 const { t } = useI18n();
@@ -140,7 +121,6 @@ const previewId = 'preview-content';
 const route = useRoute();
 const content = ref(null);
 const form = ref({});
-const showPlayer = ref(true);
 const speakerPlayer = ref(null);
 const selectedText = ref('');
 const mdPreview = ref(null);
@@ -150,9 +130,9 @@ const isLandscape = computed(() => width.value >= 768);
 const isContentModified = ref(false);
 const mdEditor = ref(null);
 const aiDialogVisible = ref(false);
-const predefinedQuestions = ref([]);
 const defaultReferenceType = ref('');
 const addDialog = ref(null)
+const etype = "editor"
 
 const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
@@ -172,22 +152,6 @@ const resetContent = async () => {
         isContentModified.value = false;
     } else {
         markdownContent.value = t('notSupport');
-    }
-}
-
-const setPlayer = () => {
-    try {
-        if (showPlayer.value) {
-            if (speakerPlayer.value) {
-                speakerPlayer.value.stop();
-            }
-            showPlayer.value = false;
-            return;
-        }
-        showPlayer.value = true;
-    } catch (error) {
-        console.error('TTS error:', error);
-        ElMessage.error(t('speakError') + error);
     }
 }
 
@@ -279,40 +243,7 @@ const handleMouseUp = (event) => {
     }
 }
 
-const handleAI = () => {
-    predefinedQuestions.value = [];
-    defaultReferenceType.value = 'all';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
-}
-
-const handleSummarize = () => {
-    predefinedQuestions.value = getSummaryQuestions(t);
-    defaultReferenceType.value = 'all';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
-}
-
-const handlePolish = () => {
-    predefinedQuestions.value = getPolishQuestions(t);
-    defaultReferenceType.value = getSelectedContent()?.trim() ? 'selection' : 'screen';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
-}
-
-const handleGenerate = () => {
-    predefinedQuestions.value = getGenerateQuestions(t);
-    defaultReferenceType.value = 'all';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
-}
-
-const handleStyle = () => {
-    predefinedQuestions.value = getStyleQuestions(t);
+const handleAI = async () => {
     defaultReferenceType.value = 'all';
     nextTick(() => {
         aiDialogVisible.value = true;

@@ -16,9 +16,9 @@
                     <div class="button-container-flex">
                         <el-button-group class="basic-buttons" style="margin-right: 5px;">
                             <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll')
-                                }}</el-button>
+                            }}</el-button>
                             <el-button size="small" type="primary" @click="copyContent">{{ t('copy')
-                                }}</el-button>
+                            }}</el-button>
                             <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{
                                 t('viewMarkdown.openWeb') }}</el-button>
                             <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{
@@ -29,7 +29,7 @@
                             </el-button>
                             -->
                         </el-button-group>
-                        
+
                         <el-dropdown trigger="click">
                             <el-button size="small" type="primary">
                                 {{ t('viewMarkdown.highlight') }}
@@ -40,7 +40,8 @@
                             <template #dropdown>
                                 <el-dropdown-menu>
                                     <el-dropdown-item @click="highlightText" :class="{ 'is-active': isHighlightMode }">
-                                        {{ isHighlightMode ? t('viewMarkdown.stopHighlight') : t('viewMarkdown.showHighlight') }}
+                                        {{ isHighlightMode ? t('viewMarkdown.stopHighlight') :
+                                        t('viewMarkdown.showHighlight') }}
                                     </el-dropdown-item>
                                     <el-dropdown-item @click="copyHighlight" :disabled="!isHighlightMode">
                                         {{ t('viewMarkdown.copyHighlight') }}
@@ -96,28 +97,23 @@
                             t('viewMarkdown.insertHighlight') }}</el-button>
                             -->
                         <el-button size="small" type="primary" @click="allToNote">{{ t('viewMarkdown.insertAll')
-                            }}</el-button>
+                        }}</el-button>
                         <el-button size="small" type="primary" @click="saveAsNote">{{ t('viewMarkdown.saveAsNote')
-                            }}</el-button>
+                        }}</el-button>
                     </el-button-group>
                 </div>
                 <ViewNote ref="viewNote" :form="form" />
             </div>
         </div>
 
-        <div class="player-toggle" @click="setPlayer">
-            <el-icon>
-                <VideoPlay v-if="!showPlayer" />
-                <Close v-else />
-            </el-icon>
-        </div>
-        <div v-if="showPlayer" class="player-footer">
-            <TextSpeakerPlayer :text="selectedText" :lang="getLocale()" :getContentCallback="getContent"
-                ref="speakerPlayer" @onSpeak="handleSpeak" />
-        </div>
-        <AIDialog v-model="aiDialogVisible" :full-content="markdownContent" :selected-content="getSelectedContent()"
-            :screen-content="getScreenContent()" :common-questions="predefinedQuestions"
-            @insertNote="handleInsertAIAnswer" />
+        <TextSpeakPlayer :text="selectedText" :lang="getLocale()" :getContentCallback="getContent" ref="txtPlayer"
+            @onSpeak="handleSpeak" />
+        <AIDialog v-model="aiDialogVisible" 
+            :full-content="markdownContent" 
+            :selected-content="getSelectedContent()"
+            :screen-content="getScreenContent()"
+            :etype="etype"
+            @insert-note="handleInsertAIAnswer" />
     </div>
 </template>
 
@@ -135,12 +131,11 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
-import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
-import { View, Edit, ChatDotRound, Expand, Fold, Close, ArrowDown, VideoPlay } from '@element-plus/icons-vue'
+import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
+import { View, Edit, ChatDotRound, Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
-import AIDialog from './AIDialog.vue'
-import { getBasicQuestions } from './predefinedQuestions'
+import AIDialog from '@/components/ai/AIDialog.vue'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -151,9 +146,10 @@ const content = ref(null)
 const form = ref({})
 const highlightManager = ref(null)
 const showPlayer = ref(true)
-const speakerPlayer = ref(null)
+const txtPlayer = ref(null)
 const selectedText = ref('')
 const mdPreview = ref(null)
+const etype = "view"
 
 const highlightChanged = ref(false)
 const viewNote = ref(null)
@@ -284,8 +280,8 @@ const copyContent = () => {
 const setPlayer = () => {
     try {
         if (showPlayer.value) {
-            if (speakerPlayer.value) {
-                speakerPlayer.value.stop();
+            if (txtPlayer.value) {
+                txtPlayer.value.stop();
             }
             showPlayer.value = false;
             return;
@@ -314,16 +310,16 @@ const highlightSelection = () => {
 }
 
 const handleMouseUp = (event) => {
-    const isPlaying = speakerPlayer.value?.getStatus().isPlaying || false
+    const isPlaying = txtPlayer.value?.getStatus().isPlaying || false
     if (isPlaying) {
         const selection = window.getSelection()
         const startNode = selection.anchorNode
-        if (startNode && speakerPlayer.value) {
+        if (startNode && txtPlayer.value) {
             const previewElement = document.querySelector('.md-editor-preview');
             const nodeList = getVisibleNodeList(previewElement, startNode)
-            speakerPlayer.value.stop()
-            speakerPlayer.value.setContent(nodeList)
-            speakerPlayer.value.resume()
+            txtPlayer.value.stop()
+            txtPlayer.value.setContent(nodeList)
+            txtPlayer.value.resume()
         }
         return
     }
@@ -540,7 +536,6 @@ const handleInsertAIAnswer = (text) => {
     ElMessage.success(t('viewMarkdown.insertSuccess'))
 }
 
-const predefinedQuestions = getBasicQuestions(t)
 const showCatalog = ref(false)
 
 const toggleCatalog = () => {
@@ -560,17 +555,17 @@ const updateReadingProgress = () => {
 }
 
 onMounted(() => {
-  const mdPreviewContent = document.querySelector('.md-editor-preview')
-  if (mdPreviewContent) {
-    mdPreviewContent.addEventListener('scroll', updateReadingProgress)
-  }
+    const mdPreviewContent = document.querySelector('.md-editor-preview')
+    if (mdPreviewContent) {
+        mdPreviewContent.addEventListener('scroll', updateReadingProgress)
+    }
 })
 
 onBeforeUnmount(() => {
-  const mdPreviewContent = document.querySelector('.md-editor-preview')
-  if (mdPreviewContent) {
-    mdPreviewContent.removeEventListener('scroll', updateReadingProgress)
-  }
+    const mdPreviewContent = document.querySelector('.md-editor-preview')
+    if (mdPreviewContent) {
+        mdPreviewContent.removeEventListener('scroll', updateReadingProgress)
+    }
 })
 </script>
 
@@ -668,51 +663,17 @@ onBeforeUnmount(() => {
     font-weight: bold;
 }
 
-.player-footer {
-    flex-shrink: 1;
-    position: relative;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #fff;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    padding: 0;
-    min-height: 40px;
-}
-
-.player-toggle {
-    position: fixed;
-    left: 5px;
-    bottom: 5px;
-    width: 32px;
-    height: 32px;
-    background: #fff;
+.button-container-flex {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: all 0.3s;
-    z-index: 1000;
-    font-size: 14px;
-}
-
-.player-toggle:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.button-container-flex {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .progress-text {
-  color: #909399;
-  font-size: 14px;
-  margin-left: auto;
-  padding: 0 10px;
+    color: #909399;
+    font-size: 14px;
+    margin-left: auto;
+    padding: 0 10px;
 }
 </style>

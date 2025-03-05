@@ -1,61 +1,101 @@
 <template>
-    <el-dialog v-model="dialogVisible" :title="t('aiDialog.title')" width="60%" :before-close="handleClose">
-        <div class="common-questions">
+    <el-dialog 
+        v-model="dialogVisible" 
+        :title="t('ai.title')" 
+        :width="dialogWidth"
+        :before-close="handleClose"
+    >
+        <template #header>
+            <div class="dialog-header">
+                <span class="dialog-title">{{ t('ai.title') }}</span>
+                <div class="prompt-actions">
+                    <el-tooltip :content="t('ai.addPrompt')" placement="top">
+                        <el-button type="primary" size="small" @click="handleAddPrompt">
+                            <el-icon><Plus /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip :content="t('ai.savePrompt')" placement="top">
+                        <el-button type="primary" size="small" @click="handleSavePrompt" :disabled="!prompt">
+                            <el-icon><DocumentAdd /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip :content="t('ai.managePrompts')" placement="top">
+                        <el-button type="primary" size="small" @click="handleManagePrompts">
+                            <el-icon><Setting /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                </div>
+            </div>
+        </template>
+
+        <div class="common-prompts">
             <el-button v-for="q in commonQuestions" :key="q.id" size="small" @click="handleQuestionSelect(q)">
-                {{ q.label }}
+                {{ q.title }}
             </el-button>
         </div>
 
-        <el-input v-model="question" type="textarea" :rows="6" :placeholder="t('aiDialog.questionPlaceholder')" />
+        <el-input v-model="prompt" type="textarea" :rows="6" :placeholder="t('ai.questionPlaceholder')" />
 
         <div class="reference-options">
-            <span class="reference-label">{{ t('aiDialog.reference') }}: </span>
+            <span class="reference-label">{{ t('ai.reference') }}: </span>
             <el-radio-group v-model="referenceType">
-                <el-radio :value="'all'">{{ t('aiDialog.all') }}</el-radio>
-                <el-radio :value="'selection'">{{ t('aiDialog.referenceSelection') }}</el-radio>
-                <el-radio :value="'screen'">{{ t('aiDialog.referenceScreen') }}</el-radio>
-                <el-radio :value="'none'">{{ t('aiDialog.referenceNone') }}</el-radio>
+                <el-radio :value="'all'" v-if="props.fullContent?.trim()">{{ t('ai.all') }}</el-radio>
+                <el-radio :value="'selection'" v-if="props.selectedContent?.trim()">{{ t('ai.referenceSelection') }}</el-radio>
+                <el-radio :value="'screen'" v-if="props.screenContent?.trim()">{{ t('ai.referenceScreen') }}</el-radio>
+                <el-radio :value="'none'">{{ t('ai.referenceNone') }}</el-radio>
+                <el-radio :value="'specific'" v-if="props.specificContent?.trim()">{{ specificContent }}</el-radio>
             </el-radio-group>
         </div>
 
         <el-button type="primary" @click="handleSubmit" :loading="loading">
-            {{ t('aiDialog.submit') }}
+            {{ t('ai.submit') }}
         </el-button>
 
         <div v-if="answer" class="answer-container">
             <div class="answer-content">{{ answer }}</div>
             <div class="answer-actions">
                 <el-button type="primary" size="small" @click="copyAnswer">
-                    {{ t('aiDialog.copyAnswer') }}
+                    {{ t('ai.copyAnswer') }}
                 </el-button>
                 <el-button type="primary" size="small" @click="insertToNote">
-                    {{ t('aiDialog.insertToNote') }}
+                    {{ t('ai.insertToNote') }}
                 </el-button>
             </div>
         </div>
     </el-dialog>
 
-    <el-dialog v-model="confirmDialogVisible" :title="t('aiDialog.warning')">
-        <p>{{ t('aiDialog.textLengthWarning', { length: checkTextLength(pendingContent) }) }}</p>
+    <el-dialog v-model="confirmDialogVisible" :title="t('ai.warning')">
+        <p>{{ t('ai.textLengthWarning', { length: checkTextLength(pendingContent) }) }}</p>
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="handleCancel">{{ t('cancel') }}</el-button>
                 <el-button @click="handleContinue">{{ t('continue') }}</el-button>
                 <el-button type="primary" @click="handlePartial">
-                    {{ t('aiDialog.usePartial') }}
+                    {{ t('ai.usePartial') }}
                 </el-button>
             </span>
         </template>
     </el-dialog>
+
+    <PromptDialog
+        v-model:visible="promptDialogVisible"
+        :is-edit="false"
+        :edit-data="currentPrompt"
+        @success="handlePromptSuccess"
+        ref="promptDialog"
+    />
 </template>
 
 <script setup>
 
 import axios from 'axios'
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import { getURL, parseBackendError } from '@/components/support/conn'
+import { Plus, Setting, DocumentAdd } from '@element-plus/icons-vue'
+import PromptDialog from '@/components/ai/PromptDialog.vue'
+import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn'
+
 const { t } = useI18n()
 
 const props = defineProps({
@@ -63,34 +103,54 @@ const props = defineProps({
     fullContent: String,
     selectedContent: String,
     screenContent: String,
+    specificContent: String,
+    etype: String,
     defaultReferenceType: {
         type: String,
         default: '', 
         validator: (value) => ['', 'all', 'selection', 'screen', 'none'].includes(value)
-    },
-    commonQuestions: {
-        type: Array,
-        default: () => [],
-        // format: [{id: string, label: string, question: string}]
     }
 })
 
-const emit = defineEmits(['update:modelValue', 'insertNote'])
+const emit = defineEmits([
+    'update:modelValue', 
+    'insert-note',
+])
 
 const dialogVisible = ref(props.modelValue)
-const question = ref('')
+const idx = ref('')
+const prompt = ref('')
 const answer = ref('')
 const loading = ref(false)
 const referenceType = ref(props.defaultReferenceType || 'screen')
 const confirmDialogVisible = ref(false)
 const pendingContent = ref(null)
+const promptDialogVisible = ref(false)
+const promptDialog = ref(null)
+const currentPrompt = ref(null)
+const commonQuestions = ref([])
+
+const dialogWidth = computed(() => {
+    return window.innerWidth <= 768 ? '90%' : '60%'
+})
+
+onMounted(() => {
+    window.addEventListener('resize', () => {
+        dialogWidth.value = window.innerWidth <= 768 ? '90%' : '60%'
+    })
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', () => {})
+})
 
 const handleClose = () => {
     emit('update:modelValue', false)
 }
 
 const handleQuestionSelect = (q) => {
-    question.value = q.question
+    idx.value = q.idx
+    prompt.value = q.prompt
 }
 
 const getReference = () => {
@@ -105,6 +165,11 @@ const getReference = () => {
                 return null
             }
             return props.screenContent
+        case 'specific':
+            if (!props.specificContent || props.specificContent.trim() === '') {
+                return null
+            }
+            return props.specificContent
         case 'none':
             return null
         default:
@@ -163,7 +228,7 @@ const submitQuestion = async (content) => {
 }
 
 const handleSubmit = async () => {
-    if (!question.value) {
+    if (!prompt.value) {
         ElMessage({
             message: t('pleaseEnterText'),
             type: 'warning'
@@ -174,13 +239,13 @@ const handleSubmit = async () => {
     const reference = getReference()
     if (!reference && referenceType.value !== 'none') {
         ElMessage({
-            message: t('aiDialog.referenceIsNull'),
+            message: t('ai.referenceIsNull'),
             type: 'warning'
         })
         return
     }
 
-    const content = reference ? `${question.value}\n\nContent:\n${reference}` : question.value
+    const content = reference ? `${prompt.value}\n\nContent:\n${reference}` : prompt.value
 
     console.log('question length', checkTextLength(content)) // for debug
     if (checkTextLength(content) > 2500) {
@@ -190,6 +255,11 @@ const handleSubmit = async () => {
     }
 
     await submitQuestion(content)
+}
+
+const handleManagePrompts = () => {
+    dialogVisible.value = false
+    window.open('/user_setting?section=prompt', '_blank')
 }
 
 const copyAnswer = () => {
@@ -228,16 +298,74 @@ const fallbackCopyTextToClipboard = (text) => {
 
 const insertToNote = () => {
     if (!answer.value) return
-    emit('insertNote', answer.value)
+    emit('insert-note', answer.value)
+}
+
+const handleSavePrompt = async () => {
+    if (!prompt.value) return
+    if (!idx.value) {
+        handleAddPrompt()
+        return 
+    }
+    const item = commonQuestions.value.find(q => q.idx === idx.value)
+    if (!item) return
+
+    setDefaultAuthHeader()
+    const formData = new FormData()
+    item.prompt = prompt.value
+    for (const key in item) {
+        formData.append(key, item[key])
+    }
+    await axios.put(getURL() + `api/ai/prompt/${idx.value}/`, formData)
+    ElMessage.success(t('saveSuccess'))
+    loadPrompts();
+}
+
+const handleAddPrompt = () => {
+    currentPrompt.value = {
+        title: '',
+        prompt: prompt.value,
+        etype: props.etype
+    }
+    promptDialogVisible.value = true
+}
+
+const handlePromptSuccess = () => {
+    ElMessage.success(t('saveSuccess'))
+    loadPrompts();
+}
+
+const loadPrompts = async () => {
+    try {
+        setDefaultAuthHeader();
+        const response = await axios.get(getURL() + 'api/ai/prompt/');
+        const prompts = response.data.results || [];
+        commonQuestions.value = prompts.filter(p => p.etype === props.etype);
+    } catch (error) {
+        console.error('Load prompts error:', error);
+        ElMessage.error(t('operationFailed'));
+        commonQuestions.value = [];
+    }
 }
 
 watch(() => props.modelValue, (val) => {
     dialogVisible.value = val
     if (val) {
-        //question.value = '' # save question
+        loadPrompts();
+        idx.value = ''
+        prompt.value = ''
         answer.value = ''
         pendingContent.value = null
-        referenceType.value = props.defaultReferenceType || (props.selectedContent?.trim() ? 'selection' : 'screen')
+        
+        const defaultType = props.defaultReferenceType || (props.selectedContent?.trim() ? 'selection' : 'screen')
+        if (defaultType !== 'none') {
+            const content = getReference()
+            if (!content) {
+                referenceType.value = 'none'
+            } else {
+                referenceType.value = defaultType
+            }
+        }
     }
 })
 
@@ -247,14 +375,20 @@ watch(dialogVisible, (val) => {
 </script>
 
 <style scoped>
-.common-questions {
+.common-prompts {
     gap: 5px;
+    margin-bottom: 5px;
+    max-height: calc(32px * 4 + 4px * 2);
+    overflow-y: auto;
+    padding: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
 }
 
-.common-questions .el-button {
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 10px;
+.common-prompts .el-button {
+    margin: 2px;
+    flex-shrink: 0;
 }
 
 .reference-options {
@@ -304,4 +438,25 @@ watch(dialogVisible, (val) => {
 .reference-label {
     margin-right: 10px;
 }
+
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dialog-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.prompt-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.prompt-actions .el-button {
+    margin: 0px;
+}
+
 </style>
