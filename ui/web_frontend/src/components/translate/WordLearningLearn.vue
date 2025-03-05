@@ -2,7 +2,7 @@
     <div>
         <div class="translate-header">
             <div class="translate-counter" v-if="wordList.length">
-                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}, {{$t('trans.current')}}: {{this.currentIndex+1}}/{{wordList.length-finishCount}}
+                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}, {{$t('trans.current')}}: {{this.currentIndex+1}}/{{wordList.length}}
             </div>
         </div>
         <div class="translate-common-style">
@@ -30,21 +30,30 @@
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
+                <el-button @click="handleAI" :icon="ChatLineRound">{{ $t('trans.aiSupport') }}</el-button>
             </div>
         </div>
     </div>
+    <AIDialog
+        v-model="aiDialogVisible"
+        :specificContent="wordStr"
+        :default-reference-type="defaultReferenceType"
+        :etype="etype"
+    />
 </template>
 
 <script>
-import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
+import { VideoPlay, VideoPause, ChatLineRound } from '@element-plus/icons-vue'
 import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
 import { getLocale } from '@/main.js'
-import { t } from '@/utils/i18n';
+import AIDialog from '@/components/ai/AIDialog.vue'
 
 export default {
     components: {
         VideoPlay,
         VideoPause,
+        AIDialog,
+        ChatLineRound,
     },
     data() {
         return {
@@ -61,6 +70,9 @@ export default {
             isSpeaking: false,
             speechUtterance: null,
             needSave: false,
+            etype: 'translate',
+            aiDialogVisible: false,
+            defaultReferenceType: 'specific',
         };
     },
     methods: {
@@ -176,6 +188,9 @@ export default {
                 }
             }
             await this.updateWordDisplay();
+        },
+        handleAI() {
+            this.aiDialogVisible = true;
         },
         speakWord() {
             if (this.isSpeaking) {

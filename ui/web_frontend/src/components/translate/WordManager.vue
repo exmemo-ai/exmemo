@@ -10,7 +10,7 @@
                             <Search />
                         </el-icon>
                     </el-button>
-                    <el-select v-model="statusFilter" style="margin-left: 10px; width: 120px;" @change="searchKeyword">
+                    <el-select v-model="statusFilter" style="margin-left: 5px; flex:1;" @change="searchKeyword">
                         <el-option :label="$t('all')" value=""></el-option>
                         <el-option v-for="status in statusOptions" 
                                  :key="status" 

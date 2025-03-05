@@ -1,8 +1,8 @@
 <template>
     <div>
-        <div>
+        <div style="margin-bottom: 10px;">
             <el-text>{{ $t('trans.selectWordList') }}</el-text>
-            <el-select v-model="currentVOC" @change="handleVocChange" style="width: 200px; margin-left: 10px;">
+            <el-select v-model="currentVOC" @change="handleVocChange" style="width: 150px; margin-left: 10px;">
                 <el-option 
                     v-for="item in fromList" 
                     :key="item"
