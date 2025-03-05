@@ -10,7 +10,7 @@
       style="width: 100%; margin-top: 10px;"></el-input>
     
     <div v-if="showPlayer" class="player-container">
-      <TextSpeakerPlayer
+      <TextSpeakPlayer
         :text="textarea_value"
         :lang="getLocale()"
         :getContentCallback="getContent"
@@ -23,13 +23,13 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
-import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
+import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
 import { getLocale } from '@/main.js'
 import axios from 'axios';
 
 export default {
   components: {
-    TextSpeakerPlayer
+    TextSpeakPlayer
   },
   setup() {
     const textarea_value = ref('');
