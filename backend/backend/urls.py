@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/entry/", include("app_dataforge.urls")),
     path("api/message/", include("app_message.urls")),
     #
+    path("api/ai/", include("app_ai.urls")),
     path("api/web/", WebAPIView.as_view(), name="web-api"),
     path("api/paper/", PaperAPIView.as_view(), name="paper-api"),
     #

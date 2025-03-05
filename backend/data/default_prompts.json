@@ -1,0 +1,68 @@
+[
+    {
+        "title": "Polish",
+        "prompt": "Please help me polish this text.",
+        "etype": "editor"
+    },
+    {
+        "title": "Proofread",
+        "prompt": "Please correct any typos, grammar, punctuation, and other errors in the following content to make it more fluent while maintaining the original content and style as much as possible.",
+        "etype": "editor"
+    },
+    {
+        "title": "Summarize",
+        "prompt": "Please help me summarize the following content in one sentence.",
+        "etype": "editor"
+    },
+    {
+        "title": "Conclusion",
+        "prompt": "Please help me write a conclusion that:\n1. Summarizes the core points\n2. Highlights the value and significance\n3. Elevates and extends the content\n4. Uses elegant and fluid language\n5. Ends with depth and inspiration",
+        "etype": "editor"
+    },
+    {
+        "title": "Generate Title",
+        "prompt": "Please help me create a title for this content.",
+        "etype": "editor"
+    },
+    {
+        "title": "Generate Article",
+        "prompt": "Please generate a 1200-1500 word article based on the following content:\n1. Use markdown format with one to two heading levels\n2. Structure requirements:\n   - Engaging introduction (10%)\n   - Brief background (10%)\n   - Main story description (50%)\n   - Pain point analysis (20%)\n   - Methodology summary (10%)\n   - Concluding thoughts\n3. Language should be lively and suitable for social media\n4. Reasonable paragraph lengths of 200-300 words each",
+        "etype": "editor"
+    },
+    {
+        "title": "Social Media Style",
+        "prompt": "Please rewrite this content in social media style:\n1. Attractive, engaging title\n2. Lively, conversational language\n3. Use analogies and examples\n4. Add appropriate emoticons\n5. Short, readable paragraphs",
+        "etype": "editor"
+    },
+    {
+        "id": "xiaohongshu",
+        "title": "RED Style",
+        "prompt": "Please rewrite this content in RED (Xiaohongshu) style:\n1. Eye-catching title\n2. Friendly, natural tone\n3. Liberal use of emojis\n4. Clear bullet points\n5. Strong interactive ending",
+        "etype": "editor"
+    },
+    {
+        "title": "Concise Style",
+        "prompt": "Please rewrite this content in a concise style:\n1. Precise language\n2. Remove redundant phrases\n3. Emphasize core information\n4. Express maximum information with minimum words\n5. Maintain clear structure",
+        "etype": "editor"
+    },
+    {
+        "title": "Literary Style",
+        "prompt": "Please rewrite this content in elegant literary style:\n1. Refined word choice\n2. Varied sentence structure\n3. Beautiful imagery\n4. Appropriate use of rhetoric\n5. Rhythmic writing",
+        "etype": "editor"
+    },
+    {
+        "title": "Summarize",
+        "prompt": "Please help me summarize the following content in one sentence.",
+        "etype": "view"
+    },
+    {
+        "title": "Translate",
+        "prompt": "Please translate this content to English.",
+        "etype": "view"
+    },
+    {
+        "title": "Memory Techniques",
+        "prompt": "Please provide memory techniques for the following words, including root splitting and related word associations, in a concise manner, avoiding complex explanations.",
+        "etype": "translate"
+    }
+]

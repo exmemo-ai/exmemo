@@ -155,7 +155,7 @@ class SettingAPIView(APIView):
             'web_save_content', 'web_get_category', 'web_get_abstract',
             'file_save_content', 'file_get_category', 'file_get_abstract',
             'note_save_content', 'note_get_category', 'note_get_abstract',
-            'truncate_content'
+            'truncate_content', 'first_use_prompt'
         ]
 
         # basic format
