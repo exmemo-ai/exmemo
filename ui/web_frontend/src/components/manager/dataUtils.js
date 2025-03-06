@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getURL, parseBackendError, parseBlobData, setDefaultAuthHeader } from '@/components/support/conn'
+import SettingService from '@/components/settings/settingService'
 import { t } from '@/utils/i18n'
 
 export async function saveEntry({
@@ -192,4 +193,42 @@ const showConfirm = (idx) => {
         window.open(`${window.location.origin}/edit_markdown?idx=${idx}`, '_blank');
     }).catch(() => {
     });
+};
+
+export const getDefaultPath = (etype, addr, title) => {
+    let path = null;
+    if (etype === 'note') {
+        if (addr?.length > 0) {
+            path = addr.split('/').slice(1).join('/');
+        }
+    } else if (etype === 'file') {
+        path = t('viewMarkdown.fileNote');
+    } else if (etype === 'web') {
+        path = t('viewMarkdown.webNote');
+    } else if (etype === 'chat') {
+        path = t('.viewMarkdown.chatNote');
+    } else {
+        path = t('note');
+    }
+    let filename = title;
+    if (filename) {
+        filename = filename.replace(/\.md$/, '') + '_' + t('note') + '.md';
+    }
+    if (path) {
+        path = path + '/' + filename;
+    } else {
+        path = filename;
+    }
+    return path
+};
+
+export const getDefaultVault = (etype, addr) => {
+    if (etype === 'note') {
+        if (addr?.length > 0) {
+            return addr.split('/')[0];
+        }
+    }
+    const settingService = SettingService.getInstance();
+    const vault = settingService.getSetting('default_vault', t('default'));
+    return vault;
 };

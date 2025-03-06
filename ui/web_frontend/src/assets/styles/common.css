@@ -335,3 +335,12 @@ button {
 .settings-section-content {
     padding: 10px;
 }
+
+.title-filename-container {
+    margin-left: 10px;
+    color: #666;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

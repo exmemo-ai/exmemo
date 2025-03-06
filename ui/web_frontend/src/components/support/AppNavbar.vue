@@ -45,6 +45,11 @@
                 <el-tab-pane name="ReadingTools" :label="$t('learnTools')"></el-tab-pane>
                 <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane>
                 <el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>
+                <el-tab-pane name="openClipboard">
+                    <template #label>
+                        <el-icon><CopyDocument /></el-icon>
+                    </template>
+                </el-tab-pane>
             </el-tabs>
         </div>
     </el-container>
@@ -54,14 +59,15 @@
 import logo from '@/assets/images/logo.png'
 import axios from 'axios';
 import { setDefaultAuthHeader,getURL } from './conn';
-import { Setting, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
+import { Setting, ArrowDown, SwitchButton, CopyDocument } from '@element-plus/icons-vue'
 
 export default {
     name: 'AppNavbar',
     components: {
         Setting,
         ArrowDown,
-        SwitchButton
+        SwitchButton,
+        CopyDocument
     },
     props: {
         title: {
@@ -101,6 +107,23 @@ export default {
         },
         gotoBMManager() {
             this.$router.push('/bm_manager'); 
+        },
+        openClipboard() {
+            let clipboard = navigator.clipboard;
+            clipboard.readText().then((text) => {
+                if (text.startsWith('http')) {
+                    window.open(`/view_markdown?url=${text}`,
+                        '_blank');
+                } else if (text.length > 0) {
+                    window.open(`/edit_markdown`,
+                        '_blank');
+                } else {
+                    this.$message({
+                        type: 'warning',
+                        message: this.$t('clipboardNull')
+                    })
+                }
+            });
         },
         loginFunc() {
             this.$router.push('/login');
@@ -161,6 +184,9 @@ export default {
                     break;
                 case 'BMManager':
                     this.gotoBMManager();
+                    break;
+                case 'openClipboard':
+                    this.openClipboard();
                     break;
             }
         },

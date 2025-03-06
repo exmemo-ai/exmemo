@@ -1,5 +1,5 @@
 <template>
-    <el-dialog v-model="dialogVisible" :title="$t('new')" :width="dialogWidth"
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" :width="dialogWidth"
         :before-close="handleClose">
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
@@ -74,6 +74,7 @@ export default {
     data() {
         return {
             dialogWidth: '60%',
+            dialogTitle: '',
             isMobile: false,
             onSuccess: null,
             input_vault: null,
@@ -99,6 +100,7 @@ export default {
         openDialog(onSuccess, options = {}) {
             this.onSuccess = onSuccess;
             this.dialogVisible = true;
+            this.dialogTitle = options?.title ?? this.$t('new');
             this.saveProgress = 0;
             this.file = null;
             this.file_path = null;

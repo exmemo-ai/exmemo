@@ -6,6 +6,14 @@
                     <div class="title-container">
                         <img :src="logo" class="nav-avatar" />
                         <h3 class="title">{{ appName }}</h3>
+                        <div class="title-filename-container" v-if="currentFileName">
+                            {{ currentFileName }}
+                        </div>
+                    </div>
+                    <div class="nav-right">
+                        <el-button size="small" type="primary" circle @click="showAIDialog">
+                            {{ t('viewMarkdown.ai') }}
+                        </el-button>
                     </div>
                 </div>
             </el-container>
@@ -53,19 +61,9 @@
                             </template>
                         </el-dropdown>
 
-                        <el-button size="small" type="primary" @click="toggleViewMode">
-                            <el-icon class="view-mode-icon">
-                                <component :is="viewModeIcon" />
-                            </el-icon>
-                            {{ viewMode === 'content' ? t('viewMarkdown.contentWithNote') :
-                                t('viewMarkdown.contentOnly') }}
-                        </el-button>
-                        <el-button size="small" type="primary" @click="showAIDialog" style="margin-left: 0px">
-                            <el-icon class="view-mode-icon">
-                                <ChatDotRound />
-                            </el-icon>
-                            {{ t('viewMarkdown.ai') }}
-                        </el-button>
+                        <el-checkbox v-model="showNote" size="small" style="margin-left: auto;">
+                            {{ t('note') }}
+                        </el-checkbox>
                         <div class="progress-text">{{ readingProgress }}%</div>
                     </div>
                 </div>
@@ -132,10 +130,12 @@ import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { View, Edit, ChatDotRound, Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
+import { Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue'
+import axios from 'axios';
+import { getURL, parseBackendError } from '@/components/support/conn'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -208,6 +208,28 @@ const fetchContent = async (idx) => {
     if (result.success) {
         form.value = { ...result.data };
         resetContent();
+    }
+}
+
+const fetchWeb = async (url) => {
+    const formData = new FormData();
+    formData.append('content', url); 
+    formData.append('rtype', 'markdown');
+    try {
+        const res = await axios.post(getURL() + 'api/web/', formData);
+        if (res.data.status === 'success') {
+            ElMessage.info(t('openClipboardContent'));
+            form.value = {
+                content: res.data.content,
+                title: res.data.title,
+                addr: url,
+                etype: 'web'
+            };
+            resetContent();
+        }
+    } catch (err) {
+        parseBackendError(null, err);
+        markdownContent.value = t('fetchFailed');
     }
 }
 
@@ -354,7 +376,13 @@ onBeforeUnmount(() => {
 const previewScrollElement = ref(null)
 
 onMounted(() => {
-    fetchContent(route.query.idx)
+    if (route.query.idx) {
+        fetchContent(route.query.idx)
+    } else if (route.query.url) {
+        fetchWeb(route.query.url)
+    } else {
+        markdownContent.value = t('notSupport')
+    }
     highlightManager.value = new HighlightManager(content.value)
     window.addEventListener('beforeunload', handleBeforeUnload)
     window.addEventListener('resize', handleResize);
@@ -373,24 +401,11 @@ const handleBeforeUnload = async (e) => {
     e.returnValue = ''
 }
 
-const viewMode = ref('content') // 'content' | 'content-note'
-
-const toggleViewMode = () => {
-    viewMode.value = viewMode.value === 'content' ? 'content-note' : 'content'
-}
-
-const viewModeIcon = computed(() => {
-    switch (viewMode.value) {
-        case 'content':
-            return View
-        case 'content-note':
-            return Edit
-        default:
-            return View
-    }
-})
+const viewMode = computed(() => showNote.value ? 'content-note' : 'content')
+const showNote = ref(false)
 
 const saveMeta = async (force) => {
+    if (!form.value.idx) return
     await nextTick();
     const mdPreviewContent = document.querySelector('.md-editor-preview');
     const scrollPosition = mdPreviewContent ? mdPreviewContent.scrollTop : 0;
@@ -545,7 +560,7 @@ const toggleCatalog = () => {
 const readingProgress = ref(0)
 
 const updateReadingProgress = () => {
-    const mdPreviewContent = document.querySelector('.md-editor-preview')
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
     if (!mdPreviewContent) return
 
     const scrollPosition = mdPreviewContent.scrollTop
@@ -555,18 +570,25 @@ const updateReadingProgress = () => {
 }
 
 onMounted(() => {
-    const mdPreviewContent = document.querySelector('.md-editor-preview')
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
     if (mdPreviewContent) {
         mdPreviewContent.addEventListener('scroll', updateReadingProgress)
     }
 })
 
 onBeforeUnmount(() => {
-    const mdPreviewContent = document.querySelector('.md-editor-preview')
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
     if (mdPreviewContent) {
         mdPreviewContent.removeEventListener('scroll', updateReadingProgress)
     }
 })
+
+const currentFileName = computed(() => {
+    if (form.value && form.value.title) {
+        return form.value.title.split('/').pop();
+    }
+    return '';
+});
 </script>
 
 <style scoped>
@@ -673,7 +695,26 @@ onBeforeUnmount(() => {
 .progress-text {
     color: #909399;
     font-size: 14px;
-    margin-left: auto;
+    width: 50px;
+    margin-left: 10px;
     padding: 0 10px;
 }
+
+.title-container {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+}
+
+.top-row-view {
+    display: flex;
+    flex-direction: row;
+}
+
 </style>

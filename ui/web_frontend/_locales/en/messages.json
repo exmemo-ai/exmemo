@@ -208,6 +208,9 @@
     "continue": "Continue",
     "editor": "Editor",
     "validation_required": "Required",
+    "clipboardNull": "Clipboard is empty",
+    "openClipboard": "Open clipboard",
+    "openClipboardContent": "Open clipboard content",
     "opt": {
         "vault": "Vault",
         "path": "Path",
