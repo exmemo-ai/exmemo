@@ -52,6 +52,27 @@
                 </el-tab-pane>
             </el-tabs>
         </div>
+        <el-dialog
+            v-model="dialogVisible"
+            :title="$t('paste.pasteUrlOrContent')"
+            width="80%"
+            :close-on-click-modal="false"
+        >
+            <el-input
+                v-model="pastedContent"
+                type="textarea"
+                :rows="3"
+                :placeholder="$t('paste.pastePlaceholder')"
+            />
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="dialogVisible = false">{{ $t('cancel') }}</el-button>
+                    <el-button type="primary" @click="handlePastedContent">
+                        {{ $t('confirm') }}
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
     </el-container>
 </template>
 
@@ -87,6 +108,8 @@ export default {
             login_user: '',
             activeTab: 'DataManager',
             userAvatar: '',
+            dialogVisible: false,
+            pastedContent: '',
         };
     },
     methods: {
@@ -108,22 +131,56 @@ export default {
         gotoBMManager() {
             this.$router.push('/bm_manager'); 
         },
-        openClipboard() {
-            let clipboard = navigator.clipboard;
-            clipboard.readText().then((text) => {
-                if (text.startsWith('http')) {
-                    window.open(`/view_markdown?url=${text}`,
-                        '_blank');
-                } else if (text.length > 0) {
-                    window.open(`/edit_markdown`,
-                        '_blank');
-                } else {
-                    this.$message({
-                        type: 'warning',
-                        message: this.$t('clipboardNull')
-                    })
+        async openClipboard() {
+            try {
+                if (!navigator?.clipboard) {
+                    this.showPasteDialog();
+                    return;
                 }
-            });
+
+                if (navigator.permissions) {
+                    const result = await navigator.permissions.query({ name: 'clipboard-read' });
+                    if (result.state === 'denied') {
+                        this.showPasteDialog();
+                        return;
+                    }
+                }
+                const text = await navigator.clipboard.readText();
+                this.processContent(text);
+            } catch (err) {
+                console.error('Clipboard error:', err);
+                this.showPasteDialog();
+            }
+        },
+        
+        showPasteDialog() {
+            this.pastedContent = '';
+            this.dialogVisible = true;
+        },
+
+        handlePastedContent() {
+            if (!this.pastedContent) {
+                this.$message({
+                    type: 'warning',
+                    message: this.$t('paste.contentEmpty')
+                });
+                return;
+            }
+            this.processContent(this.pastedContent);
+            this.dialogVisible = false;
+        },
+
+        processContent(content) {
+            if (content.startsWith('http')) {
+                window.open(`/view_markdown?url=${content}`, '_blank');
+            } else if (content.length > 0) {
+                window.open(`/edit_markdown`, '_blank');
+            } else {
+                this.$message({
+                    type: 'warning',
+                    message: this.$t('paste.contentEmpty')
+                });
+            }
         },
         loginFunc() {
             this.$router.push('/login');

@@ -208,9 +208,13 @@
     "continue": "Continue",
     "editor": "Editor",
     "validation_required": "Required",
-    "clipboardNull": "Clipboard is empty",
-    "openClipboard": "Open clipboard",
-    "openClipboardContent": "Open clipboard content",
+    "paste": {
+        "openClipboard": "Open clipboard",
+        "openClipboardContent": "Please open clipboard",
+        "pasteUrlOrContent": "Open URL or content",
+        "pastePlaceholder": "Please input content",
+        "contentEmpty": "Content is empty"
+    },    
     "opt": {
         "vault": "Vault",
         "path": "Path",

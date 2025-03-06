@@ -346,7 +346,7 @@ const setContentFromCB = async () => {
     }
 
     if (allContent) {
-        ElMessage.info(t('openClipboardContent'));
+        ElMessage.info(t('paste.openClipboardContent'));
         form.value = {};
         markdownContent.value = allContent.trim();
         isContentModified.value = true;

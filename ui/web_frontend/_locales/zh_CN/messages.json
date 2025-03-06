@@ -208,9 +208,13 @@
     "continue": "继续",
     "editor": "编辑",
     "validation_required": "必填",
-    "clipboardNull": "剪切板为空",
-    "openClipboard": "打开剪切板",
-    "openClipboardContent": "打开剪切板内容",
+    "paste": {
+        "openClipboard": "打开剪切板",
+        "openClipboardContent": "打开剪切板内容",
+        "pasteUrlOrContent": "打开网页",
+        "pastePlaceholder": "请输入/粘贴网址或内容",
+        "contentEmpty": "内容为空"
+    },
     "opt": {
         "vault": "仓库",
         "path": "路径",

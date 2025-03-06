@@ -218,7 +218,7 @@ const fetchWeb = async (url) => {
     try {
         const res = await axios.post(getURL() + 'api/web/', formData);
         if (res.data.status === 'success') {
-            ElMessage.info(t('openClipboardContent'));
+            ElMessage.info(t('paste.openClipboardContent'));
             form.value = {
                 content: res.data.content,
                 title: res.data.title,
