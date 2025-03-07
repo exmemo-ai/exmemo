@@ -33,7 +33,7 @@
                     <template #defToolbars>
                         <NormalToolbar :title="t('saveAs')" @onClick="saveAs">
                             <template #trigger>
-                                <el-icon><Edit /></el-icon>
+                                <el-icon><SaveAsIcon /></el-icon>
                             </template>
                         </NormalToolbar>
                     </template>
@@ -74,7 +74,7 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { MdEditor, NormalToolbar } from 'md-editor-v3';
 import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from './dataUtils';
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue';
-import { Edit } from '@element-plus/icons-vue';
+import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
@@ -325,6 +325,19 @@ const htmlToMarkdown = (html) => {
 }
 
 const setContentFromCB = async () => {
+    if (!navigator?.clipboard) {
+        ElMessage.warning(t('paste.notSupport'));
+        return;
+    }
+
+    if (navigator.permissions) {
+        const result = await navigator.permissions.query({ name: 'clipboard-read' });
+        if (result.state === 'denied') {
+            ElMessage.warning(t('paste.permissionDenied'));
+            return;
+        }
+    }
+
     const clipboardData = await navigator.clipboard.read();
     let allContent = '';
     

@@ -9,19 +9,18 @@
     <div v-if="showPlayer" class="player-footer">
       <div class="player-controls">
         <el-button-group>
-          <el-button :icon="DocumentParagraph" @click="player?.prevParagraph()" :disabled="!playerStatus.canGoPrevPara">
-            {{ t("player.prevPara") }} </el-button>
-          <el-button :icon="ArrowLeft" @click="player?.prevSentence()" :disabled="!playerStatus.canGoPrevSentence">
-            {{ t("player.prevSentence") }}</el-button>
-          <el-button :icon="playIcon" @click="togglePlay">
-            {{ playerStatus.isPlaying ? t("player.pause") : t("player.play") }}
-          </el-button>
-          <el-button :icon="ArrowRight" @click="player?.nextSentence()" :disabled="!playerStatus.canGoNextSentence">
-            {{ t("player.nextSentence") }} </el-button>
-          <el-button :icon="DocumentParagraph" @click="player?.nextParagraph()" :disabled="!playerStatus.canGoNextPara">
-            {{ t("player.nextPara") }} </el-button>
-          <el-button @click="player?.stop()">{{ t("player.stop") }}</el-button>
           <el-button :icon="Setting" @click="showSettingDialog"></el-button>
+          <el-button :icon="Prev2Icon" @click="player?.prevParagraph()" :disabled="!playerStatus.canGoPrevPara">
+            </el-button>
+          <el-button :icon="Prev1Icon" @click="player?.prevSentence()" :disabled="!playerStatus.canGoPrevSentence">
+            </el-button>
+          <el-button :icon="playIcon" @click="togglePlay">
+          </el-button>
+          <el-button :icon="Next1Icon" @click="player?.nextSentence()" :disabled="!playerStatus.canGoNextSentence">
+          </el-button>
+          <el-button :icon="Next2Icon" @click="player?.nextParagraph()" :disabled="!playerStatus.canGoNextPara">
+          </el-button>
+          <el-button :icon="StopIcon" @click="player?.stop()"></el-button>
         </el-button-group>
       </div>
     </div>
@@ -40,7 +39,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { DocumentParagraph, ArrowLeft, ArrowRight, VideoPlay, VideoPause, Setting, Close } from '@element-plus/icons-vue'
+import {  Setting, Close, VideoPause, VideoPlay } from '@element-plus/icons-vue'
+import PlayIcon from '@/components/icons/PlayIcon.vue'
+import StopIcon from '@/components/icons/StopIcon.vue'
+import Prev1Icon from '@/components/icons/Prev1Icon.vue'
+import Prev2Icon from '@/components/icons/Prev2Icon.vue'
+import Next1Icon from '@/components/icons/Next1Icon.vue'
+import Next2Icon from '@/components/icons/Next2Icon.vue'
 import { TextPlayerManager } from './TextPlayerManager'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -77,7 +82,7 @@ const playerStatus = ref({
 })
 
 const showSettings = ref(false)
-const playIcon = computed(() => playerStatus.value.isPlaying ? VideoPause : VideoPlay)
+const playIcon = computed(() => playerStatus.value.isPlaying ? StopIcon : PlayIcon)
 
 const formatProgress = () => {
   if (playerStatus.value.sentencesCount === 0) return '0/0'
@@ -193,6 +198,26 @@ defineExpose({
   gap: 15px;
 }
 
+.player-controls :deep(.el-button) {
+  min-width: 36px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+}
+
+.player-controls :deep(.el-button i) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.player-controls :deep(.el-button-group .el-button) {
+  border: none;
+}
+
 .progress-text {
   color: #606266;
   font-size: 14px;
@@ -232,6 +257,7 @@ defineExpose({
     transition: all 0.3s;
     z-index: 1000;
     font-size: 14px;
+    line-height: 1;
 }
 
 .player-toggle:hover {

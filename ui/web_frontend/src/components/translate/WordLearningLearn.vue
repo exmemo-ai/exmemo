@@ -45,6 +45,7 @@
 <script>
 import { VideoPlay, VideoPause, ChatLineRound } from '@element-plus/icons-vue'
 import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
+import { ElMessage } from 'element-plus';
 import { getLocale } from '@/main.js'
 import AIDialog from '@/components/ai/AIDialog.vue'
 
@@ -214,6 +215,7 @@ export default {
                 this.isSpeaking = true
             } catch (error) {
                 console.error('TTS error:', error)
+                ElMessage.warning(this.t('player.speechSynthesisNotSupported'));
                 this.isSpeaking = false
             }
         },

@@ -1,6 +1,7 @@
 import { t } from '@/utils/i18n'
 import { TextSplitter } from '../../utils/TextSplitter'
 import SettingService from '../settings/settingService'
+import { ElMessage } from 'element-plus';
 
 export class TextPlayerManager {
     constructor(text, lang = 'zh-CN') {
@@ -14,6 +15,11 @@ export class TextPlayerManager {
         this.utterance = null;
         this.isPlaying = false;
         this.onSpeakCallback = null;
+        
+        this.isSpeechSynthesisSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+        if (!this.isSpeechSynthesisSupported) {
+            console.warn(this.t('player.speechSynthesisNotSupported'));
+        }
     }
 
     getText() {
@@ -138,6 +144,11 @@ export class TextPlayerManager {
     }
 
     speak(index) {
+        if (!this.isSpeechSynthesisSupported) {
+            ElMessage.warning(this.t('player.speechSynthesisNotSupported'));
+            return;
+        }
+
         const sentence = this.getAllSentences()[index];
         if (sentence) {
             this.currentIndex = index;

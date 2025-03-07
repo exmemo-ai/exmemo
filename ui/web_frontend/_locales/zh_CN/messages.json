@@ -208,12 +208,15 @@
     "continue": "继续",
     "editor": "编辑",
     "validation_required": "必填",
+    "mainPage": "工具主页",
     "paste": {
         "openClipboard": "打开剪切板",
         "openClipboardContent": "打开剪切板内容",
-        "pasteUrlOrContent": "打开网页",
-        "pastePlaceholder": "请输入/粘贴网址或内容",
-        "contentEmpty": "内容为空"
+        "pasteDlgTitle": "剪切板",
+        "pastePlaceholder": "请输入/粘贴网址",
+        "contentEmpty": "内容为空",
+        "notSupport": "不支持剪切板",
+        "permissionDenied": "剪切板权限被拒绝"
     },
     "opt": {
         "vault": "仓库",
@@ -379,14 +382,15 @@
         "pause": "暂停",
         "stop": "停止",
         "prevSentence": "上一句",
-        "nextSentence": "下一句"
+        "nextSentence": "下一句",
+        "speechSynthesisNotSupported": "当前浏览器不支持语音合成"
     },
     "ai": {
         "resetPromptConfirm": "此操作将删除用户修改的所有提示，是否继续?",
-        "addPrompt": "添加提示",
-        "savePrompt": "保存提示",
-        "managePrompts": "管理提示",
-        "resetPrompt": "重置提示",
+        "addPrompt": "添加",
+        "savePrompt": "保存",
+        "managePrompts": "管理",
+        "resetPrompt": "重置",
         "title": "AI助手",
         "questionPlaceholder": "请输入修改需求...",
         "submit": "提问",

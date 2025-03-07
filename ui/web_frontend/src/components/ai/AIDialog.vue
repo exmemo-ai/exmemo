@@ -9,21 +9,15 @@
             <div class="dialog-header">
                 <span class="dialog-title">{{ t('ai.title') }}</span>
                 <div class="prompt-actions">
-                    <el-tooltip :content="t('ai.addPrompt')" placement="top">
-                        <el-button type="primary" size="small" @click="handleAddPrompt">
-                            <el-icon><Plus /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip :content="t('ai.savePrompt')" placement="top">
-                        <el-button type="primary" size="small" @click="handleSavePrompt" :disabled="!prompt">
-                            <el-icon><DocumentAdd /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip :content="t('ai.managePrompts')" placement="top">
-                        <el-button type="primary" size="small" @click="handleManagePrompts">
-                            <el-icon><Setting /></el-icon>
-                        </el-button>
-                    </el-tooltip>
+                    <el-button type="primary" size="small" @click="handleAddPrompt">
+                        <el-icon><Plus /></el-icon>
+                    </el-button>
+                    <el-button type="primary" size="small" @click="handleSavePrompt" :disabled="!prompt">
+                        <el-icon><SaveIcon /></el-icon>
+                    </el-button>
+                    <el-button type="primary" size="small" @click="handleManagePrompts">
+                        <el-icon><ListIcon /></el-icon>
+                    </el-button>
                 </div>
             </div>
         </template>
@@ -92,7 +86,9 @@ import axios from 'axios'
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import { Plus, Setting, DocumentAdd } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
+import SaveIcon from '@/components/icons/SaveIcon.vue'
+import ListIcon from '@/components/icons/ListIcon.vue'
 import PromptDialog from '@/components/ai/PromptDialog.vue'
 import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn'
 

@@ -208,12 +208,15 @@
     "continue": "Continue",
     "editor": "Editor",
     "validation_required": "Required",
+    "mainPage": "GitHub",
     "paste": {
         "openClipboard": "Open clipboard",
         "openClipboardContent": "Please open clipboard",
-        "pasteUrlOrContent": "Open URL or content",
-        "pastePlaceholder": "Please input content",
-        "contentEmpty": "Content is empty"
+        "pasteDlgTitle": "Clipboard",
+        "pastePlaceholder": "Please paste/input URL",
+        "contentEmpty": "Content is empty",
+        "notSupport": "Clipboard not supported",
+        "permissionDenied": "Clipboard permission denied"
     },    
     "opt": {
         "vault": "Vault",
@@ -380,14 +383,15 @@
         "pause": "Pause",
         "stop": "Stop",
         "prevSentence": "Prev Sent",
-        "nextSentence": "Next Sent"
+        "nextSentence": "Next Sent",
+        "speechSynthesisNotSupported": "Speech synthesis not supported in this browser"
     },
     "ai": {
         "resetPromptConfirm": "This action will delete all user-modified prompts, do you want to continue?",
-        "addPrompt": "Add prompt",
-        "savePrompt": "Save prompt",
-        "managePrompts": "Manage prompts",
-        "resetPrompt": "Reset prompt",
+        "addPrompt": "Add",
+        "savePrompt": "Save",
+        "managePrompts": "Manage",
+        "resetPrompt": "Reset",
         "title": "AI Assistant",
         "questionPlaceholder": "Please enter prompt",
         "submit": "Submit",

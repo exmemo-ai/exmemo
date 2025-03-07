@@ -3,7 +3,6 @@
         <div class="settings-section">
             <div class="settings-section-header">
                 <div class="header-left">
-                    <span>{{ $t('prompt') }}</span>
                     <el-select v-model="selectedType" class="type-filter" :placeholder="$t('all')">
                         <el-option value="" :label="$t('all')" />
                         <el-option

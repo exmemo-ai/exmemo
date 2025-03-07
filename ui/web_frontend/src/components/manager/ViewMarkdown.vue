@@ -703,13 +703,15 @@ const currentFileName = computed(() => {
 .title-container {
     display: flex;
     align-items: center;
+    min-width: 0;
     flex-grow: 1;
 }
 
 .nav-right {
     display: flex;
     align-items: center;
-    flex-shrink: 1;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .top-row-view {

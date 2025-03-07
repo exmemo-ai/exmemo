@@ -24,6 +24,12 @@
                                 </el-icon>
                                 <span>{{ $t('userSetting') }}</span>
                             </el-dropdown-item>
+                            <el-dropdown-item @click="openGitHub">
+                                <el-icon>
+                                    <Link />
+                                </el-icon>
+                                <span>{{ $t('mainPage') }}</span>
+                            </el-dropdown-item>
                             <el-dropdown-item divided @click="logoutFunc">
                                 <el-icon>
                                     <SwitchButton />
@@ -38,23 +44,21 @@
                 </el-button>
             </div>
         </div>
-        <div class="bottom-row" style="width:100%;">
-            <el-tabs v-model="activeTab" @tab-click="handleTabClick" style="width:100%">
+        <div class="bottom-row" style="width:100%; display: flex;">
+            <el-tabs v-model="activeTab" @tab-click="handleTabClick" >
                 <el-tab-pane name="ChatTools" :label="$t('chatTools')"></el-tab-pane>
                 <el-tab-pane name="DataManager" :label="$t('dataManager')"></el-tab-pane>
                 <el-tab-pane name="ReadingTools" :label="$t('learnTools')"></el-tab-pane>
                 <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane>
                 <el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>
-                <el-tab-pane name="openClipboard">
-                    <template #label>
-                        <el-icon><CopyDocument /></el-icon>
-                    </template>
-                </el-tab-pane>
             </el-tabs>
+            <el-icon class="clipboard-icon" @click="openClipboard" size="small" style="margin-left: 30px;">
+                <ClipboardIcon />
+            </el-icon>
         </div>
         <el-dialog
             v-model="dialogVisible"
-            :title="$t('paste.pasteUrlOrContent')"
+            :title="$t('paste.pasteDlgTitle')"
             width="80%"
             :close-on-click-modal="false"
         >
@@ -80,7 +84,8 @@
 import logo from '@/assets/images/logo.png'
 import axios from 'axios';
 import { setDefaultAuthHeader,getURL } from './conn';
-import { Setting, ArrowDown, SwitchButton, CopyDocument } from '@element-plus/icons-vue'
+import { Setting, ArrowDown, SwitchButton, Link } from '@element-plus/icons-vue'
+import ClipboardIcon from '@/components/icons/ClipboardIcon.vue'
 
 export default {
     name: 'AppNavbar',
@@ -88,7 +93,8 @@ export default {
         Setting,
         ArrowDown,
         SwitchButton,
-        CopyDocument
+        ClipboardIcon,
+        Link
     },
     props: {
         title: {
@@ -166,14 +172,14 @@ export default {
                 });
                 return;
             }
-            this.processContent(this.pastedContent);
+            this.processContent(this.pastedContent, True);
             this.dialogVisible = false;
         },
 
-        processContent(content) {
+        processContent(content, onlyURL = false) {
             if (content.startsWith('http')) {
                 window.open(`/view_markdown?url=${content}`, '_blank');
-            } else if (content.length > 0) {
+            } else if (content.length > 0 && !onlyURL) {
                 window.open(`/edit_markdown`, '_blank');
             } else {
                 this.$message({
@@ -242,10 +248,10 @@ export default {
                 case 'BMManager':
                     this.gotoBMManager();
                     break;
-                case 'openClipboard':
-                    this.openClipboard();
-                    break;
             }
+        },
+        openGitHub() {
+            window.open('https://github.com/exmemo-ai/exmemo', '_blank');
         },
     },
     watch: {
@@ -345,5 +351,16 @@ export default {
         padding: 0 5px !important;
         font-size: 14px;
     }
+}
+
+.clipboard-icon {
+    margin-right: 20px;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--el-text-color-primary);
+}
+
+.clipboard-icon:hover {
+    color: var(--el-color-primary);
 }
 </style>
