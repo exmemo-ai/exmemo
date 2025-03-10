@@ -100,7 +100,7 @@
                         }}</el-button>
                     </el-button-group>
                 </div>
-                <ViewNote ref="viewNote" :form="form" />
+                <ViewNote ref="viewNote" :form="form" @note-change="handleNoteChange" />
             </div>
         </div>
 
@@ -151,14 +151,14 @@ const selectedText = ref('')
 const mdPreview = ref(null)
 const etype = "view"
 
-const highlightChanged = ref(false)
+const metaChanged = ref(false)
 const viewNote = ref(null)
-const highlightSaveTimer = ref(null)
+const saveTimer = ref(null)
 
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
-    highlightChanged.value = true
-    scheduleHighlightSave()
+    metaChanged.value = true
+    scheduleSave()
 }
 
 const copyHighlight = () => {
@@ -299,22 +299,6 @@ const copyContent = () => {
     }
 }
 
-const setPlayer = () => {
-    try {
-        if (showPlayer.value) {
-            if (txtPlayer.value) {
-                txtPlayer.value.stop();
-            }
-            showPlayer.value = false;
-            return;
-        }
-        showPlayer.value = true;
-    } catch (error) {
-        console.error('TTS error:', error);
-        ElMessage.error(t('speakError') + error);
-    }
-}
-
 const isHighlightMode = computed(() => highlightManager.value?.isHighlightMode || false)
 
 const highlightText = () => {
@@ -327,8 +311,8 @@ const highlightText = () => {
 
 const highlightSelection = () => {
     highlightManager.value?.handleSelection()
-    highlightChanged.value = true
-    scheduleHighlightSave()
+    metaChanged.value = true
+    scheduleSave()
 }
 
 const handleMouseUp = (event) => {
@@ -393,8 +377,8 @@ onMounted(() => {
 })
 
 const handleBeforeUnload = async (e) => {
-    if (highlightSaveTimer.value) {
-        clearTimeout(highlightSaveTimer.value)
+    if (saveTimer.value) {
+        clearTimeout(saveTimer.value)
     }
     await saveMeta(true)
     e.preventDefault()
@@ -405,12 +389,13 @@ const viewMode = computed(() => showNote.value ? 'content-note' : 'content')
 const showNote = ref(false)
 
 const saveMeta = async (force) => {
+    console.log('real saveMeta')
     if (!form.value.idx) return
     await nextTick();
     const mdPreviewContent = document.querySelector('.md-editor-preview');
     const scrollPosition = mdPreviewContent ? mdPreviewContent.scrollTop : 0;
 
-    if (force == false && !highlightChanged.value) return
+    if (force == false && !metaChanged.value) return
 
     if (!form.value.meta || form.value.meta === 'null') {
         form.value.meta = {}
@@ -425,7 +410,7 @@ const saveMeta = async (force) => {
         }
     }
 
-    if (highlightChanged.value && highlightManager.value?.hasHighlights()) {
+    if (metaChanged.value && highlightManager.value?.hasHighlights()) {
         const serializableHighlights = highlightManager.value.getSerializableHighlights()
         form.value.meta.highlights = JSON.stringify(serializableHighlights)
     }
@@ -448,7 +433,7 @@ const saveMeta = async (force) => {
         })
 
         if (result) {
-            highlightChanged.value = false
+            metaChanged.value = false
             console.log('saveSuccess')
         }
     } catch (error) {
@@ -457,14 +442,15 @@ const saveMeta = async (force) => {
     }
 }
 
-const scheduleHighlightSave = () => {
-    if (highlightSaveTimer.value) {
-        clearTimeout(highlightSaveTimer.value)
+const scheduleSave = () => {
+    console.log('scheduleSave, wait 30')
+    if (saveTimer.value) {
+        clearTimeout(saveTimer.value)
     }
-    highlightSaveTimer.value = setTimeout(async () => {
+    saveTimer.value = setTimeout(async () => {
         await saveMeta(false)
-        highlightSaveTimer.value = null
-    }, 10000) // 15s
+        saveTimer.value = null
+    }, 30000) // 30s
 }
 
 const highlightToNote = () => {
@@ -567,6 +553,8 @@ const updateReadingProgress = () => {
     const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight
     const progress = Math.round((scrollPosition / scrollHeight) * 1000) / 10
     readingProgress.value = Math.min(100, Math.max(0, progress))
+    metaChanged.value = true
+    scheduleSave() // save bookmark
 }
 
 onMounted(() => {
@@ -589,6 +577,11 @@ const currentFileName = computed(() => {
     }
     return '';
 });
+
+const handleNoteChange = async () => {
+    metaChanged.value = true
+    scheduleSave()
+}
 </script>
 
 <style scoped>

@@ -289,6 +289,11 @@ transition: none !important;
     flex-direction: column;
     align-items: flex-end;
     margin-left: auto;
+    gap: 5px;
+}
+
+.translate-buttons button {
+    width: 100%;
 }
 
 .translate-header {

@@ -104,7 +104,7 @@ const props = defineProps({
     defaultReferenceType: {
         type: String,
         default: '', 
-        validator: (value) => ['', 'all', 'selection', 'screen', 'none'].includes(value)
+        validator: (value) => ['', 'all', 'selection', 'screen', 'none', 'specific'].includes(value)
     }
 })
 
