@@ -30,20 +30,20 @@
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
-                <el-button @click="handleAI" :icon="ChatLineRound">{{ $t('trans.aiSupport') }}</el-button>
+                <el-button @click="handleAI">{{ $t('trans.aiSupport') }}</el-button>
             </div>
         </div>
     </div>
     <AIDialog
         v-model="aiDialogVisible"
         :specificContent="wordStr"
-        :default-reference-type="defaultReferenceType"
+        default-reference-type="specific"
         :etype="etype"
     />
 </template>
 
 <script>
-import { VideoPlay, VideoPause, ChatLineRound } from '@element-plus/icons-vue'
+import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
 import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
 import { ElMessage } from 'element-plus';
 import { getLocale } from '@/main.js'
@@ -53,8 +53,7 @@ export default {
     components: {
         VideoPlay,
         VideoPause,
-        AIDialog,
-        ChatLineRound,
+        AIDialog
     },
     data() {
         return {
@@ -65,6 +64,7 @@ export default {
             sentenceMeaning: '',
             transStrInSentence: '',
             wordList: [],
+            lastSavedList: [],
             currentIndex: 0,
             finishCount: 0,
             showTranslation: false,
@@ -73,7 +73,6 @@ export default {
             needSave: false,
             etype: 'translate',
             aiDialogVisible: false,
-            defaultReferenceType: 'specific',
         };
     },
     methods: {
@@ -118,20 +117,32 @@ export default {
                 this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
                 if (this.wordList[this.currentIndex].status !== 'review') {
                     await this.updateWordDisplay();
-                    //this.save(false);
+                    this.save(false);
                     return;
                 }
             } while (this.currentIndex !== startIndex);
-            this.save(true)
+            await this.save(true)
         },
         async save(nextStep = true) {
             if (this.wordList.length > 0) {
                 localStorage.setItem('learning_word', this.wordList[this.currentIndex].word);
             }
+            
             if (this.needSave) {
-                await realUpdate(this.wordList);
+                const changedWords = this.wordList.filter((word, index) => {
+                    const lastSaved = this.lastSavedList[index];
+                    return !lastSaved || 
+                           JSON.stringify(word.status) !== JSON.stringify(lastSaved.status) ||
+                           JSON.stringify(word.info) !== JSON.stringify(lastSaved.info);
+                });
+                
+                if (changedWords.length > 0) {
+                    await realUpdate(changedWords);
+                    this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
+                }
                 this.needSave = false;
             }
+            
             if (nextStep) {
                 this.$emit('update-status', 'write');
             }
@@ -188,6 +199,7 @@ export default {
                     this.currentIndex = savedWordIndex;
                 }
             }
+            this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
             await this.updateWordDisplay();
         },
         handleAI() {

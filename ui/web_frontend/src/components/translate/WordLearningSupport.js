@@ -72,7 +72,7 @@ export async function realUpdate(wordList) {
         formData.append('rtype', 'update');
         formData.append('list', JSON.stringify(wordList));
         await axios.post(getURL() + func, formData).then((res) => {
-            console.log('Word list updated successfully');
+            console.log('Word list updated successfully, list', wordList.length);
         }).catch((err) => {
             if (err.response && err.response.status === 401) {
                 parseBackendError(null, err);

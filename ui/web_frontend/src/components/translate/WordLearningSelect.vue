@@ -52,48 +52,56 @@ export default {
             needSave: false,
             fromList: [],
             currentVOC: '',
+            lastSavedList: [],
         };
     },
     methods: {
         toggleTranslation() {
             this.showTranslation = !this.showTranslation;
         },
-        markAsKnown() {
+        async markAsKnown() {
             if (this.wordList.length === 0) {
                 return;
             }
             this.wordList[this.currentIndex].status = 'learned';
-            this.nextWord();
-            this.updateCount();
             this.needSave = true;
+            await this.nextWord();
+            this.updateCount();
         },
-        learnToday() {
+        async learnToday() {
             if (this.wordList.length === 0) {
                 return;
             }
             this.wordList[this.currentIndex].status = 'learning';
-            this.nextWord();
-            this.updateCount();
             this.needSave = true;
+            await this.nextWord();
+            this.updateCount();
         },
-        nextWord() {
+        async nextWord() {
             this.currentIndex++;
             this.showTranslation = false;
             if (this.currentIndex < this.wordList.length) {
                 this.updateWordDisplay();
-                //this.save(false);
+                this.save(false);
             } else {
-                this.save(true);
+                await this.save(true);
             }
         },
         async save(nextStep = true) {
-            let updateList = [];
-            for (let i = 0; i < this.wordList.length; i++) {
-                if (this.wordList[i].status === 'learned' || this.wordList[i].status === 'learning') {
-                    updateList.push(this.wordList[i]);
+            if (this.needSave) {
+                const changedWords = this.wordList.filter((word, index) => {
+                    const lastSaved = this.lastSavedList[index];
+                    return !lastSaved || 
+                           JSON.stringify(word.status) !== JSON.stringify(lastSaved.status) ||
+                           JSON.stringify(word.info) !== JSON.stringify(lastSaved.info);
+                });
+                
+                if (changedWords.length > 0) {
+                    await realUpdate(changedWords);
+                    this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
                 }
+                this.needSave = false;
             }
-            await realUpdate(updateList);
             if (nextStep) {
                 this.$emit('update-status', 'learn');
             }
@@ -123,6 +131,7 @@ export default {
                 }
                 
                 this.wordList = await fetchWordList('get_words', 'not_learned', null, this.currentVOC);
+                this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
                 this.updateWordDisplay();
             } catch (err) {
                 console.error(err);
