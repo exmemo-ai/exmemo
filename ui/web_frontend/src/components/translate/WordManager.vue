@@ -68,7 +68,7 @@
 
 <script>
 import axios from 'axios';
-import CheckDialog from './CheckDialog.vue';
+import CheckDialog from './LookupDialog.vue';
 import OptWordListDialog from './OptWordListDialog.vue';
 import WordEditorDialog from './WordEditorDialog.vue';
 import { getURL, parseBackendError } from '@/components/support/conn';

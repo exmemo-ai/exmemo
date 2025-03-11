@@ -36,23 +36,29 @@
             </div>
         </div>
 
-        <ChatDialog ref="chatDialog" />
         <CheckDialog ref="checkDialog" />
+        <AIDialog
+            :full-content="getAllCountent()"
+            :selected-content="getSelectedContent()"
+            :etype="etype"
+            v-model="aiDialogVisible"
+            default-reference-type="all"
+        />
     </div>
 </template>
 
 <script>
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 import axios from 'axios';
-import CheckDialog from './CheckDialog.vue';
-import ChatDialog from './ChatDialog.vue';
+import CheckDialog from './LookupDialog.vue';
 import { translateFunc } from './TransFunction';
+import AIDialog from '@/components/ai/AIDialog.vue'
 
 export default {
     name: 'EnReader',
     components: {
-        ChatDialog,
-        CheckDialog
+        CheckDialog,
+        AIDialog
     },
     data() {
         return {
@@ -66,6 +72,8 @@ export default {
             showText: '',
             popupTime: null,
             pressTimer: null,
+            etype: 'translate',
+            aiDialogVisible: false,
         };
     },
     methods: {
@@ -95,7 +103,7 @@ export default {
             });
         },
         handleAnalysis() {
-            this.$refs.chatDialog.openDialog(this);
+            this.aiDialogVisible = true;
             console.log('analysis:', this.inputText);
         },
         handleInput() {
@@ -239,7 +247,17 @@ export default {
         },
         searchWord() {
             this.$refs.checkDialog.openDialog(this);
-        }
+        },
+        getAllCountent() {
+            return this.inputText;
+        },
+        getSelectedContent() {
+            let selectedText = window.getSelection().toString();
+            if (selectedText) {
+                return selectedText;
+            }
+            return this.inputText;
+        },
     },
     mounted() {
         this.handleResize()
