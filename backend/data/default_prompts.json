@@ -64,5 +64,10 @@
         "title": "Memory Techniques",
         "prompt": "Please provide memory techniques for the following words, including root splitting and related word associations, in a concise manner, avoiding complex explanations.",
         "etype": "translate"
-    }
+    },
+    {
+        "title": "Question Answering",
+        "prompt": "Please answer the following questions based on the provided content.\n Questions:\n",
+        "etype": "translate"
+    }    
 ]
