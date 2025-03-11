@@ -52,7 +52,7 @@
                 <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane>
                 <el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>
             </el-tabs>
-            <el-icon class="clipboard-icon" @click="openClipboard" size="small" style="margin-left: 30px;">
+            <el-icon class="clipboard-icon" @click="openClipboard" size="small">
                 <ClipboardIcon />
             </el-icon>
         </div>
@@ -292,7 +292,7 @@ export default {
 }
 
 .el-tabs {
-    margin-right: 20px;
+    margin-right: 5px;
 }
 
 :deep(.el-tabs__header) {
@@ -351,10 +351,15 @@ export default {
         padding: 0 5px !important;
         font-size: 14px;
     }
+
+    .clipboard-icon {
+        margin: 0 5px !important;
+    }
 }
 
 .clipboard-icon {
-    margin-right: 20px;
+    margin-right: 30px;
+    margin-left: 30px;
     cursor: pointer;
     font-size: 20px;
     color: var(--el-text-color-primary);
