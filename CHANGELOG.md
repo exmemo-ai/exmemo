@@ -68,3 +68,24 @@
 
 - 401 error not redirecting to the re-login interface
 - Fixed error in the word lookup interface
+
+
+## 5 [1.1.4] - 2025-03-12
+
+### 5.1 Added
+
+- Added note editing interface
+- Added AI and custom prompts
+- Added table of contents support in the reading interface
+- Added note-taking and note-exporting features in the reading interface
+- Added feature to directly open clipboard
+
+### 5.2 Changed
+
+- Optimized TTS logic
+- Optimized display format of epub files
+- Optimized learning interface
+
+### 5.3 Fixed
+
+- Handling for Chat connection issues with the server
