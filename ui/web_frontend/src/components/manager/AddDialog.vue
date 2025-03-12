@@ -1,17 +1,24 @@
 <template>
     <el-dialog v-model="dialogVisible" :title="dialogTitle" :width="dialogWidth"
         :before-close="handleClose">
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
-            <div style="display: flex; align-items: center; gap: 10px">
-                <el-radio-group v-model="form.etype" :disabled="!!force_etype">
-                    <el-radio id="upload" value="file" :disabled="!!force_etype">{{ $t('uploadFile') }}</el-radio>
-                    <el-radio id="record" value="record" :disabled="!!force_etype">{{ $t('record') }}</el-radio>
-                    <el-radio id="addWeb" value="web" :disabled="!!force_etype">{{ $t('addWeb') }}</el-radio>
-                    <el-radio id="note" value="note" :disabled="!!force_etype">{{ $t('note') }}</el-radio>
-                </el-radio-group>
+        <template #header>
+            <div class="dialog-header">
+                <span class="dialog-title">{{ dialogTitle }}</span>
+                <div class="action-buttons">
+                    <el-button size="small" type="primary" @click="doSave">
+                        <el-icon><SaveIcon /></el-icon>
+                    </el-button>
+                </div>
             </div>
-            <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
+        </template>
+
+        <div style="display: flex; align-items: center; margin-bottom: 10px">
+            <el-radio-group v-model="form.etype" :disabled="!!force_etype">
+                <el-radio id="upload" value="file" :disabled="!!force_etype">{{ $t('uploadFile') }}</el-radio>
+                <el-radio id="record" value="record" :disabled="!!force_etype">{{ $t('record') }}</el-radio>
+                <el-radio id="addWeb" value="web" :disabled="!!force_etype">{{ $t('addWeb') }}</el-radio>
+                <el-radio id="note" value="note" :disabled="!!force_etype">{{ $t('note') }}</el-radio>
+            </el-radio-group>
         </div>
 
         <div style="display: flex;margin-bottom: 5px;" width="100%">
@@ -66,10 +73,12 @@ import { ElMessage } from 'element-plus';
 import DataEditor from './DataEditor.vue'
 import SettingService from '@/components/settings/settingService'
 import { confirmOpenNote } from './dataUtils';
+import SaveIcon from '@/components/icons/SaveIcon.vue'
 
 export default {
     components: {
-        DataEditor
+        DataEditor,
+        SaveIcon
     },
     data() {
         return {
@@ -95,6 +104,13 @@ export default {
                 addr: '',
             },
         };
+    },
+    watch: {
+        input_path(newPath) {
+            if (this.form.etype === 'note') {
+                this.form.title = this.calcTitle(newPath);
+            }
+        }
     },
     methods: {
         openDialog(onSuccess, options = {}) {
@@ -159,6 +175,9 @@ export default {
         async calcFilePath() {
             const normalizedPath = this.normalizePath(this.input_path);
             this.file_path = this.input_vault + '/' + normalizedPath;
+            if (this.form.etype === 'note' && this.file_path && !this.file_path.includes('.')) {
+                this.file_path += '.md';
+            }
         },
         async doSave() {
             console.log("doSave");
@@ -227,5 +246,26 @@ export default {
 .content-container {
     flex-grow: 1;
     display: flex;
+}
+
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dialog-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-buttons .el-button {
+    margin: 0;
+    padding: 0 5px;
 }
 </style>

@@ -29,6 +29,8 @@
                     :toolbars="customToolbars"
                     :showToolbar="true"
                     :preview="isLandscape ? true: false"
+                    :scroll-auto="true"
+                    :footers="['markdownTotal']"
                 >
                     <template #defToolbars>
                         <NormalToolbar :title="t('saveAs')" @onClick="saveAs">
@@ -239,6 +241,10 @@ const getContent = () => {
     const selectedNodeList = getSelectedNodeList(previewElement);
     if (selectedNodeList.length > 0) {
         return selectedNodeList;
+    }
+    if (!previewElement || !previewElement.offsetParent) {
+        ElMessage.warning(t('viewMarkdown.pleasePreview'));
+        return [];
     }
     return getVisibleNodeList(previewElement);
 }
@@ -456,7 +462,6 @@ const getScreenContent = () => {
             visibleText += node.textContent.trim() + '\n';
         }
     }
-    
     return visibleText.trim();
 }
 
@@ -476,10 +481,17 @@ const handleInsertAIAnswer = (text) => {
     ElMessage.success(t('viewMarkdown.insertSuccess'));
 }
 
+const handleResize = () => {
+    const visualHeight = window.innerHeight;
+    console.log('visualHeight', visualHeight);
+    document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
+}
+
 onBeforeUnmount(() => {
     if (speakerPlayer.value) {
         speakerPlayer.value.stop();
     }
+    window.removeEventListener('resize', handleResize);    
 })
 
 onMounted(() => {
@@ -488,6 +500,8 @@ onMounted(() => {
     } else {
         setContentFromCB()
     }
+    window.addEventListener('resize', handleResize);
+    handleResize();
     nextTick(() => {
         if (mdEditor.value?.$el) {
             const previewElement = mdEditor.value.$el.querySelector('.md-editor-preview');
@@ -502,11 +516,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.app-container {
-    display: flex;
-    flex-direction: column;
-    height: var(--mainHeight);
-}
 
 .main-content {
     flex: 1;

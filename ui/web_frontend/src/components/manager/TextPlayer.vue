@@ -41,6 +41,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import {  Setting, Close, VideoPause, VideoPlay } from '@element-plus/icons-vue'
 import PlayIcon from '@/components/icons/PlayIcon.vue'
+import PauseIcon from '@/components/icons/PauseIcon.vue'
 import StopIcon from '@/components/icons/StopIcon.vue'
 import Prev1Icon from '@/components/icons/Prev1Icon.vue'
 import Prev2Icon from '@/components/icons/Prev2Icon.vue'
@@ -82,7 +83,7 @@ const playerStatus = ref({
 })
 
 const showSettings = ref(false)
-const playIcon = computed(() => playerStatus.value.isPlaying ? StopIcon : PlayIcon)
+const playIcon = computed(() => playerStatus.value.isPlaying ? PauseIcon : PlayIcon)
 
 const formatProgress = () => {
   if (playerStatus.value.sentencesCount === 0) return '0/0'

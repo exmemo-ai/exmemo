@@ -172,7 +172,7 @@ export default {
                 });
                 return;
             }
-            this.processContent(this.pastedContent, True);
+            this.processContent(this.pastedContent, true);
             this.dialogVisible = false;
         },
 
@@ -184,7 +184,7 @@ export default {
             } else {
                 this.$message({
                     type: 'warning',
-                    message: this.$t('paste.contentEmpty')
+                    message: this.$t('paste.contentNotSupport')
                 });
             }
         },

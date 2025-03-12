@@ -4,7 +4,7 @@
             <strong>{{ $t('metaData') }}</strong>
         </div>
         <div class="content-container right-aligned">
-            <el-button type="primary" size="small" @click="extractInfo">{{ $t('autoExtract') }}</el-button>
+            <el-button size="small" @click="extractInfo">{{ $t('autoExtract') }}</el-button>
         </div>
     </div>
     <div class="form-row">

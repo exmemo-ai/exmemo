@@ -61,7 +61,15 @@
                             </template>
                         </el-dropdown>
 
-                        <el-checkbox v-model="showNote" size="small" style="margin-left: auto;">
+                        <div style="margin-left: auto; margin-right: 5px;">
+                            <el-button size="small" class="zoomButton" circle @click="decreaseFontSize">
+                                <el-icon><FontSmallIcon /></el-icon>
+                            </el-button>
+                            <el-button size="small" class="zoomButton" circle @click="increaseFontSize">
+                                <el-icon><FontLargeIcon /></el-icon>
+                            </el-button>
+                        </div>
+                        <el-checkbox v-model="showNote" size="small">
                             {{ t('note') }}
                         </el-checkbox>
                         <div class="progress-text">{{ readingProgress }}%</div>
@@ -76,7 +84,7 @@
                     </div>
 
                     <div v-show="showCatalog" class="catalog-container">
-                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview'" class="md-catalog" />
+                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview-wrapper'" class="md-catalog" />
                     </div>
                     <div class="content-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp"
                         @contextmenu.prevent">
@@ -119,7 +127,6 @@
 import 'md-editor-v3/lib/preview.css';
 import 'md-editor-v3/lib/style.css';
 import '@/assets/styles/markdown-view.css'
-import '@/assets/styles/markdown-preview.css'
 import logo from '@/assets/images/logo.png'
 import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
@@ -130,7 +137,9 @@ import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
+import { Expand, Fold, ArrowDown, Plus, Remove } from '@element-plus/icons-vue'
+import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
+import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue'
@@ -145,7 +154,6 @@ const route = useRoute()
 const content = ref(null)
 const form = ref({})
 const highlightManager = ref(null)
-const showPlayer = ref(true)
 const txtPlayer = ref(null)
 const selectedText = ref('')
 const mdPreview = ref(null)
@@ -154,6 +162,8 @@ const etype = "view"
 const metaChanged = ref(false)
 const viewNote = ref(null)
 const saveTimer = ref(null)
+
+const fontSize = ref(16)
 
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
@@ -245,9 +255,10 @@ const resetContent = async () => {
         loadHighlight();
         setTimeout(() => {
             if (form.value.meta?.bookmark?.position) {
-                const mdPreviewContent = document.querySelector('.md-editor-preview');
+                const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
                 if (mdPreviewContent) {
-                    mdPreviewContent.scrollTop = form.value.meta.bookmark.position;
+                    const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight;
+                    mdPreviewContent.scrollTop = form.value.meta.bookmark.position * scrollHeight / 100;
                 }
             }
         }, 100);
@@ -256,6 +267,11 @@ const resetContent = async () => {
     }
     viewMode.value = 'content';
     console.log("viewMode", viewMode.value, form.value.etype);
+    await nextTick()
+    if (form.value.meta?.fontSize) {
+        fontSize.value = form.value.meta.fontSize
+        updatePreviewFontSize()
+    }
 }
 
 const loadHighlight = () => {
@@ -348,7 +364,6 @@ const handleSpeak = (text, index, node) => {
 
 const handleResize = () => {
     const visualHeight = window.innerHeight;
-    console.log('visualHeight', visualHeight);
     document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
 }
 
@@ -392,8 +407,12 @@ const saveMeta = async (force) => {
     console.log('real saveMeta')
     if (!form.value.idx) return
     await nextTick();
-    const mdPreviewContent = document.querySelector('.md-editor-preview');
-    const scrollPosition = mdPreviewContent ? mdPreviewContent.scrollTop : 0;
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
+    let scrollPosition = 0;
+    if (mdPreviewContent) {
+        const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight;
+        scrollPosition = Math.round((mdPreviewContent.scrollTop / scrollHeight) * 1000) / 10;
+    }
 
     if (force == false && !metaChanged.value) return
 
@@ -421,7 +440,9 @@ const saveMeta = async (force) => {
     }
 
     form.value.meta.note = viewNote.value.editContent
+    form.value.meta.fontSize = fontSize.value
 
+    console.log('@@@@@', form.value.meta)
     try {
         const result = await saveEntry({
             parentObj: null,
@@ -498,17 +519,18 @@ const getScreenContent = () => {
     const preview = document.querySelector('.md-editor-preview')
     if (!preview) return ''
 
-    const visibleHeight = preview.clientHeight
-    const previewRect = preview.getBoundingClientRect()
+    const previewWrapper = preview.closest('.md-editor-preview-wrapper')
+    if (!previewWrapper) return ''
+
     const walker = document.createTreeWalker(
         preview,
         NodeFilter.SHOW_TEXT,
         {
             acceptNode: (node) => {
                 if (node.textContent?.trim() === '') {
-                    return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_REJECT
                 }
-                return NodeFilter.FILTER_ACCEPT;
+                return NodeFilter.FILTER_ACCEPT
             }
         }
     )
@@ -519,14 +541,14 @@ const getScreenContent = () => {
         const range = document.createRange()
         range.selectNodeContents(node)
         const rect = range.getBoundingClientRect()
-        const elementTop = rect.top - previewRect.top
-        const elementBottom = rect.bottom - previewRect.top
-
-        if (elementTop >= 0 && elementTop <= visibleHeight && elementBottom >= 0) {
+        const elementTop = rect.top
+        const elementBottom = rect.bottom
+        const wrapperRect = previewWrapper.getBoundingClientRect()
+        
+        if (elementBottom > wrapperRect.top && elementTop < wrapperRect.bottom) {
             visibleText += node.textContent.trim() + '\n'
         }
     }
-
     return visibleText.trim()
 }
 
@@ -582,6 +604,29 @@ const handleNoteChange = async () => {
     metaChanged.value = true
     scheduleSave()
 }
+
+const increaseFontSize = () => {
+    fontSize.value = Math.min(fontSize.value + 2, 32)
+    updatePreviewFontSize()
+    metaChanged.value = true
+    scheduleSave()
+}
+
+const decreaseFontSize = () => {
+    fontSize.value = Math.max(fontSize.value - 2, 12)
+    updatePreviewFontSize()
+    metaChanged.value = true
+    scheduleSave()
+}
+
+const updatePreviewFontSize = () => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (preview) {
+        preview.style.fontSize = `${fontSize.value}px`
+    }
+    metaChanged.value = true
+    scheduleSave()
+}
 </script>
 
 <style scoped>
@@ -592,44 +637,11 @@ const handleNoteChange = async () => {
     padding: 10px 20px;
     max-width: 960px;
     margin: 0 auto;
+    font-size: v-bind('fontSize + "px"');
 }
 
 :deep(.md-editor-preview-wrapper) {
     padding: 0px;
-}
-
-.catalog-control {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    cursor: pointer;
-    background: #409EFF;
-    color: white;
-    padding: 8px 4px;
-    border-radius: 0 4px 4px 0;
-}
-
-.catalog-control .is-active {
-    transform: rotate(180deg);
-}
-
-.catalog-container {
-    width: 250px;
-    flex-shrink: 0;
-    /* 防止目录被压缩 */
-    background: #f5f7fa;
-    border-right: 1px solid #e6e6e6;
-    height: 100%;
-    overflow-y: auto;
-    position: relative;
-    z-index: 2;
-}
-
-.md-catalog {
-    height: 100%;
-    padding: 10px;
 }
 
 :deep(.md-editor-catalog) {
@@ -646,70 +658,9 @@ const handleNoteChange = async () => {
     padding: 10px !important;
 }
 
-.preview-container-out {
-    flex: 2;
-    overflow: hidden;
-    height: 100%;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.preview-container {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    height: 100%;
-    min-width: 0;
-    background-color: white;
-    display: flex;
-}
-
-.content-container {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    height: 100%;
-    min-width: 0;
-}
-
 :deep(.el-dropdown-menu__item.is-active) {
     color: #409EFF;
     font-weight: bold;
-}
-
-.button-container-flex {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.progress-text {
-    color: #909399;
-    font-size: 14px;
-    width: 50px;
-    margin-left: 10px;
-    padding: 0 10px;
-}
-
-.title-container {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    flex-grow: 1;
-}
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    margin-left: auto;
-}
-
-.top-row-view {
-    display: flex;
-    flex-direction: row;
 }
 
 </style>

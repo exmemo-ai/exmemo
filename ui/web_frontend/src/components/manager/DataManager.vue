@@ -1,5 +1,5 @@
 <template>
-    <div class="full-container">
+    <div class="app-container">
       <el-container style="flex: 0; width: 100%;">
         <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
       </el-container>
@@ -77,10 +77,10 @@
                 </div>
             </div>
             <el-container class="list-width" style="flex: 1; flex-direction: column; width: 100%;">
-                <el-table :data="fileList" stripe>
+                <el-table :data="fileList" stripe @row-click="handleRowClick">
                     <el-table-column prop="title" :label="t('title')">
                         <template v-slot="scope">
-                            <div class="ellipsis-container nowrap" @click="handleRowClick(scope.row)">{{ scope.row.title }}</div>
+                            <div class="ellipsis-container nowrap">{{ scope.row.title }}</div>
                         </template>
                     </el-table-column>
                     <el-table-column prop="etype" :label="t('data')" :width=70>
@@ -292,6 +292,9 @@ export default {
         },
         handleResize() {
             this.isMobile = window.innerWidth < 768;
+            const visualHeight = window.innerHeight;
+            console.log('visualHeight', visualHeight);
+            document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
         },
     },
     async mounted() {
@@ -307,11 +310,18 @@ export default {
         await this.getOptions(this, "all");
         await this.$nextTick();
         this.fetchData();
+    },
+    onBeforeUnmount() {
+        window.removeEventListener('resize', this.handleResize);    
     }
 }
+
+
 </script>
 
 <style scoped>
+
+
 .ellipsis-container {
     max-height: 40px;
     overflow: hidden;
