@@ -197,7 +197,7 @@ def _create_content_blocks(dic, content, use_embedding, debug=False):
     return ret_emb
 
 def save_entry(dic, abstract, content, update_content=True, debug=False):
-    logger.error(f'save {dic}')
+    logger.info(f'save {dic}')
     use_embedding = EmbeddingTools.use_embedding()
     ret_emb = True
     try:
