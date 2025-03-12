@@ -4,11 +4,12 @@
             <app-navbar :title="$t('chatManagement')" :info="'ChatTools'" />
         </el-container>
         <div class="chat-container">
-            <vue-advanced-chat 
+            <vue-advanced-chat
             height="100%" 
             width="100%"
             :current-user-id="chat.getCurrentUserId()" 
             :room-id="activeRoomId"
+            :emoji-data-source="chat.getEmojiDataSource()"
             :rooms="JSON.stringify(sessions)" 
             :messages="JSON.stringify(messages)" 
             :rooms-loaded="sessionsLoaded"

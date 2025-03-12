@@ -2,7 +2,7 @@
     <div>
         <div class="translate-header">
             <div class="translate-counter" v-if="wordList.length">
-                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}, {{$t('trans.current')}}: {{this.currentIndex+1}}/{{wordList.length-finishCount}}
+                {{ $t('trans.todayLearn') }}: {{ wordList.length }}, {{ $t('trans.learned') }}: {{ finishCount }}, {{$t('trans.current')}}: {{this.currentIndex+1}}/{{wordList.length}}
             </div>
         </div>
         <div class="translate-common-style">
@@ -30,21 +30,30 @@
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
+                <el-button @click="handleAI">{{ $t('trans.aiSupport') }}</el-button>
             </div>
         </div>
     </div>
+    <AIDialog
+        v-model="aiDialogVisible"
+        :specificContent="wordStr"
+        default-reference-type="specific"
+        :etype="etype"
+    />
 </template>
 
 <script>
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
 import { fetchWordList, realUpdate, getExamples, getMeaning } from './WordLearningSupport';
+import { ElMessage } from 'element-plus';
 import { getLocale } from '@/main.js'
-import { t } from '@/utils/i18n';
+import AIDialog from '@/components/ai/AIDialog.vue'
 
 export default {
     components: {
         VideoPlay,
         VideoPause,
+        AIDialog
     },
     data() {
         return {
@@ -55,12 +64,15 @@ export default {
             sentenceMeaning: '',
             transStrInSentence: '',
             wordList: [],
+            lastSavedList: [],
             currentIndex: 0,
             finishCount: 0,
             showTranslation: false,
             isSpeaking: false,
             speechUtterance: null,
             needSave: false,
+            etype: 'translate',
+            aiDialogVisible: false,
         };
     },
     methods: {
@@ -105,20 +117,32 @@ export default {
                 this.currentIndex = (this.currentIndex + 1) % this.wordList.length;
                 if (this.wordList[this.currentIndex].status !== 'review') {
                     await this.updateWordDisplay();
-                    //this.save(false);
+                    this.save(false);
                     return;
                 }
             } while (this.currentIndex !== startIndex);
-            this.save(true)
+            await this.save(true)
         },
         async save(nextStep = true) {
             if (this.wordList.length > 0) {
                 localStorage.setItem('learning_word', this.wordList[this.currentIndex].word);
             }
+            
             if (this.needSave) {
-                await realUpdate(this.wordList);
+                const changedWords = this.wordList.filter((word, index) => {
+                    const lastSaved = this.lastSavedList[index];
+                    return !lastSaved || 
+                           JSON.stringify(word.status) !== JSON.stringify(lastSaved.status) ||
+                           JSON.stringify(word.info) !== JSON.stringify(lastSaved.info);
+                });
+                
+                if (changedWords.length > 0) {
+                    await realUpdate(changedWords);
+                    this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
+                }
                 this.needSave = false;
             }
+            
             if (nextStep) {
                 this.$emit('update-status', 'write');
             }
@@ -175,7 +199,11 @@ export default {
                     this.currentIndex = savedWordIndex;
                 }
             }
+            this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
             await this.updateWordDisplay();
+        },
+        handleAI() {
+            this.aiDialogVisible = true;
         },
         speakWord() {
             if (this.isSpeaking) {
@@ -199,6 +227,7 @@ export default {
                 this.isSpeaking = true
             } catch (error) {
                 console.error('TTS error:', error)
+                ElMessage.warning(this.t('player.speechSynthesisNotSupported'));
                 this.isSpeaking = false
             }
         },

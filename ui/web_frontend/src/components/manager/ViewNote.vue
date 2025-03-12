@@ -16,8 +16,9 @@ import { useI18n } from 'vue-i18n'
 import { MdEditor } from 'md-editor-v3'
 import { ElMessage } from 'element-plus'
 import AddDialog from '@/components/manager/AddDialog.vue'
-import SettingService from '@/components/settings/settingService'
-import { saveEntry } from './dataUtils';
+import { getDefaultPath, getDefaultVault } from './dataUtils';
+
+const emit = defineEmits(['noteChange'])
 
 const { t } = useI18n()
 const editContent = ref('')
@@ -30,44 +31,7 @@ const props = defineProps({
     }
 })
 
-const hasNoteChanged = ref(false)
 const originalNote = ref('')
-const saveTimer = ref(null)
-
-const getDefaultPath = () => {
-    let path = null;
-    if (props.form.etype === 'note') {
-        path = props.form.addr.split('/').slice(1, -1).join('/');
-    } else if (props.form.etype === 'file') {
-        path = t('viewMarkdown.fileNote');
-    } else if (props.form.etype === 'web') {
-        path = t('viewMarkdown.webNote');
-    } else if (props.form.etype === 'chat') {
-        path = t('.viewMarkdown.chatNote');
-    } else {
-        path = t('note');
-    }
-    let filename = props.form.title;
-    if (filename) {
-        filename = filename.replace(/\.md$/, '') + '_' + t('note') + '.md';
-    }
-    if (path) {
-        path = path + '/' + filename;
-    } else {
-        path = filename;
-    }
-    return path
-};
-
-const getDefaultVault = () => {
-    if (props.form.etype === 'note') {
-        return props.form.addr.split('/')[0];
-    } else {
-        const settingService = SettingService.getInstance();
-        const vault = settingService.getSetting('default_vault', t('default'));
-        return vault;
-    }
-};
 
 const updateFrontMatter = (content, newFields) => {
     if (content.startsWith('---')) {
@@ -108,8 +72,8 @@ const saveAsNote = async () => {
     
     editContent.value = updateFrontMatter(editContent.value.trim(), newFields);
     
-    const vault = getDefaultVault();
-    const path = getDefaultPath();
+    const vault = getDefaultVault(props.form.etype, props.form.addr);
+    const path = getDefaultPath(props.form.etype, props.form.addr, props.form.title);
     addDialog.value.openDialog(null, {
         etype: 'note',
         content: editContent.value,
@@ -129,65 +93,10 @@ const loadNote = () => {
 }
 
 const handleContentChange = (value) => {
-    hasNoteChanged.value = value !== originalNote.value
-    scheduleSave()
-}
-
-const scheduleSave = () => {
-    if (saveTimer.value) {
-        clearTimeout(saveTimer.value)
-    }
-    saveTimer.value = setTimeout(async () => {
-        await saveMeta()
-        saveTimer.value = null
-    }, 30000)
-}
-
-const saveMeta = async () => {
-    if (!hasNoteChanged.value) return
-
-    if (!props.form.meta || props.form.meta === 'null') {
-        props.form.meta = {}
-    }
-    
-    if (typeof props.form.meta === 'string') {
-        try {
-            props.form.meta = JSON.parse(props.form.meta)
-        } catch (error) {
-            console.error('Failed to parse meta:', error)
-            props.form.meta = {}
-        }
-    }
-
-    if (hasNoteChanged.value && editContent.value.trim().length > 0) {
-        props.form.meta.note = editContent.value
-    }
-
-    try {
-        const result = await saveEntry({
-            parentObj: null,
-            form: props.form,
-            path: null,
-            file: null,
-            onProgress: null,
-            showMessage: false
-        })
-        
-        if (result) {
-            hasNoteChanged.value = false
-            originalNote.value = editContent.value
-        }
-    } catch (error) {
-        console.error(t('saveFail'), error)
-        ElMessage.error(t('saveFail'))
+    if (value !== originalNote.value) {
+        emit('noteChange')
     }
 }
-
-onBeforeUnmount(() => {
-    if (saveTimer.value) {
-        clearTimeout(saveTimer.value)
-    }
-})
 
 defineExpose({
     editContent,

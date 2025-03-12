@@ -6,95 +6,43 @@
                     <div class="title-container">
                         <img :src="logo" class="nav-avatar" />
                         <h3 class="title">{{ appName }}</h3>
-                    </div>
-                </div>
-                <div>
-                    <div class="user-controls" style="margin-bottom: 5px">
-                        <div class="button-container-flex">
-                            <el-button-group class="basic-buttons">
-                                <el-button size="small" type="primary" @click="setPlayer">
-                                    {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
-                                </el-button>
-                            </el-button-group>
-                            <el-button-group>
-                                <el-button size="small" type="primary" @click="saveContent" :icon="Document">
-                                    {{ t('save') }}
-                                </el-button>
-                            </el-button-group>
-                            <el-button-group style="margin-right: 5px;">
-                                <el-button size="small" type="primary" @click="saveAs" :icon="Document">
-                                    {{ t('saveAs') }}
-                                </el-button>
-                            </el-button-group>                            
-                            <el-button-group style="margin-right: 5px;" v-if="!isLandscape">
-                                <el-button 
-                                    size="small" 
-                                    type="primary" 
-                                    @click="toggleViewMode"
-                                    :icon="viewModeIcon">
-                                    {{ viewMode === 'edit' ? t('viewMarkdown.previewMode') : t('viewMarkdown.editMode') }}
-                                </el-button>
-                            </el-button-group>
-                            <el-button-group style="margin-right: 5px;">
-                                <el-button size="small" type="primary" @click="handleAI">
-                                    {{ t('viewMarkdown.ai') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handlePolish">
-                                    {{ t('aiDialog.commonQuestions.polish') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handleSummarize">
-                                    {{ t('aiDialog.commonQuestions.summary') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handleGenerate">
-                                    {{ t('aiDialog.commonQuestions.generate') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="handleStyle">
-                                    {{ t('aiDialog.commonQuestions.style') }}
-                                </el-button>
-                                <!--
-                                <el-button size="small" type="primary" @click="handleExtractStyle">
-                                    提取样式
-                                </el-button>
-                                -->
-                            </el-button-group>
+                        <div class="title-filename-container" v-if="currentFileName">
+                            {{ currentFileName }}
                         </div>
+                    </div>
+                    <div class="nav-right">
+                        <el-button size="small" type="primary" circle @click="handleAI">
+                            {{ t('viewMarkdown.ai') }}
+                        </el-button>
                     </div>
                 </div>
             </el-container>
         </div>
         <div class="main-content" :class="{ 'landscape': isLandscape }">
-            <div :class="[
-                'editor-container',
-                { 'hidden': !isLandscape && viewMode === 'preview' }
-            ]">
+            <div class="editor-container">
                 <MdEditor
                     ref="mdEditor"
                     v-model="markdownContent"
                     :showCodeRowNumber="true"
                     @onChange="handleContentChange"
                     @on-save="saveContent"
-                    :toolbarsExclude="['preview']"
+                    :toolbars="customToolbars"
                     :showToolbar="true"
                     :preview="isLandscape ? true: false"
-                />
-            </div>
-            <div v-if="!isLandscape" 
-                :class="['preview-container', { 'hidden': viewMode === 'edit' }]" 
-                ref="content"
-                @mouseup="handleMouseUp" 
-                @touchend="handleMouseUp"
-                @contextmenu.prevent>
-                <MdPreview 
-                    :modelValue="markdownContent" 
-                    :id="previewId"
-                    ref="mdPreview" 
-                    style="height: 100%; padding: 0px;"
-                />
+                >
+                    <template #defToolbars>
+                        <NormalToolbar :title="t('saveAs')" @onClick="saveAs">
+                            <template #trigger>
+                                <el-icon><SaveAsIcon /></el-icon>
+                            </template>
+                        </NormalToolbar>
+                    </template>
+                </MdEditor>
             </div>
         </div>
         
-        <div v-if="showPlayer" class="player-footer" style="flex-shrink: 1">
-            <TextSpeakerPlayer
+        <div style="flex-shrink: 1">
+            <TextSpeakPlayer
                 :text="selectedText"
                 :lang="getLocale()"
                 :getContentCallback="getContent"
@@ -107,9 +55,9 @@
             :full-content="markdownContent"
             :selected-content="getSelectedContent()"
             :screen-content="getScreenContent()"
-            :common-questions="predefinedQuestions"
+            :etype="etype"
             :default-reference-type="defaultReferenceType"
-            @insertNote="handleInsertAIAnswer"
+            @insert-note="handleInsertAIAnswer"
         />
         <AddDialog ref="addDialog" />
     </div>
@@ -123,36 +71,85 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
-import { MdEditor, MdPreview } from 'md-editor-v3';
-import { saveEntry, fetchItem } from './dataUtils';
-import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue';
-import { View, Edit, Document } from '@element-plus/icons-vue';
+import { MdEditor, NormalToolbar } from 'md-editor-v3';
+import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from './dataUtils';
+import TextSpeakPlayer from '@/components/manager/TextPlayer.vue';
+import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
-import { getPolishQuestions, getSummaryQuestions, getGenerateQuestions, getStyleQuestions } from './predefinedQuestions';
-import AIDialog from './AIDialog.vue';
+import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/manager/AddDialog.vue'
 
 const { t } = useI18n();
 const appName = 'ExMemo';
 const markdownContent = ref('');
-const previewId = 'preview-content';
 const route = useRoute();
-const content = ref(null);
 const form = ref({});
-const showPlayer = ref(true);
 const speakerPlayer = ref(null);
 const selectedText = ref('');
-const mdPreview = ref(null);
-const viewMode = ref('edit');
 const { width } = useWindowSize();
 const isLandscape = computed(() => width.value >= 768);
 const isContentModified = ref(false);
 const mdEditor = ref(null);
 const aiDialogVisible = ref(false);
-const predefinedQuestions = ref([]);
 const defaultReferenceType = ref('');
 const addDialog = ref(null)
+const etype = "editor"
+
+const currentFileName = computed(() => {
+    if (form.value && form.value.title) {
+        return form.value.addr.split('/').pop();
+    }
+    return '';
+});
+
+const customToolbars = computed(() => {
+    const mobileToolbars = [
+        'bold',
+        'italic',
+        'strikethrough',
+        'title',
+        'quote',
+        'unorderedList',
+        'orderedList',
+        'task',
+        '=',
+        'previewOnly',
+        'save',
+        0,
+    ];
+
+    const desktopToolbars = [
+        'bold',
+        'italic',
+        'strikethrough',
+        '-',
+        'title',
+        'quote',
+        'unorderedList',
+        'orderedList',
+        'task',
+        '-',
+        'codeRow',
+        'code',
+        'link',
+        //'image',
+        'table',
+        'mermaid',
+        'formula',
+        '=',
+        'revoke',
+        'next',
+        'catalog',
+        'preview',
+        'previewOnly',
+        'htmlPreview',
+        'save',
+        0,
+    ];
+
+    return isLandscape.value ? desktopToolbars : mobileToolbars;
+});
 
 const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
@@ -175,37 +172,20 @@ const resetContent = async () => {
     }
 }
 
-const setPlayer = () => {
-    try {
-        if (showPlayer.value) {
-            if (speakerPlayer.value) {
-                speakerPlayer.value.stop();
-            }
-            showPlayer.value = false;
-            return;
-        }
-        showPlayer.value = true;
-    } catch (error) {
-        console.error('TTS error:', error);
-        ElMessage.error(t('speakError') + error);
-    }
-}
-
-const viewModeIcon = computed(() => {
-    return viewMode.value === 'edit' ? Edit : View;
-})
-
-const toggleViewMode = () => {
-    viewMode.value = viewMode.value === 'edit' ? 'preview' : 'edit';
-}
-
 const handleContentChange = () => {
     isContentModified.value = true;
 }
 
 const saveAs = async () => {
-    const vault = form.value.addr.split('/')[0];
-    const path = form.value.addr.split('/').slice(1).join('/');
+    let vault = '';
+    let path = '';
+    if (!form.value.addr) {
+        vault = getDefaultVault('note', null);
+        path = getDefaultPath('note', null, null);
+    } else {
+        vault = form.value.addr.split('/')[0];
+        path = form.value.addr.split('/').slice(1).join('/');
+    }
     addDialog.value.openDialog(null, {
         etype: 'note',
         content: markdownContent.value,
@@ -213,11 +193,16 @@ const saveAs = async () => {
         path: path,
         atype: form.value.atype,
         ctype: form.value.ctype,
-        status: form.value.status
+        status: form.value.status,
+        title: t('saveAs')
     });
 }
-            
+
 const saveContent = async () => {
+    if (!form.value.idx) {
+        await saveAs();
+        return;
+    }
     if (!isContentModified.value) {
         ElMessage.info(t('noChanges'));
         return;
@@ -245,16 +230,12 @@ const saveContent = async () => {
 }
 
 const handleSpeak = (text, index, node) => {
-    const previewElement = isLandscape.value 
-        ? document.querySelector('.md-editor-preview')
-        : document.getElementById(previewId);
-    setHighlight(text, index, node, previewElement);
+    const previewElement = document.querySelector('.md-editor-preview')
+    setHighlight(text, index, node, previewElement, scroll=false);
 }
 
 const getContent = () => {
-    const previewElement = isLandscape.value 
-        ? document.querySelector('.md-editor-preview')  
-        : document.getElementById(previewId);   
+    const previewElement = document.querySelector('.md-editor-preview')
     const selectedNodeList = getSelectedNodeList(previewElement);
     if (selectedNodeList.length > 0) {
         return selectedNodeList;
@@ -268,9 +249,7 @@ const handleMouseUp = (event) => {
         const selection = window.getSelection()
         const startNode = selection.anchorNode
         if (startNode && speakerPlayer.value) {
-            const previewElement = isLandscape.value 
-                ? document.querySelector('.md-editor-preview')
-                : document.getElementById(previewId);
+            const previewElement = document.querySelector('.md-editor-preview')
             const nodeList = getVisibleNodeList(previewElement, startNode)
             speakerPlayer.value.stop()
             speakerPlayer.value.setContent(nodeList)
@@ -279,47 +258,114 @@ const handleMouseUp = (event) => {
     }
 }
 
-const handleAI = () => {
-    predefinedQuestions.value = [];
+const handleAI = async () => {
     defaultReferenceType.value = 'all';
     nextTick(() => {
         aiDialogVisible.value = true;
     });
 }
 
-const handleSummarize = () => {
-    predefinedQuestions.value = getSummaryQuestions(t);
-    defaultReferenceType.value = 'all';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
+const htmlToMarkdown = (html) => {
+    try {
+        const div = document.createElement('div');
+        div.innerHTML = html; 
+        
+        const processNode = (node) => {
+            if (node.nodeType === 3) {
+                return node.textContent;
+            }
+            
+            let text = '';
+            for (const child of node.childNodes) {
+                text += processNode(child);
+            }
+            
+            switch (node.nodeName.toLowerCase()) {
+                case 'p':
+                    return text + '\n\n';
+                case 'br':
+                    return '\n';
+                case 'h1':
+                    return `# ${text}\n\n`;
+                case 'h2':
+                    return `## ${text}\n\n`;
+                case 'h3':
+                    return `### ${text}\n\n`;
+                case 'b':
+                case 'strong':
+                    return `**${text}**`;
+                case 'i':
+                case 'em':
+                    return `*${text}*`;
+                case 'pre':
+                    return `\`\`\`\n${text}\n\`\`\`\n\n`;
+                case 'code':
+                    return `\`${text}\``;
+                case 'ul':
+                    return text + '\n';
+                case 'ol':
+                    return text + '\n';
+                case 'li':
+                    return `- ${text}\n`;
+                case 'a':
+                    const href = node.getAttribute('href');
+                    return href ? `[${text}](${href})` : text;
+                default:
+                    return text;
+            }
+        };
+        
+        let markdown = processNode(div);        
+        markdown = markdown.replace(/\n\s*\n\s*\n/g, '\n\n');
+        return markdown.trim();
+    } catch (error) {
+        console.error('HTML to Markdown conversion failed:', error);
+        return '';
+    }
 }
 
-const handlePolish = () => {
-    predefinedQuestions.value = getPolishQuestions(t);
-    defaultReferenceType.value = getSelectedContent()?.trim() ? 'selection' : 'screen';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
+const setContentFromCB = async () => {
+    if (!navigator?.clipboard) {
+        ElMessage.warning(t('paste.notSupport'));
+        return;
+    }
+
+    if (navigator.permissions) {
+        const result = await navigator.permissions.query({ name: 'clipboard-read' });
+        if (result.state === 'denied') {
+            ElMessage.warning(t('paste.permissionDenied'));
+            return;
+        }
+    }
+
+    const clipboardData = await navigator.clipboard.read();
+    let allContent = '';
+    
+    for (const item of clipboardData) {
+        if (item.types.includes('text/html')) {
+            const blob = await item.getType('text/html');
+            const html = await blob.text();
+            const markdown = htmlToMarkdown(html);
+            if (markdown) {
+                allContent += markdown + '\n\n';
+            }
+        } else if (item.types.includes('text/plain')) {
+            const blob = await item.getType('text/plain');
+            const text = await blob.text();
+            if (text.length > 0) {
+                allContent += text + '\n\n';
+            }
+        }
+    }
+
+    if (allContent) {
+        ElMessage.info(t('paste.openClipboardContent'));
+        form.value = {};
+        markdownContent.value = allContent.trim();
+        isContentModified.value = true;
+    }
 }
 
-const handleGenerate = () => {
-    predefinedQuestions.value = getGenerateQuestions(t);
-    defaultReferenceType.value = 'all';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
-}
-
-const handleStyle = () => {
-    predefinedQuestions.value = getStyleQuestions(t);
-    defaultReferenceType.value = 'all';
-    nextTick(() => {
-        aiDialogVisible.value = true;
-    });
-}
-
-// for get style from clipboard
 const handleExtractStyle = async () => {
     try {
         const clipboardData = await navigator.clipboard.read();
@@ -379,9 +425,7 @@ const getSelectedContent = () => {
 }
 
 const getScreenContent = () => {
-    const previewElement = isLandscape.value 
-        ? document.querySelector('.md-editor-preview')
-        : document.getElementById(previewId);
+    const previewElement = document.querySelector('.md-editor-preview')
     if (!previewElement) return '';
     
     const visibleHeight = previewElement.clientHeight;
@@ -439,7 +483,11 @@ onBeforeUnmount(() => {
 })
 
 onMounted(() => {
-    fetchContent(route.query.idx);
+    if (route.query.idx) {
+        fetchContent(route.query.idx)
+    } else {
+        setContentFromCB()
+    }
     nextTick(() => {
         if (mdEditor.value?.$el) {
             const previewElement = mdEditor.value.$el.querySelector('.md-editor-preview');
@@ -463,32 +511,25 @@ onMounted(() => {
 .main-content {
     flex: 1;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    width: 100%;
+    height: 100%;
 }
 
-.main-content.landscape {
-    flex-direction: row;
-}
-
-.editor-container, .preview-container {
+.editor-container {
+    width: 100%;
     height: 100%;
     transition: all 0.3s ease;
 }
 
-.main-content.landscape .editor-container {
-    width: 100%;
-}
-
-.main-content.landscape :deep(.md-editor) {
+:deep(.md-editor) {
     height: 100%;
 }
 
-.main-content.landscape :deep(.md-editor-container) {
+:deep(.md-editor-container) {
     transition: width 0.3s ease;
 }
 
-.main-content.landscape :deep(.md-editor-preview) {
+:deep(.md-editor-preview) {
     border-left: 1px solid #ddd;
     display: block !important;
 }
@@ -505,5 +546,33 @@ onMounted(() => {
 
 :deep(.md-editor-preview-wrapper) {
     padding: 0px;
+}
+
+.title-container {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+}
+
+.top-row-view {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.filename-container {
+    margin-left: 10px;
+    color: #666;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>

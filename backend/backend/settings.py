@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "app_message",
     "app_web",
     "app_record",
+    "app_ai",
     "app_bm_syncex",
     "app_bm_keeper",
     "backend.common.user",

@@ -127,7 +127,7 @@ const findScrollableParent = (element) => {
     return null;
 };
 
-export const setHighlight = (text, index, node, parentElement) => {
+export const setHighlight = (text, index, node, parentElement, scroll=true) => {
     if (currentHighlight.value) {
         currentHighlight.value.style.backgroundColor = ''
     }
@@ -178,7 +178,7 @@ export const setHighlight = (text, index, node, parentElement) => {
                 );
             }
 
-            if (!isVisible) {
+            if (scroll && !isVisible) {
                 const targetScroll = scrollContainer.scrollTop + relativeTop
                 scrollContainer.scrollTo({
                     top: targetScroll,

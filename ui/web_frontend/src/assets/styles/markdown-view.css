@@ -32,7 +32,7 @@
 }
 
 .editor-toolbar {
-    padding: 5px;
+    padding: 2px 5px;
     background-color: #f5f5f5;
     border-bottom: 0px solid #ddd;
     flex-shrink: 1;

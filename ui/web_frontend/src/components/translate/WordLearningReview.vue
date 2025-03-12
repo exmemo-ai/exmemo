@@ -38,6 +38,7 @@ export default {
             transStr: '',
             sentence: '',
             wordList: [],
+            lastSavedList: [],
             currentIndex: 0,
             showTranslation: 0,
             finishCount: 0,
@@ -115,14 +116,14 @@ export default {
         },
         async nextWord() {
             if (this.getShowListLength() === 0) {
-                this.save(true);
+                await this.save(true);
                 return;
             }
             const showList = this.getShowList();
             this.currentIndex = (this.currentIndex + 1) % showList.length;
             this.showTranslation = 0
             await this.updateWordDisplay();
-            //this.save(false);
+            this.save(false);
         },
         async updateWordDisplay() {
             const showList = this.getShowList();
@@ -150,15 +151,26 @@ export default {
         },
         async save(nextStep = true) {
             if (this.needSave) {
-                await realUpdate(this.wordList);
+                const changedWords = this.wordList.filter((word, index) => {
+                    const lastSaved = this.lastSavedList[index];
+                    return !lastSaved || 
+                           JSON.stringify(word.status) !== JSON.stringify(lastSaved.status) ||
+                           JSON.stringify(word.info) !== JSON.stringify(lastSaved.info);
+                });
+                
+                if (changedWords.length > 0) {
+                    await realUpdate(changedWords);
+                    this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
+                }
                 this.needSave = false;
             }
             if (nextStep) {
                 this.$emit('update-status', 'summary');
             }
         },
+        
         async fetch() {
-            this.wordList = []
+            this.wordList = [];
             let tmpList = await fetchWordList('review');
             for (let i = 0; i < tmpList.length; i++) {
                 if (tmpList[i].info === null) {
@@ -169,6 +181,7 @@ export default {
             this.wordList = [...this.wordList].sort((a, b) => {
                 return new Date(b.updated_time) - new Date(a.updated_time);
             });
+            this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
             await this.updateWordDisplay();
         },     
     },

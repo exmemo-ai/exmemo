@@ -25,6 +25,9 @@
                     <el-menu-item index="bookmark">
                         <span>{{ $t('settings.bookmark') }}</span>
                     </el-menu-item>
+                    <el-menu-item index="prompt">
+                        <span>{{ $t('prompt') }}</span>
+                    </el-menu-item>
                     <el-menu-item index="privilege">
                         <span>{{ $t('privileges') }}</span>
                     </el-menu-item>
@@ -42,6 +45,10 @@
 
                     <div v-show="currentSection === 'bookmark'">
                         <setting-bookmark ref="bookmarkSettings" />
+                    </div>
+                    
+                    <div v-show="currentSection === 'prompt'">
+                        <setting-prompt ref="promptSettings" />
                     </div>
 
                     <div v-show="currentSection === 'extract'">
@@ -96,6 +103,7 @@ import SettingTTS from './SettingTTS.vue'
 import SettingLLM from './SettingLLM.vue'
 import SettingBookmark from './SettingBookmark.vue'
 import SettingExtract from './SettingExtract.vue'
+import SettingPrompt from './SettingPrompt.vue'
 import { Fold, Expand } from '@element-plus/icons-vue'
 
 export default {
@@ -105,6 +113,7 @@ export default {
         SettingLLM,
         SettingBookmark,
         SettingExtract,
+        SettingPrompt,
         Fold,
         Expand
     },
@@ -121,6 +130,7 @@ export default {
             info_usage: '',
             currentSection: 'voice',
             isCollapse: false,
+            validSections: ['voice', 'dialog', 'extract', 'bookmark', 'prompt', 'privilege'] // 添加有效的设置项列表
         };
     },
     methods: {
@@ -190,8 +200,18 @@ export default {
                 parseBackendError(this, err);
             }
         },
+        initializeSection() {
+            const section = this.$route.query.section;
+            if (section && this.validSections.includes(section)) {
+                this.currentSection = section;
+            }
+        },
+
         handleSelect(key) {
             this.currentSection = key;
+            this.$router.push({
+                query: { ...this.$route.query, section: key }
+            });
         }
     },
     mounted() {
@@ -199,6 +219,7 @@ export default {
         window.addEventListener('resize', this.handleResize);
         this.handleResize();
         this.loadSetting();
+        this.initializeSection();
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.handleResize);

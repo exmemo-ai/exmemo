@@ -77,10 +77,10 @@
                 </div>
             </div>
             <el-container class="list-width" style="flex: 1; flex-direction: column; width: 100%;">
-                <el-table :data="fileList" @row-click="handleRowClick" stripe>
+                <el-table :data="fileList" stripe>
                     <el-table-column prop="title" :label="t('title')">
                         <template v-slot="scope">
-                            <div class="ellipsis-container nowrap">{{ scope.row.title }}</div>
+                            <div class="ellipsis-container nowrap" @click="handleRowClick(scope.row)">{{ scope.row.title }}</div>
                         </template>
                     </el-table-column>
                     <el-table-column prop="etype" :label="t('data')" :width=70>
@@ -103,6 +103,17 @@
                             <div class="nowrap">{{ te(scope.row.status) ? t(scope.row.status) : scope.row.status }}</div>
                         </template>
                     </el-table-column>
+                    <el-table-column :label="t('operation')" width="60" fixed="right" v-if="!isMobile">
+                        <template v-slot="scope">
+                            <el-icon 
+                                class="delete-icon"
+                                @click.stop="handleDelete(scope.row)"
+                                size="small"
+                            >
+                                <el-icon><Delete /></el-icon>
+                            </el-icon>
+                        </template>
+                    </el-table-column>
                 </el-table>
                 <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
                     :current-page="currentPage" :page-sizes="[10]" :page-size="10"
@@ -118,7 +129,7 @@
 </template>
 
 <script>
-import { Search, Plus } from '@element-plus/icons-vue'
+import { Search, Plus, Delete } from '@element-plus/icons-vue'
 import axios from 'axios';
 import EditDialog from './EditDialog.vue';
 import AddDialog from './AddDialog.vue';
@@ -133,7 +144,8 @@ export default {
         AddDialog,
         AppNavbar,
         Search,
-        Plus
+        Plus,
+        Delete
     },
     setup() {
         const { t, te } = useI18n();
@@ -239,9 +251,44 @@ export default {
         openAddDialog() {
             this.$refs.addDialog.openDialog(() => this.fetchData());
         },
-        handleRowClick(row, column, event) {
-            console.log(column, event)
+        handleRowClick(row) {
             this.$refs.editDialog.openDialog(() => this.fetchData(), row);
+        },
+        handleDelete(row) {
+            this.$confirm(this.t('deleteConfirmation'), this.t('promptTitle'), {
+                confirmButtonText: this.t('confirm'),
+                cancelButtonText: this.t('cancel'),
+                type: 'warning'
+            }).then(() => {
+                this.deleteData(row.idx);
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: this.t('cancelDelete')
+                });
+            });
+        },
+        
+        deleteData(idx) {
+            let table_name = 'data'
+            axios.delete(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
+                .then(response => {
+                    if (response.data.status == 'success') {
+                        this.$message({
+                            type: 'success',
+                            message: this.t('deleteSuccess')
+                        });
+                        this.fetchData();
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            message: this.t('deleteFail')
+                        });
+                    }
+                })
+                .catch(error => {
+                    parseBackendError(this, error);
+                });
         },
         handleResize() {
             this.isMobile = window.innerWidth < 768;
@@ -413,4 +460,11 @@ export default {
         margin: 0 0 0 5px !important;
     }
 }
+
+.delete-icon {
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
 </style>

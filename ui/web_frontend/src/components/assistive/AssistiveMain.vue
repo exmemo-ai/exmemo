@@ -19,12 +19,14 @@
           <el-menu-item index="paper">
             <span>{{ $t('paperAnalysis') }}</span>
           </el-menu-item>
+          <!--
           <el-menu-item index="web">
             <span>{{ $t('webTools') }}</span>
           </el-menu-item>
           <el-menu-item index="tts">
             <span>{{ $t('voiceReading') }}</span>
           </el-menu-item>
+          -->
         </el-menu>
       </el-aside>
 

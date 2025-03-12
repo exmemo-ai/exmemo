@@ -311,6 +311,10 @@ export class ChatService {
         return this.currentUserId;
     }
 
+    getEmojiDataSource() {
+        return '/data/data.json'
+    }
+
     getSessions() {
         return this.sessions;
     }

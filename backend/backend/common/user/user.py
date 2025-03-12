@@ -63,6 +63,7 @@ class UserSettings:
     truncate_content: bool = True
     truncate_max_length: int = DEFAULT_TRUNCATE_MAX_LENGTH
     truncate_mode: str = DEFAULT_TRUNCATE_MODE
+    first_use_prompt: bool = True
 
     def get_json(self):
         return asdict(self)
