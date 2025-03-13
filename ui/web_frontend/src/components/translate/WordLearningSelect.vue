@@ -1,8 +1,8 @@
 <template>
     <div>
-        <div>
+        <div style="margin-bottom: 10px;">
             <el-text>{{ $t('trans.selectWordList') }}</el-text>
-            <el-select v-model="currentVOC" @change="handleVocChange" style="width: 200px; margin-left: 10px;">
+            <el-select v-model="currentVOC" @change="handleVocChange" style="width: 150px; margin-left: 10px;">
                 <el-option 
                     v-for="item in fromList" 
                     :key="item"
@@ -13,7 +13,7 @@
         </div>
         <div class="translate-header">
             <div class="translate-counter">
-                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
+                {{ $t('trans.todayLearn') }}: {{ selectCount }}, {{ $t('trans.learned') }}: {{ getLearnedCount() }}, {{ $t('trans.options') }}: {{ getTotalCount() }}
             </div>
         </div>
         <div class="translate-common-style">            
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_BASE } from './WordLearningSupport';
+import { fetchWordList, realUpdate, getMeaning, LEARN_WORD_VOC, LEARN_WORD_VOC_DEFAULT } from './WordLearningSupport';
 import { getWordsFrom } from './TransFunction';
 import SettingService from '@/components/settings/settingService';
 
@@ -52,48 +52,56 @@ export default {
             needSave: false,
             fromList: [],
             currentVOC: '',
+            lastSavedList: [],
         };
     },
     methods: {
         toggleTranslation() {
             this.showTranslation = !this.showTranslation;
         },
-        markAsKnown() {
+        async markAsKnown() {
             if (this.wordList.length === 0) {
                 return;
             }
             this.wordList[this.currentIndex].status = 'learned';
-            this.nextWord();
-            this.updateCount();
             this.needSave = true;
+            await this.nextWord();
+            this.updateCount();
         },
-        learnToday() {
+        async learnToday() {
             if (this.wordList.length === 0) {
                 return;
             }
             this.wordList[this.currentIndex].status = 'learning';
-            this.nextWord();
-            this.updateCount();
             this.needSave = true;
+            await this.nextWord();
+            this.updateCount();
         },
-        nextWord() {
+        async nextWord() {
             this.currentIndex++;
             this.showTranslation = false;
             if (this.currentIndex < this.wordList.length) {
                 this.updateWordDisplay();
-                //this.save(false);
+                this.save(false);
             } else {
-                this.save(true);
+                await this.save(true);
             }
         },
         async save(nextStep = true) {
-            let updateList = [];
-            for (let i = 0; i < this.wordList.length; i++) {
-                if (this.wordList[i].status === 'learned' || this.wordList[i].status === 'learning') {
-                    updateList.push(this.wordList[i]);
+            if (this.needSave) {
+                const changedWords = this.wordList.filter((word, index) => {
+                    const lastSaved = this.lastSavedList[index];
+                    return !lastSaved || 
+                           JSON.stringify(word.status) !== JSON.stringify(lastSaved.status) ||
+                           JSON.stringify(word.info) !== JSON.stringify(lastSaved.info);
+                });
+                
+                if (changedWords.length > 0) {
+                    await realUpdate(changedWords);
+                    this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
                 }
+                this.needSave = false;
             }
-            await realUpdate(updateList);
             if (nextStep) {
                 this.$emit('update-status', 'learn');
             }
@@ -115,7 +123,7 @@ export default {
                 this.fromList = await getWordsFrom(this);
                 const settingService = SettingService.getInstance();
                 await settingService.loadSetting();
-                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_BASE);
+                const currentVOC = settingService.getSetting(LEARN_WORD_VOC, LEARN_WORD_VOC_DEFAULT);
                 if (currentVOC && this.fromList.includes(currentVOC)) {
                     this.currentVOC = currentVOC;
                 } else if (this.fromList.length > 0) {
@@ -123,6 +131,7 @@ export default {
                 }
                 
                 this.wordList = await fetchWordList('get_words', 'not_learned', null, this.currentVOC);
+                this.lastSavedList = JSON.parse(JSON.stringify(this.wordList));
                 this.updateWordDisplay();
             } catch (err) {
                 console.error(err);
@@ -140,9 +149,12 @@ export default {
             this.selectCount = this.wordList.filter(word => word.status === 'learning').length;
         },
         getTotalCount() {
-            const notLearned = this.wordList.filter(word => word.status !== 'learned');
+            const notLearned = this.wordList.filter(word => word.status === 'not_learned');
             return notLearned.length;
-        },  
+        },
+        getLearnedCount() {
+            return this.wordList.filter(word => word.status === 'learned').length;
+        }
     },
     mounted() {
         this.fetch();

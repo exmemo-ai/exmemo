@@ -315,15 +315,16 @@ def get_html_content(path, format):
         str: Formatted content
     """
     ret = {}
+    h = html2text.HTML2Text()
+    h.ignore_links = False
+    h.ignore_images = False
+    h.ignore_tables = False
+
     with open(path, "r", errors="ignore") as file:
         file_content = file.read()
         soup = BeautifulSoup(file_content, "html.parser")
         
         if format == 'markdown':
-            h = html2text.HTML2Text()
-            h.ignore_links = False
-            h.ignore_images = False
-            h.ignore_tables = False
             text = h.handle(str(soup))
         else:
             text = soup.get_text()
@@ -347,7 +348,10 @@ def get_html_content(path, format):
                             # Convert HTML in JSON to markdown
                             markdown_dic = {}
                             for k, v in visited_dic.items():
-                                markdown_dic[k] = h.handle(v) if isinstance(v, str) else v
+                                str1 = v # h.handle(v) if isinstance(v, str) else v # 会去掉需要的换行
+                                str1 = str1.replace('\n\n\n', '\n')
+                                str1 = str1.replace('\n', '\n\n')
+                                markdown_dic[k] = str1
                             ret.update(markdown_dic)
                         else:
                             ret.update(visited_dic)
@@ -361,7 +365,6 @@ def get_html_content(path, format):
             ret_string += f"{value}\n\n"
         else:
             ret_string += f"{key}\n{value}\n\n"
-    
     return ret_string
 
 # for test

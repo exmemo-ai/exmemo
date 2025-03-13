@@ -4,7 +4,8 @@ import SettingService from '@/components/settings/settingService';
 import { t } from '@/utils/i18n';
 
 export const LEARN_WORD_VOC = 'learn_word_voc';
-export const LEARN_WORD_VOC_DEFAULT = 'BASE';
+export const LEARN_WORD_VOC_DEFAULT = 'ALL';
+export const LEARN_WORD_VOC_BASE = 'BASE';
 
 export async function getSummary() {
     const dateStr = new Date().toISOString().slice(0, 10);
@@ -71,7 +72,7 @@ export async function realUpdate(wordList) {
         formData.append('rtype', 'update');
         formData.append('list', JSON.stringify(wordList));
         await axios.post(getURL() + func, formData).then((res) => {
-            console.log('Word list updated successfully');
+            console.log('Word list updated successfully, list', wordList.length);
         }).catch((err) => {
             if (err.response && err.response.status === 401) {
                 parseBackendError(null, err);
@@ -115,8 +116,8 @@ export async function getMeaning(info, voc_name = null) {
         }
         if (voc_name in meaning_dict) {
             meaning = meaning_dict[voc_name];
-        } else if (LEARN_WORD_VOC_DEFAULT in meaning_dict) {
-            meaning = meaning_dict[LEARN_WORD_VOC_DEFAULT];
+        } else if (LEARN_WORD_VOC_BASE in meaning_dict) {
+            meaning = meaning_dict[LEARN_WORD_VOC_BASE];
         } else if (Object.keys(meaning_dict).length > 0) {
             meaning = meaning_dict[Object.keys(meaning_dict)[0]];
         }

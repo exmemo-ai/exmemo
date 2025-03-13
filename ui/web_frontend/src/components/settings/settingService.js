@@ -33,10 +33,10 @@ class SettingService {
 
     async loadSetting(force = false) {
         try {
+            await this._acquireLock();
             if (!force && this._settingCache) {
                 return this._settingCache;
-            }    
-            await this._acquireLock();
+            }            
             setDefaultAuthHeader();
             const formData = new FormData();
             formData.append('rtype', 'get_setting');
@@ -61,6 +61,10 @@ class SettingService {
         setDefaultAuthHeader();
         const formData = new FormData();
         formData.append('rtype', 'save');
+        if (!this._pendingSettings) {
+            console.log('No pending settings');
+            return;
+        }
         for (const [key, value] of Object.entries(this._pendingSettings.setting)) {
             formData.append(key, value);
         }

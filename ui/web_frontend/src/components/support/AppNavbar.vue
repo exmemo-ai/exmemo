@@ -24,6 +24,12 @@
                                 </el-icon>
                                 <span>{{ $t('userSetting') }}</span>
                             </el-dropdown-item>
+                            <el-dropdown-item @click="openGitHub">
+                                <el-icon>
+                                    <Link />
+                                </el-icon>
+                                <span>{{ $t('mainPage') }}</span>
+                            </el-dropdown-item>
                             <el-dropdown-item divided @click="logoutFunc">
                                 <el-icon>
                                     <SwitchButton />
@@ -38,15 +44,39 @@
                 </el-button>
             </div>
         </div>
-        <div class="bottom-row" style="width:100%;">
-            <el-tabs v-model="activeTab" @tab-click="handleTabClick" style="width:100%">
+        <div class="bottom-row" style="width:100%; display: flex;">
+            <el-tabs v-model="activeTab" @tab-click="handleTabClick" >
                 <el-tab-pane name="ChatTools" :label="$t('chatTools')"></el-tab-pane>
                 <el-tab-pane name="DataManager" :label="$t('dataManager')"></el-tab-pane>
                 <el-tab-pane name="ReadingTools" :label="$t('learnTools')"></el-tab-pane>
                 <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane>
                 <el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>
             </el-tabs>
+            <el-icon class="clipboard-icon" @click="openClipboard" size="small">
+                <ClipboardIcon />
+            </el-icon>
         </div>
+        <el-dialog
+            v-model="dialogVisible"
+            :title="$t('paste.pasteDlgTitle')"
+            width="80%"
+            :close-on-click-modal="false"
+        >
+            <el-input
+                v-model="pastedContent"
+                type="textarea"
+                :rows="3"
+                :placeholder="$t('paste.pastePlaceholder')"
+            />
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="dialogVisible = false">{{ $t('cancel') }}</el-button>
+                    <el-button type="primary" @click="handlePastedContent">
+                        {{ $t('confirm') }}
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
     </el-container>
 </template>
 
@@ -54,14 +84,17 @@
 import logo from '@/assets/images/logo.png'
 import axios from 'axios';
 import { setDefaultAuthHeader,getURL } from './conn';
-import { Setting, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
+import { Setting, ArrowDown, SwitchButton, Link } from '@element-plus/icons-vue'
+import ClipboardIcon from '@/components/icons/ClipboardIcon.vue'
 
 export default {
     name: 'AppNavbar',
     components: {
         Setting,
         ArrowDown,
-        SwitchButton
+        SwitchButton,
+        ClipboardIcon,
+        Link
     },
     props: {
         title: {
@@ -81,6 +114,8 @@ export default {
             login_user: '',
             activeTab: 'DataManager',
             userAvatar: '',
+            dialogVisible: false,
+            pastedContent: '',
         };
     },
     methods: {
@@ -101,6 +136,57 @@ export default {
         },
         gotoBMManager() {
             this.$router.push('/bm_manager'); 
+        },
+        async openClipboard() {
+            try {
+                if (!navigator?.clipboard) {
+                    this.showPasteDialog();
+                    return;
+                }
+
+                if (navigator.permissions) {
+                    const result = await navigator.permissions.query({ name: 'clipboard-read' });
+                    if (result.state === 'denied') {
+                        this.showPasteDialog();
+                        return;
+                    }
+                }
+                const text = await navigator.clipboard.readText();
+                this.processContent(text);
+            } catch (err) {
+                console.error('Clipboard error:', err);
+                this.showPasteDialog();
+            }
+        },
+        
+        showPasteDialog() {
+            this.pastedContent = '';
+            this.dialogVisible = true;
+        },
+
+        handlePastedContent() {
+            if (!this.pastedContent) {
+                this.$message({
+                    type: 'warning',
+                    message: this.$t('paste.contentEmpty')
+                });
+                return;
+            }
+            this.processContent(this.pastedContent, true);
+            this.dialogVisible = false;
+        },
+
+        processContent(content, onlyURL = false) {
+            if (content.startsWith('http')) {
+                window.open(`/view_markdown?url=${content}`, '_blank');
+            } else if (content.length > 0 && !onlyURL) {
+                window.open(`/edit_markdown`, '_blank');
+            } else {
+                this.$message({
+                    type: 'warning',
+                    message: this.$t('paste.contentNotSupport')
+                });
+            }
         },
         loginFunc() {
             this.$router.push('/login');
@@ -164,6 +250,9 @@ export default {
                     break;
             }
         },
+        openGitHub() {
+            window.open('https://github.com/exmemo-ai/exmemo', '_blank');
+        },
     },
     watch: {
         info: {
@@ -203,7 +292,7 @@ export default {
 }
 
 .el-tabs {
-    margin-right: 20px;
+    margin-right: 5px;
 }
 
 :deep(.el-tabs__header) {
@@ -262,5 +351,21 @@ export default {
         padding: 0 5px !important;
         font-size: 14px;
     }
+
+    .clipboard-icon {
+        margin: 0 5px !important;
+    }
+}
+
+.clipboard-icon {
+    margin-right: 30px;
+    margin-left: 30px;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--el-text-color-primary);
+}
+
+.clipboard-icon:hover {
+    color: var(--el-color-primary);
 }
 </style>

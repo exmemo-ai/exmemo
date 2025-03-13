@@ -581,7 +581,7 @@ def gpt(uid, content, debug=False):
         if debug:
             print("req", content)
         ret, answer, detail = llm_query(
-            uid, PAPER_ROLE, content[:4096], "chat", debug=debug
+            uid, PAPER_ROLE, content[:4096], "ptools", debug=debug
         )
         return True, answer
     except Exception as e:

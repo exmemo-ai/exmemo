@@ -3,13 +3,24 @@ from .block import *
 import re
 import ebooklib
 from ebooklib import epub
-from markdownify import markdownify as md
+#from markdownify import markdownify as md
+from html2text import HTML2Text
 
 
 def remove_xml_declaration(input_bytes):
     pattern = re.compile(b"<\?xml version='.*' encoding='.*'\?>", re.IGNORECASE)
     result = re.sub(pattern, b"", input_bytes)
     return result
+
+def convert_to_markdown(html_content):
+    if isinstance(html_content, bytes):
+        html_content = html_content.decode('utf-8')
+    h = HTML2Text()
+    h.ignore_links = False
+    h.ignore_images = False
+    h.ignore_tables = False
+    h.body_width = 0
+    return h.handle(html_content)
 
 
 class EPUBParser(BaseParser):
@@ -39,9 +50,12 @@ class EPUBParser(BaseParser):
         text = ""
         for item in book.items:
             if isinstance(item, epub.EpubHtml):
-                item_string = md(remove_xml_declaration(item.get_content()))
+                item_string = convert_to_markdown(remove_xml_declaration(item.get_content()))
+                #item_string = md(remove_xml_declaration(item.get_content()))
                 item_string = re.sub(r"\n+", "\n", item_string.strip())
                 # print('in if', item.file_name, item_string[:50])
+                if len(item_string) > 0 and item_string[-1] != "\n":
+                    item_string += "\n"
                 text += item_string
             elif isinstance(item, epub.EpubNcx):
                 if debug:

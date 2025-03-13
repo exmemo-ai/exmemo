@@ -88,31 +88,55 @@ def add_file(dic, path, use_llm=True):
     user = UserManager.get_instance().get_user(dic["user_id"])
     filename = os.path.basename(dic["addr"])
     ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
+    update_content = True
 
     if dic["etype"] == "note":
         dic["path"] = os.path.join(REL_DIR_NOTES, dic["addr"])
     if dic["etype"] == "file":
         dic["path"] = os.path.join(REL_DIR_FILES, dic["addr"])
-    ret = utils_filemanager.get_file_manager().save_file(
-        dic["user_id"], dic["path"], path
-    )
-    if not ret:
-        return False, False, _("save_file_failed_excl_")
-
-    if "md5" not in dic or dic["md5"] is None:
-        dic["md5"] = utils_md.get_file_md5(path)
-    dic["created_time"] = mtime_datetime
-
-    if (dic['etype'] == 'note' and user.get("note_save_content")) or (dic['etype'] == 'file' and user.get("file_save_content")):
-        meta_data, content = get_file_content_by_path(path, user)
-    elif converter.is_markdown(path):
-        parser = MarkdownParser(path)
-        meta_data = convert_dic_to_json(parser.fm)
-        content = None
+    if path is None:
+        if 'idx' not in dic:
+            return False, False, _("save_file_failed_excl_")
+        update_content = False
     else:
-        meta_data = {}
-        content = None
-    dic["meta"] = meta_data
+        ret = utils_filemanager.get_file_manager().save_file(
+            dic["user_id"], dic["path"], path
+        )
+        if not ret:
+            return False, False, _("save_file_failed_excl_")
+        
+    if update_content and "md5" not in dic or dic["md5"] is None:
+        dic["md5"] = utils_md.get_file_md5(path)
+
+    if "created_time" not in dic:
+        dic["created_time"] = mtime_datetime
+
+    meta_data = {}
+    content = None
+    if update_content:
+        if (dic['etype'] == 'note' and user.get("note_save_content")) or (dic['etype'] == 'file' and user.get("file_save_content")):
+            meta_data, content = get_file_content_by_path(path, user)
+        elif converter.is_markdown(path):
+            parser = MarkdownParser(path)
+            meta_data = convert_dic_to_json(parser.fm)
+            content = None
+        else:
+            meta_data = {}
+            content = None
+        if meta_data is None:
+            meta_data = {}
+
+    if 'meta' not in dic:
+        dic["meta"] = meta_data
+    else:
+        # 判断类型，如果是dict，就合并，如果为string转换为dict
+        if isinstance(dic["meta"], str):
+            try:
+                dic["meta"] = json.loads(dic["meta"])
+            except Exception as e:
+                logger.warning(f"parse meta failed {e}")
+                dic["meta"] = meta_data
+        dic["meta"].update(meta_data)
 
     abstract = None
     if (dic['etype'] == 'note' and user.get("note_get_abstract")) or (dic['etype'] == 'file' and user.get("file_get_abstract")):
@@ -120,7 +144,7 @@ def add_file(dic, path, use_llm=True):
         if ret:
             abstract = detail
 
-    return save_entry(dic, abstract, content)
+    return save_entry(dic, abstract, content, update_content)
 
 
 def filter_model_fields(data):
@@ -140,44 +164,85 @@ def filter_model_fields(data):
     return filtered_data
 
 
-def save_entry(dic, abstract, content, debug=False):
+def _create_content_blocks(dic, content, use_embedding, debug=False):
+    ret_emb = True
+    if content:
+        all_splits = EmbeddingTools.split(content)
+        if len(all_splits) == 0:
+            all_splits = [content]
+        if not use_embedding:
+            embeddings = [None for split in all_splits]
+        else:
+            ret_emb, embeddings = EmbeddingTools.do_embedding(
+                all_splits, use_embedding
+            )
+        if debug:
+            logger.debug(
+                f"split blocks {len(all_splits)}, emb {ret_emb}"
+            )
+        for idx, (text, emb) in enumerate(zip(all_splits, embeddings)):
+            dic["block_id"] = idx + 1
+            dic["raw"] = text
+            if emb is not None:
+                dic["embeddings"] = emb
+            elif "embeddings" in dic:
+                dic.pop("embeddings")
+            if "idx" in dic and dic["idx"]:
+                dic.pop("idx")
+            if "meta" in dic:
+                dic.pop("meta")
+            filtered_dic = filter_model_fields(dic)
+            StoreEntry.objects.create(**filtered_dic)
+        logger.info(f'saved blocks {idx}')
+    return ret_emb
+
+def save_entry(dic, abstract, content, update_content=True, debug=False):
+    logger.info(f'save {dic}')
     use_embedding = EmbeddingTools.use_embedding()
     ret_emb = True
     try:
-        if "addr" in dic and dic["addr"] is not None:
-            StoreEntry.objects.filter(user_id=dic["user_id"], addr=dic["addr"]).delete()
-        dic["block_id"] = 0
-        dic["emb_model"] = EmbeddingTools.get_model_name(use_embedding)
-        dic["raw"] = abstract
-        if "created_time" not in dic:
-            dic["created_time"] = timezone.now().astimezone(pytz.UTC)
-        filtered_dic = filter_model_fields(dic)
-        StoreEntry.objects.create(**filtered_dic)
-        if content:
-            all_splits = EmbeddingTools.split(content)
-            if len(all_splits) == 0:
-                all_splits = [content]
-            if use_embedding == False:
-                embeddings = [None for split in all_splits]
-            else:
-                ret_emb, embeddings = EmbeddingTools.do_embedding(
-                    all_splits, use_embedding
-                )
-            if debug:
-                logger.debug(
-                    f"save to serv, split blocks {len(all_splits)}, emb {ret_emb}"
-                )
-            for idx, (text, emb) in enumerate(zip(all_splits, embeddings)):
-                dic["block_id"] = idx + 1
-                dic["raw"] = text
-                if emb is not None:
-                    dic["embeddings"] = emb
-                elif "embeddings" in dic:
-                    dic.pop("embeddings")
+        dic["updated_time"] = timezone.now().astimezone(pytz.UTC)
+        if "idx" in dic and dic["idx"]:
+            if "created_time" not in dic:
+                dic["created_time"] = entry.created_time
+            if update_content:
+                entry = StoreEntry.objects.get(idx=dic["idx"]) # only one
+                logger.info(f"update content for addr {entry.addr}")
+                dic["block_id"] = 0
+                dic["emb_model"] = EmbeddingTools.get_model_name(use_embedding)
+                dic["raw"] = abstract
                 filtered_dic = filter_model_fields(dic)
-                StoreEntry.objects.create(**filtered_dic)
-            logger.info(f'save blocks {idx}')
-        return True, ret_emb, _("add_success")
+                for key, value in filtered_dic.items():
+                    setattr(entry, key, value)
+                entry.save()
+                StoreEntry.objects.filter(user_id=entry.user_id, addr=entry.addr, block_id__gt=0).delete()            
+            else:
+                entry = StoreEntry.objects.get(idx=dic["idx"])
+                addr = entry.addr
+                entries = StoreEntry.objects.filter(user_id=dic["user_id"], addr=addr)
+                filtered_dic = filter_model_fields(dic)
+                for key in ["idx", "embeddings", "emb_model", "block_id", "raw"]:
+                    if key in filtered_dic:
+                        filtered_dic.pop(key)
+                for entry in entries:
+                    for key, value in filtered_dic.items():
+                        if entry.block_id == 0 or key != "meta":
+                            setattr(entry, key, value)
+                    entry.save()
+                return True, ret_emb, _("update_success")
+        else:
+            if "addr" in dic and dic["addr"] is not None:
+                StoreEntry.objects.filter(user_id=dic["user_id"], addr=dic["addr"]).delete()
+            dic["block_id"] = 0
+            dic["emb_model"] = EmbeddingTools.get_model_name(use_embedding)
+            dic["raw"] = abstract
+            if "created_time" not in dic:
+                dic["created_time"] = timezone.now().astimezone(pytz.UTC)
+            filtered_dic = filter_model_fields(dic)
+            StoreEntry.objects.create(**filtered_dic)
+
+        ret_emb = _create_content_blocks(dic, content, use_embedding, debug)
+        return True, ret_emb, _("update_success") if "idx" in dic else _("add_success")
     except Exception as e:
         traceback.print_exc()
         logger.warning(f"save to db failed {e}")
@@ -326,11 +391,14 @@ def get_entry_list(keywords, query_args, max_count, fields = None):
     if keywords is not None and len(keywords) > 0:
         keywords = regular_keyword(keywords)
         keyword_arr = keywords.split(" ")
-        # find by title
-        q_obj = Q()
-        for keyword in keyword_arr:
-            q_obj &= Q(title__iregex=keyword)
-        queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
+        queryset = StoreEntry.objects.filter(addr__iregex=keywords, **query_args).values(*fields)[:max_count]
+
+        if len(queryset) == 0:
+            # find by title
+            q_obj = Q()
+            for keyword in keyword_arr:
+                q_obj &= Q(title__iregex=keyword)
+            queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
         
         if len(queryset) == 0:
             # find by raw
@@ -385,18 +453,19 @@ def get_type_options(ctype):
         return HttpResponse(json.dumps([]))
 
 
-def rename_file(uid, oldaddr, newaddr):
-    instances = StoreEntry.objects.filter(addr=oldaddr)
-    logger.debug(f"found instances {len(instances)}")
-    oldpath = os.path.join(REL_DIR_FILES, oldaddr)
-    newpath = os.path.join(REL_DIR_FILES, newaddr)
+def rename_file(uid, oldaddr, newaddr, dic):
+    if dic['etype'] == 'file':
+        oldpath = os.path.join(REL_DIR_FILES, oldaddr)
+        newpath = os.path.join(REL_DIR_FILES, newaddr)
+    elif dic['etype'] == 'note':
+        oldpath = os.path.join(REL_DIR_NOTES, oldaddr)
+        newpath = os.path.join(REL_DIR_NOTES, newaddr)
+    else:
+        return False
     ret = utils_filemanager.get_file_manager().rename_file(uid, oldpath, newpath)
     if ret:
-        for item in instances:
-            item.addr = newaddr
-            item.path = newpath
-            filename = os.path.basename(newpath)
-            item.title = filename
-            item.save()
-        return True
+        dic['addr'] = newaddr
+        ret, ret_emb, info = add_data(dic)
+        if ret:
+            return True
     return False

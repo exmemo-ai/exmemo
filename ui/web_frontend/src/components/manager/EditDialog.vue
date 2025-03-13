@@ -1,21 +1,46 @@
 <template>
     <el-dialog v-model="dialogVisible" :title="$t('edit')" :width="dialogWidth"
         :before-close="handleClose">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
-            <div>
-                <label v-if="form.etype === 'file'"><strong>{{ $t('file') }}</strong></label>
-                <label v-if="form.etype === 'record'"><strong>{{ $t('record') }}</strong></label>
-                <label v-if="form.etype === 'web'"><strong>{{ $t('web') }}</strong></label>
-                <label v-if="form.etype === 'note'"><strong>{{ $t('note') }}</strong></label>
-                <label v-if="form.etype === 'chat'"><strong>{{ $t('chat') }}</strong></label>
+        <template #header>
+            <div class="dialog-header">
+                <div class="dialog-title">
+                    <strong>
+                        <template v-if="form.etype === 'file'">{{ $t('file') }}</template>
+                        <template v-if="form.etype === 'record'">{{ $t('record') }}</template>
+                        <template v-if="form.etype === 'web'">{{ $t('web') }}</template>
+                        <template v-if="form.etype === 'note'">{{ $t('note') }}</template>
+                        <template v-if="form.etype === 'chat'">{{ $t('chat') }}</template>
+                    </strong>
+                </div>
+                <div class="action-buttons">
+                    <el-tooltip :content="$t('save')" placement="top">
+                        <el-button size="small" @click="doSave">
+                            <el-icon><SaveIcon /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip :content="$t('delete')" placement="top">
+                        <el-button size="small" @click="showDeleteConfirmation">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="form.etype !== 'record'" :content="$t('view')" placement="top">
+                        <el-button size="small" @click="viewContent">
+                            <el-icon><View /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="form.etype === 'note'" :content="$t('edit')" placement="top">
+                        <el-button size="small" @click="editNote">
+                            <el-icon><Edit /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="form.etype === 'file'" :content="$t('download')" placement="top">
+                        <el-button size="small" @click="download">
+                            <el-icon><Download /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                </div>
             </div>
-            <el-button-group>
-                <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
-                <el-button size="small" @click="showDeleteConfirmation">{{ $t('delete') }}</el-button>
-                <el-button size="small" @click="viewContent">{{ $t('view') }}</el-button>
-                <el-button size="small" v-if="form.etype === 'file'" @click="download">{{ $t('download') }}</el-button> 
-            </el-button-group>
-        </div>
+        </template>
 
         <div style="display: flex;margin-bottom: 5px;" width="100%">
             <div style="flex: 3;margin-right: 5px;" width="100%">
@@ -59,7 +84,7 @@
             :form="form"
             :file_path="file_path"
             :file="file"
-            :parent_obj="parent_obj"
+            :onSuccess="onSuccess"
         />
         <span class="dialog-footer">
         </span>
@@ -71,10 +96,18 @@ import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import DataEditor from './DataEditor.vue'
 import { downloadFile } from './dataUtils'
+import { Delete, Edit, View, Download } from '@element-plus/icons-vue'
+import SaveIcon from '@/components/icons/SaveIcon.vue'
+
 
 export default {
     components: {
-        DataEditor
+        DataEditor,
+        Delete,
+        Edit,
+        View,
+        Download,
+        SaveIcon
     },
     data() {
         return {
@@ -95,11 +128,12 @@ export default {
                 status: '',
                 addr: '',
             },
+            onSuccess: null,
         };
     },
     methods: {
-        openDialog(parent_obj, row) {
-            this.parent_obj = parent_obj;
+        openDialog(onSuccess, row) {
+            this.onSuccess = onSuccess;
             this.form.idx = row.idx;
             this.form.ctype = row.ctype;
             this.form.etype = row.etype;
@@ -141,9 +175,7 @@ export default {
                     type: 'success',
                     message: this.$t('renameSuccess')
                 });
-                if (this.parent_obj) {
-                    this.parent_obj.fetchData();
-                }
+                this.onSuccess?.(response.data);
                 this.closeDialog();
                 return true;
             } else {
@@ -167,7 +199,6 @@ export default {
                 }
                 const ret = await this.realRename(this.form.title);
                 if (!ret) {
-                    ELMessage.error(this.$t('renameFail'));
                     return;
                 }
             }
@@ -186,6 +217,10 @@ export default {
             console.log(this.$t('view', { idx: this.form.idx }));
             window.open(`${window.location.origin}/view_markdown?idx=${this.form.idx}`, '_blank');
             //window.location.href = `${window.location.origin}/view_markdown?idx=${this.form.idx}`;
+        },
+        editNote() {
+            this.closeDialog();
+            window.open(`${window.location.origin}/edit_markdown?idx=${this.form.idx}`, '_blank');
         },
         showDeleteConfirmation() {
             this.$confirm(this.$t('deleteConfirmation'), this.$t('promptTitle'), {
@@ -214,9 +249,7 @@ export default {
                             message: this.$t('deleteSuccess')
                         });
                         this.closeDialog();
-                        if (this.parent_obj) {
-                            this.parent_obj.fetchData();
-                        }
+                        this.onSuccess?.(response.data);
                     } else {
                         this.$message({
                             type: 'error',
@@ -239,3 +272,25 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dialog-title {
+    font-size: 18px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-buttons .el-button {
+    margin: 0;
+    padding: 0 5px;
+}
+</style>

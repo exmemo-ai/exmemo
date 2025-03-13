@@ -40,10 +40,10 @@ class StoreEntry(models.Model):
     )  # wechat,frontend,obsidian,web_chrome_bm
     access_level = models.IntegerField(default=-1)  # confidentiality level
     #
-    addr = models.URLField(
+    addr = models.CharField(
         max_length=400, default=None, null=True, blank=True
     )  # Unique Addresses
-    path = models.URLField(
+    path = models.CharField(
         max_length=400, default=None, null=True, blank=True
     )  # Relative path to file storage
     md5 = models.CharField(max_length=200, default=None, null=True, blank=True)

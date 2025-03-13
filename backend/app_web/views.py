@@ -44,3 +44,7 @@ class WebAPIView(APIView):
         elif rtype == "abstract":  # FetchSummary
             detail = get_web_abstract(args["user_id"], url)
             return do_result(True, str(detail))
+        elif rtype == 'markdown':
+            title, content = get_url_content(url, format='markdown')
+            return do_result(True, {'title': title, 'content': content})
+        return do_result(False, "Invalid Request")

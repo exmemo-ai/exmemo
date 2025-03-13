@@ -1,6 +1,7 @@
 import { t } from '@/utils/i18n'
 import { TextSplitter } from '../../utils/TextSplitter'
 import SettingService from '../settings/settingService'
+import { ElMessage } from 'element-plus';
 
 export class TextPlayerManager {
     constructor(text, lang = 'zh-CN') {
@@ -14,6 +15,11 @@ export class TextPlayerManager {
         this.utterance = null;
         this.isPlaying = false;
         this.onSpeakCallback = null;
+        
+        this.isSpeechSynthesisSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+        if (!this.isSpeechSynthesisSupported) {
+            console.warn(this.t('player.speechSynthesisNotSupported'));
+        }
     }
 
     getText() {
@@ -22,10 +28,28 @@ export class TextPlayerManager {
     }
 
     setContent(data) {
-        console.log("setText", data);
+        //console.log("setText", data);
         this.paragraphs = [];
         
-        if (typeof(data) === 'string') {
+        if (Array.isArray(data)) {
+            for (const node of data) {
+                if (node.textContent.trim()) {
+                    const sentences = this.textSplitter.splitParagraphIntoSentences(node.textContent);
+                    const paragraph = {
+                        text: node.textContent,
+                        sentences: sentences.map((sentence, index) => ({
+                            text: sentence,
+                            node: node,
+                            globalIndex: this.paragraphs.reduce((acc, para) => acc + para.sentences.length, 0) + index
+                        }))
+                    };
+                    this.paragraphs.push(paragraph);
+                }
+                if (this.paragraphs.length > 500) {
+                    break;
+                }
+            }
+        } else if (typeof(data) === 'string') {
             const paragraphs = data.split('\n');
             for (let i = 0; i < paragraphs.length; i++) {
                 const paragraphText = paragraphs[i];
@@ -53,25 +77,6 @@ export class TextPlayerManager {
             );
             let node = walker.currentNode;
             while (node && node !== startNode) {
-                node = walker.nextNode();
-            }
-            while (node) {
-                const nodeText = node.textContent;
-                if (nodeText.trim()) {
-                    const sentences = this.textSplitter.splitParagraphIntoSentences(nodeText);
-                    const paragraph = {
-                        text: nodeText,
-                        sentences: sentences.map((sentence, index) => ({
-                            text: sentence,
-                            node: node,
-                            globalIndex: this.paragraphs.reduce((acc, para) => acc + para.sentences.length, 0) + index
-                        }))
-                    };
-                    this.paragraphs.push(paragraph);
-                }
-                if (this.paragraphs.length > 500) {
-                    break;
-                }
                 node = walker.nextNode();
             }
         }
@@ -139,11 +144,16 @@ export class TextPlayerManager {
     }
 
     speak(index) {
-        console.log('speak', index);
+        if (!this.isSpeechSynthesisSupported) {
+            ElMessage.warning(this.t('player.speechSynthesisNotSupported'));
+            return;
+        }
+
         const sentence = this.getAllSentences()[index];
         if (sentence) {
             this.currentIndex = index;
             const text = sentence.text;
+            console.log('speak', index, text);
             
             if (this.containsOnlyPunctuation(text)) {
                 console.log('Skipping punctuation-only sentence:', text);

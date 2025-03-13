@@ -89,7 +89,8 @@ class EntryFeatureTool:
         elif dic["etype"] == "note":
             if dic["title"] is None:
                 filename = os.path.basename(content)
-                dic["title"] = os.path.splitext(filename)[0]
+                #dic["title"] = os.path.splitext(filename)[0]
+                dic["title"] = filename
             if dic["ctype"] is None:
                 if user.get("note_get_category") == False and force == False:
                     dic["ctype"] = DEFAULT_CATEGORY

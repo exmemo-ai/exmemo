@@ -29,10 +29,8 @@ class ListSerializer(serializers.ModelSerializer):
 class DetailSerializer(serializers.ModelSerializer):
     updated_time = serializers.DateTimeField(format="%Y-%m-%d")
     created_time = serializers.DateTimeField(format="%Y-%m-%d")
+    meta = serializers.JSONField(required=False)
 
     class Meta:
         model = StoreEntry
         fields = '__all__'
-
-    #def get_type(self, obj):
-    #    return obj.get_type_display()

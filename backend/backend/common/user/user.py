@@ -48,6 +48,7 @@ class UserSettings:
     llm_chat_memory_count: int = DEFAULT_CHAT_LLM_MEMORY_COUNT
     llm_chat_max_context_count: int = DEFAULT_CHAT_MAX_CONTEXT_COUNT
     learn_word_voc: str = "BASE"
+    default_vault: str = _("default")
     batch_use_llm: bool = False
     bookmark_download_web: bool = False
     web_save_content: bool = False
@@ -62,6 +63,7 @@ class UserSettings:
     truncate_content: bool = True
     truncate_max_length: int = DEFAULT_TRUNCATE_MAX_LENGTH
     truncate_mode: str = DEFAULT_TRUNCATE_MODE
+    first_use_prompt: bool = True
 
     def get_json(self):
         return asdict(self)

@@ -1,99 +1,179 @@
 <template>
-    <el-container class="app-container">
-        <el-header class="fixed-header" height="auto" style="padding: 0;">
+    <div class="app-container">
+        <div ref="navbar" class="header">
             <el-container class="nav-container">
                 <div class="top-row-view">
                     <div class="title-container">
                         <img :src="logo" class="nav-avatar" />
                         <h3 class="title">{{ appName }}</h3>
-                    </div>
-                </div>
-                <div>
-                    <div class="user-controls" style="margin-bottom: 5px">
-                        <div class="button-container-flex">
-                            <el-button-group class="basic-buttons" style="margin-right: 5px;">
-                                <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll') }}</el-button>
-                                <el-button size="small" type="primary" @click="copyContent">{{ t('copySelected') }}</el-button>
-                                <el-button size="small" type="primary" @click="addBookmark">{{ t('viewMarkdown.addBookmark') }}</el-button>
-                                <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{ t('viewMarkdown.openWeb') }}</el-button>
-                                <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{ t('viewMarkdown.downloadFile') }}</el-button>
-                                <el-button size="small" type="primary" @click="setPlayer">
-                                    {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
-                                </el-button>
-                            </el-button-group>
-                            <el-button-group class="highlight-buttons" style="margin-right: 5px;">
-                                <el-button size="small" type="primary" @click="highlightText">
-                                    {{ isHighlightMode ? t('viewMarkdown.stopHighlight') : t('viewMarkdown.startHighlight') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="clearHighlight" :disabled="!isHighlightMode">
-                                    {{ t('viewMarkdown.clearHighlight') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="copyHighlight" :disabled="!isHighlightMode">
-                                    {{ t('viewMarkdown.copyHighlight') }}
-                                </el-button>
-                                <el-button size="small" type="primary" @click="saveHighLight" :disabled="!isHighlightMode || savedRanges.value?.length === 0">
-                                    {{ t('viewMarkdown.saveHighlight') }}
-                                </el-button>
-                            </el-button-group>
+                        <div class="title-filename-container" v-if="currentFileName">
+                            {{ currentFileName }}
                         </div>
+                    </div>
+                    <div class="nav-right">
+                        <el-button size="small" type="primary" circle @click="showAIDialog">
+                            {{ t('viewMarkdown.ai') }}
+                        </el-button>
                     </div>
                 </div>
             </el-container>
-        </el-header>
-        <div class="preview-container preview-with-fixed-header" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp" @contextmenu.prevent>
-            <MdPreview :id="previewId" :modelValue="markdownContent" ref="mdPreview" />
         </div>
-        
-        <div v-if="showPlayer" class="player-footer">
-            <TextSpeakerPlayer
-                :text="selectedText"
-                :lang="getLocale()"
-                :getContentCallback="getContent"
-                ref="speakerPlayer"
-                @onSpeak="handleSpeak"
-            />
+        <div class="main-content" :class="viewMode">
+            <div class="preview-container-out">
+                <div class="editor-toolbar">
+                    <div class="button-container-flex">
+                        <el-button-group class="basic-buttons" style="margin-right: 5px;">
+                            <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll')
+                            }}</el-button>
+                            <el-button size="small" type="primary" @click="copyContent">{{ t('copy')
+                            }}</el-button>
+                            <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{
+                                t('viewMarkdown.openWeb') }}</el-button>
+                            <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{
+                                t('viewMarkdown.downloadFile') }}</el-button>
+                            <!--
+                            <el-button size="small" type="primary" @click="setPlayer">
+                                {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
+                            </el-button>
+                            -->
+                        </el-button-group>
+
+                        <el-dropdown trigger="click">
+                            <el-button size="small" type="primary">
+                                {{ t('viewMarkdown.highlight') }}
+                                <el-icon class="el-icon--right">
+                                    <arrow-down />
+                                </el-icon>
+                            </el-button>
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item @click="highlightText" :class="{ 'is-active': isHighlightMode }">
+                                        {{ isHighlightMode ? t('viewMarkdown.stopHighlight') :
+                                        t('viewMarkdown.showHighlight') }}
+                                    </el-dropdown-item>
+                                    <el-dropdown-item @click="copyHighlight" :disabled="!isHighlightMode">
+                                        {{ t('viewMarkdown.copyHighlight') }}
+                                    </el-dropdown-item>
+                                    <el-dropdown-item @click="clearHighlight" :disabled="!isHighlightMode">
+                                        {{ t('viewMarkdown.clearHighlight') }}
+                                    </el-dropdown-item>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+
+                        <div style="margin-left: auto; margin-right: 5px;">
+                            <el-button size="small" class="zoomButton" circle @click="decreaseFontSize">
+                                <el-icon><FontSmallIcon /></el-icon>
+                            </el-button>
+                            <el-button size="small" class="zoomButton" circle @click="increaseFontSize">
+                                <el-icon><FontLargeIcon /></el-icon>
+                            </el-button>
+                        </div>
+                        <el-checkbox v-model="showNote" size="small">
+                            {{ t('note') }}
+                        </el-checkbox>
+                        <div class="progress-text">{{ readingProgress }}%</div>
+                    </div>
+                </div>
+                <div class="preview-container">
+                    <div class="catalog-control" @click="toggleCatalog">
+                        <el-icon :class="{ 'is-active': showCatalog }">
+                            <Expand v-if="!showCatalog" />
+                            <Fold v-else />
+                        </el-icon>
+                    </div>
+
+                    <div v-show="showCatalog" class="catalog-container">
+                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview-wrapper'" class="md-catalog" />
+                    </div>
+                    <div class="content-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp"
+                        @contextmenu.prevent">
+                        <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
+                            :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
+                    </div>
+                </div>
+            </div>
+            <div v-show="viewMode === 'content-note'" class="editor-container">
+                <div class="editor-toolbar">
+                    <el-button-group>
+                        <el-button size="small" type="primary" @click="selectedToNote">{{
+                            t('viewMarkdown.insertSelected') }}</el-button>
+                        <!--
+                        <el-button size="small" type="primary" @click="highlightToNote">{{
+                            t('viewMarkdown.insertHighlight') }}</el-button>
+                            -->
+                        <el-button size="small" type="primary" @click="allToNote">{{ t('viewMarkdown.insertAll')
+                        }}</el-button>
+                        <el-button size="small" type="primary" @click="saveAsNote">{{ t('viewMarkdown.saveAsNote')
+                        }}</el-button>
+                    </el-button-group>
+                </div>
+                <ViewNote ref="viewNote" :form="form" @note-change="handleNoteChange" />
+            </div>
         </div>
-    </el-container>
+
+        <TextSpeakPlayer :text="selectedText" :lang="getLocale()" :getContentCallback="getContent" ref="txtPlayer"
+            @onSpeak="handleSpeak" />
+        <AIDialog v-model="aiDialogVisible" 
+            :full-content="markdownContent" 
+            :selected-content="getSelectedContent()"
+            :screen-content="getScreenContent()"
+            :etype="etype"
+            @insert-note="handleInsertAIAnswer" />
+    </div>
 </template>
 
 <script setup>
-import 'md-editor-v3/lib/preview.css'
-import axios from 'axios';
+import 'md-editor-v3/lib/preview.css';
+import 'md-editor-v3/lib/style.css';
+import '@/assets/styles/markdown-view.css'
 import logo from '@/assets/images/logo.png'
-import { setDefaultAuthHeader,getURL,parseBackendError } from '@/components/support/conn'
-import { getLocale } from '@/main.js' 
+import { getLocale } from '@/main.js'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { MdPreview } from 'md-editor-v3'
-import { saveEntry, downloadFile } from './dataUtils';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
+import { MdPreview, MdCatalog } from 'md-editor-v3'
+import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
-import '@/assets/styles/markdown-view.css'
-import TextSpeakerPlayer from '@/components/manager/TextPlayer.vue'
+import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
+import { Expand, Fold, ArrowDown, Plus, Remove } from '@element-plus/icons-vue'
+import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
+import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
+import ViewNote from '@/components/manager/ViewNote.vue'
+import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
+import AIDialog from '@/components/ai/AIDialog.vue'
+import axios from 'axios';
+import { getURL, parseBackendError } from '@/components/support/conn'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
 const markdownContent = ref(t('loading'))
-const previewId = 'preview-content'
+const previewId = 'preview-content-' + Date.now()
 const route = useRoute()
 const content = ref(null)
 const form = ref({})
 const highlightManager = ref(null)
-const showPlayer = ref(true)
-const speakerPlayer = ref(null)
+const txtPlayer = ref(null)
 const selectedText = ref('')
 const mdPreview = ref(null)
+const etype = "view"
 
-const currentHighlight = ref(null)
+const metaChanged = ref(false)
+const viewNote = ref(null)
+const saveTimer = ref(null)
+
+const fontSize = ref(16)
 
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
+    metaChanged.value = true
+    scheduleSave()
 }
 
 const copyHighlight = () => {
     if (!highlightManager.value) return
-    
+
     let text = highlightManager.value.getHighlightedText().join('\n')
     text = text + "\n"
     text = text + "\n" + t('title') + ": " + form.value.title
@@ -134,30 +214,63 @@ const fallbackCopyTextToClipboard = (text) => {
 }
 
 const fetchContent = async (idx) => {
-    let table_name = 'data'
-    setDefaultAuthHeader();
+    const result = await fetchItem(idx);
+    if (result.success) {
+        form.value = { ...result.data };
+        resetContent();
+    }
+}
+
+const fetchWeb = async (url) => {
+    const formData = new FormData();
+    formData.append('content', url); 
+    formData.append('rtype', 'markdown');
     try {
-        const response = await axios.get(getURL() + 'api/entry/' + table_name + '/' + idx + '/');
-        form.value = { ...response.data };
-        if ('content' in response.data && response.data.content !== null) {
-            markdownContent.value = response.data.content;
-            setTimeout(() => {
-                if (form.value.meta?.bookmark?.position) {
-                    window.scrollTo({
-                        top: form.value.meta.bookmark.position,
-                        behavior: 'smooth'
-                    });
+        const res = await axios.post(getURL() + 'api/web/', formData);
+        if (res.data.status === 'success') {
+            ElMessage.info(t('paste.openClipboardContent'));
+            form.value = {
+                content: res.data.content,
+                title: res.data.title,
+                addr: url,
+                etype: 'web'
+            };
+            resetContent();
+        }
+    } catch (err) {
+        parseBackendError(null, err);
+        markdownContent.value = t('fetchFailed');
+    }
+}
+
+const resetContent = async () => {
+    if ('content' in form.value && form.value.content !== null) {
+        let content = form.value.content;
+        if (form.value.etype === 'note') {
+            content = content.replace(/^---\n[\s\S]*?\n---\n/, '');
+        }
+        markdownContent.value = content;
+        await nextTick();
+        viewNote.value?.loadNote();
+        loadHighlight();
+        setTimeout(() => {
+            if (form.value.meta?.bookmark?.position) {
+                const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
+                if (mdPreviewContent) {
+                    const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight;
+                    mdPreviewContent.scrollTop = form.value.meta.bookmark.position * scrollHeight / 100;
                 }
-            }, 100);
-        } else {
-            markdownContent.value = t('notSupport');
-        }
-    } catch (error) {
-        if (error.response && error.response.status === 401) {
-            parseBackendError(null, error);
-        } else {
-            ElMessage.error(t('fetchError'));
-        }
+            }
+        }, 100);
+    } else {
+        markdownContent.value = t('notSupport');
+    }
+    viewMode.value = 'content';
+    console.log("viewMode", viewMode.value, form.value.etype);
+    await nextTick()
+    if (form.value.meta?.fontSize) {
+        fontSize.value = form.value.meta.fontSize
+        updatePreviewFontSize()
     }
 }
 
@@ -202,124 +315,33 @@ const copyContent = () => {
     }
 }
 
-const addBookmark = async () => {
-    const scrollPosition = window.scrollY || window.pageYOffset
-
-    if (!form.value.meta) {
-        form.value.meta = {}
-    }
-    
-    if (typeof form.value.meta === 'string') {
-        try {
-            form.value.meta = JSON.parse(form.value.meta)
-        } catch (error) {
-            console.error('Failed to parse meta:', error)
-            form.value.meta = {}
-        }
-    }
-    
-    form.value.meta.bookmark = {
-        position: scrollPosition,
-        timestamp: new Date().toISOString()
-    }
-
-    try {
-        const result = await saveEntry({
-            parentObj: null,
-            form: form.value,
-            file: null,
-            onProgress: null
-        })
-        if (result) {
-            ElMessage.success(t('viewMarkdown.addBookmarkSuccess'))
-        }
-    } catch (error) {
-        console.error(t('viewMarkdown.addBookmarkFail'), error)
-        ElMessage.error(t('viewMarkdown.addBookmarkFail'))
-    }
-}
-
-const setPlayer = () => {
-    try {
-        if (showPlayer.value) {
-            if (speakerPlayer.value) {
-                speakerPlayer.value.stop();
-            }
-            showPlayer.value = false;
-            return;
-        }
-        showPlayer.value = true;
-    } catch (error) {
-        console.error('TTS error:', error);
-        ElMessage.error(t('speakError') + error);
-    }
-}
-
 const isHighlightMode = computed(() => highlightManager.value?.isHighlightMode || false)
-const savedRanges = computed(() => highlightManager.value?.savedRanges || [])
 
 const highlightText = () => {
     if (!highlightManager.value) return
-    
+
     const newMode = highlightManager.value.toggleHighlightMode()
     ElMessage.success(newMode ? t('viewMarkdown.highlightModeOn') : t('viewMarkdown.highlightModeOff'))
-    if (newMode) {
-        loadHighlight()
-    }
+    loadHighlight();
 }
 
 const highlightSelection = () => {
     highlightManager.value?.handleSelection()
-}
-
-const saveHighLight = async () => {
-    if (!highlightManager.value?.hasHighlights()) {
-        ElMessage.warning(t('noHighlightToSave'))
-        return
-    }
-
-    if (!form.value.meta) {
-        form.value.meta = {}
-    }
-    
-    if (typeof form.value.meta === 'string') {
-        try {
-            form.value.meta = JSON.parse(form.value.meta)
-        } catch (error) {
-            console.error('Failed to parse meta:', error)
-            form.value.meta = {}
-        }
-    }
-    
-    const serializableHighlights = highlightManager.value.getSerializableHighlights()
-    form.value.meta.highlights = JSON.stringify(serializableHighlights)
-
-    try {
-        const result = await saveEntry({
-            parentObj: null,
-            form: form.value,
-            file: null,
-            onProgress: null
-        })
-        
-        if (result) {
-            console.log('saveHighlightSuccess')
-        }
-    } catch (error) {
-        console.error(t('saveHighlightFail'), error)
-        ElMessage.error(t('saveHighlightFail'))
-    }
+    metaChanged.value = true
+    scheduleSave()
 }
 
 const handleMouseUp = (event) => {
-    const isPlaying = speakerPlayer.value?.getStatus().isPlaying || false
+    const isPlaying = txtPlayer.value?.getStatus().isPlaying || false
     if (isPlaying) {
         const selection = window.getSelection()
-        const node = selection.anchorNode
-        if (node && speakerPlayer.value) {
-            speakerPlayer.value.stop()
-            speakerPlayer.value.setContent(node)
-            speakerPlayer.value.resume()
+        const startNode = selection.anchorNode
+        if (startNode && txtPlayer.value) {
+            const previewElement = document.querySelector('.md-editor-preview');
+            const nodeList = getVisibleNodeList(previewElement, startNode)
+            txtPlayer.value.stop()
+            txtPlayer.value.setContent(nodeList)
+            txtPlayer.value.resume()
         }
         return
     }
@@ -327,136 +349,318 @@ const handleMouseUp = (event) => {
 }
 
 const getContent = () => {
-    const selection = window.getSelection()
-    const text = selection.toString().trim()
-    const previewElement = document.getElementById(previewId)
-    
-    if (text && text.length > 0 && previewElement) {
-        const range = selection.getRangeAt(0)
-        return range.startContainer
+    const previewElement = document.querySelector('.md-editor-preview');
+    const selectedNodeList = getSelectedNodeList(previewElement);
+    if (selectedNodeList.length > 0) {
+        return selectedNodeList;
     }
-    
-    if (previewElement) {
-        const viewportTop = window.scrollY
-        const walker = document.createTreeWalker(
-            previewElement,
-            NodeFilter.SHOW_TEXT,
-            null
-        )
-        
-        let node
-        let bestNode = null
-        let bestDistance = Infinity
-        
-        while (node = walker.nextNode()) {
-            const range = document.createRange()
-            range.selectNode(node)
-            const rect = range.getBoundingClientRect()
-            
-            const absoluteTop = rect.top + window.scrollY
-            const isVisible = getComputedStyle(node.parentElement).display !== 'none' && 
-                            rect.height > 0 &&
-                            node.textContent.trim().length > 0
-            
-            if (isVisible) {
-                const distanceToTop = Math.abs(absoluteTop - viewportTop)
-                if (distanceToTop < bestDistance && absoluteTop >= viewportTop) {
-                    bestDistance = distanceToTop
-                    bestNode = node
-                }
-            }
-        }
-        
-        return bestNode
-    }
-    return null
+    return getVisibleNodeList(previewElement);
 }
 
 const handleSpeak = (text, index, node) => {
-    if (currentHighlight.value) {
-        currentHighlight.value.style.backgroundColor = ''
-    }
+    const previewElement = document.getElementById(previewId)
+    setHighlight(text, index, node, previewElement)
+}
 
-    if (index === -1) {
-        return
-    }
-
-    if (!node) {
-        const previewElement = document.getElementById(previewId)
-        if (previewElement) {
-            const walker = document.createTreeWalker(
-                previewElement,
-                NodeFilter.SHOW_TEXT,
-                null
-            )
-            let foundNode
-            while (foundNode = walker.nextNode()) {
-                if (foundNode.textContent.includes(text)) {
-                    node = foundNode
-                    break
-                }
-            }
-        }
-    }
-    
-    if (node?.parentElement) {
-        node.parentElement.style.backgroundColor = '#fffacd'
-        currentHighlight.value = node.parentElement
-        
-        const rect = node.parentElement.getBoundingClientRect()
-        const isVisible = (
-            rect.top >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-        )
-        
-        if (!isVisible) {
-            node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-    }
+const handleResize = () => {
+    const visualHeight = window.innerHeight;
+    document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
 }
 
 onBeforeUnmount(() => {
-    if (currentHighlight.value) {
-        currentHighlight.value.style.backgroundColor = ''
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.removeEventListener('resize', handleResize);
+})
+
+const previewScrollElement = ref(null)
+
+onMounted(() => {
+    if (route.query.idx) {
+        fetchContent(route.query.idx)
+    } else if (route.query.url) {
+        fetchWeb(route.query.url)
+    } else {
+        markdownContent.value = t('notSupport')
+    }
+    highlightManager.value = new HighlightManager(content.value)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    nextTick(() => {
+        previewScrollElement.value = document.querySelector('.md-editor-preview')
+    })
+})
+
+const handleBeforeUnload = async (e) => {
+    if (saveTimer.value) {
+        clearTimeout(saveTimer.value)
+    }
+    await saveMeta(true)
+    e.preventDefault()
+    e.returnValue = ''
+}
+
+const viewMode = computed(() => showNote.value ? 'content-note' : 'content')
+const showNote = ref(false)
+
+const saveMeta = async (force) => {
+    console.log('real saveMeta')
+    if (!form.value.idx) return
+    await nextTick();
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
+    let scrollPosition = 0;
+    if (mdPreviewContent) {
+        const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight;
+        scrollPosition = Math.round((mdPreviewContent.scrollTop / scrollHeight) * 1000) / 10;
+    }
+
+    if (force == false && !metaChanged.value) return
+
+    if (!form.value.meta || form.value.meta === 'null') {
+        form.value.meta = {}
+    }
+
+    if (typeof form.value.meta === 'string') {
+        try {
+            form.value.meta = JSON.parse(form.value.meta)
+        } catch (error) {
+            console.error('Failed to parse meta:', error)
+            form.value.meta = {}
+        }
+    }
+
+    if (metaChanged.value && highlightManager.value?.hasHighlights()) {
+        const serializableHighlights = highlightManager.value.getSerializableHighlights()
+        form.value.meta.highlights = JSON.stringify(serializableHighlights)
+    }
+
+    form.value.meta.bookmark = {
+        position: scrollPosition,
+        timestamp: new Date().toISOString()
+    }
+
+    form.value.meta.note = viewNote.value.editContent
+    form.value.meta.fontSize = fontSize.value
+
+    console.log('@@@@@', form.value.meta)
+    try {
+        const result = await saveEntry({
+            parentObj: null,
+            form: form.value,
+            path: null,
+            file: null,
+            onProgress: null,
+            showMessage: false
+        })
+
+        if (result) {
+            metaChanged.value = false
+            console.log('saveSuccess')
+        }
+    } catch (error) {
+        console.error(t('saveFail'), error)
+        ElMessage.error(t('saveFail'))
+    }
+}
+
+const scheduleSave = () => {
+    console.log('scheduleSave, wait 30')
+    if (saveTimer.value) {
+        clearTimeout(saveTimer.value)
+    }
+    saveTimer.value = setTimeout(async () => {
+        await saveMeta(false)
+        saveTimer.value = null
+    }, 30000) // 30s
+}
+
+const highlightToNote = () => {
+    if (!highlightManager.value) return
+    let text = highlightManager.value.getHighlightedText().join('\n')
+    text = text + "\n\n"
+    viewNote.value.editContent = viewNote.value.editContent + text
+};
+
+const selectedToNote = () => {
+    const selection = window.getSelection()
+    let text = selection.toString()
+    text = text.trim()
+    text = text.split('\n').map(line => '> ' + line).join('\n')
+    text = t('viewMarkdown.estreat') + ": " + readingProgress.value + "%" + "\n" + text + "\n\n"
+    let content = viewNote.value.editContent.trim()
+    if (content.length > 0) {
+        content = content + "\n\n" + text
+    } else {
+        content = text
+    }
+    viewNote.value.editContent = content
+};
+
+const allToNote = () => {
+    viewNote.value.editContent = markdownContent.value
+};
+
+const saveAsNote = () => {
+    viewNote.value.saveAsNote();
+};
+
+const aiDialogVisible = ref(false)
+
+const showAIDialog = () => {
+    aiDialogVisible.value = true
+}
+
+const getSelectedContent = () => {
+    const selection = window.getSelection()
+    return selection.toString()
+}
+
+const getScreenContent = () => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview) return ''
+
+    const previewWrapper = preview.closest('.md-editor-preview-wrapper')
+    if (!previewWrapper) return ''
+
+    const walker = document.createTreeWalker(
+        preview,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: (node) => {
+                if (node.textContent?.trim() === '') {
+                    return NodeFilter.FILTER_REJECT
+                }
+                return NodeFilter.FILTER_ACCEPT
+            }
+        }
+    )
+
+    let visibleText = ''
+    let node
+    while (node = walker.nextNode()) {
+        const range = document.createRange()
+        range.selectNodeContents(node)
+        const rect = range.getBoundingClientRect()
+        const elementTop = rect.top
+        const elementBottom = rect.bottom
+        const wrapperRect = previewWrapper.getBoundingClientRect()
+        
+        if (elementBottom > wrapperRect.top && elementTop < wrapperRect.bottom) {
+            visibleText += node.textContent.trim() + '\n'
+        }
+    }
+    return visibleText.trim()
+}
+
+const handleInsertAIAnswer = (text) => {
+    if (!text) return
+    text = text + "\n\n"
+    viewNote.value.editContent = viewNote.value.editContent + text
+    ElMessage.success(t('viewMarkdown.insertSuccess'))
+}
+
+const showCatalog = ref(false)
+
+const toggleCatalog = () => {
+    showCatalog.value = !showCatalog.value
+}
+
+const readingProgress = ref(0)
+
+const updateReadingProgress = () => {
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
+    if (!mdPreviewContent) return
+
+    const scrollPosition = mdPreviewContent.scrollTop
+    const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight
+    const progress = Math.round((scrollPosition / scrollHeight) * 1000) / 10
+    readingProgress.value = Math.min(100, Math.max(0, progress))
+    metaChanged.value = true
+    scheduleSave() // save bookmark
+}
+
+onMounted(() => {
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
+    if (mdPreviewContent) {
+        mdPreviewContent.addEventListener('scroll', updateReadingProgress)
     }
 })
 
-onMounted(() => {
-    fetchContent(route.query.idx)
-    highlightManager.value = new HighlightManager(content.value)
+onBeforeUnmount(() => {
+    const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
+    if (mdPreviewContent) {
+        mdPreviewContent.removeEventListener('scroll', updateReadingProgress)
+    }
 })
+
+const currentFileName = computed(() => {
+    if (form.value && form.value.title) {
+        return form.value.title.split('/').pop();
+    }
+    return '';
+});
+
+const handleNoteChange = async () => {
+    metaChanged.value = true
+    scheduleSave()
+}
+
+const increaseFontSize = () => {
+    fontSize.value = Math.min(fontSize.value + 2, 32)
+    updatePreviewFontSize()
+    metaChanged.value = true
+    scheduleSave()
+}
+
+const decreaseFontSize = () => {
+    fontSize.value = Math.max(fontSize.value - 2, 12)
+    updatePreviewFontSize()
+    metaChanged.value = true
+    scheduleSave()
+}
+
+const updatePreviewFontSize = () => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (preview) {
+        preview.style.fontSize = `${fontSize.value}px`
+    }
+    metaChanged.value = true
+    scheduleSave()
+}
 </script>
 
 <style scoped>
-.fixed-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/*为知为啥，只能写这里*/
+:deep(.md-editor-preview) {
+    height: auto;
+    overflow-y: auto !important;
+    padding: 10px 20px;
+    max-width: 960px;
+    margin: 0 auto;
+    font-size: v-bind('fontSize + "px"');
 }
 
-.preview-with-fixed-header {
-    margin-top: 80px;
-    padding-bottom: 50px !important;
-}
-
-.player-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+:deep(.md-editor-preview-wrapper) {
     padding: 0px;
-    z-index: 1000;
 }
 
-@media screen and (max-width: 768px) {
-    .preview-with-fixed-header {
-        margin-top: 110px;
-    }
+:deep(.md-editor-catalog) {
+    border: none !important;
+    height: 100% !important;
 }
+
+:deep(.md-editor-catalog-title) {
+    padding: 10px !important;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+:deep(.md-editor-catalog-list) {
+    padding: 10px !important;
+}
+
+:deep(.el-dropdown-menu__item.is-active) {
+    color: #409EFF;
+    font-weight: bold;
+}
+
 </style>

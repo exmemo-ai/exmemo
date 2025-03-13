@@ -31,6 +31,12 @@ body {
     width: 100%; 
 }
 
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(var(--mainHeight, 100vh)) !important;
+}
+
 .top-row {
     display: flex;
     justify-content: space-between;
@@ -169,11 +175,6 @@ body {
         flex-direction: column;
     }
 
-    .translate-common-style {
-        flex-direction: column;
-        padding: 0px;
-    }    
-
     .nav-container {
         padding-left: 5px;
         padding-right: 5px;
@@ -276,6 +277,7 @@ transition: none !important;
     justify-content: space-between;
     align-items: flex-start;
     padding: 0px;
+    margin-top: 10px;
 }
 
 .translate-word-display {
@@ -293,6 +295,11 @@ transition: none !important;
     flex-direction: column;
     align-items: flex-end;
     margin-left: auto;
+    gap: 5px;
+}
+
+.translate-buttons button {
+    width: 100%;
 }
 
 .translate-header {
@@ -338,4 +345,13 @@ button {
 
 .settings-section-content {
     padding: 10px;
+}
+
+.title-filename-container {
+    margin-left: 10px;
+    color: #666;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

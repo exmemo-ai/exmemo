@@ -141,13 +141,13 @@ class SettingAPIView(APIView):
         settings = {}
         req_params = {**request.GET.dict(), **request.POST.dict()}
         
-        #logger.error(f"params {req_params}")
+        logger.info(f"params {req_params}")
         basic_settings = [
             'tts_engine', 'tts_voice', 'tts_language', 'tts_speed',
             'llm_chat_prompt', 'llm_chat_show_count',
             'llm_chat_max_context_count', 'llm_chat_memory_count',
             'truncate_max_length', 'truncate_mode',
-            'learn_word_voc'
+            'learn_word_voc', 'default_vault'
         ]
         
         boolean_settings = [
@@ -155,7 +155,7 @@ class SettingAPIView(APIView):
             'web_save_content', 'web_get_category', 'web_get_abstract',
             'file_save_content', 'file_get_category', 'file_get_abstract',
             'note_save_content', 'note_get_category', 'note_get_abstract',
-            'truncate_content'
+            'truncate_content', 'first_use_prompt'
         ]
 
         # basic format
