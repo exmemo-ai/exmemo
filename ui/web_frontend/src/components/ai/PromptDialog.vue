@@ -2,7 +2,7 @@
     <el-dialog
         :title="isEdit ? $t('edit') : $t('add')"
         v-model="dialogVisible"
-        width="500px"
+        :width="dialogWidth"
         @close="handleClose"
     >
         <el-form :model="formData" :rules="rules" ref="promptForm">
@@ -95,7 +95,16 @@ export default {
                 value: type,
                 label: this.$t(`${type}`)
             }))
+        },
+        dialogWidth() {
+            return window.innerWidth <= 768 ? '80%' : '60%'
         }
+    },
+    mounted() {
+        window.addEventListener('resize', this.handleResize)
+    },
+    beforeUnmount() {
+        window.removeEventListener('resize', this.handleResize)
     },
     watch: {
         visible(val) {
@@ -148,7 +157,21 @@ export default {
                 await axios.post(getURL() + 'api/ai/prompt/', this.formData)
             }
             ElMessage.success(this.$t('operationSuccess'))
+        },
+        handleResize() {
+            this.$forceUpdate()
         }
     }
 }
 </script>
+
+<style scoped>
+:deep(.el-dialog) {
+    @media screen and (max-width: 768px) {
+        width: 80% !important;
+    }
+    @media screen and (min-width: 769px) {
+        width: 60% !important;
+    }
+}
+</style>

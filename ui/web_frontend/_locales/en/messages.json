@@ -216,7 +216,8 @@
         "pastePlaceholder": "Please paste/input URL",
         "contentEmpty": "Content is empty",
         "notSupport": "Clipboard not supported",
-        "permissionDenied": "Clipboard permission denied"
+        "permissionDenied": "Clipboard permission denied",
+        "contentNotSupport": "Content not supported"
     },    
     "opt": {
         "vault": "Vault",
@@ -352,7 +353,8 @@
         "insertSuccess": "Inserted to note",
         "ai": "AI",
         "estreat": "Estreat",
-        "userDefine": "User define"
+        "userDefine": "User define",
+        "pleasePreview": "Please preview first"
     },
     "settings": {
         "bookmark": "Bookmark",
@@ -405,26 +407,7 @@
         "warning": "Warning",
         "textLengthWarning": "Text length exceeds limit {length}, please reduce the text length",
         "usePartial": "Use partial",
-        "referenceIsNull": "Reference is empty",
-        "commonQuestions": {
-            "translate": "Translate",
-            "polish": "Polish",
-            "correct": "Correct",
-            "summary": "Summary",
-            "conclusion": "Conclusion",
-            "abstract": "Abstract",
-            "generate": "Generate",
-            "outline": "Outline",
-            "styleWechat": "WeChat",
-            "styleXiaohongshu": "Rednote",
-            "styleTechnical": "Technical",
-            "styleConcise": "Concise",
-            "styleElegant": "Elegant",
-            "styleEmotional": "Emotional",
-            "styleObjective": "Objective",
-            "style": "Style",
-            "makeTitle": "Make title"
-        }
+        "referenceIsNull": "Reference is empty"
     },    
     "bookmarkManager": "Bookmark",
     "bookmarkTree": "Bookmark directory",

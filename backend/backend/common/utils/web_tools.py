@@ -349,7 +349,8 @@ def get_html_content(path, format):
                             markdown_dic = {}
                             for k, v in visited_dic.items():
                                 str1 = v # h.handle(v) if isinstance(v, str) else v # 会去掉需要的换行
-                                str1 = str1.replace('\n\n\n', '\n\n')
+                                str1 = str1.replace('\n\n\n', '\n')
+                                str1 = str1.replace('\n', '\n\n')
                                 markdown_dic[k] = str1
                             ret.update(markdown_dic)
                         else:

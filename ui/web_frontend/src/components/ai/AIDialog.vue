@@ -9,13 +9,13 @@
             <div class="dialog-header">
                 <span class="dialog-title">{{ t('ai.title') }}</span>
                 <div class="prompt-actions">
-                    <el-button type="primary" size="small" @click="handleAddPrompt">
+                    <el-button size="small" @click="handleAddPrompt">
                         <el-icon><Plus /></el-icon>
                     </el-button>
-                    <el-button type="primary" size="small" @click="handleSavePrompt" :disabled="!prompt">
+                    <el-button size="small" @click="handleSavePrompt" :disabled="!prompt">
                         <el-icon><SaveIcon /></el-icon>
                     </el-button>
-                    <el-button type="primary" size="small" @click="handleManagePrompts">
+                    <el-button size="small" @click="handleManagePrompts">
                         <el-icon><ListIcon /></el-icon>
                     </el-button>
                 </div>
@@ -58,7 +58,7 @@
         </div>
     </el-dialog>
 
-    <el-dialog v-model="confirmDialogVisible" :title="t('ai.warning')">
+    <el-dialog v-model="confirmDialogVisible" :title="t('ai.warning')" :width="dialogWidth">
         <p>{{ t('ai.textLengthWarning', { length: checkTextLength(pendingContent) }) }}</p>
         <template #footer>
             <span class="dialog-footer">
@@ -127,12 +127,12 @@ const currentPrompt = ref(null)
 const commonQuestions = ref([])
 
 const dialogWidth = computed(() => {
-    return window.innerWidth <= 768 ? '90%' : '60%'
+    return window.innerWidth <= 768 ? '80%' : '60%'
 })
 
 onMounted(() => {
     window.addEventListener('resize', () => {
-        dialogWidth.value = window.innerWidth <= 768 ? '90%' : '60%'
+        dialogWidth.value = window.innerWidth <= 768 ? '80%' : '60%'
     })
 })
 
@@ -206,7 +206,7 @@ const submitQuestion = async (content) => {
         formData.append('content', content)
         formData.append('rtype', 'gpt')
 
-        const response = await axios.post(getURL() + 'api/paper/', formData)
+        const response = await axios.post(getURL() + 'api/ai/qa/', formData)
         
         if (response.data.status === 'success') {
             answer.value = response.data.info
@@ -419,12 +419,13 @@ watch(dialogVisible, (val) => {
 :deep(.el-dialog__body) {
     max-height: calc(80vh - 100px);
     overflow-y: auto;
+    gap: 10px;
 }
 
 .dialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 0px;
 }
 
 :deep(.el-radio) {
@@ -448,11 +449,12 @@ watch(dialogVisible, (val) => {
 
 .prompt-actions {
     display: flex;
-    gap: 2px;
+    gap: 10px;
 }
 
 .prompt-actions .el-button {
     margin: 0px;
+    padding: 0 5px;
 }
 
 </style>

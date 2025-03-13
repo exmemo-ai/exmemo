@@ -30,7 +30,9 @@
                 <el-button @click="showAnswer">{{ $t('trans.showAnswer') }}</el-button>
                 <el-button @click="learned">{{ $t('trans.learned') }}</el-button>
                 <el-button @click="learnMore">{{ $t('trans.learnMore') }}</el-button>
-                <el-button @click="handleAI">{{ $t('trans.aiSupport') }}</el-button>
+                <el-button size="small" type="primary" circle @click="handleAI">
+                    {{ $t('viewMarkdown.ai') }}
+                </el-button>
             </div>
         </div>
     </div>

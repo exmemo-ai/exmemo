@@ -1,22 +1,46 @@
 <template>
     <el-dialog v-model="dialogVisible" :title="$t('edit')" :width="dialogWidth"
         :before-close="handleClose">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
-            <div>
-                <label v-if="form.etype === 'file'"><strong>{{ $t('file') }}</strong></label>
-                <label v-if="form.etype === 'record'"><strong>{{ $t('record') }}</strong></label>
-                <label v-if="form.etype === 'web'"><strong>{{ $t('web') }}</strong></label>
-                <label v-if="form.etype === 'note'"><strong>{{ $t('note') }}</strong></label>
-                <label v-if="form.etype === 'chat'"><strong>{{ $t('chat') }}</strong></label>
+        <template #header>
+            <div class="dialog-header">
+                <div class="dialog-title">
+                    <strong>
+                        <template v-if="form.etype === 'file'">{{ $t('file') }}</template>
+                        <template v-if="form.etype === 'record'">{{ $t('record') }}</template>
+                        <template v-if="form.etype === 'web'">{{ $t('web') }}</template>
+                        <template v-if="form.etype === 'note'">{{ $t('note') }}</template>
+                        <template v-if="form.etype === 'chat'">{{ $t('chat') }}</template>
+                    </strong>
+                </div>
+                <div class="action-buttons">
+                    <el-tooltip :content="$t('save')" placement="top">
+                        <el-button size="small" @click="doSave">
+                            <el-icon><SaveIcon /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip :content="$t('delete')" placement="top">
+                        <el-button size="small" @click="showDeleteConfirmation">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="form.etype !== 'record'" :content="$t('view')" placement="top">
+                        <el-button size="small" @click="viewContent">
+                            <el-icon><View /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="form.etype === 'note'" :content="$t('edit')" placement="top">
+                        <el-button size="small" @click="editNote">
+                            <el-icon><Edit /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="form.etype === 'file'" :content="$t('download')" placement="top">
+                        <el-button size="small" @click="download">
+                            <el-icon><Download /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                </div>
             </div>
-            <el-button-group>
-                <el-button size="small" type="primary" @click="doSave">{{ $t('save') }}</el-button>
-                <el-button size="small" @click="showDeleteConfirmation">{{ $t('delete') }}</el-button>
-                <el-button size="small" v-if="form.etype !== 'record'" @click="viewContent">{{ $t('view') }}</el-button>
-                <el-button size="small" v-if="form.etype === 'note'" @click="editNote">{{ $t('edit') }}</el-button>
-                <el-button size="small" v-if="form.etype === 'file'" @click="download">{{ $t('download') }}</el-button> 
-            </el-button-group>
-        </div>
+        </template>
 
         <div style="display: flex;margin-bottom: 5px;" width="100%">
             <div style="flex: 3;margin-right: 5px;" width="100%">
@@ -72,10 +96,18 @@ import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import DataEditor from './DataEditor.vue'
 import { downloadFile } from './dataUtils'
+import { Delete, Edit, View, Download } from '@element-plus/icons-vue'
+import SaveIcon from '@/components/icons/SaveIcon.vue'
+
 
 export default {
     components: {
-        DataEditor
+        DataEditor,
+        Delete,
+        Edit,
+        View,
+        Download,
+        SaveIcon
     },
     data() {
         return {
@@ -240,3 +272,25 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dialog-title {
+    font-size: 18px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-buttons .el-button {
+    margin: 0;
+    padding: 0 5px;
+}
+</style>

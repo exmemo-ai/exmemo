@@ -4,9 +4,9 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from knox.auth import TokenAuthentication
-from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 from django.utils import timezone
 import json
 import os
@@ -19,6 +19,10 @@ from backend.common.utils.net_tools import do_result
 from backend.common.user.user import UserManager
 from backend.settings import BASE_DATA_DIR
 from backend.settings import LANGUAGE_CODE
+from backend.common.user.utils import parse_common_args
+from backend.common.llm.llm_hub import llm_query
+
+AI_ROLE="You are an AI assistant."
 
 class StorePromptViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -106,3 +110,48 @@ class StorePromptViewSet(viewsets.ModelViewSet):
                 StorePrompt.objects.create(**prompt)
             except Exception as e:
                 logger.warning(f"Error creating prompt {prompt['title']}: {str(e)}")
+
+
+class QAAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Provide interfaces to support the paper analysis page
+        """
+        args = parse_common_args(request)
+        rtype = request.GET.get("rtype", request.POST.get("rtype", None))
+        content = request.GET.get("content", request.POST.get("content", None))
+        logger.debug(f"rtype *{rtype}*")
+
+        if rtype == "gpt":
+            return self.handle_gpt_request(content, args)
+        return do_result(False, _("method_not_supported_colon_") + rtype)
+
+
+    def handle_gpt_request(self, content, args):
+        if content is not None:
+            logger.debug(f"content {content[:20]}")
+        ret, info = self.gpt(args["user_id"], content)
+        if ret:
+            return do_result(True, str(info))
+        else:
+            return do_result(False, str(info))
+
+    def gpt(self, uid, content, debug=False):
+        """
+        Direct question GPT
+        """
+        debug = True
+        if content is None or len(content.strip()) == 0:
+            return False, _("empty_contents")
+        try:
+            if debug:
+                print("req", content)
+            ret, answer, detail = llm_query(
+                uid, AI_ROLE, content[:4096], "ptools", debug=debug
+            )
+            return True, answer
+        except Exception as e:
+            return False, e

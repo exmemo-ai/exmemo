@@ -216,7 +216,8 @@
         "pastePlaceholder": "请输入/粘贴网址",
         "contentEmpty": "内容为空",
         "notSupport": "不支持剪切板",
-        "permissionDenied": "剪切板权限被拒绝"
+        "permissionDenied": "剪切板权限被拒绝",
+        "contentNotSupport": "不支持打开当前内容"
     },
     "opt": {
         "vault": "仓库",
@@ -351,7 +352,8 @@
         "insertSuccess": "已插入到笔记",
         "ai": "AI",
         "estreat": "摘抄",
-        "userDefine": "用户自定义"
+        "userDefine": "用户自定义",
+        "pleasePreview": "请先切换到预览"
     },
     "settings": {
         "bookmark": "书签",
@@ -409,26 +411,7 @@
         "all": "全文",
         "selection": "选中内容",
         "screen": "当前屏幕",
-        "none": "不参考",
-        "commonQuestions": {
-            "translate": "翻译",
-            "polish": "润色",
-            "correct": "纠错",
-            "summary": "总结",
-            "conclusion": "结语",
-            "abstract": "摘要",
-            "generate": "一键成文",
-            "outline": "提纲",
-            "styleWechat": "微信",
-            "styleXiaohongshu": "小红书",
-            "styleTechnical": "技术文",
-            "styleConcise": "简洁",
-            "styleElegant": "优雅",
-            "styleEmotional": "情感",
-            "styleObjective": "客观",
-            "style": "切换风格",
-            "makeTitle": "生成标题"
-        }
+        "none": "不参考"
     },
     "bookmarkManager": "书签",
     "bookmarkTree": "书签目录",

@@ -1,10 +1,12 @@
 <template>
     <div style="display: flex; flex-direction: column;">
-        <el-button-group style="margin-right: 5px; margin-bottom: 10px;">
+        <div style="margin-right: 5px; margin-bottom: 10px;">
             <el-button style="margin-right: 5px;" @click="searchWord">{{ $t('searchWord') }}</el-button>
             <el-button style="margin-right: 5px;" @click="handleSave">{{ $t('saveArticle') }}</el-button>
-            <el-button @click="handleAnalysis">{{ $t('AIQA') }}</el-button>
-        </el-button-group>
+            <el-button size="small" type="primary" circle @click="handleAnalysis">
+                {{ $t('viewMarkdown.ai') }}
+            </el-button>
+        </div>
 
         <div style="display: flex; flex-direction: column;">
             <el-text style="margin: 10px 0;">{{ $t('editArea') }}</el-text>

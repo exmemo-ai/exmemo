@@ -90,7 +90,7 @@ export default {
             prompts: [],
             dialogVisible: false,
             isEdit: false,
-            currentPrompt: null,
+            currentPrompt: {},
             selectedType: '',
             rules: {
                 title: [
@@ -133,7 +133,7 @@ export default {
         },
         handleAdd() {
             this.isEdit = false
-            this.currentPrompt = null
+            this.currentPrompt = {}
             this.dialogVisible = true
         },
         handleEdit(row) {
