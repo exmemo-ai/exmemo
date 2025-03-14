@@ -370,6 +370,10 @@ def get_entry(idx):
         return None
 
 
+def escape_regex(s):
+    special_chars = r'[]()*+?.^$|{}\/'
+    return ''.join('\\' + c if c in special_chars else c for c in s)
+
 def get_entry_list(keywords, query_args, max_count, fields = None):
     query_args["block_id"] = 0
     query_args["is_deleted"] = False
@@ -391,19 +395,22 @@ def get_entry_list(keywords, query_args, max_count, fields = None):
     if keywords is not None and len(keywords) > 0:
         keywords = regular_keyword(keywords)
         keyword_arr = keywords.split(" ")
-        queryset = StoreEntry.objects.filter(addr__iregex=keywords, **query_args).values(*fields)[:max_count]
+        escaped_keywords = escape_regex(keywords)
+        escaped_keyword_arr = [escape_regex(k) for k in keyword_arr]
+        
+        queryset = StoreEntry.objects.filter(addr__iregex=escaped_keywords, **query_args).values(*fields)[:max_count]
 
         if len(queryset) == 0:
             # find by title
             q_obj = Q()
-            for keyword in keyword_arr:
+            for keyword in escaped_keyword_arr:
                 q_obj &= Q(title__iregex=keyword)
             queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[:max_count]
         
         if len(queryset) == 0:
             # find by raw
             q_obj = Q()
-            for keyword in keyword_arr:
+            for keyword in escaped_keyword_arr:
                 q_obj &= Q(raw__iregex=keyword)
             query_args_2 = query_args.copy()
             query_args_2.pop("block_id")
