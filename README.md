@@ -6,6 +6,8 @@ English | [中文简体](./README_cn.md)
 
 ## 1 Introduction
 
+### 1.1 Features
+
 ![](./images/img1.png)
 
 ExMemo is a personal knowledge management tool designed to record and manage various types of information, such as favorite texts, web pages, work documents, images, music, videos, and personal reflections. It can also store specific details like item locations, phone numbers, and addresses. By leveraging automated categorization and naming, ExMemo organizes information systematically, helping users broaden their thinking and uncover hidden connections.
@@ -31,6 +33,10 @@ ExMemo also integrates practical tools like calorie calculators, translators, re
 *Bookmark Manager*
 
 ![](./images/bookmark.png)
+
+### 1.2 Video Tutorials
+
+* [View and Edit Content](https://www.bilibili.com/video/BV1mAQgYVE2S/)
 
 ## 2 Installation
 

@@ -187,6 +187,7 @@ const saveAs = async () => {
     } else {
         vault = form.value.addr.split('/')[0];
         path = form.value.addr.split('/').slice(1).join('/');
+        path = path.replace(/(\.[^.]*)$/, '_copy$1');
     }
     addDialog.value.openDialog(null, {
         etype: 'note',
