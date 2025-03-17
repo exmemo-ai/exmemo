@@ -164,9 +164,9 @@ const fetchContent = async (idx) => {
 const resetContent = async () => {
     if ('content' in form.value && form.value.content !== null) {
         let content = form.value.content;
-        if (form.value.etype === 'note') {
-            content = content.replace(/^---\n[\s\S]*?\n---\n/, '');
-        }
+        //if (form.value.etype === 'note') {
+        //    content = content.replace(/^---\n[\s\S]*?\n---\n/, '');
+        //}
         markdownContent.value = content;
         isContentModified.value = false;
     } else {
