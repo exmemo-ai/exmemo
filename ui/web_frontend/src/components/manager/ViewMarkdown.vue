@@ -47,14 +47,10 @@
                             </el-button>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item @click="highlightText" :class="{ 'is-active': isHighlightMode }">
-                                        {{ isHighlightMode ? t('viewMarkdown.stopHighlight') :
-                                        t('viewMarkdown.showHighlight') }}
-                                    </el-dropdown-item>
-                                    <el-dropdown-item @click="copyHighlight" :disabled="!isHighlightMode">
+                                    <el-dropdown-item @click="copyHighlight">
                                         {{ t('viewMarkdown.copyHighlight') }}
                                     </el-dropdown-item>
-                                    <el-dropdown-item @click="clearHighlight" :disabled="!isHighlightMode">
+                                    <el-dropdown-item @click="clearHighlight">
                                         {{ t('viewMarkdown.clearHighlight') }}
                                     </el-dropdown-item>
                                 </el-dropdown-menu>
@@ -90,6 +86,31 @@
                         @contextmenu.prevent">
                         <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
                             :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
+                        
+                        <div v-show="contextMenuVisible" 
+                             class="context-menu" 
+                             :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
+                            <div class="context-menu-item" @click="handleAddToNote">
+                                {{ t('viewMarkdown.addToNote') }}
+                            </div>
+                            <div class="context-menu-item">
+                                <div class="highlight-color-buttons">
+                                    <div 
+                                        v-for="(color, index) in ['pink', 'blue', 'yellow', 'green', 'purple']" 
+                                        :key="color"
+                                        :class="['highlight-color-button', color]"
+                                        @click.stop="highlightSelection(index)"
+                                    ></div>
+                                    <div 
+                                        class="highlight-action-button"
+                                        @click.stop="handleHighlightAction"
+                                    >
+                                        <el-icon v-if="hasHighlight"><RemoveFilled /></el-icon>
+                                        <el-icon v-else><Close /></el-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -137,7 +158,7 @@ import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { Expand, Fold, ArrowDown, Plus, Remove } from '@element-plus/icons-vue'
+import { Expand, Fold, ArrowDown, RemoveFilled, Close } from '@element-plus/icons-vue'
 import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
@@ -168,7 +189,7 @@ const fontSize = ref(16)
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
     metaChanged.value = true
-    scheduleSave()
+    scheduleSave(5)
 }
 
 const copyHighlight = () => {
@@ -252,7 +273,6 @@ const resetContent = async () => {
         markdownContent.value = content;
         await nextTick();
         viewNote.value?.loadNote();
-        loadHighlight();
         setTimeout(() => {
             if (form.value.meta?.bookmark?.position) {
                 const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
@@ -261,6 +281,7 @@ const resetContent = async () => {
                     mdPreviewContent.scrollTop = form.value.meta.bookmark.position * scrollHeight / 100;
                 }
             }
+            loadHighlight();
         }, 100);
     } else {
         markdownContent.value = t('notSupport');
@@ -315,23 +336,19 @@ const copyContent = () => {
     }
 }
 
-const isHighlightMode = computed(() => highlightManager.value?.isHighlightMode || false)
-
-const highlightText = () => {
-    if (!highlightManager.value) return
-
-    const newMode = highlightManager.value.toggleHighlightMode()
-    ElMessage.success(newMode ? t('viewMarkdown.highlightModeOn') : t('viewMarkdown.highlightModeOff'))
-    loadHighlight();
-}
-
-const highlightSelection = () => {
-    highlightManager.value?.handleSelection()
-    metaChanged.value = true
-    scheduleSave()
+const highlightSelection = (index) => {
+    if (highlightManager.value?.handleSelection(index)) {
+        metaChanged.value = true
+        scheduleSave(5)
+    }
+    contextMenuVisible.value = false
 }
 
 const handleMouseUp = (event) => {
+    if (event.target.classList.contains('highlight-color-button')) {
+        return
+    }
+
     const isPlaying = txtPlayer.value?.getStatus().isPlaying || false
     if (isPlaying) {
         const selection = window.getSelection()
@@ -345,7 +362,45 @@ const handleMouseUp = (event) => {
         }
         return
     }
-    highlightSelection()
+    handleSelectArea(event)
+    event.preventDefault()
+    event.stopPropagation()
+}
+
+const handleSelectArea = (event) => {
+    const selection = window.getSelection()
+    if (!selection || selection.toString().trim() === '') {
+        contextMenuVisible.value = false
+        return
+    }
+
+    const range = selection.getRangeAt(0)
+    const commonAncestor = range.commonAncestorContainer
+    const highlightElement = commonAncestor.nodeType === 3 
+        ? commonAncestor.parentElement?.closest('.custom-highlight')
+        : commonAncestor.querySelector('.custom-highlight')
+    hasHighlight.value = !!highlightElement
+
+    const menuWidth = 160
+    const menuHeight = 88
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+
+    let x = event.clientX
+    let y = event.clientY
+    if (x + menuWidth > viewportWidth) {
+        x = viewportWidth - menuWidth - 10
+    }
+    if (y + menuHeight > viewportHeight) {
+        y = y - menuHeight
+    }
+    x = Math.max(10, x)
+    y = Math.max(10, y)
+
+    contextMenuPosition.value = { x, y }
+    nextTick(() => {
+        contextMenuVisible.value = true
+    })
 }
 
 const getContent = () => {
@@ -388,6 +443,14 @@ onMounted(() => {
     handleResize();
     nextTick(() => {
         previewScrollElement.value = document.querySelector('.md-editor-preview')
+    })
+    document.addEventListener('click', (e) => {
+        const menu = document.querySelector('.context-menu')
+        if (menu && !menu.contains(e.target) && 
+            (Math.abs(e.clientX - contextMenuPosition.value.x) > 10 || 
+             Math.abs(e.clientY - contextMenuPosition.value.y) > 10)) {
+            contextMenuVisible.value = false
+        }
     })
 })
 
@@ -442,7 +505,6 @@ const saveMeta = async (force) => {
     form.value.meta.note = viewNote.value.editContent
     form.value.meta.fontSize = fontSize.value
 
-    console.log('@@@@@', form.value.meta)
     try {
         const result = await saveEntry({
             parentObj: null,
@@ -463,23 +525,16 @@ const saveMeta = async (force) => {
     }
 }
 
-const scheduleSave = () => {
-    console.log('scheduleSave, wait 30')
+const scheduleSave = (timeout) => {
+    console.log('scheduleSave, wait', timeout)
     if (saveTimer.value) {
         clearTimeout(saveTimer.value)
     }
     saveTimer.value = setTimeout(async () => {
         await saveMeta(false)
         saveTimer.value = null
-    }, 30000) // 30s
+    }, timeout * 1000)
 }
-
-const highlightToNote = () => {
-    if (!highlightManager.value) return
-    let text = highlightManager.value.getHighlightedText().join('\n')
-    text = text + "\n\n"
-    viewNote.value.editContent = viewNote.value.editContent + text
-};
 
 const selectedToNote = () => {
     const selection = window.getSelection()
@@ -576,7 +631,7 @@ const updateReadingProgress = () => {
     const progress = Math.round((scrollPosition / scrollHeight) * 1000) / 10
     readingProgress.value = Math.min(100, Math.max(0, progress))
     metaChanged.value = true
-    scheduleSave() // save bookmark
+    scheduleSave(10) // save bookmark
 }
 
 onMounted(() => {
@@ -602,21 +657,17 @@ const currentFileName = computed(() => {
 
 const handleNoteChange = async () => {
     metaChanged.value = true
-    scheduleSave()
+    scheduleSave(30)
 }
 
 const increaseFontSize = () => {
     fontSize.value = Math.min(fontSize.value + 2, 32)
     updatePreviewFontSize()
-    metaChanged.value = true
-    scheduleSave()
 }
 
 const decreaseFontSize = () => {
     fontSize.value = Math.max(fontSize.value - 2, 12)
     updatePreviewFontSize()
-    metaChanged.value = true
-    scheduleSave()
 }
 
 const updatePreviewFontSize = () => {
@@ -625,7 +676,39 @@ const updatePreviewFontSize = () => {
         preview.style.fontSize = `${fontSize.value}px`
     }
     metaChanged.value = true
-    scheduleSave()
+    scheduleSave(10)
+}
+
+const contextMenuVisible = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+
+const handleAddToNote = () => {
+    selectedToNote()
+    contextMenuVisible.value = false
+    showNote.value = true
+}
+
+const hasHighlight = ref(false)
+
+const handleHighlightAction = () => {
+    if (hasHighlight.value) {
+        const selection = window.getSelection()
+        const range = selection.getRangeAt(0)
+        const commonAncestor = range.commonAncestorContainer
+        const highlightElement = commonAncestor.nodeType === 3 
+            ? commonAncestor.parentElement?.closest('.custom-highlight')
+            : commonAncestor.querySelector('.custom-highlight')
+        
+        if (highlightElement) {
+            const textContent = highlightElement.textContent
+            highlightManager.value?.removeHighlight(textContent)
+            const parent = highlightElement.parentNode
+            parent.replaceChild(document.createTextNode(textContent), highlightElement)
+            metaChanged.value = true
+            scheduleSave(5)
+        }
+    }
+    contextMenuVisible.value = false
 }
 </script>
 
@@ -663,4 +746,71 @@ const updatePreviewFontSize = () => {
     font-weight: bold;
 }
 
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+    z-index: 9999;
+    width: 200px;  /* 增加宽度以适应颜色按钮 */
+    padding: 4px 0;
+    pointer-events: auto;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    min-height: 36px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.highlight-color-buttons {
+  display: flex;
+  gap: 4px;
+  margin-left: 5px;
+}
+
+.highlight-color-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.highlight-color-button:hover {
+  transform: scale(1.1);
+}
+
+.highlight-color-button.active {
+  border: 1px solid #ffffff;
+}
+
+.highlight-action-button {
+    width: 20px;
+    height: 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+    margin-left: 4px;
+}
+
+.highlight-action-button:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.1);
+}
+
+.highlight-action-button .el-icon {
+    font-size: 14px;
+    color: #606266;
+}
 </style>

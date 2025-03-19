@@ -1,8 +1,16 @@
 export class HighlightManager {
     constructor(container) {
         this.container = container;
-        this.isHighlightMode = false;
+        this.isHighlightMode = true;
         this.savedRanges = [];
+        this.colorClasses = [
+            'highlight-pink',
+            'highlight-blue',
+            'highlight-yellow',
+            'highlight-green',
+            'highlight-purple'
+        ];
+        this.currentColorIndex = 0;
     }
 
     clearHighlight() {
@@ -23,10 +31,6 @@ export class HighlightManager {
         this.isHighlightMode = !this.isHighlightMode;
         if (this.container) {
             this.container.setAttribute('data-highlight-mode', this.isHighlightMode);
-            const highlights = this.container.getElementsByClassName('custom-highlight');
-            Array.from(highlights).forEach(el => {
-                el.style.backgroundColor = this.isHighlightMode ? 'yellow' : 'transparent';
-            });
         }
         return this.isHighlightMode;
     }
@@ -45,6 +49,7 @@ export class HighlightManager {
 
         if (meta.highlights) {
             try {
+                this.clearHighlight();
                 const highlights = typeof meta.highlights === 'string' 
                     ? JSON.parse(meta.highlights) 
                     : meta.highlights;
@@ -59,13 +64,13 @@ export class HighlightManager {
     applyHighlights(highlights) {
         if (!highlights || !highlights.length) return;
         
-        this.clearHighlight();
         highlights.forEach(highlight => {
-            this.findAndHighlightText(highlight.text);
+            const colorClass = highlight.colorClass || 'highlight-yellow';
+            this.findAndHighlightText(highlight.text, colorClass);
         });
     }
 
-    findAndHighlightText(text) {
+    findAndHighlightText(text, colorClass = 'highlight-yellow') {
         if (!this.container) return;
 
         const textNodes = this.getTextNodes(this.container);
@@ -74,11 +79,10 @@ export class HighlightManager {
         for (const node of textNodes) {
             const nodeText = node.textContent;
             const index = nodeText.indexOf(searchText);
-            
             if (index >= 0) {
                 const range = document.createRange();
                 const mark = document.createElement('mark');
-                mark.className = 'custom-highlight';
+                mark.className = `custom-highlight ${colorClass}`;
                 
                 range.setStart(node, index);
                 range.setEnd(node, index + searchText.length);
@@ -91,29 +95,36 @@ export class HighlightManager {
         }
     }
 
-    handleSelection() {
-        if (!this.isHighlightMode) return;
+    handleSelection(colorIndex) {
+        if (colorIndex >= 0 && colorIndex < this.colorClasses.length) {
+            this.currentColorIndex = colorIndex;
+        }
+
+        if (!this.isHighlightMode) return false;
 
         const selection = window.getSelection();
-        if (!selection.rangeCount) return;
+        if (!selection.rangeCount) return false;
 
         try {
             const range = selection.getRangeAt(0);
             const selectedText = range.toString();
-            if (!selectedText.trim()) return;
+            if (!selectedText.trim()) return false;
 
             this.savedRanges.push({
                 text: selectedText,
                 startOffset: range.startOffset,
                 endOffset: range.endOffset,
                 startContainer: range.startContainer.textContent,
-                timestamp: new Date().getTime()
+                timestamp: new Date().getTime(),
+                colorClass: this.colorClasses[this.currentColorIndex]
             });
 
             this.processHighlight(range, selection);
         } catch (error) {
             console.error('highlight failed:', error);
+            return false;
         }
+        return true;
     }
 
     processHighlight(range, selection) {
@@ -134,10 +145,15 @@ export class HighlightManager {
         selection.removeAllRanges();
     }
 
+    createHighlightMark() {
+        const mark = document.createElement('mark');
+        mark.className = `custom-highlight ${this.colorClasses[this.currentColorIndex]}`;
+        return mark;
+    }
+
     handleSingleNodeHighlight(range) {
         const startContainer = range.startContainer;
-        const mark = document.createElement('mark');
-        mark.className = 'custom-highlight';
+        const mark = this.createHighlightMark();
         
         const beforeText = startContainer.textContent.substring(0, range.startOffset);
         const selectedText = startContainer.textContent.substring(range.startOffset, range.endOffset);
@@ -161,8 +177,7 @@ export class HighlightManager {
         const endContainer = range.endContainer;
 
         nodesToHighlight.forEach(node => {
-            const mark = document.createElement('mark');
-            mark.className = 'custom-highlight';
+            const mark = this.createHighlightMark();
             
             if (node === startContainer) {
                 const newNode = node.splitText(range.startOffset);
@@ -197,11 +212,16 @@ export class HighlightManager {
             text: range.text,
             timestamp: range.timestamp,
             startOffset: range.startOffset,
-            endOffset: range.endOffset
+            endOffset: range.endOffset,
+            colorClass: range.colorClass
         }));
     }
 
     hasHighlights() {
         return this.savedRanges.length > 0;
+    }
+
+    removeHighlight(text) {
+        this.savedRanges = this.savedRanges.filter(range => range.text !== text);
     }
 }

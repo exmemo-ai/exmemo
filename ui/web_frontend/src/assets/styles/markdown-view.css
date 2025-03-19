@@ -36,8 +36,29 @@
     transition: background-color 0.3s;
 }
 
-.preview-container[data-highlight-mode="true"] mark.custom-highlight {
-    background-color: yellow !important;
+.preview-container mark.custom-highlight.highlight-pink {
+    background-color: #fcbed5 !important;
+    color: inherit !important;
+}
+
+.preview-container mark.custom-highlight.highlight-blue {
+    background-color: #bedef5 !important;
+    color: inherit !important;
+}
+
+.preview-container mark.custom-highlight.highlight-yellow {
+    background-color: #fff082 !important;
+    color: inherit !important;
+}
+
+.preview-container mark.custom-highlight.highlight-green {
+    background-color: #d7fa9b !important;
+    color: inherit !important;
+}
+
+.preview-container mark.custom-highlight.highlight-purple {
+    background-color: #e7ceff !important;
+    color: inherit !important;
 }
 
 .preview-container[data-highlight-mode="false"] mark.custom-highlight {
@@ -155,6 +176,39 @@
 
 .zoomButton {
     margin-left: 2px !important; 
+}
+
+.highlight-color-button {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    margin: 0 2px;
+    cursor: pointer;
+}
+
+.highlight-color-button.pink {
+    background-color: #fcbed5;
+}
+
+.highlight-color-button.blue {
+    background-color: #bedef5;
+}
+
+.highlight-color-button.yellow {
+    background-color: #fff082;
+}
+
+.highlight-color-button.green {
+    background-color: #d7fa9b;
+}
+
+.highlight-color-button.purple {
+    background-color: #e7ceff;
+}
+
+.highlight-color-button.active {
+    border: 2px solid #409EFF;
 }
 
 @media screen and (max-width: 768px) {
