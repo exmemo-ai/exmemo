@@ -353,7 +353,8 @@
         "ai": "AI",
         "estreat": "摘抄",
         "userDefine": "用户自定义",
-        "pleasePreview": "请先切换到预览"
+        "pleasePreview": "请先切换到预览",
+        "addToNote": "添加到笔记"
     },
     "settings": {
         "bookmark": "书签",

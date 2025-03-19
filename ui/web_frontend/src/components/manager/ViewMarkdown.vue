@@ -90,11 +90,26 @@
                         <div v-show="contextMenuVisible" 
                              class="context-menu" 
                              :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
-                            <div class="context-menu-item" @click="handleAddToNote">
-                                {{ t('viewMarkdown.addToNote') }}
+                            <div class="context-menu-item">
+                                <div class="context-menu-buttons">
+                                    <div class="context-menu-button" :title="t('viewMarkdown.addToNote')" @click="handleAddToNote">
+                                        <el-icon><DocumentAdd /></el-icon>
+                                    </div>
+                                    <div class="context-menu-button" title="AI" @click="handleAskAI">
+                                        <el-icon><ChatDotSquare /></el-icon>
+                                    </div>
+                                    <div class="context-menu-button" :title="t('copy')" @click="handleCopySelection">
+                                        <el-icon><DocumentCopy /></el-icon>
+                                    </div>
+                                    <!--
+                                    <div class="context-menu-button" :title="t('translate')" @click="handleTranslate">
+                                        <el-icon><Connection /></el-icon>
+                                    </div>
+                                -->
+                                </div>
                             </div>
                             <div class="context-menu-item">
-                                <div class="highlight-color-buttons">
+                                <div class="context-menu-buttons">
                                     <div 
                                         v-for="(color, index) in ['pink', 'blue', 'yellow', 'green', 'purple']" 
                                         :key="color"
@@ -102,10 +117,11 @@
                                         @click.stop="highlightSelection(index)"
                                     ></div>
                                     <div 
-                                        class="highlight-action-button"
+                                        class="context-menu-button"
                                         @click.stop="handleHighlightAction"
+                                        :title="hasHighlight ? t('viewMarkdown.clearHighlight') : ''"
                                     >
-                                        <el-icon v-if="hasHighlight"><RemoveFilled /></el-icon>
+                                        <el-icon v-if="hasHighlight"><Delete /></el-icon>
                                         <el-icon v-else><Close /></el-icon>
                                     </div>
                                 </div>
@@ -158,7 +174,7 @@ import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { Expand, Fold, ArrowDown, RemoveFilled, Close } from '@element-plus/icons-vue'
+import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete } from '@element-plus/icons-vue'
 import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
@@ -195,7 +211,7 @@ const clearHighlight = () => {
 const copyHighlight = () => {
     if (!highlightManager.value) return
 
-    let text = highlightManager.value.getHighlightedText().join('\n')
+    let text = highlightManager.value.getHighlightedText().join('\n\n')
     text = text + "\n"
     text = text + "\n" + t('title') + ": " + form.value.title
     text = text + "\n" + t('viewMarkdown.detail') + ": " + window.location.href
@@ -337,7 +353,7 @@ const copyContent = () => {
 }
 
 const highlightSelection = (index) => {
-    if (highlightManager.value?.handleSelection(index)) {
+    if (highlightManager.value?.addHighlight(index)) {
         metaChanged.value = true
         scheduleSave(5)
     }
@@ -345,7 +361,7 @@ const highlightSelection = (index) => {
 }
 
 const handleMouseUp = (event) => {
-    if (event.target.classList.contains('highlight-color-button')) {
+    if (event.target.classList.contains('context-menu-button')) {
         return
     }
 
@@ -692,23 +708,43 @@ const hasHighlight = ref(false)
 
 const handleHighlightAction = () => {
     if (hasHighlight.value) {
-        const selection = window.getSelection()
-        const range = selection.getRangeAt(0)
-        const commonAncestor = range.commonAncestorContainer
-        const highlightElement = commonAncestor.nodeType === 3 
-            ? commonAncestor.parentElement?.closest('.custom-highlight')
-            : commonAncestor.querySelector('.custom-highlight')
-        
-        if (highlightElement) {
-            const textContent = highlightElement.textContent
-            highlightManager.value?.removeHighlight(textContent)
-            const parent = highlightElement.parentNode
-            parent.replaceChild(document.createTextNode(textContent), highlightElement)
+        if (highlightManager.value?.removeHighlight()) {
             metaChanged.value = true
             scheduleSave(5)
         }
     }
     contextMenuVisible.value = false
+}
+
+const handleAskAI = () => {
+    contextMenuVisible.value = false
+    aiDialogVisible.value = true
+}
+
+const handleTranslate = () => {
+    contextMenuVisible.value = false
+    const selection = window.getSelection()
+    const text = selection.toString().trim()
+    if (!text) return
+    
+    // 打开谷歌翻译
+    const url = `https://translate.google.com/?sl=auto&tl=${getLocale()}&text=${encodeURIComponent(text)}`
+    window.open(url, '_blank')
+}
+
+const handleCopySelection = () => {
+    contextMenuVisible.value = false
+    const selection = window.getSelection()
+    const text = selection.toString().trim()
+    if (!text) return
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(() => ElMessage.success(t('copySuccess')))
+            .catch(() => fallbackCopyTextToClipboard(text))
+    } else {
+        fallbackCopyTextToClipboard(text)
+    }
 }
 </script>
 
@@ -753,64 +789,59 @@ const handleHighlightAction = () => {
     border-radius: 4px;
     box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
     z-index: 9999;
-    width: 200px;  /* 增加宽度以适应颜色按钮 */
-    padding: 4px 0;
+    width: auto;
+    padding: 4px;
     pointer-events: auto;
 }
 
 .context-menu-item {
-    padding: 8px 16px;
-    cursor: pointer;
+    padding: 4px;
+    cursor: default;
     white-space: nowrap;
     user-select: none;
-    min-height: 36px;
-    line-height: 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     box-sizing: border-box;
 }
 
-.highlight-color-buttons {
-  display: flex;
-  gap: 4px;
-  margin-left: 5px;
+.context-menu-buttons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
 }
 
 .highlight-color-button {
-  width: 20px;
-  height: 20px;
-  border-radius: 12px;
-  cursor: pointer;
+    width: 18px;
+    height: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
 .highlight-color-button:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
 }
 
-.highlight-color-button.active {
-  border: 1px solid #ffffff;
-}
-
-.highlight-action-button {
-    width: 20px;
-    height: 20px;
+.context-menu-button {
+    width: 24px;
+    height: 24px;
     border-radius: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f0f0f0;
-    margin-left: 4px;
+    transition: all 0.3s;
+    background-color: #f5f7fa;
 }
 
-.highlight-action-button:hover {
-    background-color: #e0e0e0;
+.context-menu-button:hover {
+    background-color: #e4e7ed;
     transform: scale(1.1);
 }
 
-.highlight-action-button .el-icon {
+.context-menu-button .el-icon {
     font-size: 14px;
     color: #606266;
 }
+
 </style>

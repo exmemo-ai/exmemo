@@ -354,7 +354,8 @@
         "ai": "AI",
         "estreat": "Estreat",
         "userDefine": "User define",
-        "pleasePreview": "Please preview first"
+        "pleasePreview": "Please preview first",
+        "addToNote": "Add to note"
     },
     "settings": {
         "bookmark": "Bookmark",
