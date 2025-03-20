@@ -16,7 +16,7 @@ from backend.common.utils import text_tools
 
 EMBEDDING_CHUNK_SIZE = 512
 
-def llm_query(uid, role, question, app, engine_type=None, debug=False):
+def llm_query(uid, role, question, app, engine_type=None, llm_type='llm_tool_model', debug=False):
     start_time = time.time()
     user = UserManager.get_instance().get_user(uid)
 
@@ -25,9 +25,9 @@ def llm_query(uid, role, question, app, engine_type=None, debug=False):
         return ret, desc, {}
         
     if engine_type is None:
-        engine_type = user.get("llm_tool_model", None)
+        engine_type = user.get(llm_type, None)
     try:
-        llm_info = llm_tools.LLMInfo.get_info(engine_type, 'llm_tool_model')
+        llm_info = llm_tools.LLMInfo.get_info(engine_type, llm_type)
         if debug:
             logger.debug(f"Role {role}")
             logger.debug(f"Question {question}")
