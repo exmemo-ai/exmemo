@@ -52,7 +52,7 @@
                 <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane>
                 <el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>
             </el-tabs>
-            <el-icon class="clipboard-icon" @click="openClipboard" size="small">
+            <el-icon class="clipboard-icon" @click="openClipboard" size="small" :title="$t('paste.openClipboard')">
                 <ClipboardIcon />
             </el-icon>
         </div>

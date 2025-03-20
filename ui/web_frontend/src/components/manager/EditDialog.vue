@@ -13,31 +13,21 @@
                     </strong>
                 </div>
                 <div class="action-buttons">
-                    <el-tooltip :content="$t('save')" placement="top">
-                        <el-button size="small" @click="doSave">
-                            <el-icon><SaveIcon /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip :content="$t('delete')" placement="top">
-                        <el-button size="small" @click="showDeleteConfirmation">
-                            <el-icon><Delete /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip v-if="form.etype !== 'record'" :content="$t('view')" placement="top">
-                        <el-button size="small" @click="viewContent">
-                            <el-icon><View /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip v-if="form.etype === 'note'" :content="$t('edit')" placement="top">
-                        <el-button size="small" @click="editNote">
-                            <el-icon><Edit /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip v-if="form.etype === 'file'" :content="$t('download')" placement="top">
-                        <el-button size="small" @click="download">
-                            <el-icon><Download /></el-icon>
-                        </el-button>
-                    </el-tooltip>
+                    <el-button size="small" @click="doSave" :title="$t('save')">
+                        <el-icon><SaveIcon /></el-icon>
+                    </el-button>
+                    <el-button size="small" @click="showDeleteConfirmation" :title="$t('delete')">
+                        <el-icon><Delete /></el-icon>
+                    </el-button>
+                    <el-button v-if="form.etype !== 'record'" size="small" @click="viewContent" :title="$t('view')">
+                        <el-icon><View /></el-icon>
+                    </el-button>
+                    <el-button v-if="form.etype === 'note'" size="small" @click="editNote" :title="$t('edit')">
+                        <el-icon><Edit /></el-icon>
+                    </el-button>
+                    <el-button v-if="form.etype === 'file'" size="small" @click="download" :title="$t('download')">
+                        <el-icon><Download /></el-icon>
+                    </el-button>
                 </div>
             </div>
         </template>
