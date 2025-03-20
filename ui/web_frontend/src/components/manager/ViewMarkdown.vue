@@ -24,13 +24,15 @@
                     <div class="button-container-flex">
                         <el-button-group class="basic-buttons" style="margin-right: 5px;">
                             <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll')
-                            }}</el-button>
+                                }}</el-button>
                             <el-button size="small" type="primary" @click="copyContent">{{ t('copy')
-                            }}</el-button>
+                                }}</el-button>
                             <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{
                                 t('viewMarkdown.openWeb') }}</el-button>
                             <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{
                                 t('viewMarkdown.downloadFile') }}</el-button>
+                            <el-button v-if="!form.idx" size="small" type="primary" @click="handleSave">{{ 
+                                t('collect') }}</el-button>
                             <!--
                             <el-button size="small" type="primary" @click="setPlayer">
                                 {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
@@ -59,10 +61,14 @@
 
                         <div style="margin-left: auto; margin-right: 5px;">
                             <el-button size="small" class="zoomButton" circle @click="decreaseFontSize">
-                                <el-icon><FontSmallIcon /></el-icon>
+                                <el-icon>
+                                    <FontSmallIcon />
+                                </el-icon>
                             </el-button>
                             <el-button size="small" class="zoomButton" circle @click="increaseFontSize">
-                                <el-icon><FontLargeIcon /></el-icon>
+                                <el-icon>
+                                    <FontLargeIcon />
+                                </el-icon>
                             </el-button>
                         </div>
                         <el-checkbox v-model="showNote" size="small">
@@ -80,26 +86,33 @@
                     </div>
 
                     <div v-show="showCatalog" class="catalog-container">
-                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview-wrapper'" class="md-catalog" />
+                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview-wrapper'"
+                            class="md-catalog" />
                     </div>
                     <div class="content-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp"
                         @contextmenu.prevent">
                         <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
                             :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
-                        
-                        <div v-show="contextMenuVisible" 
-                             class="context-menu" 
-                             :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
+
+                        <div v-show="contextMenuVisible" class="context-menu"
+                            :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
                             <div class="context-menu-item">
                                 <div class="context-menu-buttons">
-                                    <div class="context-menu-button" :title="t('viewMarkdown.addToNote')" @click="handleAddToNote">
-                                        <el-icon><DocumentAdd /></el-icon>
+                                    <div class="context-menu-button" :title="t('viewMarkdown.addToNote')"
+                                        @click="handleAddToNote">
+                                        <el-icon>
+                                            <DocumentAdd />
+                                        </el-icon>
                                     </div>
                                     <div class="context-menu-button" title="AI" @click="handleAskAI">
-                                        <el-icon><ChatDotSquare /></el-icon>
+                                        <el-icon>
+                                            <ChatDotSquare />
+                                        </el-icon>
                                     </div>
                                     <div class="context-menu-button" :title="t('copy')" @click="handleCopySelection">
-                                        <el-icon><DocumentCopy /></el-icon>
+                                        <el-icon>
+                                            <DocumentCopy />
+                                        </el-icon>
                                     </div>
                                     <!--
                                     <div class="context-menu-button" :title="t('translate')" @click="handleTranslate">
@@ -110,19 +123,17 @@
                             </div>
                             <div class="context-menu-item">
                                 <div class="context-menu-buttons">
-                                    <div 
-                                        v-for="(color, index) in ['pink', 'blue', 'yellow', 'green', 'purple']" 
-                                        :key="color"
-                                        :class="['highlight-color-button', color]"
-                                        @click.stop="highlightSelection(index)"
-                                    ></div>
-                                    <div 
-                                        class="context-menu-button"
-                                        @click.stop="handleHighlightAction"
-                                        :title="hasHighlight ? t('viewMarkdown.clearHighlight') : ''"
-                                    >
-                                        <el-icon v-if="hasHighlight"><Delete /></el-icon>
-                                        <el-icon v-else><Close /></el-icon>
+                                    <div v-for="(color, index) in ['pink', 'blue', 'yellow', 'green', 'purple']"
+                                        :key="color" :class="['highlight-color-button', color]"
+                                        @click.stop="highlightSelection(index)"></div>
+                                    <div class="context-menu-button" @click.stop="handleHighlightAction"
+                                        :title="hasHighlight ? t('viewMarkdown.clearHighlight') : ''">
+                                        <el-icon v-if="hasHighlight">
+                                            <Delete />
+                                        </el-icon>
+                                        <el-icon v-else>
+                                            <Close />
+                                        </el-icon>
                                     </div>
                                 </div>
                             </div>
@@ -140,9 +151,9 @@
                             t('viewMarkdown.insertHighlight') }}</el-button>
                             -->
                         <el-button size="small" type="primary" @click="allToNote">{{ t('viewMarkdown.insertAll')
-                        }}</el-button>
+                            }}</el-button>
                         <el-button size="small" type="primary" @click="saveAsNote">{{ t('viewMarkdown.saveAsNote')
-                        }}</el-button>
+                            }}</el-button>
                     </el-button-group>
                 </div>
                 <ViewNote ref="viewNote" :form="form" @note-change="handleNoteChange" />
@@ -151,12 +162,8 @@
 
         <TextSpeakPlayer :text="selectedText" :lang="getLocale()" :getContentCallback="getContent" ref="txtPlayer"
             @onSpeak="handleSpeak" />
-        <AIDialog v-model="aiDialogVisible" 
-            :full-content="markdownContent" 
-            :selected-content="getSelectedContent()"
-            :screen-content="getScreenContent()"
-            :etype="etype"
-            @insert-note="handleInsertAIAnswer" />
+        <AIDialog v-model="aiDialogVisible" :full-content="markdownContent" :selected-content="getSelectedContent()"
+            :screen-content="getScreenContent()" :etype="etype" @insert-note="handleInsertAIAnswer" />
     </div>
 </template>
 
@@ -174,7 +181,7 @@ import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete } from '@element-plus/icons-vue'
+import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete, Star } from '@element-plus/icons-vue'
 import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
@@ -260,7 +267,7 @@ const fetchContent = async (idx) => {
 
 const fetchWeb = async (url) => {
     const formData = new FormData();
-    formData.append('content', url); 
+    formData.append('content', url);
     formData.append('rtype', 'markdown');
     try {
         const res = await axios.post(getURL() + 'api/web/', formData);
@@ -392,7 +399,7 @@ const handleSelectArea = (event) => {
 
     const range = selection.getRangeAt(0)
     const commonAncestor = range.commonAncestorContainer
-    const highlightElement = commonAncestor.nodeType === 3 
+    const highlightElement = commonAncestor.nodeType === 3
         ? commonAncestor.parentElement?.closest('.custom-highlight')
         : commonAncestor.querySelector('.custom-highlight')
     hasHighlight.value = !!highlightElement
@@ -462,9 +469,9 @@ onMounted(() => {
     })
     document.addEventListener('click', (e) => {
         const menu = document.querySelector('.context-menu')
-        if (menu && !menu.contains(e.target) && 
-            (Math.abs(e.clientX - contextMenuPosition.value.x) > 10 || 
-             Math.abs(e.clientY - contextMenuPosition.value.y) > 10)) {
+        if (menu && !menu.contains(e.target) &&
+            (Math.abs(e.clientX - contextMenuPosition.value.x) > 10 ||
+                Math.abs(e.clientY - contextMenuPosition.value.y) > 10)) {
             contextMenuVisible.value = false
         }
     })
@@ -615,7 +622,7 @@ const getScreenContent = () => {
         const elementTop = rect.top
         const elementBottom = rect.bottom
         const wrapperRect = previewWrapper.getBoundingClientRect()
-        
+
         if (elementBottom > wrapperRect.top && elementTop < wrapperRect.bottom) {
             visibleText += node.textContent.trim() + '\n'
         }
@@ -726,7 +733,7 @@ const handleTranslate = () => {
     const selection = window.getSelection()
     const text = selection.toString().trim()
     if (!text) return
-    
+
     // 打开谷歌翻译
     const url = `https://translate.google.com/?sl=auto&tl=${getLocale()}&text=${encodeURIComponent(text)}`
     window.open(url, '_blank')
@@ -745,6 +752,49 @@ const handleCopySelection = () => {
     } else {
         fallbackCopyTextToClipboard(text)
     }
+}
+
+const handleSave = async () => {
+    if (!form.value.content) {
+        ElMessage.warning(t('noContent'))
+        return
+    }
+
+    try {
+        const result = await saveEntry({
+            parentObj: null,
+            form: form.value,
+            path: null,
+            file: null
+        })
+
+        if (result && result.status === 'success') {
+            getNewIdx()   
+        }
+    } catch (error) {
+        console.error(t('saveFail'), error)
+        ElMessage.error(t('saveFail'))
+    }
+}
+
+const getNewIdx = () => {
+    const addr = form.value.addr;
+    let func = 'api/entry/data/'
+    let params = {
+        keyword: addr,
+        etype: 'web',
+        max_count: 1
+    }
+    axios.get(getURL() + func, { params: params })
+        .then(response => {
+            const results = response.data['results'];
+            if (results && results.length > 0) {
+                form.value.idx = results[0].idx
+            }
+        })
+        .catch(error => {
+            console.error('Failed to get idx:', error)
+        })
 }
 </script>
 
@@ -787,7 +837,7 @@ const handleCopySelection = () => {
     background: white;
     border: 1px solid #dcdfe6;
     border-radius: 4px;
-    box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
     z-index: 9999;
     width: auto;
     padding: 4px;
@@ -843,5 +893,4 @@ const handleCopySelection = () => {
     font-size: 14px;
     color: #606266;
 }
-
 </style>
