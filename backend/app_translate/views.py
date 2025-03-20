@@ -178,7 +178,7 @@ class TranslateAPIView(APIView):
         try:
             ret, answer = translate.translate_word_role(args["user_id"], word, sentence)
         except Exception as e:
-            logger.warning(f"translate_sentence {e}")
+            logger.warning(f"translate_word_role {e}")
             ret = False
             answer = str(e)
         return do_result(ret, answer)
