@@ -100,50 +100,6 @@ def normalize_markdown_text(text):
     Normalize markdown text by removing unnecessary line breaks while preserving markdown formatting
     """
     markdown = mistune.create_markdown()
-    ast = markdown.parse(text)
-    def is_special_block(block):
-        return block['type'] in [
-            'code', 'code_block', 'block_quote', 'list', 
-            'list_item', 'heading', 'thematic_break',
-            'table'
-        ]
-
-    def process_block(block):
-        if is_special_block(block):
-            return block
-        
-        if block['type'] == 'paragraph':
-            text = block.get('text', '')
-            
-            # 保留以下情况的换行：
-            # 1. 行尾有两个或以上空格（markdown强制换行）
-            # 2. 以 |、-、* 开头的行（可能是表格或列表）
-            # 3. 以 > 开头的行（引用）
-            lines = text.split('\n')
-            processed_lines = []
-            
-            for i, line in enumerate(lines):
-                if (i > 0 and  # 不是第一行
-                    not line.strip().startswith(('|', '-', '*', '>')) and  # 不是特殊行
-                    not lines[i-1].endswith('  ')):  # 上一行不是强制换行
-                    processed_lines.append(' ' + line.strip())
-                else:
-                    processed_lines.append(line)
-            
-            block['text'] = ''.join(processed_lines)
-        
-        return block
-
-    def process_ast(ast_tree):
-        for item in ast_tree:
-            if isinstance(item, dict):
-                process_block(item)
-                if 'children' in item:
-                    process_ast(item['children'])
-
-    process_ast(ast)
-    markdown = mistune.create_markdown()
     normalized_text = markdown(text)
     normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
-    
     return normalized_text
