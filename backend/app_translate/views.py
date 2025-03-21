@@ -149,7 +149,8 @@ class TranslateAPIView(APIView):
         rtype = request.GET.get("rtype", request.POST.get("rtype", "word"))
         word = request.GET.get("word", request.POST.get("word", None))
         sentence = request.GET.get("sentence", request.POST.get("sentence", None))
-        logger.debug(f"translate rtype:{rtype} word:{word} sentence:{sentence}")
+        #logger.debug(f"translate rtype:{rtype} word:{word}")
+        #logger.debug(f"translate sentence:{sentence}")
         if rtype == "word":
             return self.translate_word(args, word, sentence)
         elif rtype == "sentence":

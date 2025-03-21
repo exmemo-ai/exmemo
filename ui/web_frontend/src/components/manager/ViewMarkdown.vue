@@ -23,25 +23,25 @@
                 <div class="editor-toolbar">
                     <div class="button-container-flex">
                         <el-button-group class="basic-buttons" style="margin-right: 5px;">
-                            <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll')
-                                }}</el-button>
-                            <el-button size="small" type="primary" @click="copyContent">{{ t('copy')
-                                }}</el-button>
-                            <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{
-                                t('viewMarkdown.openWeb') }}</el-button>
-                            <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{
-                                t('viewMarkdown.downloadFile') }}</el-button>
-                            <el-button v-if="!form.idx" size="small" type="primary" @click="handleSave">{{ 
-                                t('collect') }}</el-button>
-                            <!--
-                            <el-button size="small" type="primary" @click="setPlayer">
-                                {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
+                            <el-button size="small" @click="selectAll" :title="t('selectAll')">
+                                <el-icon><Select /></el-icon>
                             </el-button>
-                            -->
+                            <el-button size="small" @click="copyContent" :title="t('copy')">
+                                <el-icon><DocumentCopy /></el-icon>
+                            </el-button>
+                            <el-button size="small" v-if="form.etype === 'web'" @click="openWeb" :title="t('viewMarkdown.openWeb')">
+                                <el-icon><Link /></el-icon>
+                            </el-button>
+                            <el-button size="small" v-if="form.etype === 'file'" @click="download" :title="t('viewMarkdown.downloadFile')">
+                                <el-icon><Download /></el-icon>
+                            </el-button>
+                            <el-button v-if="!form.idx" size="small" @click="handleSave" :title="t('collect')">
+                                <el-icon><Star /></el-icon>
+                            </el-button>
                         </el-button-group>
 
                         <el-dropdown trigger="click">
-                            <el-button size="small" type="primary">
+                            <el-button size="small">
                                 {{ t('viewMarkdown.highlight') }}
                                 <el-icon class="el-icon--right">
                                     <arrow-down />
@@ -114,11 +114,11 @@
                                             <DocumentCopy />
                                         </el-icon>
                                     </div>
-                                    <!--
                                     <div class="context-menu-button" :title="t('translate')" @click="handleTranslate">
-                                        <el-icon><Connection /></el-icon>
+                                        <el-icon>
+                                            <TranslateIcon />
+                                        </el-icon>
                                     </div>
-                                -->
                                 </div>
                             </div>
                             <div class="context-menu-item">
@@ -138,22 +138,33 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-if="showTranslatePopup"
+                            :style="{ top: `${translatePosition.y}px`, left: `${translatePosition.x}px`, maxHeight: '200px', height: 'auto', overflow: 'auto' }"
+                            class="popup">
+                            <div style="display: flex; flex-direction: column; margin: 5px;">
+                                <div style="flex-grow: 0; text-align: left; white-space: pre-line;">
+                                    {{ translatedText }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div v-show="viewMode === 'content-note'" class="editor-container">
                 <div class="editor-toolbar">
                     <el-button-group>
-                        <el-button size="small" type="primary" @click="selectedToNote">{{
-                            t('viewMarkdown.insertSelected') }}</el-button>
-                        <!--
-                        <el-button size="small" type="primary" @click="highlightToNote">{{
-                            t('viewMarkdown.insertHighlight') }}</el-button>
-                            -->
-                        <el-button size="small" type="primary" @click="allToNote">{{ t('viewMarkdown.insertAll')
-                            }}</el-button>
-                        <el-button size="small" type="primary" @click="saveAsNote">{{ t('viewMarkdown.saveAsNote')
-                            }}</el-button>
+                        <el-button size="small" @click="selectedToNote" :title="t('viewMarkdown.insertSelected')">
+                            <el-icon><DocumentAdd /></el-icon>
+                        </el-button>
+                        <el-button size="small" @click="allToNote" :title="t('viewMarkdown.insertAll')">
+                            <el-icon><Files /></el-icon>
+                        </el-button>
+                        <el-button size="small" @click="saveAsNote" :title="t('viewMarkdown.saveAsNote')">
+                            <el-icon><SaveAsIcon /></el-icon>
+                        </el-button>
+                        <el-button size="small" v-if="isPaper" @click="parsePaper" :title="t('paperAnalysis')">
+                            <el-icon><Search /></el-icon>
+                        </el-button>
                     </el-button-group>
                 </div>
                 <ViewNote ref="viewNote" :form="form" @note-change="handleNoteChange" />
@@ -181,14 +192,17 @@ import { MdPreview, MdCatalog } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from './dataUtils';
 import { HighlightManager } from '@/components/manager/HighlightManager'
 import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete, Star } from '@element-plus/icons-vue'
+import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete, Select, Link, Download, Star, Document, Files, Search } from '@element-plus/icons-vue'
 import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
+import TranslateIcon from '@/components/icons/TranslateIcon.vue'
+import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
 import ViewNote from '@/components/manager/ViewNote.vue'
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue'
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
+import { translateFunc } from '@/components/translate/TransFunction'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -474,6 +488,10 @@ onMounted(() => {
                 Math.abs(e.clientY - contextMenuPosition.value.y) > 10)) {
             contextMenuVisible.value = false
         }
+        if (showTranslatePopup.value &&
+            new Date().getTime() - translateTimer.value > 1000) {
+            showTranslatePopup.value = false
+        }
     })
 })
 
@@ -734,9 +752,77 @@ const handleTranslate = () => {
     const text = selection.toString().trim()
     if (!text) return
 
-    // 打开谷歌翻译
-    const url = `https://translate.google.com/?sl=auto&tl=${getLocale()}&text=${encodeURIComponent(text)}`
-    window.open(url, '_blank')
+    const rect = selection.getRangeAt(0).getBoundingClientRect()
+    translatePosition.value = {
+        x: rect.left,
+        y: rect.bottom + window.scrollY
+    }
+
+    if (text.indexOf(' ') === -1 && text.length < 20 && /^[a-zA-Z]+$/.test(text)) {
+        let sentence = getSentence(selection.anchorNode)
+        let word = getWord(selection.anchorNode)
+        console.log('sentence', sentence)
+        console.log('word', word)
+        translateFunc(null, 'word', word, sentence, translateCallback)
+    } else {
+        translateFunc(null, 'sentence', null, text, translateCallback)
+    }
+}
+
+const getWord = (element) => {
+    const text = element.textContent
+    const selection = window.getSelection()
+    const range = selection.getRangeAt(0)
+
+    let start = range.startOffset
+    let end = range.endOffset
+
+    while (start > 0 && !/\s/.test(text[start - 1])) {
+        start--
+    }
+    while (end < text.length && !/\s/.test(text[end])) {
+        end++
+    }
+    return text.substring(start, end).trim()
+}
+
+const getSentence = (element) => {
+    let paragraph = getParagraph(element)
+    if (paragraph.length > 0) {
+        let sentences = paragraph.match(/[^\.!\?]+[\.!\?]+/g)
+        const text = element.textContent
+        let ret = paragraph
+        //console.log('sentence', sentences)
+        if (sentences && sentences.length > 0) {
+            for (let i = 0; i < sentences.length; i++) {
+                if (text.indexOf(sentences[i]) !== -1) {
+                    ret = sentences[i]
+                    break
+                }
+            }
+        }
+        //console.log('ret', ret)
+        return ret
+    } else {
+        return ''
+    }
+}
+
+const getParagraph = (element) => {
+    while (element && element.nodeType === 3) {
+        element = element.parentNode
+    }
+    const container = element.closest('p, div, li')
+    if (!container) {
+        return element.textContent?.trim() || ''
+    }
+    return container.textContent?.trim() || ''
+}
+
+const translateCallback = (info) => {
+    translatedText.value = info
+    showTranslatePopup.value = true
+    translateTimer.value = new Date().getTime()
 }
 
 const handleCopySelection = () => {
@@ -769,7 +855,7 @@ const handleSave = async () => {
         })
 
         if (result && result.status === 'success') {
-            getNewIdx()   
+            getNewIdx()
         }
     } catch (error) {
         console.error(t('saveFail'), error)
@@ -795,6 +881,40 @@ const getNewIdx = () => {
         .catch(error => {
             console.error('Failed to get idx:', error)
         })
+}
+
+const showTranslatePopup = ref(false)
+const translatePosition = ref({ x: 0, y: 0 })
+const translatedText = ref('')
+const translateTimer = ref(null)
+
+const isPaper = computed(() => {
+    if (!form.value || !form.value.addr) return false
+    return form.value.etype === 'web' && (
+        form.value.addr.includes('arxiv.org')
+    )
+})
+
+const parsePaper = async () => {
+    const formData = new FormData();
+    formData.append('content', form.value.addr);
+    formData.append('rtype', 'search')
+    axios.post(getURL() + 'api/paper/', formData).then((res) => {
+        if (res.data.status == 'success') {
+            let note = viewNote.value.editContent;
+            if (note.length > 0) {
+                note = note + "\n\n";
+            }
+            note = note + res.data.info;
+            viewNote.value.editContent = note;
+            this.$message({
+                message: this.$t('searchSuccess'),
+                type: 'success'
+            });
+        }
+    }).catch((err) => {
+        parseBackendError(this, err);
+    });
 }
 </script>
 
@@ -832,65 +952,22 @@ const getNewIdx = () => {
     font-weight: bold;
 }
 
-.context-menu {
+.popup {
+    margin: 2px;
     position: fixed;
-    background: white;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+    width: 200px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    font-size: 12px;
     z-index: 9999;
-    width: auto;
-    padding: 4px;
-    pointer-events: auto;
+    padding: 8px;
 }
 
-.context-menu-item {
-    padding: 4px;
-    cursor: default;
-    white-space: nowrap;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
+.el-button {
+    padding: 8px 12px;
 }
 
-.context-menu-buttons {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-.highlight-color-button {
-    width: 18px;
-    height: 18px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.highlight-color-button:hover {
-    transform: scale(1.1);
-}
-
-.context-menu-button {
-    width: 24px;
-    height: 24px;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    background-color: #f5f7fa;
-}
-
-.context-menu-button:hover {
-    background-color: #e4e7ed;
-    transform: scale(1.1);
-}
-
-.context-menu-button .el-icon {
-    font-size: 14px;
-    color: #606266;
+.el-button-group .el-button {
+    padding: 8px 12px;
 }
 </style>

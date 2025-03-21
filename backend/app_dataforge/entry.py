@@ -55,8 +55,13 @@ def add_data(dic, path=None, use_llm=True):
         return False, False, _("unknown_type_colon_") + dic["etype"]
 
 def add_chat(dic, use_llm=True):
-    abstract = dic["abstract"]
-    del dic["abstract"]
+    abstract = None
+    if 'abstract' in dic:
+        abstract = dic["abstract"]
+        del dic["abstract"]
+    else:
+        if 'raw' in dic:
+            abstract = dic["raw"]
     return save_entry(dic, abstract, dic["raw"])
 
 def get_file_content_by_path(path, user):

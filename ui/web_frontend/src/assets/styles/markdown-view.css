@@ -179,6 +179,18 @@
 }
 
 .highlight-color-button {
+    width: 18px;
+    height: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.highlight-color-button:hover {
+    transform: scale(1.1);
+}
+
+.highlight-color-button {
     width: 24px;
     height: 24px;
     border: 1px solid #dcdfe6;
@@ -209,6 +221,56 @@
 
 .highlight-color-button.active {
     border: 2px solid #409EFF;
+}
+
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+    z-index: 9999;
+    width: auto;
+    padding: 4px;
+    pointer-events: auto;
+}
+
+.context-menu-item {
+    padding: 4px;
+    cursor: default;
+    white-space: nowrap;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.context-menu-buttons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.context-menu-button {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    background-color: #f5f7fa;
+}
+
+.context-menu-button:hover {
+    background-color: #e4e7ed;
+    transform: scale(1.1);
+}
+
+.context-menu-button .el-icon {
+    font-size: 14px;
+    color: #606266;
 }
 
 @media screen and (max-width: 768px) {

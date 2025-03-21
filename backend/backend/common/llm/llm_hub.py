@@ -75,7 +75,7 @@ def find_first_json(s):
 
 
 def llm_query_json(uid, role, question, app, engine_type=None, debug=False):
-    ret, answer, dic = llm_query(uid, role, question, app, engine_type, debug)
+    ret, answer, dic = llm_query(uid, role, question, app, engine_type=engine_type, debug=debug)
     if ret:
         json_object = text_tools.parse_json(answer)
         if json_object is not None:
