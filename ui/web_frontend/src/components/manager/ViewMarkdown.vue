@@ -151,20 +151,22 @@
                 </div>
             </div>
             <div v-show="viewMode === 'content-note'" class="editor-container">
-                <div class="editor-toolbar">
+                <div class="editor-toolbar" style="display: flex; justify-content: flex-end;">
                     <el-button-group>
+                        <!--
                         <el-button size="small" @click="selectedToNote" :title="t('viewMarkdown.insertSelected')">
                             <el-icon><DocumentAdd /></el-icon>
                         </el-button>
                         <el-button size="small" @click="allToNote" :title="t('viewMarkdown.insertAll')">
                             <el-icon><Files /></el-icon>
                         </el-button>
-                        <el-button size="small" @click="saveAsNote" :title="t('viewMarkdown.saveAsNote')">
-                            <el-icon><SaveAsIcon /></el-icon>
-                        </el-button>
+                        -->
                         <el-button size="small" v-if="isPaper" @click="parsePaper" :title="t('paperAnalysis')">
                             <el-icon><Search /></el-icon>
                         </el-button>
+                        <el-button size="small" @click="saveAsNote" :title="t('viewMarkdown.saveAsNote')">
+                            <el-icon><SaveAsIcon /></el-icon>
+                        </el-button>                        
                     </el-button-group>
                 </div>
                 <ViewNote ref="viewNote" :form="form" @note-change="handleNoteChange" />

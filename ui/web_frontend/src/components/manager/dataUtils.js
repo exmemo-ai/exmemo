@@ -206,7 +206,7 @@ export const getDefaultPath = (etype, addr, title) => {
     } else if (etype === 'web') {
         path = t('viewMarkdown.webNote');
     } else if (etype === 'chat') {
-        path = t('.viewMarkdown.chatNote');
+        path = t('viewMarkdown.chatNote');
     } else {
         path = t('note');
     }

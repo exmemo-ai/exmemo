@@ -94,7 +94,7 @@ export default {
             search_text: '',
             fileList: [],
             statusFilter: '',
-            statusOptions: ['learned', 'learning', 'not_learned', 'review', 'to_review'],
+            statusOptions: ['learned', 'learning', 'not_learned', 'review'],
         };
     },
     methods: {

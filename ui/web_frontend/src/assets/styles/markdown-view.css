@@ -181,22 +181,15 @@
 .highlight-color-button {
     width: 18px;
     height: 18px;
+    border: 1px solid #dcdfe6;
     border-radius: 12px;
+    margin: 0 2px;
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .highlight-color-button:hover {
     transform: scale(1.1);
-}
-
-.highlight-color-button {
-    width: 24px;
-    height: 24px;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    margin: 0 2px;
-    cursor: pointer;
 }
 
 .highlight-color-button.pink {
