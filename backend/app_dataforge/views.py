@@ -363,6 +363,8 @@ class EntryAPIView(APIView):
             return self.feature(request)
         elif rtype == "extract":
             return self.extract(request)
+        elif rtype == "tree":
+            return self.tree(request)
         else:
             return do_result(False, _("unknown_action"))
 
@@ -388,3 +390,71 @@ class EntryAPIView(APIView):
             return do_result(True, {"dic": dic_new})
         else:
             return do_result(False, {"info": "extract failed"})
+        
+    def tree(self, request):
+        """
+        Get file tree structure
+        """
+        try:
+            user_id = get_user_id(request)
+            if user_id is None:
+                return Response([])
+
+            etype = request.GET.get("etype", request.POST.get("etype", None))
+            if etype is not None and etype != "":
+                entries = StoreEntry.objects.filter(
+                    user_id=user_id,
+                    etype=etype,
+                    is_deleted=False
+                ).order_by('addr')
+            else:
+                entries = StoreEntry.objects.filter(
+                    user_id=user_id,
+                    is_deleted=False
+                ).order_by('addr')
+
+            root = []
+            path_dict = {}
+
+            for entry in entries:
+                if entry.etype != 'web':
+                    path_parts = entry.addr.split('/')
+                else:
+                    if entry.meta and 'update_path' in entry.meta:
+                        path_parts = entry.meta['update_path'].split('/')
+                    elif entry.meta and 'resource_path' in entry.meta:
+                        path_parts = entry.meta['resource_path'].split('/')
+                    else:
+                        path_parts = entry.title.split('/')
+                current_path = ""
+                current_level = root
+
+                for i, part in enumerate(path_parts):
+                    if not part:
+                        continue
+                        
+                    current_path = (current_path + '/' + part).lstrip('/')
+                    
+                    if current_path not in path_dict:
+                        new_node = {
+                            'id': entry.idx if i == len(path_parts) - 1 else current_path,
+                            'title': part,
+                            'is_folder': i < len(path_parts) - 1,
+                            'children': []
+                        }
+                        path_dict[current_path] = new_node
+                        current_level.append(new_node)
+                        current_level = new_node['children']
+                    else:
+                        current_level = path_dict[current_path]['children']
+
+            return Response(root)
+            
+        except Exception as e:
+            logger.error(f"Error getting file tree: {str(e)}")
+            return Response(
+                {"error": "Failed to get file tree"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
