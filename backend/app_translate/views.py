@@ -282,7 +282,7 @@ class TranslateLearnView(APIView):
         if args['user_id'] is None:
             return do_result(False, {"list": []})
         status = "review"
-        limit = 100
+        limit = 300
         queryset = StoreTranslate.objects.filter(
             user_id=args['user_id'], status=status
             ).order_by("freq").all()

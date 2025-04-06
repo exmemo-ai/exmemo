@@ -41,7 +41,7 @@
                 </el-table-column>
                 <el-table-column :label="$t('operation')" :width=100>
                     <template v-slot="scope">
-                        <el-button link @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
+                        <el-button link @click.stop="removeItem(scope.row)">{{ $t('delete') }}</el-button>
                     </template>
                 </el-table-column>
                 <template #empty>
