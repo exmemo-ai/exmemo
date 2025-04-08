@@ -29,6 +29,7 @@ from .entry import delete_entry, add_data, get_entry_list, get_type_options, ren
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
 
+MAX_LEVEL = 2
 
 class StoreEntryViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -391,6 +392,29 @@ class EntryAPIView(APIView):
         else:
             return do_result(False, {"info": "extract failed"})
         
+    def _build_tree_node(self, path_dict, current_level, current_path, path_parts, entry=None, path=None, is_last_level=False):
+        for i, part in enumerate(path_parts):
+            if not part:
+                continue
+                
+            current_path = (current_path + '/' + part).lstrip('/')
+            if current_path not in path_dict:
+                abs_path = os.path.join(path, current_path) if path != "" and path is not None else current_path
+                new_node = {
+                    'id': entry.idx if entry and i == len(path_parts) - 1 else abs_path,
+                    'title': part,
+                    'is_folder': i < len(path_parts) - 1 or is_last_level,
+                    'need_load': is_last_level and i == len(path_parts) - 1,
+                    'children': []
+                }
+                logger.error('' + str(new_node))
+                path_dict[current_path] = new_node
+                current_level.append(new_node)
+                current_level = new_node['children']
+            else:
+                current_level = path_dict[current_path]['children']
+        return current_level
+
     def tree(self, request):
         """
         Get file tree structure
@@ -401,57 +425,57 @@ class EntryAPIView(APIView):
                 return Response([])
 
             etype = request.GET.get("etype", request.POST.get("etype", None))
+            path = request.GET.get("path", request.POST.get("path", None))
+
+            query_conditions = {
+                'user_id': user_id,
+                'is_deleted': False
+            }
+            
             if etype is not None and etype != "":
-                entries = StoreEntry.objects.filter(
-                    user_id=user_id,
-                    etype=etype,
-                    is_deleted=False
-                ).order_by('addr')
-            else:
-                entries = StoreEntry.objects.filter(
-                    user_id=user_id,
-                    is_deleted=False
-                ).order_by('addr')
+                query_conditions['etype'] = etype
+
+            if path is not None and path != "" and etype in ['note', 'file']:
+                query_conditions['addr__startswith'] = path
+
+            entries = StoreEntry.objects.filter(**query_conditions).order_by('addr')
 
             root = []
             path_dict = {}
-
             for entry in entries:
                 if entry.etype != 'web':
-                    path_parts = entry.addr.split('/')
+                    file_path = entry.addr
                 else:
                     if entry.meta and 'update_path' in entry.meta:
-                        path_parts = entry.meta['update_path'].split('/')
+                        file_path = entry.meta['update_path']
                     elif entry.meta and 'resource_path' in entry.meta:
-                        path_parts = entry.meta['resource_path'].split('/')
+                        file_path = entry.meta['resource_path']
                     else:
-                        path_parts = entry.title.split('/')
+                        file_path = entry.title
+
+                if path != "" and path is not None and file_path.startswith(path):
+                    rel_path = file_path[len(path):].lstrip('/')
+                else:
+                    rel_path = file_path
+
+                arr = rel_path.split('/')
+                if len(arr) > MAX_LEVEL:
+                    # 处理超过最大层级的情况
+                    current_path = ""
+                    current_level = root
+                    self._build_tree_node(path_dict, current_level, current_path, arr[:MAX_LEVEL], path=path, is_last_level=True)
+                    continue
+
                 current_path = ""
                 current_level = root
-
-                for i, part in enumerate(path_parts):
-                    if not part:
-                        continue
-                        
-                    current_path = (current_path + '/' + part).lstrip('/')
-                    
-                    if current_path not in path_dict:
-                        new_node = {
-                            'id': entry.idx if i == len(path_parts) - 1 else current_path,
-                            'title': part,
-                            'is_folder': i < len(path_parts) - 1,
-                            'children': []
-                        }
-                        path_dict[current_path] = new_node
-                        current_level.append(new_node)
-                        current_level = new_node['children']
-                    else:
-                        current_level = path_dict[current_path]['children']
+                self._build_tree_node(path_dict, current_level, current_path, arr, entry=entry, path=path)
 
             return Response(root)
             
         except Exception as e:
             logger.error(f"Error getting file tree: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response(
                 {"error": "Failed to get file tree"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

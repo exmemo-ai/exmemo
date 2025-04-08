@@ -15,13 +15,15 @@
                     ref="treeRef"
                     :data="treeData"
                     :props="defaultProps"
+                    :load="loadNode"
+                    lazy
                     @node-click="handleNodeClick"
                     :highlight-current="true"
                     :expand-on-click-node="false"
                 >
                     <template #default="{ node, data }">
                         <span class="custom-tree-node">
-                            <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
+                            <el-icon v-if="data.is_folder"><Folder /></el-icon>
                             <el-icon v-else><Document /></el-icon>
                             <span>{{ node.label }}</span>
                         </span>
@@ -69,7 +71,7 @@ import AddDialog from '@/components/manager/AddDialog.vue';
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import { Search, Plus, Delete, Folder, Document, Refresh } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
-import { getURL, parseBackendError } from '@/components/support/conn'
+import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn'
 
 export default {
     name: 'DataManager2',
@@ -101,10 +103,11 @@ export default {
     data() {
         const { t } = useI18n();
         return {
-            treeData: [],
+            treeData: null,
             defaultProps: {
                 children: 'children',
-                label: 'label'
+                label: 'label',
+                isLeaf: (data) => !data.is_folder,
             },
             currentNode: null,
             mounted: false,
@@ -114,46 +117,90 @@ export default {
         };
     },
     methods: {
-        async fetchTreeData() {
-            let func = 'api/entry/tool/'
-            try {
-                let etype_value = this.etype_value === this.t('all') ? '' : this.etype_value;
-                const response = await axios.get(getURL() + func, {
-                    params: { rtype: 'tree', etype: etype_value, search: this.search_text }
-                });
-                this.treeData = this.processTreeData(response.data);
-            } catch (error) {
-                parseBackendError(this, error);
-            }
+        getInitialTreeData() {
+            return [{
+                label: 'Root',
+                id: '',
+                is_folder: true,
+                need_load: true,
+                children: []
+            }];
         },
 
-        processTreeData(data) {
+        mapTreeData(data) {
             return data.map(item => ({
                 label: item.title,
                 type: item.is_folder ? 'folder' : 'file',
                 id: item.id,
-                children: item.children ? this.processTreeData(item.children) : null
+                is_folder: item.is_folder,
+                need_load: item.need_load ?? false,
+                children: item.children || [],
             }));
+        },
+
+        async loadNode(node, resolve) {
+            console.log('loadNode');
+            if (node.data && !node.data.need_load && node.data.children) {
+                resolve(this.mapTreeData(node.data.children));
+                return;
+            }
+
+            console.log('requesting children for node', node);
+            try {
+                let path = node.level === 0 ? '' : node.data.id;
+                setDefaultAuthHeader();
+                const response = await axios.get(getURL() + 'api/entry/tool/', {
+                    params: {
+                        rtype: 'tree',
+                        etype: this.etype_value === this.t('all') ? '' : this.etype_value,
+                        path: path
+                    }
+                });
+
+                const children = this.mapTreeData(response.data);
+                resolve(children);
+                
+                if (node.level === 0) {
+                    await this.$nextTick();
+                }
+            } catch (error) {
+                parseBackendError(this, error);
+                resolve([]);
+            }
+            console.log('after loadNode', node);
+        },
+
+        async initializeTree() {
+            if (this.$refs.treeRef) {
+                await this.$nextTick();
+                this.treeData = this.getInitialTreeData();
+                await this.$nextTick();
+            }
+        },
+
+        async refreshTree() {
+            console.log('refreshTree');
+            if (this.$refs.treeRef) {
+                this.treeData = this.getInitialTreeData();
+                await this.$nextTick();
+                const rootNode = this.$refs.treeRef.store.root.childNodes[0];
+                if (rootNode) {
+                    rootNode.expand();
+                }
+            }
         },
 
         handleNodeClick(data, node) {
             this.currentNode = data;
-            if (data.type === 'folder') {
-                console.log('Node:', node);
+            if (data.is_folder) {
                 if (!node.expanded) {
                     node.expand();
                 } else {
                     node.collapse();
                 }
-                this.search_text = `folder:${data.id}`;
             } else {
-                this.search_text = `file:${data.id}`;
                 this.openItem(data.id);
             }
-        },
-
-        refreshTree() {
-            this.fetchTreeData();
         },
 
         parseOptions(data) {
@@ -167,7 +214,6 @@ export default {
             });
             return options;
         },
-
         async getEtypeOptions() {
             await this.getOptions(null, 'etype');
         },
@@ -206,9 +252,9 @@ export default {
             }
         },
 
-        handleEtypeChange(value) {
+        async handleEtypeChange(value) {
             this.etype_value = value;
-            this.fetchTreeData();
+            await this.refreshTree();
         },
 
         async openItem(idx) {
@@ -216,8 +262,6 @@ export default {
             try {
                 const response = await axios.get(getURL() + func + idx + '/');
                 const data = response.data;
-                
-                // Format the description
                 this.description = [
                     `Title: ${data.title}`,
                     `Type: ${data.etype}`,
@@ -237,11 +281,9 @@ export default {
     },
     async mounted() {
         this.mounted = true;
-        console.log('Component mounted, treeRef:', this.treeRef);
         await this.$nextTick();
-        console.log('After nextTick, treeRef:', this.treeRef);
         await this.getEtypeOptions();
-        await this.fetchTreeData();
+        await this.initializeTree();
     }
 }
 </script>
