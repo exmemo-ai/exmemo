@@ -445,8 +445,16 @@ class EntryAPIView(APIView):
             )
             
             if etype in ['note', 'file']:
+                path_level = 0
+                if path:
+                    path_clean = path.strip('/')
+                    if path_clean:
+                        path_level = path_clean.count('/') + 1
+                    if debug:
+                        logger.info(f'path: {path}, path_level: {path_level}')
+                
                 query = query.exclude(
-                    addr__regex=f'^[^/]*/([^/]*/){{{MAX_LEVEL+1}}}'
+                    addr__regex=f'^[^/]*/([^/]*/){{{MAX_LEVEL+path_level}}}'
                 )
             
             entries = query.order_by('addr')

@@ -4,7 +4,7 @@
             <app-navbar :title="t('dataManagement')" :info="'DataManager2'" />
         </el-container>
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
-            <el-aside width="250px" class="file-tree-aside">
+            <el-aside class="file-tree-aside">
                 <div class="tree-header">
                     <el-text class="tree-title">{{ t('fileTree') }}</el-text>
                     <el-button class="icon-button" @click="refreshTree">
@@ -285,6 +285,9 @@ export default {
     height: 100%;
     overflow-y: auto;
     padding: 10px;
+    min-width: 150px;
+    max-width: 500px;
+    resize: horizontal;
 }
 
 .tree-header {
@@ -350,17 +353,10 @@ export default {
 
 @media (max-width: 767px) {
     .file-tree-aside {
-        width: 100% !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1000;
-        transform: translateX(-100%);
-        transition: transform 0.3s;
-    }
-
-    .file-tree-aside.show {
-        transform: translateX(0);
+        width: 250px !important;  /* 移动端默认宽度 */
+        min-width: auto;
+        max-width: 100%;
+        resize: none;
     }
 
     .filter-section {
