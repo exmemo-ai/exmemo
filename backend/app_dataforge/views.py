@@ -414,11 +414,13 @@ class EntryAPIView(APIView):
                 current_level = path_dict[current_path]['children']
         return current_level
 
-    def tree(self, request):
+    def tree(self, request, debug=True):
         """
-        Get file tree structure
+        Get file tree structure 
         """
         try:
+            if debug:
+                logger.info('get file tree')
             user_id = get_user_id(request)
             if user_id is None:
                 return Response([])
@@ -428,7 +430,8 @@ class EntryAPIView(APIView):
 
             query_conditions = {
                 'user_id': user_id,
-                'is_deleted': False
+                'is_deleted': False,
+                'block_id': 0
             }
             
             if etype is not None and etype != "":
@@ -437,10 +440,22 @@ class EntryAPIView(APIView):
             if path is not None and path != "" and etype in ['note', 'file']:
                 query_conditions['addr__startswith'] = path
 
-            entries = StoreEntry.objects.filter(**query_conditions).order_by('addr')
-
+            query = StoreEntry.objects.filter(**query_conditions).only(
+                'idx', 'addr', 'etype', 'title', 'meta'
+            )
+            
+            if etype in ['note', 'file']:
+                query = query.exclude(
+                    addr__regex=f'^[^/]*/([^/]*/){{{MAX_LEVEL}}}'
+                )
+            
+            entries = query.order_by('addr')
+            
+            if debug:
+                logger.info('entries: %s' % len(entries))
             root = []
             path_dict = {}
+            count = 0
             for entry in entries:
                 if entry.etype != 'web':
                     file_path = entry.addr
@@ -468,7 +483,9 @@ class EntryAPIView(APIView):
                 current_path = ""
                 current_level = root
                 self._build_tree_node(path_dict, current_level, current_path, arr, entry=entry, path=path)
-
+                count += 1
+            if debug:
+                logger.info('count: %s' % count)
             return Response(root)
             
         except Exception as e:
