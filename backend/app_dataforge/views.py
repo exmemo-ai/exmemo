@@ -446,7 +446,7 @@ class EntryAPIView(APIView):
             
             if etype in ['note', 'file']:
                 query = query.exclude(
-                    addr__regex=f'^[^/]*/([^/]*/){{{MAX_LEVEL}}}'
+                    addr__regex=f'^[^/]*/([^/]*/){{{MAX_LEVEL+1}}}'
                 )
             
             entries = query.order_by('addr')
