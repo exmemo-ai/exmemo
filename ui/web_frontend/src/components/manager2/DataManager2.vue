@@ -111,20 +111,32 @@ export default {
             },
             currentNode: null,
             mounted: false,
-            etype_value: t('all'),
+            etype_value: null,
             etype_options: [],
             description: '',
         };
     },
     methods: {
-        getInitialTreeData() {
-            return [{
-                label: 'Root',
-                id: '',
-                is_folder: true,
-                need_load: true,
-                children: []
-            }];
+        async loadTreeData(path = '') {
+            if (!this.mounted || !this.etype_value) {
+                return [];
+            }
+            try {
+                console.log('loadTreeData', path);
+                setDefaultAuthHeader();
+                const response = await axios.get(getURL() + 'api/entry/tool/', {
+                    params: {
+                        rtype: 'tree',
+                        etype: this.etype_value === this.t('all') ? '' : this.etype_value,
+                        path: path
+                    }
+                });
+                return this.mapTreeData(response.data);
+            } catch (error) {
+                console.error('Load tree data error:', error);
+                parseBackendError(this, error);
+                return [];
+            }
         },
 
         mapTreeData(data) {
@@ -139,54 +151,24 @@ export default {
         },
 
         async loadNode(node, resolve) {
-            console.log('loadNode');
+            console.log('loadNode', node);
             if (node.data && !node.data.need_load && node.data.children) {
                 resolve(this.mapTreeData(node.data.children));
                 return;
-            }
-
-            console.log('requesting children for node', node);
-            try {
-                let path = node.level === 0 ? '' : node.data.id;
-                setDefaultAuthHeader();
-                const response = await axios.get(getURL() + 'api/entry/tool/', {
-                    params: {
-                        rtype: 'tree',
-                        etype: this.etype_value === this.t('all') ? '' : this.etype_value,
-                        path: path
-                    }
-                });
-
-                const children = this.mapTreeData(response.data);
-                resolve(children);
-                
-                if (node.level === 0) {
-                    await this.$nextTick();
-                }
-            } catch (error) {
-                parseBackendError(this, error);
-                resolve([]);
-            }
-            console.log('after loadNode', node);
+            }            
+            const children = await this.loadTreeData(node.data?.id || '');
+            resolve(children);
         },
 
         async initializeTree() {
             if (this.$refs.treeRef) {
-                await this.$nextTick();
-                this.treeData = this.getInitialTreeData();
-                await this.$nextTick();
+                this.treeData = await this.loadTreeData();
             }
         },
 
         async refreshTree() {
-            console.log('refreshTree');
             if (this.$refs.treeRef) {
-                this.treeData = this.getInitialTreeData();
-                await this.$nextTick();
-                const rootNode = this.$refs.treeRef.store.root.childNodes[0];
-                if (rootNode) {
-                    rootNode.expand();
-                }
+                await this.initializeTree();
             }
         },
 
@@ -204,7 +186,8 @@ export default {
         },
 
         parseOptions(data) {
-            const options = [{ value: this.t('all'), label: this.t('all') }];
+            //const options = [{ value: this.t('all'), label: this.t('all') }];
+            const options = [];
             data.forEach(item => {
                 const hasTranslation = this.te(item);
                 options.push({
@@ -216,6 +199,14 @@ export default {
         },
         async getEtypeOptions() {
             await this.getOptions(null, 'etype');
+            if (this.etype_options.length === 0) {
+                this.etype_options = [{ value: this.t('all'), label: this.t('all') }];
+            }
+            if (this.etype_options.some(item => item.value === 'note')) {
+                this.etype_value = 'note';
+            } else {
+                this.etype_value = this.etype_options[0]?.value || this.t('all');
+            }
         },
 
         async getOptions(obj, ctype) { // same as DataManager.vue
@@ -224,7 +215,6 @@ export default {
                 const response = await axios.get(getURL() + func, {
                     params: { ctype: ctype, rtype: 'feature' }
                 });
-                console.log('getOptions success');
 
                 if (ctype == 'all') {
                     if ('ctype' in response.data) {

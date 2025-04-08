@@ -407,7 +407,6 @@ class EntryAPIView(APIView):
                     'need_load': is_last_level and i == len(path_parts) - 1,
                     'children': []
                 }
-                logger.error('' + str(new_node))
                 path_dict[current_path] = new_node
                 current_level.append(new_node)
                 current_level = new_node['children']
