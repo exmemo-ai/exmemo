@@ -137,7 +137,7 @@ const loadTreeData = async (path = '') => {
                 path: path
             }
         });
-        return mapTreeData(response.data);
+        return response.data;
     } catch (error) {
         console.error('Load tree data error:', error);
         parseBackendError(error);
@@ -145,7 +145,19 @@ const loadTreeData = async (path = '') => {
     }
 };
 
+const mapTreeItem = (item) => ({
+    label: item.title,
+    type: item.is_folder ? 'folder' : 'file',
+    id: item.id,
+    addr: item.addr,
+    is_folder: item.is_folder,
+    need_load: item.need_load ?? false,
+    children: item.is_folder && item.children ? mapTreeData(item.children) : undefined,
+});
+
 const mapTreeData = (data) => {
+    if (!Array.isArray(data)) return [];
+    
     const folders = data.filter(item => item.is_folder);
     const files = data.filter(item => !item.is_folder);
 
@@ -153,29 +165,50 @@ const mapTreeData = (data) => {
     folders.sort(sortByTitle);
     files.sort(sortByTitle);
 
-    return [...folders, ...files].map(item => ({
-        label: item.title,
-        type: item.is_folder ? 'folder' : 'file',
-        id: item.id,
-        addr: item.addr,
-        is_folder: item.is_folder,
-        need_load: item.need_load ?? false,
-        children: item.is_folder ? item.children : undefined,
-    }));
+    return [...folders, ...files].map(mapTreeItem);
 };
 
 const loadNode = async (node, resolve) => {
+    console.log('loadNode')
+    /*
+    if (node.level === 0) {
+        const data = await loadTreeData();
+        const mappedData = mapTreeData(data);
+        resolve(mappedData);
+        return;
+    }*/ // later
+
     if (node.data && !node.data.need_load && node.data.children) {
-        resolve(mapTreeData(node.data.children));
+        resolve(node.data.children);
         return;
     }
+
     const children = await loadTreeData(node.data?.id || '');
-    resolve(children);
+    const mappedChildren = mapTreeData(children);
+    
+    updateNodeChildren(treeData.value, node.data?.id, mappedChildren);
+    resolve(mappedChildren);
+};
+
+const updateNodeChildren = (nodes, nodeId, mappedChildren) => {
+    if (!nodes) return false;
+    for (let n of nodes) {
+        if (n.id === nodeId) {
+            n.children = mappedChildren;
+            n.need_load = false;
+            return true;
+        }
+        if (n.children && updateNodeChildren(n.children)) {
+            return true;
+        }
+    }
+    return false;
 };
 
 const initializeTree = async () => {
     if (treeRef.value) {
-        treeData.value = await loadTreeData();
+        const data = await loadTreeData();
+        treeData.value = mapTreeData(data);
     }
 };
 
@@ -403,24 +436,27 @@ const findAndAddNode = (trees, targetId, newNode) => {
     return false;
 };
 
-const findAndExpandNode = async (nodeId) => {
-    let currentNode = null;
+const findNode = (nodeId) => {
     const traverse = (node) => {
-        if (node && node.data && node.data.id === nodeId) {
-            currentNode = node;
-        }
-        if (node.childNodes) {
-            node.childNodes.forEach(child => traverse(child));
-        }
+        if (!node) return null;
+        if (node.data?.id === nodeId) return node;
+        return node.childNodes?.find(child => traverse(child)) || null;  
     };
 
-    treeRef.value.root.childNodes.forEach(node => traverse(node));
+    return treeRef.value.root.childNodes.reduce((found, node) => 
+        found || traverse(node), null);
+};
 
-    if (currentNode) {
-        await currentNode.expand();
-        return currentNode;
-    }
-    return null;
+const findData = (nodeId) => {
+    const traverse = (nodes) => {
+        if (!nodes || !Array.isArray(nodes)) return false;
+        for (const node of nodes) {
+            if (node.id === nodeId) return true;
+            if (node.children && traverse(node.children)) return true;
+        }
+        return false;
+    };
+    return traverse(treeData.value);
 };
 
 const handleNewFolder = async () => {
@@ -439,14 +475,23 @@ const handleNewFolder = async () => {
 
         if (!folderName) return;
 
-        const newFolder = {
+        const id = `${rightClickNode.value.data.addr}/${folderName}`;
+        const folderData = {
             title: folderName,
             is_folder: true,
-            id: `${rightClickNode.value.data.addr}/${folderName}`,
-            addr: `${rightClickNode.value.data.addr}/${folderName}`,
+            id: id,
+            addr: id,
             need_load: false,
             children: []
         };
+
+        const existingNode = await findData(id);
+        if (existingNode) {
+            ElMessage.error(t('folderAlreadyExists'));
+            return;
+        }
+
+        const newFolder = mapTreeItem(folderData);
 
         if (rightClickNode.value.data.id === '') {
             if (!treeData.value) {
@@ -457,7 +502,10 @@ const handleNewFolder = async () => {
             if (findAndAddNode(treeData.value, rightClickNode.value.data.id, newFolder)) {
                 treeData.value = [...treeData.value];
                 await nextTick();
-                await findAndExpandNode(rightClickNode.value.data.id);
+                const exNode = await findNode(rightClickNode.value.data.id);
+                if (exNode) {
+                    exNode.expand();
+                }
             }
         }
         ElMessage.success(t('createFolderSuccess'));
