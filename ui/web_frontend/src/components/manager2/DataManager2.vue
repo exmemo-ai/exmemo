@@ -83,7 +83,7 @@ import AddDialog from '@/components/manager/AddDialog.vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import ContextMenu from './ContextMenu.vue'
 import { mapTreeData, updateNodeChildren, findNode } from './treeUtils'
-import { loadTreeData, getFeatureOptions } from './apiUtils'
+import { loadTreeData, getFeatureOptions, renameData } from './apiUtils'
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 
 const { t, te } = useI18n();
@@ -227,6 +227,7 @@ const handleEtypeChange = async (value) => {
 const openItem = async (idx) => {
     let func = 'api/entry/data/'
     try {
+        setDefaultAuthHeader();
         const response = await axios.get(getURL() + func + idx + '/');
         const data = response.data;
         description.value = [
