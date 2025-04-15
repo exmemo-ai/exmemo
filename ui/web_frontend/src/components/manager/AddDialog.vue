@@ -27,8 +27,24 @@
                     <el-input type="textarea" :rows="6" v-model="form.addr"
                         placeholder="http://"></el-input>
                 </div>
-                <div v-if="form.etype === 'file'" width="100%">
+                <div v-if="form.etype === 'file'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
                     <input type="file" @change="handleFileUpload" width="100%">
+                    <div class="form-row">
+                        <div class="label-container">
+                            <el-text>{{ $t('opt.vault') }}</el-text>
+                        </div>
+                        <div class="content-container">
+                            <el-input type="text" v-model="file_vault"></el-input>
+                        </div>
+                    </div>  
+                    <div class="form-row">
+                        <div class="label-container">
+                            <el-text>{{ $t('opt.path') }}</el-text>
+                        </div>
+                        <div class="content-container">
+                            <el-input type="text" v-model="file_input_path"></el-input>
+                        </div>
+                    </div>
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
                     <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
@@ -88,6 +104,8 @@ export default {
             onSuccess: null,
             input_vault: null,
             input_path: null,
+            file_vault: null,
+            file_input_path: null,
             file_path: null,
             file: null,
             dialogVisible: false,
@@ -135,6 +153,8 @@ export default {
             }
             this.input_vault = options?.vault ?? null;
             this.input_path = options?.path ?? null;
+            this.file_vault = options?.vault ?? null;
+            this.file_input_path = options?.path ?? null;
             this.form.ctype = options?.ctype ?? '';
             this.form.atype = options?.atype ?? '';
             this.form.status = options?.status ?? '';
@@ -173,16 +193,28 @@ export default {
             }
         },
         async calcFilePath() {
-            const normalizedPath = this.normalizePath(this.input_path);
-            this.file_path = this.input_vault + '/' + normalizedPath;
-            if (this.form.etype === 'note' && this.file_path && !this.file_path.includes('.')) {
-                this.file_path += '.md';
+            if (this.form.etype === 'file') {
+                const normalizedPath = this.normalizePath(this.file_input_path);
+                this.file_path = this.file_vault + '/' + normalizedPath;
+            } else {
+                const normalizedPath = this.normalizePath(this.input_path);
+                this.file_path = this.input_vault + '/' + normalizedPath;
+                if (this.form.etype === 'note' && this.file_path && !this.file_path.includes('.')) {
+                    this.file_path += '.md';
+                }
             }
         },
         async doSave() {
             console.log("doSave");
             if (this.form.etype === 'note') {
                 if (this.input_vault && this.input_path) {
+                    this.calcFilePath();
+                } else {
+                    ElMessage.error(this.$t('opt.needVaultPath'));
+                    return;
+                }
+            } else if (this.form.etype === 'file') {
+                if (this.file_vault) {
                     this.calcFilePath();
                 } else {
                     ElMessage.error(this.$t('opt.needVaultPath'));
@@ -196,6 +228,11 @@ export default {
                     const settingService = SettingService.getInstance();
                     settingService.loadSetting();
                     settingService.setSetting('default_vault', this.input_vault);
+                    settingService.saveSetting();
+                } else if (this.form.etype === 'file' && this.file_vault && this.file_vault.length > 0) {
+                    const settingService = SettingService.getInstance();
+                    settingService.loadSetting();
+                    settingService.setSetting('default_file_vault', this.file_vault);
                     settingService.saveSetting();
                 }
                 this.closeDialog();
@@ -211,9 +248,20 @@ export default {
             return '';
         },
         handleFileUpload(event) {
-            this.file_path = event.target.files[0].name;
-            this.file = event.target.files[0];
-            this.form.title = this.calcTitle(this.file_path)
+            const uploadedFile = event.target.files[0];
+            this.file = uploadedFile;
+            const fileName = uploadedFile.name;
+            
+            if (!this.file_input_path) {
+                this.file_input_path = fileName;
+            } else {
+                const hasFileName = this.file_input_path.split('/').pop().includes('.');
+                if (!hasFileName) {
+                    this.file_input_path = this.file_input_path.replace(/\/+$/, '') + '/' + fileName;
+                }
+            }            
+            this.file_path = uploadedFile.name;
+            this.form.title = this.calcTitle(this.file_path);
         },
     },
     mounted() {

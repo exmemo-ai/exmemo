@@ -366,6 +366,8 @@ class EntryAPIView(APIView):
             return self.extract(request)
         elif rtype == "tree":
             return self.tree(request)
+        elif rtype == "move":
+            return self.move(request)
         else:
             return do_result(False, _("unknown_action"))
 
@@ -402,6 +404,7 @@ class EntryAPIView(APIView):
                 abs_path = os.path.join(path, current_path) if path != "" and path is not None else current_path
                 new_node = {
                     'id': entry.idx if entry and i == len(path_parts) - 1 else abs_path,
+                    'addr': abs_path,
                     'title': part,
                     'is_folder': i < len(path_parts) - 1 or is_last_level,
                     'need_load': is_last_level and i == len(path_parts) - 1,
@@ -502,6 +505,72 @@ class EntryAPIView(APIView):
             traceback.print_exc()
             return Response(
                 {"error": "Failed to get file tree"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+    def move(self, request):
+        """
+        Move file to another folder
+        """
+        try:
+            user_id = get_user_id(request)
+            if user_id is None:
+                return do_result(False, "User_id is empty")
+
+            src = request.GET.get("source", request.POST.get("source", None))
+            dst = request.GET.get("target", request.POST.get("target", None))
+            src_type = request.GET.get("source_type", request.POST.get("source_type", None))
+            dst_type = request.GET.get("target_type", request.POST.get("target_type", None))
+            etype = request.GET.get("etype", request.POST.get("etype", None))
+            if not src or not dst or not src_type or not dst_type:
+                return do_result(False, "Src or dst is empty")
+
+            src = src.strip()
+            dst = dst.strip()
+
+            if src == dst:
+                return do_result(True, "Src and dst are same")
+
+            if dst_type == 'folder':
+                dst_path = dst
+            else:
+                dst_path = os.path.dirname(dst)
+
+            logger.info(f'{src} {dst_path} {src_type} {dst_type}')
+
+            if src_type == 'file':
+                entry = StoreEntry.objects.filter(user_id=user_id, addr=src, etype=etype, block_id=0).first()
+                if not entry:
+                    return do_result(False, "Src not found")
+                dst = os.path.join(dst_path, os.path.basename(entry.addr))
+                dic = entry.__dict__.copy()
+                ret = rename_file(user_id, entry.addr, dst, dic)
+                if ret:
+                    return do_result(True, "Move success")
+            else:
+                dirname = src
+                if not dirname.endswith('/'):
+                    dirname = dirname + '/'
+                entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
+                src_basename = os.path.basename(src.rstrip('/'))
+                target_base = os.path.join(dst_path, src_basename)
+                
+                for entry in entries:
+                    rel_path = entry.addr[len(dirname):]
+                    new_dst = os.path.join(target_base, rel_path)
+                    dic = entry.__dict__.copy()
+                    ret = rename_file(user_id, entry.addr, new_dst, dic, debug=True)
+                    if not ret:
+                        return do_result(False, "Move failed")
+                return do_result(True, "Move success")
+
+            return do_result(False, "Move failed")
+        except Exception as e:
+            logger.error(f"Error moving file: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {"error": "Failed to move file"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

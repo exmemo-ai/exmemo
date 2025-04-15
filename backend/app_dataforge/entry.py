@@ -465,7 +465,9 @@ def get_type_options(ctype):
         return HttpResponse(json.dumps([]))
 
 
-def rename_file(uid, oldaddr, newaddr, dic):
+def rename_file(uid, oldaddr, newaddr, dic, debug=False):
+    if debug:
+        logger.debug(f'rename_file {uid} {oldaddr} to {newaddr}')
     if dic['etype'] == 'file':
         oldpath = os.path.join(REL_DIR_FILES, oldaddr)
         newpath = os.path.join(REL_DIR_FILES, newaddr)
@@ -476,8 +478,6 @@ def rename_file(uid, oldaddr, newaddr, dic):
         return False
     ret = utils_filemanager.get_file_manager().rename_file(uid, oldpath, newpath)
     if ret:
-        dic['addr'] = newaddr
-        ret, ret_emb, info = add_data(dic)
-        if ret:
-            return True
+        StoreEntry.objects.filter(user_id=uid, addr=oldaddr, etype=dic['etype']).update(addr=newaddr, path=newpath)
+        return True
     return False

@@ -144,7 +144,10 @@ class LocalFileManager:
         real_oldpath = f"{self.base_path}/{uid}/{oldpath}"
         real_newpath = f"{self.base_path}/{uid}/{newpath}"
         try:
-            # logger.debug(f'rename_file {real_oldpath} to {real_newpath}')
+            target_dir = os.path.dirname(real_newpath)
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+
             os.rename(real_oldpath, real_newpath)
             return True
         except Exception as e:

@@ -147,7 +147,7 @@ class SettingAPIView(APIView):
             'llm_chat_prompt', 'llm_chat_show_count',
             'llm_chat_max_context_count', 'llm_chat_memory_count',
             'truncate_max_length', 'truncate_mode',
-            'learn_word_voc', 'default_vault'
+            'learn_word_voc', 'default_vault', 'default_file_vault'
         ]
         
         boolean_settings = [
