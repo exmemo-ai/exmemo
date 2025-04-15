@@ -417,19 +417,23 @@ class EntryAPIView(APIView):
                 current_level = path_dict[current_path]['children']
         return current_level
 
-    def tree(self, request, debug=True):
+    def tree(self, request, debug=False):
         """
         Get file tree structure 
         """
         try:
-            if debug:
-                logger.info('get file tree')
             user_id = get_user_id(request)
             if user_id is None:
                 return Response([])
 
             etype = request.GET.get("etype", request.POST.get("etype", None))
             path = request.GET.get("path", request.POST.get("path", None))
+            level = request.GET.get("level", request.POST.get("level", MAX_LEVEL))
+            if isinstance(level, str):
+                level = int(level)
+
+            if debug:
+                logger.info(f'get file tree etype: {etype}, path: {path} level: {level}')
 
             query_conditions = {
                 'user_id': user_id,
@@ -447,18 +451,19 @@ class EntryAPIView(APIView):
                 'idx', 'addr', 'etype', 'title', 'meta'
             )
             
-            if etype in ['note', 'file']:
-                path_level = 0
-                if path:
-                    path_clean = path.strip('/')
-                    if path_clean:
-                        path_level = path_clean.count('/') + 1
-                    if debug:
-                        logger.info(f'path: {path}, path_level: {path_level}')
-                
-                query = query.exclude(
-                    addr__regex=f'^[^/]*/([^/]*/){{{MAX_LEVEL+path_level}}}'
-                )
+            if level != -1:
+                if etype in ['note', 'file']:
+                    path_level = 0
+                    if path:
+                        path_clean = path.strip('/')
+                        if path_clean:
+                            path_level = path_clean.count('/') + 1
+                        if debug:
+                            logger.info(f'path: {path}, path_level: {path_level}')
+                    
+                    query = query.exclude(
+                        addr__regex=f'^[^/]*/([^/]*/){{{level+path_level}}}'
+                    )
             
             entries = query.order_by('addr')
             
@@ -484,11 +489,10 @@ class EntryAPIView(APIView):
                     rel_path = file_path
 
                 arr = rel_path.split('/')
-                if len(arr) > MAX_LEVEL:
-                    # 处理超过最大层级的情况
+                if level != -1 and len(arr) > level:
                     current_path = ""
                     current_level = root
-                    self._build_tree_node(path_dict, current_level, current_path, arr[:MAX_LEVEL], path=path, is_last_level=True)
+                    self._build_tree_node(path_dict, current_level, current_path, arr[:level], path=path, is_last_level=True)
                     continue
 
                 current_path = ""
@@ -510,68 +514,59 @@ class EntryAPIView(APIView):
         
     def move(self, request):
         """
-        Move file to another folder
+        Move file or folder to another location
         """
         try:
             user_id = get_user_id(request)
             if user_id is None:
                 return do_result(False, "User_id is empty")
 
-            src = request.GET.get("source", request.POST.get("source", None))
-            dst = request.GET.get("target", request.POST.get("target", None))
-            src_type = request.GET.get("source_type", request.POST.get("source_type", None))
-            dst_type = request.GET.get("target_type", request.POST.get("target_type", None))
+            source = request.GET.get("source", request.POST.get("source", None))
+            target = request.GET.get("target", request.POST.get("target", None))
+            is_folder = request.GET.get("is_folder", request.POST.get("is_folder", "false")).lower() == "true"
             etype = request.GET.get("etype", request.POST.get("etype", None))
-            if not src or not dst or not src_type or not dst_type:
-                return do_result(False, "Src or dst is empty")
 
-            src = src.strip()
-            dst = dst.strip()
+            if not source or not target:
+                return do_result(False, "Source or target is empty")
 
-            if src == dst:
-                return do_result(True, "Src and dst are same")
+            source = source.strip()
+            target = target.strip()
 
-            if dst_type == 'folder':
-                dst_path = dst
-            else:
-                dst_path = os.path.dirname(dst)
+            if source == target:
+                return do_result(True, "Source and target are same")
 
-            logger.info(f'{src} {dst_path} {src_type} {dst_type}')
+            logger.debug(f'Move: {source} -> {target} (is_folder: {is_folder})')
 
-            if src_type == 'file':
-                entry = StoreEntry.objects.filter(user_id=user_id, addr=src, etype=etype, block_id=0).first()
+            if not is_folder:
+                # Move single file
+                entry = StoreEntry.objects.filter(user_id=user_id, addr=source, etype=etype, block_id=0).first()
                 if not entry:
-                    return do_result(False, "Src not found")
-                dst = os.path.join(dst_path, os.path.basename(entry.addr))
+                    return do_result(False, "Source file not found")
                 dic = entry.__dict__.copy()
-                ret = rename_file(user_id, entry.addr, dst, dic)
+                ret = rename_file(user_id, source, target, dic)
                 if ret:
                     return do_result(True, "Move success")
             else:
-                dirname = src
-                if not dirname.endswith('/'):
-                    dirname = dirname + '/'
+                dirname = source if source.endswith('/') else source + '/'
                 entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
-                src_basename = os.path.basename(src.rstrip('/'))
-                target_base = os.path.join(dst_path, src_basename)
                 
+                logger.debug(f"Move entries: {len(entries)} {dirname}")
                 for entry in entries:
                     rel_path = entry.addr[len(dirname):]
-                    new_dst = os.path.join(target_base, rel_path)
+                    new_dst = os.path.join(target, rel_path)
                     dic = entry.__dict__.copy()
-                    ret = rename_file(user_id, entry.addr, new_dst, dic, debug=True)
+                    ret = rename_file(user_id, entry.addr, new_dst, dic, False);
                     if not ret:
                         return do_result(False, "Move failed")
                 return do_result(True, "Move success")
 
             return do_result(False, "Move failed")
         except Exception as e:
-            logger.error(f"Error moving file: {str(e)}")
+            logger.error(f"Error moving file/folder: {str(e)}")
             import traceback
             traceback.print_exc()
             return Response(
-                {"error": "Failed to move file"}, 
+                {"error": "Failed to move file/folder"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 

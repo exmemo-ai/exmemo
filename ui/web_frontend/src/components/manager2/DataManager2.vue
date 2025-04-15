@@ -56,51 +56,35 @@
                 </div>
             </el-main>
         </el-container>
-        <EditDialog ref="editDialog" />
         <AddDialog ref="addDialog" />
-
-        <div v-show="contextMenuVisible" class="context-menu" :style="contextMenuStyle">
-            <el-menu>
-                <el-menu-item @click="handleNewFolder">
-                    <el-icon>
-                        <FolderAdd />
-                    </el-icon>
-                    <span>{{ t('newFolder') }}</span>
-                </el-menu-item>
-                <el-menu-item @click="handleNewFile">
-                    <el-icon>
-                        <DocumentAdd />
-                    </el-icon>
-                    <span>{{ t('newFile') }}</span>
-                </el-menu-item>
-                <el-divider />
-                <el-menu-item @click="handleRename">
-                    <el-icon>
-                        <Edit />
-                    </el-icon>
-                    <span>{{ t('rename') }}</span>
-                </el-menu-item>
-                <el-menu-item @click="handleDelete">
-                    <el-icon>
-                        <Delete />
-                    </el-icon>
-                    <span>{{ t('delete') }}</span>
-                </el-menu-item>
-            </el-menu>
-        </div>
+        
+        <ContextMenu 
+            :visible="contextMenuVisible"
+            :menu-style="contextMenuStyle"
+            :right-click-node="rightClickNode"
+            :etype_value="etype_value"
+            :tree-data="treeData"
+            :tree-ref="treeRef"
+            @update:visible="contextMenuVisible = $event"
+            @refresh-tree="refreshTree"
+            @close-menu="closeContextMenu"
+            @new-file="handleNewFileData"
+        />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
 import axios from 'axios';
-import { ElMessage, ElMessageBox } from 'element-plus'
-import EditDialog from '@/components/manager/EditDialog.vue';
-import AddDialog from '@/components/manager/AddDialog.vue';
-import AppNavbar from '@/components/support/AppNavbar.vue'
-import { Delete, Folder, Document, Refresh, FolderAdd, DocumentAdd, Edit } from '@element-plus/icons-vue'
+import { ref, onMounted, nextTick } from 'vue'
+import { ElMessage, } from 'element-plus'
+import { Folder, Document, Refresh } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
-import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn'
+import AddDialog from '@/components/manager/AddDialog.vue'
+import AppNavbar from '@/components/support/AppNavbar.vue'
+import ContextMenu from './ContextMenu.vue'
+import { mapTreeData, updateNodeChildren, findNode } from './treeUtils'
+import { loadTreeData, getFeatureOptions } from './apiUtils'
+import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 
 const { t, te } = useI18n();
 const treeRef = ref(null);
@@ -117,6 +101,7 @@ const contextMenuStyle = ref({
     left: '0px'
 });
 const rightClickNode = ref(null);
+const addDialog = ref(null);
 
 const defaultProps = {
     children: 'children',
@@ -124,52 +109,8 @@ const defaultProps = {
     isLeaf: (data) => !data.is_folder,
 };
 
-const loadTreeData = async (path = '') => {
-    if (!mounted.value || !etype_value.value) {
-        return [];
-    }
-    try {
-        setDefaultAuthHeader();
-        const response = await axios.get(getURL() + 'api/entry/tool/', {
-            params: {
-                rtype: 'tree',
-                etype: etype_value.value === t('all') ? '' : etype_value.value,
-                path: path
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Load tree data error:', error);
-        parseBackendError(error);
-        return [];
-    }
-};
-
-const mapTreeItem = (item) => ({
-    label: item.title,
-    type: item.is_folder ? 'folder' : 'file',
-    id: item.id,
-    addr: item.addr,
-    is_folder: item.is_folder,
-    need_load: item.need_load ?? false,
-    children: item.is_folder && item.children ? mapTreeData(item.children) : undefined,
-});
-
-const mapTreeData = (data) => {
-    if (!Array.isArray(data)) return [];
-    
-    const folders = data.filter(item => item.is_folder);
-    const files = data.filter(item => !item.is_folder);
-
-    const sortByTitle = (a, b) => a.title.localeCompare(b.title);
-    folders.sort(sortByTitle);
-    files.sort(sortByTitle);
-
-    return [...folders, ...files].map(mapTreeItem);
-};
-
 const loadNode = async (node, resolve) => {
-    console.log('loadNode')
+    console.log('loadNode', etype_value.value)
     /*
     if (node.level === 0) {
         const data = await loadTreeData();
@@ -183,31 +124,16 @@ const loadNode = async (node, resolve) => {
         return;
     }
 
-    const children = await loadTreeData(node.data?.id || '');
+    const children = await loadTreeData(etype_value.value, node.data?.id || '');
     const mappedChildren = mapTreeData(children);
     
     updateNodeChildren(treeData.value, node.data?.id, mappedChildren);
     resolve(mappedChildren);
 };
 
-const updateNodeChildren = (nodes, nodeId, mappedChildren) => {
-    if (!nodes) return false;
-    for (let n of nodes) {
-        if (n.id === nodeId) {
-            n.children = mappedChildren;
-            n.need_load = false;
-            return true;
-        }
-        if (n.children && updateNodeChildren(n.children)) {
-            return true;
-        }
-    }
-    return false;
-};
-
 const initializeTree = async () => {
     if (treeRef.value) {
-        const data = await loadTreeData();
+        const data = await loadTreeData(etype_value.value);
         treeData.value = mapTreeData(data);
     }
 };
@@ -280,7 +206,9 @@ const parseOptions = (data) => {
 };
 
 const getEtypeOptions = async () => {
-    await getOptions(null, 'etype');
+    const data = await getFeatureOptions('etype');
+    etype_options.value = parseOptions(data);
+    
     if (etype_options.value.length === 0) {
         etype_options.value = [{ value: t('all'), label: t('all') }];
     }
@@ -288,39 +216,6 @@ const getEtypeOptions = async () => {
         etype_value.value = 'note';
     } else {
         etype_value.value = etype_options.value[0]?.value || t('all');
-    }
-};
-
-const getOptions = async (obj, ctype) => {
-    let func = 'api/entry/tool/'
-    try {
-        const response = await axios.get(getURL() + func, {
-            params: { ctype: ctype, rtype: 'feature' }
-        });
-
-        if (ctype == 'all') {
-            if ('ctype' in response.data) {
-                ctype_options.value = parseOptions(response.data['ctype']);
-            }
-            if ('status' in response.data) {
-                status_options.value = parseOptions(response.data['status']);
-            }
-            if ('etype' in response.data) {
-                etype_options.value = parseOptions(response.data['etype']);
-            }
-        } else {
-            const options = parseOptions(response.data);
-            await nextTick();
-            if (ctype === 'ctype') {
-                ctype_options.value = options;
-            } else if (ctype === 'status') {
-                status_options.value = options;
-            } else if (ctype === 'etype') {
-                etype_options.value = options;
-            }
-        }
-    } catch (error) {
-        console.log('getOptions error', error);
     }
 };
 
@@ -345,9 +240,8 @@ const openItem = async (idx) => {
             `Path: ${data.path}`,
             `Content: \n${data.content}`
         ].join('\n');
-
     } catch (error) {
-        parseBackendError(error);
+        parseBackendError(null, error);
     }
 };
 
@@ -365,33 +259,27 @@ const allowDrop = (draggingNode, dropNode, type) => {
 
 const handleDrop = async (draggingNode, dropNode, type) => {
     try {
-        const sourceId = draggingNode.data.addr;
-        const targetId = dropNode.data.addr;
+        const sourceAddr = draggingNode.data.addr;
+        let targetAddr = dropNode.data.addr;
+        const isFolder = draggingNode.data.is_folder;
 
-        setDefaultAuthHeader();
-
-        let func = 'api/entry/tool/'
-        const response = await axios.get(getURL() + func, {
-            params: {
-                rtype: 'move',
-                source: sourceId,
-                source_type: draggingNode.data.type,
-                target: targetId,
-                target_type: dropNode.data.type,
-                etype: etype_value.value,
-            }
-        });
-
-        if (response.data.status !== 'success') {
-            ElMessage.error(response.data.info || 'Move failed');
-            return;
+        const sourceName = sourceAddr.split('/').pop();
+        if (dropNode.data.is_folder) {
+            targetAddr = `${targetAddr}/${sourceName}`.replace(/\/+/g, '/');
+        } else {
+            const targetDir = targetAddr.split('/').slice(0, -1).join('/');
+            targetAddr = `${targetDir}/${sourceName}`.replace(/\/+/g, '/');
         }
 
+        response_data = renameData(sourceAddr, targetAddr, etype_value.value, isFolder);
+        if (response_data.status !== 'success') {
+            ElMessage.error(response_data.info || t('moveFailed'));
+            return;
+        }
         await refreshTree();
-
     } catch (error) {
         console.error('Move error:', error);
-        parseBackendError(error);
+        parseBackendError(null, error);
     }
 };
 
@@ -416,119 +304,14 @@ const closeContextMenu = () => {
     document.removeEventListener('click', closeContextMenu);
 };
 
-const findAndAddNode = (trees, targetId, newNode) => {
-    for (let node of trees) {
-        if (node.id === targetId) {
-            if (node.id === targetId) {
-                if (!node.children) {
-                    node.children = [];
-                }
-                node.children.push(newNode);
-            }
-            return true;
+const handleNewFileData = (data) => {
+    addDialog.value.openDialog(async () => {
+        await refreshTree();
+        const exNode = await findNode(treeRef, rightClickNode.value.data.id);
+        if (exNode) {
+            exNode.expand();
         }
-        if (node.children) {
-            if (findAndAddNode(node.children, targetId, newNode)) {
-                return true;
-            }
-        }
-    }
-    return false;
-};
-
-const findNode = (nodeId) => {
-    const traverse = (node) => {
-        if (!node) return null;
-        if (node.data?.id === nodeId) return node;
-        return node.childNodes?.find(child => traverse(child)) || null;  
-    };
-
-    return treeRef.value.root.childNodes.reduce((found, node) => 
-        found || traverse(node), null);
-};
-
-const findData = (nodeId) => {
-    const traverse = (nodes) => {
-        if (!nodes || !Array.isArray(nodes)) return false;
-        for (const node of nodes) {
-            if (node.id === nodeId) return true;
-            if (node.children && traverse(node.children)) return true;
-        }
-        return false;
-    };
-    return traverse(treeData.value);
-};
-
-const handleNewFolder = async () => {
-    if (!rightClickNode.value) return;
-
-    try {
-        const { value: folderName } = await ElMessageBox.prompt(t('enterFolderName'), {
-            confirmButtonText: t('ok'),
-            cancelButtonText: t('cancel'),
-            inputValidator: (value) => {
-                if (!value) return t('folderNameRequired');
-                if (value.includes('/')) return t('folderNameInvalid');
-                return true;
-            }
-        });
-
-        if (!folderName) return;
-
-        const id = `${rightClickNode.value.data.addr}/${folderName}`;
-        const folderData = {
-            title: folderName,
-            is_folder: true,
-            id: id,
-            addr: id,
-            need_load: false,
-            children: []
-        };
-
-        const existingNode = await findData(id);
-        if (existingNode) {
-            ElMessage.error(t('folderAlreadyExists'));
-            return;
-        }
-
-        const newFolder = mapTreeItem(folderData);
-
-        if (rightClickNode.value.data.id === '') {
-            if (!treeData.value) {
-                treeData.value = [];
-            }
-            treeData.value.push(newFolder);
-        } else {
-            if (findAndAddNode(treeData.value, rightClickNode.value.data.id, newFolder)) {
-                treeData.value = [...treeData.value];
-                await nextTick();
-                const exNode = await findNode(rightClickNode.value.data.id);
-                if (exNode) {
-                    exNode.expand();
-                }
-            }
-        }
-        ElMessage.success(t('createFolderSuccess'));
-    } catch (error) {
-        if (error.message !== 'cancel') {
-            console.error('Create folder error:', error);
-            ElMessage.error(t('createFolderFailed'));
-        }
-    } finally {
-        closeContextMenu();
-    }
-};
-
-const handleNewFile = () => {
-    console.log('新建文件', rightClickNode.value);
-};
-
-const handleRename = () => {
-    console.log('重命名', rightClickNode.value);
-};
-
-const handleDelete = () => {
-    console.log('删除', rightClickNode.value);
+    }, data);
 };
 
 onMounted(async () => {
@@ -555,10 +338,8 @@ defineExpose({
     refreshTree,
     handleEtypeChange,
     handleContextMenu,
-    handleNewFolder,
-    handleNewFile,
-    handleRename,
-    handleDelete,
+    closeContextMenu,
+    handleNewFileData,
     allowDrag,
     allowDrop,
     handleDrop
@@ -622,15 +403,12 @@ defineExpose({
 
 .filter-item {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 5px;
-    flex-grow: 1;
 }
 
 .label-container {
-    display: flex;
-    align-items: center;
-    flex-shrink: 1;
+    flex-shrink: 0;
 }
 
 .select-container {
@@ -638,56 +416,11 @@ defineExpose({
     width: 200px;
 }
 
-@media (max-width: 767px) {
-    .file-tree-aside {
-        width: 250px !important;
-        /* 移动端默认宽度 */
-        min-width: auto;
-        max-width: 100%;
-        resize: none;
-    }
-
-    .filter-section {
-        width: 100%;
-    }
-
-    .select-container {
-        width: 100%;
-    }
-
-    :deep(.el-select) {
-        width: 100%;
-    }
+:deep(.el-select) {
+    width: 100%;
 }
 
 :deep(.el-dropdown-menu) {
     z-index: 9999;
-}
-
-.context-menu {
-    position: fixed;
-    background: var(--el-bg-color);
-    border: 1px solid var(--el-border-color-light);
-    border-radius: 4px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    z-index: 3000;
-}
-
-.context-menu :deep(.el-menu) {
-    border: none;
-    padding: 4px 0;
-}
-
-.context-menu :deep(.el-menu-item) {
-    height: 36px;
-    line-height: 36px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 16px;
-}
-
-.context-menu :deep(.el-divider--horizontal) {
-    margin: 4px 0;
 }
 </style>
