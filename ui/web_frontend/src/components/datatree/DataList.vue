@@ -49,10 +49,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="description-container" v-if="description">
+                <div class="description-container" v-if="markdownContent">
+                    <!--
                     <div style="padding: 10px;">
                         <pre>{{ description }}</pre>
-                    </div>
+                    </div>-->
+                    <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
+                            :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
                 </div>
             </el-main>
         </el-container>
@@ -85,6 +88,7 @@ import ContextMenu from './ContextMenu.vue'
 import { mapTreeData, updateNodeChildren, findNode } from './treeUtils'
 import { loadTreeData, getFeatureOptions, renameData } from './apiUtils'
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
+import { MdPreview } from 'md-editor-v3'
 
 const { t, te } = useI18n();
 const treeRef = ref(null);
@@ -93,7 +97,7 @@ const currentNode = ref(null);
 const mounted = ref(false);
 const etype_value = ref(null);
 const etype_options = ref([]);
-const description = ref('');
+const markdownContent = ref('');
 const contextMenuVisible = ref(false);
 const contextMenuStyle = ref({
     position: 'fixed',
@@ -230,7 +234,7 @@ const openItem = async (idx) => {
         setDefaultAuthHeader();
         const response = await axios.get(getURL() + func + idx + '/');
         const data = response.data;
-        description.value = [
+        markdownContent.value = [
             `Title: ${data.title}`,
             `Type: ${data.etype}`,
             `Category: ${data.ctype}`,
@@ -330,7 +334,7 @@ defineExpose({
     mounted,
     etype_value,
     etype_options,
-    description,
+    markdownContent,
     contextMenuVisible,
     contextMenuStyle,
     rightClickNode,

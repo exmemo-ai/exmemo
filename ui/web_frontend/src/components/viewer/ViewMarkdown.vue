@@ -199,8 +199,8 @@ import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
 import TranslateIcon from '@/components/icons/TranslateIcon.vue'
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
-import ViewNote from '@/components/datatable/ViewNote.vue'
-import { getSelectedNodeList, getVisibleNodeList, setHighlight } from '../datatable/DOMUtils';
+import ViewNote from '@/components/viewer/ViewNote.vue'
+import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue'
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'

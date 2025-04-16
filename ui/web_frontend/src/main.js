@@ -5,7 +5,7 @@ import ElementPlus from 'element-plus';
 import DataManager from './components/datatable/DataManager.vue'; 
 import DataList from './components/datatree/DataList.vue'; 
 import ViewMarkdown from './components/viewer/ViewMarkdown.vue';
-import EditMarkdown from './components/datatable/EditMarkdown.vue';
+import EditMarkdown from './components/viewer/EditMarkdown.vue';
 import ChatManager from './components/chat/ChatManager.vue';
 import SupportTools from './components/assistive/AssistiveMain.vue';
 import SettingMain from './components/settings/SettingMain.vue';

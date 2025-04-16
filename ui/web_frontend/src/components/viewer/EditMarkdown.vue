@@ -74,7 +74,7 @@ import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { MdEditor, NormalToolbar } from 'md-editor-v3';
-import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from './dataUtils';
+import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from '@/components/datatable/dataUtils';
 import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue';
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
 import { useWindowSize } from '@vueuse/core';
