@@ -191,16 +191,16 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { MdPreview, MdCatalog } from 'md-editor-v3'
-import { saveEntry, downloadFile, fetchItem } from './dataUtils';
-import { HighlightManager } from '@/components/manager/HighlightManager'
-import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
+import { saveEntry, downloadFile, fetchItem } from '../datatable/dataUtils';
+import { HighlightManager } from '@/components/viewer/HighlightManager'
+import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue'
 import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete, Select, Link, Download, Star, Document, Files, Search } from '@element-plus/icons-vue'
 import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
 import TranslateIcon from '@/components/icons/TranslateIcon.vue'
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
-import ViewNote from '@/components/manager/ViewNote.vue'
-import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
+import ViewNote from '@/components/datatable/ViewNote.vue'
+import { getSelectedNodeList, getVisibleNodeList, setHighlight } from '../datatable/DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue'
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'

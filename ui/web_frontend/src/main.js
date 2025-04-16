@@ -2,10 +2,10 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue'
 import ElementPlus from 'element-plus';
-import DataManager from './components/manager/DataManager.vue'; 
-import DataManager2 from './components/manager2/DataManager2.vue'; 
-import ViewMarkdown from './components/manager/ViewMarkdown.vue';
-import EditMarkdown from './components/manager/EditMarkdown.vue';
+import DataManager from './components/datatable/DataManager.vue'; 
+import DataList from './components/datatree/DataList.vue'; 
+import ViewMarkdown from './components/viewer/ViewMarkdown.vue';
+import EditMarkdown from './components/datatable/EditMarkdown.vue';
 import ChatManager from './components/chat/ChatManager.vue';
 import SupportTools from './components/assistive/AssistiveMain.vue';
 import SettingMain from './components/settings/SettingMain.vue';
@@ -49,7 +49,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: ChatManager },
     { path: '/data', component: DataManager },
-    { path: '/list', component: DataManager2 },
+    { path: '/list', component: DataList },
     { path: '/view_markdown', component: ViewMarkdown },
     { path: '/edit_markdown', component: EditMarkdown },
     { path: '/chat', component: ChatManager },
@@ -83,7 +83,7 @@ router.beforeEach((to, from, next) => {
 const app = createApp(App);
 app.use(i18n);
 app.component('DataManager', DataManager);
-app.component('DataManager2', DataManager2);
+app.component('DataList', DataList);
 app.component('ViewMarkdown', ViewMarkdown);
 app.component('EditMarkdown', EditMarkdown);
 app.component('ChatManager', ChatManager);

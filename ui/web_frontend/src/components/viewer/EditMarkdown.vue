@@ -75,12 +75,12 @@ import { ElMessage } from 'element-plus';
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { MdEditor, NormalToolbar } from 'md-editor-v3';
 import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from './dataUtils';
-import TextSpeakPlayer from '@/components/manager/TextPlayer.vue';
+import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue';
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
-import AddDialog from '@/components/manager/AddDialog.vue'
+import AddDialog from '@/components/datatable/AddDialog.vue'
 
 const { t } = useI18n();
 const appName = 'ExMemo';

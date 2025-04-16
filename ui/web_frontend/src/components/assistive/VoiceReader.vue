@@ -23,7 +23,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { getURL, parseBackendError } from '@/components/support/conn';
-import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
+import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue'
 import { getLocale } from '@/main.js'
 import axios from 'axios';
 
