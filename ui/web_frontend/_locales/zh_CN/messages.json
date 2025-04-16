@@ -415,6 +415,29 @@
         "screen": "当前屏幕",
         "none": "不参考"
     },
+    "tree": {
+        "newFolder": "新建文件夹",
+        "newFile": "新建文件",
+        "fileTree": "文件树",
+        "moveFailed": "移动失败",
+        "enterFolderName": "请输入文件夹名称",
+        "folderNameRequired": "文件夹名称不能为空",
+        "folderNameInvalid": "文件夹名称不能包含斜杠",
+        "folderAlreadyExists": "文件夹已存在",
+        "createFolderSuccess": "创建文件夹成功",
+        "createFolderFailed": "创建文件夹失败",
+        "enterNewName": "请输入新的名称",
+        "nameRequired": "名称不能为空",
+        "nameInvalid": "名称不能包含斜杠",
+        "nameAlreadyExists": "名称已存在",
+        "renameFailed": "重命名失败",
+        "deleteFolderConfirmation": "此操作将删除目录下所有文件（共 {count}），是否继续?"
+    },
+    "compress": {
+        "unzipSettings": "解压设置",
+        "wantUnzip": "解压此文件",
+        "createSubDir": "创建同名子目录"
+    },   
     "bookmarkManager": "书签",
     "bookmarkTree": "书签目录",
     "clearSession": "清空会话",
@@ -440,7 +463,7 @@
     "moveToBookmarkTitle": "移动到书签", 
     "summaryAdded": "总结已添加",
     "movedToBookmark": "已移动到书签",
-    "confirmDeleteReadLater": "确定要删除这个待读项吗?",
+    "firmDeleteReadLater": "确定要删除这个待读项吗?",
     "warningTitle": "警告",
     "deleted": "已删除",
     "editBookmark": "编辑书签",

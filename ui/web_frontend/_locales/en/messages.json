@@ -410,7 +410,30 @@
         "textLengthWarning": "Text length exceeds limit {length}, please reduce the text length",
         "usePartial": "Use partial",
         "referenceIsNull": "Reference is empty"
-    },    
+    }, 
+    "tree": {
+        "newFolder": "New folder",
+        "newFile": "New file",
+        "fileTree": "File tree", 
+        "moveFailed": "Move failed",
+        "enterFolderName": "Please enter folder name",
+        "folderNameRequired": "Folder name cannot be empty",
+        "folderNameInvalid": "Folder name cannot contain slashes",
+        "folderAlreadyExists": "Folder already exists",
+        "createFolderSuccess": "Create folder success",
+        "createFolderFailed": "Create folder failed",
+        "enterNewName": "Please enter new name",
+        "nameRequired": "Name cannot be empty",
+        "nameInvalid": "Name cannot contain slashes", 
+        "nameAlreadyExists": "Name already exists",
+        "renameFailed": "Rename failed",
+        "deleteFolderConfirmation": "This action will delete all files in the directory (total {count}), continue?"
+    },
+    "compress": {
+        "unzipSettings": "Unzip settings",
+        "wantUnzip": "Unzip this file",
+        "createSubDir": "Create subdirectory with same name"
+    },
     "bookmarkManager": "Bookmark",
     "bookmarkTree": "Bookmark directory",
     "clearSession": "Clear session",

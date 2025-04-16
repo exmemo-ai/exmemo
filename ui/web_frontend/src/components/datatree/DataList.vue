@@ -6,7 +6,7 @@
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
             <el-aside class="file-tree-aside" :style="{ width: asideWidth + 'px' }">
                 <div class="tree-header">
-                    <el-text class="tree-title">{{ t('fileTree') }}</el-text>
+                    <el-text class="tree-title">{{ t('tree.fileTree') }}</el-text>
                     <el-button class="icon-button" @click="refreshTree">
                         <el-icon>
                             <Refresh />
@@ -284,7 +284,6 @@ const openItem = async (idx) => {
             }
         });
         const data = response.data;
-        console.log('@@@@@@@@@@@@@@@@@@@', data);
         let description = ""
         if (data.title) description += `${t('title')}: ${data.title}\n`;
         if (data.etype) description += `${t('data')}: ${t(data.etype)}\n`;
@@ -333,7 +332,7 @@ const handleDrop = async (draggingNode, dropNode, type) => {
 
         const response_data = await renameData(sourceAddr, targetAddr, etype_value.value, isFolder);
         if (response_data.status !== 'success') {
-            ElMessage.error(response_data.info || t('moveFailed'));
+            ElMessage.error(response_data.info || t('tree.moveFailed'));
             return;
         }
         await refreshTree();

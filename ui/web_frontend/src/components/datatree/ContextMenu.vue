@@ -3,11 +3,11 @@
         <el-menu>
             <el-menu-item v-if="showNewFolder" @click="handleNewFolder">
                 <el-icon><FolderAdd /></el-icon>
-                <span>{{ t('newFolder') }}</span>
+                <span>{{ t('tree.newFolder') }}</span>
             </el-menu-item>
             <el-menu-item v-if="showNewFile" @click="handleNewFile">
                 <el-icon><DocumentAdd /></el-icon>
-                <span>{{ t('newFile') }}</span>
+                <span>{{ t('tree.newFile') }}</span>
             </el-menu-item>
             <el-divider v-if="showNewFolder || showNewFile" />
             <el-menu-item v-if="showRename" @click="handleRename">
@@ -56,12 +56,12 @@ const handleNewFolder = async () => {
     if (!props.rightClickNode) return;
 
     try {
-        const { value: folderName } = await ElMessageBox.prompt(t('enterFolderName'), {
-            confirmButtonText: t('ok'),
+        const { value: folderName } = await ElMessageBox.prompt(t('tree.enterFolderName'), {
+            confirmButtonText: t('confirm'),
             cancelButtonText: t('cancel'),
             inputValidator: (value) => {
-                if (!value) return t('folderNameRequired');
-                if (value.includes('/')) return t('folderNameInvalid');
+                if (!value) return t('tree.folderNameRequired');
+                if (value.includes('/')) return t('tree.folderNameInvalid');
                 return true;
             }
         });
@@ -83,7 +83,7 @@ const handleNewFolder = async () => {
         const id = `${parentPath}/${folderName}`.replace(/^\//, '');
         const existingNode = await findData(props.treeData, id);
         if (existingNode) {
-            ElMessage.error(t('folderAlreadyExists'));
+            ElMessage.error(t('tree.folderAlreadyExists'));
             return;
         }
 
@@ -112,11 +112,11 @@ const handleNewFolder = async () => {
                 }
             }
         }
-        ElMessage.success(t('createFolderSuccess'));
+        ElMessage.success(t('tree.createFolderSuccess'));
     } catch (error) {
         if (error?.message !== 'cancel' && error !== 'cancel') {
             console.error('Create folder error:', error);
-            ElMessage.error(t('createFolderFailed'));
+            ElMessage.error(t('tree.createFolderFailed'));
         }
     } finally {
         emit('close-menu');
@@ -159,15 +159,15 @@ const handleRename = async () => {
     
     try {
         const { value: newName } = await ElMessageBox.prompt(
-            t('enterNewName'),
+            t('tree.enterNewName'),
             t('rename'),
             {
-                confirmButtonText: t('ok'),
+                confirmButtonText: t('confirm'),
                 cancelButtonText: t('cancel'),
                 inputValue: props.rightClickNode.data.label,
                 inputValidator: (value) => {
-                    if (!value) return t('nameRequired');
-                    if (value.includes('/')) return t('nameInvalid');
+                    if (!value) return t('tree.nameRequired');
+                    if (value.includes('/')) return t('tree.nameInvalid');
                     return true;
                 }
             }
@@ -177,7 +177,7 @@ const handleRename = async () => {
         //console.log('Renaming to:', newName, ' at path:', newPath);
         const existingNode = await findData(props.treeData, newPath);
         if (existingNode) {
-            ElMessage.error(t('nameAlreadyExists'));
+            ElMessage.error(t('tree.nameAlreadyExists'));
             return;
         }
         await renameData(props.rightClickNode.data.addr, newPath, props.etype_value, props.rightClickNode.data.is_folder);
@@ -217,7 +217,7 @@ const handleDelete = async () => {
             const files = getAllFiles(response_data);
             if (files.length > 0) {
                 await ElMessageBox.confirm(
-                    t('deleteFolderConfirmation') + files.length,
+                    t('tree.deleteFolderConfirmation', { count: files.length }),
                     t('promptTitle'),
                     {
                         confirmButtonText: t('confirm'),
@@ -228,7 +228,7 @@ const handleDelete = async () => {
                 for (const fileId of files) {
                     await deleteData(fileId);
                 }
-                ElMessage.success(t('deleteFolderSuccess'));
+                ElMessage.success(t('tree.deleteFolderSuccess'));
             }
         } else {
             await ElMessageBox.confirm(

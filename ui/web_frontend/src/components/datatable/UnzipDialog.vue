@@ -1,20 +1,20 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="$t('unzipSettings') || '解压设置'"
+    :title="$t('compress.unzipSettings')"
     width="30%"
   >
     <div class="unzip-options">
-      <el-checkbox v-model="unzip">{{ $t('wantUnzip') || '解压此文件' }}</el-checkbox>
+      <el-checkbox v-model="unzip">{{ $t('compress.wantUnzip') }}</el-checkbox>
       <el-checkbox v-model="createSubDir" :disabled="!unzip">
-        {{ $t('createSubDir') || '创建同名子目录' }}
+        {{ $t('compress.createSubDir') }}
       </el-checkbox>
     </div>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="cancel">{{ $t('cancel') || '取消' }}</el-button>
+        <el-button @click="cancel">{{ $t('cancel') }}</el-button>
         <el-button type="primary" @click="confirm">
-          {{ $t('ok') || '确定' }}
+          {{ $t('confirm') }}
         </el-button>
       </span>
     </template>
