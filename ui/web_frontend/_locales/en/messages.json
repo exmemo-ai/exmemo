@@ -427,7 +427,9 @@
         "nameInvalid": "Name cannot contain slashes", 
         "nameAlreadyExists": "Name already exists",
         "renameFailed": "Rename failed",
-        "deleteFolderConfirmation": "This action will delete all files in the directory (total {count}), continue?"
+        "deleteFolderConfirmation": "This action will delete all files in the directory (total {count}), continue?",
+        "listView": "List View",
+        "treeView": "Tree View"
     },
     "compress": {
         "unzipSettings": "Unzip settings",

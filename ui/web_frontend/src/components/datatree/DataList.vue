@@ -4,7 +4,13 @@
             <app-navbar :title="t('dataManagement')" :info="'DataManager2'" />
         </el-container>
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
-            <el-aside class="file-tree-aside" :style="{ width: asideWidth + 'px' }">
+            <el-aside class="file-tree-aside" :class="{ 'collapse-aside': isCollapse }" :style="{ width: computedAsideWidth }">
+                <div class="toggle-button-collapse" @click="toggleCollapse">
+                    <el-icon>
+                        <Fold v-if="!isCollapse"/>
+                        <Expand v-else/>
+                    </el-icon>
+                </div>
                 <div class="tree-header">
                     <el-text class="tree-title">{{ t('tree.fileTree') }}</el-text>
                     <el-button class="icon-button" @click="refreshTree">
@@ -31,7 +37,7 @@
                 </el-tree>
             </el-aside>
 
-            <div class="resizer" @mousedown="onResizerMouseDown"></div>
+            <div class="resizer" @mousedown="onResizerMouseDown" @touchstart="onResizerMouseDown"></div>
 
             <el-main class="main-container list-options">
                 <div class="header-buttons">
@@ -99,9 +105,9 @@
 
 <script setup>
 import axios from 'axios';
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, } from 'element-plus'
-import { Folder, Document, Refresh, Download, View, Edit } from '@element-plus/icons-vue'
+import { Folder, Document, Refresh, Download, View, Edit, Fold, Expand } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import AddDialog from '@/components/datatable/AddDialog.vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
@@ -135,13 +141,20 @@ const defaultProps = {
     isLeaf: (data) => !data.is_folder,
 };
 
-const asideWidth = ref(250);
+const isMobile = computed(() => {
+    return window.innerWidth <= 768;
+});
+
+const asideWidth = ref(isMobile.value ? 150 : 250);
+
 const isDragging = ref(false);
 
 const onResizerMouseDown = (e) => {
     isDragging.value = true;
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleMouseUp);
 };
 
 const handleMouseMove = (e) => {
@@ -152,10 +165,22 @@ const handleMouseMove = (e) => {
     }
 };
 
+const handleTouchMove = (e) => {
+    if (!isDragging.value) return;
+    e.preventDefault(); // 防止页面滚动
+    const touch = e.touches[0];
+    const newWidth = touch.clientX;
+    if (newWidth >= 150 && newWidth <= 500) {
+        asideWidth.value = newWidth;
+    }
+};
+
 const handleMouseUp = () => {
     isDragging.value = false;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleMouseUp);
 };
 
 const loadNode = async (node, resolve) => {
@@ -389,15 +414,36 @@ const editNote = () => {
     window.open(`${window.location.origin}/edit_markdown?idx=${currentNode.value.id}`, '_blank');
 };
 
+const isCollapse = ref(false);
+const computedAsideWidth = computed(() => {
+    if (isCollapse.value) {
+        return '40px';
+    }
+    return asideWidth.value + 'px';
+});
+
+const toggleCollapse = () => {
+    isCollapse.value = !isCollapse.value;
+};
+
 onMounted(async () => {
     mounted.value = true;
     await nextTick();
     await getEtypeOptions();
     await initializeTree();
 
+    window.addEventListener('resize', () => {
+        if (isMobile.value && asideWidth.value > 150) {
+            asideWidth.value = 150;
+        }
+    });
+
     return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleMouseUp);
+        window.removeEventListener('resize');
     };
 });
 
@@ -417,13 +463,28 @@ defineExpose({
 </script>
 
 <style scoped>
+
+:deep(.md-editor-preview) {
+    height: auto;
+    overflow-y: auto !important;
+    padding: 10px 20px;
+    max-width: 960px;
+    margin: 0 auto;
+    font-size: v-bind('fontSize + "px"');
+}
+
+:deep(.md-editor-preview-wrapper) {
+    padding: 0px;
+}
+
 .file-tree-aside {
+    position: relative;
+    transition: width 0.3s;
     border-right: 1px solid var(--el-border-color-light);
     background-color: var(--el-bg-color);
     height: 100%;
     overflow-y: auto;
     padding: 10px;
-    min-width: 150px;
     max-width: 500px;
 }
 
@@ -433,6 +494,7 @@ defineExpose({
     background-color: transparent;
     cursor: col-resize;
     transition: background-color 0.3s;
+    touch-action: none; /* 防止触摸事件的默认行为 */
 }
 
 .resizer:hover {
@@ -479,22 +541,25 @@ defineExpose({
     display: flex;
     flex-grow: 1;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
 }
 
 .filter-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 4px;
+    min-width: 0;
 }
 
 .label-container {
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .select-container {
-    flex-grow: 1;
-    width: 200px;
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
 }
 
 :deep(.el-select) {
@@ -514,5 +579,92 @@ defineExpose({
 .action-buttons .el-button {
     margin: 0;
     padding: 0 5px;
+}
+
+:deep(.description-container) {
+    padding: 10px;
+}
+
+.toggle-button-collapse {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 40px;
+    background-color: var(--el-border-color-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px 0 0 4px;
+    z-index: 10;
+    transition: all 0.3s;
+}
+
+.toggle-button-collapse:hover {
+    background-color: var(--el-border-color);
+}
+
+.collapse-aside {
+    padding: 0;
+    overflow: hidden;
+}
+
+.collapse-aside .tree-header,
+.collapse-aside .el-tree {
+    opacity: 0;
+    visibility: hidden;
+}
+
+@media (max-width: 768px) {
+    .toggle-button-collapse {
+        width: 12px;
+        height: 30px;
+    }
+    :deep(.description-container) {
+        padding: 2px;
+    }
+    
+    :deep(.md-editor-preview) {
+        padding: 4px !important;
+    }
+    .tree-header {
+        padding: 0 5px 5px 5px;
+    }
+    .file-tree-aside {
+        padding: 5px;
+        max-width: 500px;
+    }
+    .resizer {
+        width: 12px;
+    }    
+
+    .filter-section {
+        gap: 0px;
+    }
+    
+    .filter-item {
+        gap: 4px;
+    }
+    
+    .select-container {
+        min-width: 80px;
+    }
+    
+    .label-container {
+        font-size: 14px;
+    }
+
+    .header-buttons {
+        margin: 2px;
+    }    
+
+
+    .action-buttons {
+        gap: 2px;
+        margin: 0px;
+        padding: 0px;
+    }    
 }
 </style>
