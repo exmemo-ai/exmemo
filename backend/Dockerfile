@@ -9,7 +9,7 @@ MAINTAINER XieYan
 COPY sources.list /etc/apt/
 RUN apt-get update -y --force-yes
 RUN apt-get install vim openssh-server -y --force-yes
-RUN apt-get install gettext -y --force-yes
+RUN apt-get install gettext unrar -y --force-yes
 
 RUN echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://mirrors.aliyun.com/pypi/simple/' >> /etc/pip.conf && \
