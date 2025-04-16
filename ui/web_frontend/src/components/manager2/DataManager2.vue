@@ -272,7 +272,7 @@ const handleDrop = async (draggingNode, dropNode, type) => {
             targetAddr = `${targetDir}/${sourceName}`.replace(/\/+/g, '/');
         }
 
-        const response_data = renameData(sourceAddr, targetAddr, etype_value.value, isFolder);
+        const response_data = await renameData(sourceAddr, targetAddr, etype_value.value, isFolder);
         if (response_data.status !== 'success') {
             ElMessage.error(response_data.info || t('moveFailed'));
             return;

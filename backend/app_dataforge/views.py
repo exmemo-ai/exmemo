@@ -538,14 +538,18 @@ class EntryAPIView(APIView):
             logger.debug(f'Move: {source} -> {target} (is_folder: {is_folder})')
 
             if not is_folder:
-                # Move single file
                 entry = StoreEntry.objects.filter(user_id=user_id, addr=source, etype=etype, block_id=0).first()
                 if not entry:
+                    normalized_source = source.replace('\\', '/').replace('//', '/')
+                    entry = StoreEntry.objects.filter(user_id=user_id, addr=normalized_source, etype=etype, block_id=0).first()
+                if entry:
+                    dic = entry.__dict__.copy()
+                    ret = rename_file(user_id, entry.addr, target, dic)
+                    if ret:
+                        return do_result(True, "Move success")
+                else:
+                    logger.warning(f"Source file not found: {source}")
                     return do_result(False, "Source file not found")
-                dic = entry.__dict__.copy()
-                ret = rename_file(user_id, source, target, dic)
-                if ret:
-                    return do_result(True, "Move success")
             else:
                 dirname = source if source.endswith('/') else source + '/'
                 entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)

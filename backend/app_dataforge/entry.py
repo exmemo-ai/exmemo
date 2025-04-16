@@ -478,6 +478,7 @@ def rename_file(uid, oldaddr, newaddr, dic, debug=False):
         return False
     ret = utils_filemanager.get_file_manager().rename_file(uid, oldpath, newpath)
     if ret:
-        StoreEntry.objects.filter(user_id=uid, addr=oldaddr, etype=dic['etype']).update(addr=newaddr, path=newpath)
+        StoreEntry.objects.filter(user_id=uid, addr=oldaddr, etype=dic['etype']).update(addr=newaddr, path=newpath, 
+                                  updated_time = timezone.now().astimezone(pytz.UTC))
         return True
     return False
