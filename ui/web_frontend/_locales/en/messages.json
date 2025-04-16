@@ -144,6 +144,7 @@
     "selectPlaceholder": "Please select",
     "data": "Data",
     "lastUpdated": "Last updated",
+    "createdAt": "Created at",
     "exportFail": "Export failed!",
     "downloadFail": "Download failed!",
     "notLoggedIn": "Not logged in",

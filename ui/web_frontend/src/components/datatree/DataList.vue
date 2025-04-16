@@ -48,6 +48,29 @@
                             </div>
                         </div>
                     </div>
+                    <div class="action-buttons" v-if="currentNode && !currentNode.is_folder">
+                        <template v-if="etype_value === 'file'">
+                            <el-button size="small" @click="download" :title="t('download')">
+                                <el-icon><Download /></el-icon>
+                            </el-button>
+                            <el-button size="small" @click="viewContent" :title="t('view')">
+                                <el-icon><View /></el-icon>
+                            </el-button>
+                        </template>
+                        <template v-else-if="etype_value === 'note'">
+                            <el-button size="small" @click="viewContent" :title="t('view')">
+                                <el-icon><View /></el-icon>
+                            </el-button>
+                            <el-button size="small" @click="editNote" :title="t('edit')">
+                                <el-icon><Edit /></el-icon>
+                            </el-button>
+                        </template>
+                        <template v-else-if="etype_value === 'web'">
+                            <el-button size="small" @click="viewContent" :title="t('view')">
+                                <el-icon><View /></el-icon>
+                            </el-button>
+                        </template>
+                    </div>
                 </div>
                 <div class="description-container" v-if="markdownContent">
                     <!--
@@ -80,7 +103,7 @@
 import axios from 'axios';
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, } from 'element-plus'
-import { Folder, Document, Refresh } from '@element-plus/icons-vue'
+import { Folder, Document, Refresh, Download, View, Edit } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import AddDialog from '@/components/datatable/AddDialog.vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
@@ -89,6 +112,7 @@ import { mapTreeData, updateNodeChildren, findNode } from './treeUtils'
 import { loadTreeData, getFeatureOptions, renameData } from './apiUtils'
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 import { MdPreview } from 'md-editor-v3'
+import { downloadFile } from '../datatable/dataUtils'
 
 const { t, te } = useI18n();
 const treeRef = ref(null);
@@ -225,6 +249,7 @@ const getEtypeOptions = async () => {
 
 const handleEtypeChange = async (value) => {
     etype_value.value = value;
+    markdownContent.value = '';
     await refreshTree();
 };
 
@@ -232,19 +257,28 @@ const openItem = async (idx) => {
     let func = 'api/entry/data/'
     try {
         setDefaultAuthHeader();
-        const response = await axios.get(getURL() + func + idx + '/');
+        const response = await axios.get(getURL() + func + idx + '/', {
+            params: {
+            need_web_content: false
+            }
+        });
         const data = response.data;
-        markdownContent.value = [
-            `Title: ${data.title}`,
-            `Type: ${data.etype}`,
-            `Category: ${data.ctype}`,
-            `Status: ${data.status}`,
-            `Created: ${data.created_time}`,
-            `Updated: ${data.updated_time}`,
-            `User: ${data.user_id}`,
-            `Path: ${data.path}`,
-            `Content: \n${data.content}`
-        ].join('\n');
+        console.log('@@@@@@@@@@@@@@@@@@@', data);
+        let description = ""
+        if (data.title) description += `${t('title')}: ${data.title}\n`;
+        if (data.etype) description += `${t('data')}: ${t(data.etype)}\n`;
+        if (data.ctype) description += `${t('type')}: ${t(data.ctype)}\n`;
+        if (data.status) description += `${t('status')}: ${t(data.status)}\n`;
+        if (data.etype === 'web') {
+            if (data.addr) description += `${t('webAddress')}: ${data.addr}\n`;
+        } else {
+            if (data.addr) description += `${t('file')}: ${data.addr}\n`;
+        }
+        if (data.created_time) description += `${t('createdAt')}: ${data.created_time}\n`;
+        if (data.updated_time) description += `${t('lastUpdated')}: ${data.updated_time}\n`;
+        description += '\n---\n';
+        if (data.content) description += `\n${data.content}`;
+        markdownContent.value = description
     } catch (error) {
         parseBackendError(error);
     }
@@ -319,6 +353,22 @@ const handleNewFileData = (data) => {
     }, data);
 };
 
+const download = () => {
+    if (!currentNode.value) return;
+    const filename = currentNode.value.addr.split('/').pop();
+    downloadFile(currentNode.value.id, filename);
+};
+
+const viewContent = () => {
+    if (!currentNode.value) return;
+    window.open(`${window.location.origin}/view_markdown?idx=${currentNode.value.id}`, '_blank');
+};
+
+const editNote = () => {
+    if (!currentNode.value) return;
+    window.open(`${window.location.origin}/edit_markdown?idx=${currentNode.value.id}`, '_blank');
+};
+
 onMounted(async () => {
     mounted.value = true;
     await nextTick();
@@ -337,17 +387,7 @@ defineExpose({
     markdownContent,
     contextMenuVisible,
     contextMenuStyle,
-    rightClickNode,
-    loadNode,
-    handleNodeClick,
-    refreshTree,
-    handleEtypeChange,
-    handleContextMenu,
-    closeContextMenu,
-    handleNewFileData,
-    allowDrag,
-    allowDrop,
-    handleDrop
+    rightClickNode
 });
 </script>
 
@@ -395,7 +435,7 @@ defineExpose({
     display: flex;
     flex-wrap: nowrap;
     gap: 5px;
-    margin: 0 5px 20px 5px;
+    margin: 5px;
     align-items: center;
 }
 
@@ -427,5 +467,16 @@ defineExpose({
 
 :deep(.el-dropdown-menu) {
     z-index: 9999;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.action-buttons .el-button {
+    margin: 0;
+    padding: 0 5px;
 }
 </style>

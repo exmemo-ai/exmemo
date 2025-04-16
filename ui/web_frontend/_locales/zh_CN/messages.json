@@ -144,6 +144,7 @@
     "selectPlaceholder": "请选择",
     "data": "数据",
     "lastUpdated": "修改时间",
+    "createdAt": "创建时间",
     "exportFail": "导出失败!",
     "downloadFail": "下载失败!",
     "notLoggedIn": "未登录",
