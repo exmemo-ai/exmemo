@@ -1,20 +1,20 @@
 <template>
     <div v-show="visible" class="context-menu" :style="menuStyle">
         <el-menu>
-            <el-menu-item @click="handleNewFolder">
+            <el-menu-item v-if="showNewFolder" @click="handleNewFolder">
                 <el-icon><FolderAdd /></el-icon>
                 <span>{{ t('newFolder') }}</span>
             </el-menu-item>
-            <el-menu-item @click="handleNewFile">
+            <el-menu-item v-if="showNewFile" @click="handleNewFile">
                 <el-icon><DocumentAdd /></el-icon>
                 <span>{{ t('newFile') }}</span>
             </el-menu-item>
-            <el-divider />
-            <el-menu-item @click="handleRename">
+            <el-divider v-if="showNewFolder || showNewFile" />
+            <el-menu-item v-if="showRename" @click="handleRename">
                 <el-icon><Edit /></el-icon>
                 <span>{{ t('rename') }}</span>
             </el-menu-item>
-            <el-menu-item @click="handleDelete">
+            <el-menu-item v-if="showDelete" @click="handleDelete">
                 <el-icon><Delete /></el-icon>
                 <span>{{ t('delete') }}</span>
             </el-menu-item>
@@ -26,7 +26,7 @@
 import { Delete, FolderAdd, DocumentAdd, Edit } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { nextTick } from 'vue'
+import { nextTick, computed } from 'vue'
 import { deleteData, renameData } from './apiUtils'
 import { mapTreeItem, findAndAddNode, findNode, findData } from './treeUtils'
 
@@ -46,6 +46,11 @@ const emit = defineEmits([
     'refresh-tree',
     'close-menu'
 ])
+
+const showNewFolder = computed(() => ['note', 'file'].includes(props.etype_value))
+const showNewFile = computed(() => ['note', 'file'].includes(props.etype_value))
+const showRename = computed(() => ['note', 'file', 'chat', 'record'].includes(props.etype_value))
+const showDelete = computed(() => true)
 
 const handleNewFolder = async () => {
     if (!props.rightClickNode) return;
@@ -109,7 +114,7 @@ const handleNewFolder = async () => {
         }
         ElMessage.success(t('createFolderSuccess'));
     } catch (error) {
-        if (error.message !== 'cancel') {
+        if (error?.message !== 'cancel' && error !== 'cancel') {
             console.error('Create folder error:', error);
             ElMessage.error(t('createFolderFailed'));
         }
@@ -130,11 +135,21 @@ const handleNewFile = async () => {
         parentPath = props.rightClickNode.data.addr;
     }
 
-    const data = {
-        etype: props.etype_value,
-        path: parentPath || ''
+    const data = { etype: props.etype_value };
+    if (props.etype_value === 'note' && parentPath) {
+        const pathParts = parentPath.split('/');
+        data['vault'] = pathParts[0];
+        if (pathParts.length > 1) {
+            data['path'] = pathParts.slice(1).join('/');
+        } else {
+            data['path'] = '';
+        }
+    } else {
+        data['path'] = parentPath || '';
     };
-
+    if (data['path'].length > 0 && !data['path'].endsWith('/')) {
+        data['path'] += '/';
+    }
     emit('new-file', data);
     emit('close-menu');
 };

@@ -61,7 +61,7 @@ export const findNode = (treeRef, nodeId) => {
         return node.childNodes?.find(child => traverse(child)) || null;  
     };
 
-    return treeRef.root.childNodes.reduce((found, node) => 
+    return treeRef?.root?.childNodes?.reduce((found, node) => 
         found || traverse(node), null);
 };
 

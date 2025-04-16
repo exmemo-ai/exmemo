@@ -28,15 +28,7 @@
                         placeholder="http://"></el-input>
                 </div>
                 <div v-if="form.etype === 'file'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
-                    <input type="file" @change="handleFileUpload" width="100%">
-                    <div class="form-row">
-                        <div class="label-container">
-                            <el-text>{{ $t('opt.vault') }}</el-text>
-                        </div>
-                        <div class="content-container">
-                            <el-input type="text" v-model="file_vault"></el-input>
-                        </div>
-                    </div>  
+                    <input type="file" ref="fileInput" @change="handleFileUpload" width="100%">
                     <div class="form-row">
                         <div class="label-container">
                             <el-text>{{ $t('opt.path') }}</el-text>
@@ -70,7 +62,7 @@
             </div>
         </div>
 
-        <hr style="margin: 10px 0;">        
+        <hr style="margin: 10px 0;">
         <DataEditor 
             ref="dataEditor"
             :form="form"
@@ -104,7 +96,6 @@ export default {
             onSuccess: null,
             input_vault: null,
             input_path: null,
-            file_vault: null,
             file_input_path: null,
             file_path: null,
             file: null,
@@ -136,6 +127,9 @@ export default {
             this.dialogVisible = true;
             this.dialogTitle = options?.title ?? this.$t('new');
             this.saveProgress = 0;
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value = '';
+            }
             this.file = null;
             this.file_path = null;
             this.$refs.dataEditor?.resetProgress();
@@ -153,7 +147,6 @@ export default {
             }
             this.input_vault = options?.vault ?? null;
             this.input_path = options?.path ?? null;
-            this.file_vault = options?.vault ?? null;
             this.file_input_path = options?.path ?? null;
             this.form.ctype = options?.ctype ?? '';
             this.form.atype = options?.atype ?? '';
@@ -167,6 +160,9 @@ export default {
         },
         closeDialog() {
             this.dialogVisible = false;
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value = '';
+            }
         },
         handleClose(done) {
             console.log(this.$t('dialogClosed'));
@@ -194,8 +190,7 @@ export default {
         },
         async calcFilePath() {
             if (this.form.etype === 'file') {
-                const normalizedPath = this.normalizePath(this.file_input_path);
-                this.file_path = this.file_vault + '/' + normalizedPath;
+                this.file_path = this.normalizePath(this.file_input_path);
             } else {
                 const normalizedPath = this.normalizePath(this.input_path);
                 this.file_path = this.input_vault + '/' + normalizedPath;
@@ -207,19 +202,14 @@ export default {
         async doSave() {
             console.log("doSave");
             if (this.form.etype === 'note') {
-                if (this.input_vault && this.input_path) {
+                if (this.input_vault && this.input_path && !this.input_path.endsWith('/')) {
                     this.calcFilePath();
                 } else {
                     ElMessage.error(this.$t('opt.needVaultPath'));
                     return;
                 }
             } else if (this.form.etype === 'file') {
-                if (this.file_vault) {
-                    this.calcFilePath();
-                } else {
-                    ElMessage.error(this.$t('opt.needVaultPath'));
-                    return;
-                }
+                this.calcFilePath();
             }
             await this.$nextTick();
             const ret = await this.$refs.dataEditor.realSave();
@@ -228,11 +218,6 @@ export default {
                     const settingService = SettingService.getInstance();
                     settingService.loadSetting();
                     settingService.setSetting('default_vault', this.input_vault);
-                    settingService.saveSetting();
-                } else if (this.form.etype === 'file' && this.file_vault && this.file_vault.length > 0) {
-                    const settingService = SettingService.getInstance();
-                    settingService.loadSetting();
-                    settingService.setSetting('default_file_vault', this.file_vault);
                     settingService.saveSetting();
                 }
                 this.closeDialog();
@@ -258,6 +243,8 @@ export default {
                 const hasFileName = this.file_input_path.split('/').pop().includes('.');
                 if (!hasFileName) {
                     this.file_input_path = this.file_input_path.replace(/\/+$/, '') + '/' + fileName;
+                } else {
+                    this.file_input_path = this.file_input_path.replace(/[^/]+$/, fileName);
                 }
             }            
             this.file_path = uploadedFile.name;
