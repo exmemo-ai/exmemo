@@ -21,7 +21,7 @@ export function translateFunc(obj, rtype, word, sentence, callback) {
             }
         }
     }).catch((err) => {
-        parseBackendError(obj, err);
+        parseBackendError(err);
     });
 }
 
@@ -40,7 +40,7 @@ export async function importWordList(obj, option, callback) {
             }
         }
     } catch (err) {
-        parseBackendError(obj, err);
+        parseBackendError(err);
     }
 }
 
@@ -59,7 +59,7 @@ export async function deleteWordList(obj, option, callback) {
             }
         }
     } catch (err) {
-        parseBackendError(obj, err);
+        parseBackendError(err);
     }
 }
 
@@ -77,7 +77,7 @@ export async function getWordsFrom(obj) {
             }
         }
     } catch (err) {
-        parseBackendError(obj, err);
+        parseBackendError(err);
     }
     return [];
 }

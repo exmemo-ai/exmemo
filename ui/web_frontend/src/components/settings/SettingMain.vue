@@ -156,7 +156,7 @@ export default {
                     this.info_usage = data.usage;
                 }
             } catch (err) {
-                parseBackendError(this, err);
+                parseBackendError(err);
             }
         },
 
@@ -177,7 +177,7 @@ export default {
                     });
                 }
             } catch (err) {
-                parseBackendError(this, err);
+                parseBackendError(err);
             }
         },
 
@@ -197,7 +197,7 @@ export default {
                     });
                 }
             } catch (err) {
-                parseBackendError(this, err);
+                parseBackendError(err);
             }
         },
         initializeSection() {

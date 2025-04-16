@@ -118,7 +118,7 @@ export async function saveEntry({
         if (axios.isCancel(error)) {
             ElMessage({ type: 'info', message: t('operationCancelled') });
         } else {
-            parseBackendError(null, error)
+            parseBackendError(error)
         }
         return false;
     }
@@ -146,7 +146,7 @@ export async function fetchItem(idx) {
         };
     } catch (error) {
         if (error.response && error.response.status === 401) {
-            parseBackendError(null, error);
+            parseBackendError(error);
         } else {
             console.error(error);
             ElMessage.error(t('operationFailed'));
@@ -175,7 +175,7 @@ export const confirmOpenNote = (data) => {
                 }
             })
             .catch(error => {
-                parseBackendError(null, error);
+                parseBackendError(error);
             });
     }
 };

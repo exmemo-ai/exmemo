@@ -242,7 +242,7 @@ const openItem = async (idx) => {
             `Content: \n${data.content}`
         ].join('\n');
     } catch (error) {
-        parseBackendError(null, error);
+        parseBackendError(error);
     }
 };
 
@@ -280,7 +280,7 @@ const handleDrop = async (draggingNode, dropNode, type) => {
         await refreshTree();
     } catch (error) {
         console.error('Move error:', error);
-        parseBackendError(null, error);
+        parseBackendError(error);
     }
 };
 

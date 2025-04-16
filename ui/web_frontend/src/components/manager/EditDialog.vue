@@ -176,7 +176,7 @@ export default {
                 return false;
             }
             } catch (error) {
-                parseBackendError(this, error);
+                parseBackendError(error);
                 return false;
             }
         },
@@ -248,7 +248,7 @@ export default {
                     }
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         },
     },

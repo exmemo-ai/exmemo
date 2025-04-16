@@ -298,7 +298,7 @@ const fetchWeb = async (url) => {
             resetContent();
         }
     } catch (err) {
-        parseBackendError(null, err);
+        parseBackendError(err);
         markdownContent.value = t('fetchFailed');
     }
 }
@@ -915,7 +915,7 @@ const parsePaper = async () => {
             });
         }
     }).catch((err) => {
-        parseBackendError(this, err);
+        parseBackendError(err);
     });
 }
 </script>

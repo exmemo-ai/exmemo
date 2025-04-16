@@ -158,7 +158,7 @@ export default {
                     this.resetVoice();
                 }
             }).catch((err) => {
-                parseBackendError(this, err);
+                parseBackendError(err);
             });
         },
         resetVoice() {

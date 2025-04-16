@@ -48,7 +48,7 @@ export class ChatService {
             this.reloadSessions(info);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
+                parseBackendError(error);
                 throw new Error('Token expired');
             }
             info = String(error);
@@ -99,7 +99,7 @@ export class ChatService {
             }
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
+                parseBackendError(error);
                 throw new Error('Token expired');
             }
             info = String(error);
@@ -258,7 +258,7 @@ export class ChatService {
             await this.parseSessions(response);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
+                parseBackendError(error);
                 throw new Error('Token expired');
             }
             const error_str = String(error);
@@ -285,7 +285,7 @@ export class ChatService {
                     await this.parseMessages(response);
                 } catch (error) {
                     if (error.response && error.response.status === 401) {
-                        parseBackendError(this.obj, error);
+                        parseBackendError(error);
                         throw new Error('Token expired');
                     }
                     const error_str = String(error);
@@ -341,7 +341,7 @@ export class ChatService {
             await this.parseInfo(response);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
+                parseBackendError(error);
                 throw new Error('Token expired');
             }
             const error_str = String(error);
@@ -367,7 +367,7 @@ export class ChatService {
             await this.parseInfo(response);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
+                parseBackendError(error);
                 throw new Error('Token expired');
             }
             const error_str = String(error);
@@ -389,7 +389,7 @@ export class ChatService {
             await this.parseSessions(response);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                parseBackendError(this.obj, error);
+                parseBackendError(error);
                 throw new Error('Token expired');
             }
             const error_str = String(error);

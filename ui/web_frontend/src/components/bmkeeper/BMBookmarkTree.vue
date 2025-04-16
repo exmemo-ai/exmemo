@@ -329,7 +329,7 @@ export default {
         }
       } catch (error) {
         console.error('Error fetching bookmarks:', error);
-        parseBackendError(this, error);
+        parseBackendError(error);
       }
     },
     refreshTree() {
@@ -359,7 +359,7 @@ export default {
           await this.refreshTree()
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
@@ -402,7 +402,7 @@ export default {
         }
       } catch (error) {
         if (error !== 'cancel') {
-          parseBackendError(this, error)
+          parseBackendError(error)
         }
       }
     },
@@ -547,7 +547,7 @@ export default {
         ElMessage.success(this.$t('updateSuccess'));
         this.fetchBookmarks();
       } catch (error) {
-        parseBackendError(this, error);
+        parseBackendError(error);
         this.fetchBookmarks();
       }
     },

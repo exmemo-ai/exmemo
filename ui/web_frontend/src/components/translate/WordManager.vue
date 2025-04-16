@@ -131,7 +131,7 @@ export default {
                     }
                 }));
             } catch (error) {
-                parseBackendError(this, error);
+                parseBackendError(error);
             }
         },
         searchKeyword() {
@@ -147,7 +147,7 @@ export default {
                     this.fetchData();
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         },
         handleRowClick(row, column, event) {

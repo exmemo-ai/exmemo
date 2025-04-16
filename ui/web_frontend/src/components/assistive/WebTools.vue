@@ -67,7 +67,7 @@ export default {
           });
         }
       }).catch((err) => {
-        parseBackendError(this, err);
+        parseBackendError(err);
       });
     }
   }

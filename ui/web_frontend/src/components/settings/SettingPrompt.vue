@@ -159,7 +159,7 @@ export default {
             } catch (error) {
                 if (error === 'cancel') return;
                 console.error('Reset prompt error:', error);
-                ElMessage.error(parseBackendError(error) || this.$t('operationFailed'));
+                parseBackendError(error);
             }
         },     
         async handleSuccess() {
@@ -173,7 +173,7 @@ export default {
                 ElMessage.success(this.$t('operationSuccess'));
             } catch (error) {
                 console.error('Delete error:', error);
-                ElMessage.error(parseBackendError(error) || this.$t('operationFailed'));
+                parseBackendError(error);
             }
         }
     }

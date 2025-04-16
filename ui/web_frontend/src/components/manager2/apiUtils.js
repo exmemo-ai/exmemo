@@ -17,7 +17,7 @@ export const loadTreeData = async (etype, path = '') => {
         return response.data;
     } catch (error) {
         console.error('Load tree data error:', error);
-        parseBackendError(null, error);
+        parseBackendError(error);
         return [];
     }
 };
@@ -39,7 +39,7 @@ export const openItemData = async (idx) => {
         const response = await axios.get(getURL() + 'api/entry/data/' + idx + '/');
         return response.data;
     } catch (error) {
-        parseBackendError(null, error);
+        parseBackendError(error);
         return null;
     }
 };
@@ -49,7 +49,7 @@ export const deleteData = async (idx) => {
         const response = await axios.delete(getURL() + 'api/entry/data/' + idx + '/');
         return response.data;
     } catch (error) {
-        parseBackendError(null, error);
+        parseBackendError(error);
         throw error;
     }
 };
@@ -69,7 +69,7 @@ export const renameData = async (sourceId, targetId, etype, is_folder) => {
         });
         return response.data;
     } catch (error) {
-        parseBackendError(null, error);
+        parseBackendError(error);
         throw error;
     }
 }

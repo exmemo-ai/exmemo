@@ -130,7 +130,7 @@ export default {
                     });
                 }
             }).catch(error => {
-                parseBackendError(this, error);
+                parseBackendError(error);
             });
         },
         async realSave() {

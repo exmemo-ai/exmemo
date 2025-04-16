@@ -30,7 +30,7 @@ export async function getSummary() {
 
     }).catch((err) => {
         if (err.response && err.response.status === 401) {
-            parseBackendError(null, err);
+            parseBackendError(err);
             throw new Error('Token expired');
         }
         console.error(err);
@@ -56,7 +56,7 @@ export async function fetchWordList(rtype, status=null, date=null, wfrom=null) {
         return res.data.list;
     }).catch((err) => {
         if (err.response && err.response.status === 401) {
-            parseBackendError(null, err);
+            parseBackendError(err);
             throw new Error('Token expired');
         }
         console.error(err);
@@ -75,7 +75,7 @@ export async function realUpdate(wordList) {
             console.log('Word list updated successfully, list', wordList.length);
         }).catch((err) => {
             if (err.response && err.response.status === 401) {
-                parseBackendError(null, err);
+                parseBackendError(err);
                 throw new Error('Token expired');
             }    
             console.error('Error updating word list', err);
@@ -97,7 +97,7 @@ export async function getExamples(word) {
         })
         .catch((err) => {
             if (err.response && err.response.status === 401) {
-                parseBackendError(null, err);
+                parseBackendError(err);
                 throw new Error('Token expired');
             }    
             console.error('Error fetching examples:', err);

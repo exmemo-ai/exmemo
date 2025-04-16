@@ -101,7 +101,7 @@ export default {
                     message: this.$t('saveSuccess'),
                 });
             }).catch((err) => {
-                parseBackendError(this, err);
+                parseBackendError(err);
             });
         },
         handleAnalysis() {

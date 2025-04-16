@@ -95,7 +95,7 @@ export default {
                     this.$emit('update');
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         }
     }
