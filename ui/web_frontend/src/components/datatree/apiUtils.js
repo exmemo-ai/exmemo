@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 
-export const loadTreeData = async (etype, path = '') => {
+export const loadTreeData = async (etype, path = '', level=null) => {
     if (etype === '' || etype === 'all' || etype === undefined || etype === null) {
         return [];
     }
@@ -11,7 +11,8 @@ export const loadTreeData = async (etype, path = '') => {
             params: {
                 rtype: 'tree',
                 etype: etype,
-                path: path
+                path: path,
+                level: level !== null ? level : undefined
             }
         });
         return response.data;

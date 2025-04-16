@@ -4,7 +4,7 @@
             <app-navbar :title="t('dataManagement')" :info="'DataManager2'" />
         </el-container>
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
-            <el-aside class="file-tree-aside">
+            <el-aside class="file-tree-aside" :style="{ width: asideWidth + 'px' }">
                 <div class="tree-header">
                     <el-text class="tree-title">{{ t('fileTree') }}</el-text>
                     <el-button class="icon-button" @click="refreshTree">
@@ -30,6 +30,8 @@
                     </template>
                 </el-tree>
             </el-aside>
+
+            <div class="resizer" @mousedown="onResizerMouseDown"></div>
 
             <el-main class="main-container list-options">
                 <div class="header-buttons">
@@ -73,10 +75,6 @@
                     </div>
                 </div>
                 <div class="description-container" v-if="markdownContent">
-                    <!--
-                    <div style="padding: 10px;">
-                        <pre>{{ description }}</pre>
-                    </div>-->
                     <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
                             :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
                 </div>
@@ -135,6 +133,29 @@ const defaultProps = {
     children: 'children',
     label: 'label',
     isLeaf: (data) => !data.is_folder,
+};
+
+const asideWidth = ref(250);
+const isDragging = ref(false);
+
+const onResizerMouseDown = (e) => {
+    isDragging.value = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+};
+
+const handleMouseMove = (e) => {
+    if (!isDragging.value) return;
+    const newWidth = e.clientX;
+    if (newWidth >= 150 && newWidth <= 500) {
+        asideWidth.value = newWidth;
+    }
+};
+
+const handleMouseUp = () => {
+    isDragging.value = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
 };
 
 const loadNode = async (node, resolve) => {
@@ -374,6 +395,11 @@ onMounted(async () => {
     await nextTick();
     await getEtypeOptions();
     await initializeTree();
+
+    return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    };
 });
 
 defineExpose({
@@ -400,7 +426,18 @@ defineExpose({
     padding: 10px;
     min-width: 150px;
     max-width: 500px;
-    resize: horizontal;
+}
+
+.resizer {
+    width: 4px;
+    height: 100%;
+    background-color: transparent;
+    cursor: col-resize;
+    transition: background-color 0.3s;
+}
+
+.resizer:hover {
+    background-color: var(--el-border-color-lighter);
 }
 
 .tree-header {

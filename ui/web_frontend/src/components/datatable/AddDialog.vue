@@ -72,6 +72,7 @@
         />
         <span class="dialog-footer">
         </span>
+        <UnzipDialog ref="unzipDialog" />
     </el-dialog>
 </template>
 
@@ -82,11 +83,13 @@ import DataEditor from './DataEditor.vue'
 import SettingService from '@/components/settings/settingService'
 import { confirmOpenNote } from './dataUtils';
 import SaveIcon from '@/components/icons/SaveIcon.vue'
+import UnzipDialog from './UnzipDialog.vue'
 
 export default {
     components: {
         DataEditor,
-        SaveIcon
+        SaveIcon,
+        UnzipDialog
     },
     data() {
         return {
@@ -232,11 +235,19 @@ export default {
             }
             return '';
         },
-        handleFileUpload(event) {
+        async handleFileUpload(event) {
             const uploadedFile = event.target.files[0];
-            this.file = uploadedFile;
             const fileName = uploadedFile.name;
-            
+            const fileExt = fileName.split('.').pop().toLowerCase();
+
+            if (['zip', 'rar'].includes(fileExt)) {
+                const result = await this.$refs.unzipDialog.show();
+                this.form.unzip = result.unzip;
+                this.form.createSubDir = result.createSubDir;
+            }
+            // later add check file size here
+
+            this.file = uploadedFile;
             if (!this.file_input_path) {
                 this.file_input_path = fileName;
             } else {

@@ -28,6 +28,7 @@ from .feature import EntryFeatureTool
 from .entry import delete_entry, add_data, get_entry_list, get_type_options, rename_file
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
+from .zipfile import is_compressed_file, uncompress_file
 
 MAX_LEVEL = 2
 
@@ -41,7 +42,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return ListSerializer
         return DetailSerializer
 
-    def update_file(self, dic, addr, file, md5, vault=None):
+    def update_file(self, dic, addr, file, md5, vault=None, is_unzip=False, is_createSubDir=True):
         if addr.startswith("/"):
             addr = addr[1:]
         dic_item = dic.copy()
@@ -50,19 +51,25 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         else:
             dic_item["addr"] = addr
         dic_item["md5"] = md5
-        tmp_path = filecache.get_tmpfile(get_ext(addr))
+        
+        ext = get_ext(addr).lower()
+        tmp_path = filecache.get_tmpfile(ext)
         data = file.file.read()
-        logger.debug("## save to db " + tmp_path + " len " + str(len(data)))
+        logger.debug(f"## save to db {tmp_path} len {len(data)}")
         with open(tmp_path, "wb") as f:
             f.write(data)
-        return add_data(dic_item, tmp_path)
+
+        if is_unzip and is_compressed_file(tmp_path):
+            return uncompress_file(dic_item, tmp_path, is_createSubDir)
+        else:
+            return add_data(dic_item, tmp_path)
 
     def create(self, request, *args, **kwargs):
         logger.info("now create instance")
         """
         update files
         """
-        debug = True
+        debug = False
         try:
             dic = {}
             dic["etype"] = request.POST.get("etype", "note")
@@ -88,6 +95,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 return do_result(ret, info)
             elif dic["etype"] == "file" or dic["etype"] == "note":
                 vault = request.POST.get("vault", None)
+                is_unzip = request.POST.get("unzip", "false").lower() == "true"
+                is_createSubDir = request.POST.get("createSubDir", "true").lower() == "true"
                 files = request.FILES.getlist("files")
                 filepaths = request.POST.getlist("filepaths")
                 filemd5s = request.POST.getlist("filemd5s")
@@ -100,7 +109,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     filemd5s = [None] * len(files)
                 emb_status = "success"
                 for file, addr, md5 in zip(files, filepaths, filemd5s):
-                    ret, ret_emb, detail = self.update_file(dic, addr, file, md5, vault)
+                    ret, ret_emb, detail = self.update_file(dic, addr, file, md5, vault, is_unzip, is_createSubDir)
                     if not ret_emb:
                         emb_status = "failed"
                     if ret:

@@ -57,6 +57,8 @@ export async function saveEntry({
             } else {
                 formData.append('filepaths', `${fileName}`);
             }
+            formData.append('unzip', form.unzip);
+            formData.append('createSubDir', form.createSubDir);
         }
     } else if (form.etype === 'web') {
         if (form.addr === '') {

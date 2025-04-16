@@ -27,7 +27,7 @@ import { Delete, FolderAdd, DocumentAdd, Edit } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, computed } from 'vue'
-import { deleteData, renameData } from './apiUtils'
+import { deleteData, renameData, loadTreeData } from './apiUtils'
 import { mapTreeItem, findAndAddNode, findNode, findData } from './treeUtils'
 
 const { t } = useI18n()
@@ -200,14 +200,7 @@ const handleDelete = async () => {
     
     try {
         if (isFolder) {
-            const response = await axios.get(getURL() + 'api/entry/tool/', {
-                params: {
-                    rtype: 'tree',
-                    etype: props.etype_value === t('all') ? '' : props.etype_value,
-                    path: path,
-                    level: -1
-                }
-            });
+            const response_data = await loadTreeData(props.etype_value, path, -1);
 
             const getAllFiles = (items) => {
                 let files = [];
@@ -221,7 +214,7 @@ const handleDelete = async () => {
                 return files;
             };
 
-            const files = getAllFiles(response.data);
+            const files = getAllFiles(response_data);
             if (files.length > 0) {
                 await ElMessageBox.confirm(
                     t('deleteFolderConfirmation') + files.length,
@@ -254,7 +247,7 @@ const handleDelete = async () => {
     } catch (error) {
         if (error !== 'cancel') {
             console.error('Delete error:', error);
-            ElMessage.error(t('deleteFailed'));
+            ElMessage.error(t('deleteFail'));
         }
     } finally {
         emit('close-menu');
