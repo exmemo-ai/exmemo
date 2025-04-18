@@ -13,19 +13,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from knox.auth import TokenAuthentication
 
 from backend.common.files import utils_filemanager, filecache
-from backend.common.user.utils import parse_common_args, get_user_id
+from backend.common.user.utils import get_user_id
 from backend.common.utils.net_tools import do_result, get_backend_addr
 from backend.common.utils.web_tools import get_url_content
 from backend.common.utils.file_tools import get_content_type, get_ext
 from backend.common.parser.converter import convert, is_support
 
-from .feature import EntryFeatureTool
-from .entry import delete_entry, add_data, get_entry_list, get_type_options, rename_file
+from .entry import delete_entry, add_data, get_entry_list, rename_file
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
 from .zipfile import is_compressed_file, uncompress_file
@@ -133,7 +131,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             logger.debug(request)
             instance = self.get_object()
             logger.debug(f"user_id {instance.user_id}")
-            delete_entry(instance.user_id, [{"addr": instance.addr}])
+            delete_entry(instance.user_id, [{"addr": instance.addr, "etype": instance.etype}])
             return do_result(True, None)
         except Exception as e:
             logger.warning(f"destroy failed {e}")
@@ -357,231 +355,4 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             raise Http404
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-class EntryAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        return self.api(request)
-
-    def get(self, request):
-        return self.api(request)
-
-    def api(self, request):
-        rtype = request.GET.get("rtype", request.POST.get("rtype", "feature"))
-        if rtype == "feature":
-            return self.feature(request)
-        elif rtype == "extract":
-            return self.extract(request)
-        elif rtype == "tree":
-            return self.tree(request)
-        elif rtype == "move":
-            return self.move(request)
-        else:
-            return do_result(False, _("unknown_action"))
-
-    def feature(self, request):
-        ctype = request.GET.get("ctype", request.POST.get("ctype", None))
-        logger.debug(f"ctype {ctype}")
-        return get_type_options(ctype)
-
-    def extract(self, request):
-        dic = {}
-        args = parse_common_args(request)
-        dic["etype"] = request.GET.get("etype", request.POST.get("etype", "record"))
-        dic["user_id"] = args["user_id"]
-        logger.debug(f"etype {dic['etype']}")
-        ret = False
-        if dic["etype"] in ["record", "chat"]:
-            raw = request.GET.get("raw", request.POST.get("raw", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw, force=True)
-        elif dic["etype"] in ["web", "note", "file"]:
-            addr = request.GET.get("addr", request.POST.get("addr", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, addr, force=True)
-        if ret:
-            return do_result(True, {"dic": dic_new})
-        else:
-            return do_result(False, {"info": "extract failed"})
-        
-    def _build_tree_node(self, path_dict, current_level, current_path, path_parts, entry=None, path=None, is_last_level=False):
-        for i, part in enumerate(path_parts):
-            if not part:
-                continue
-                
-            current_path = (current_path + '/' + part).lstrip('/')
-            if current_path not in path_dict:
-                abs_path = os.path.join(path, current_path) if path != "" and path is not None else current_path
-                new_node = {
-                    'id': entry.idx if entry and i == len(path_parts) - 1 else abs_path,
-                    'addr': abs_path,
-                    'title': part,
-                    'is_folder': i < len(path_parts) - 1 or is_last_level,
-                    'need_load': is_last_level and i == len(path_parts) - 1,
-                    'children': []
-                }
-                path_dict[current_path] = new_node
-                current_level.append(new_node)
-                current_level = new_node['children']
-            else:
-                current_level = path_dict[current_path]['children']
-        return current_level
-
-    def tree(self, request, debug=False):
-        """
-        Get file tree structure 
-        """
-        try:
-            user_id = get_user_id(request)
-            if user_id is None:
-                return Response([])
-
-            etype = request.GET.get("etype", request.POST.get("etype", None))
-            path = request.GET.get("path", request.POST.get("path", None))
-            level = request.GET.get("level", request.POST.get("level", MAX_LEVEL))
-            if isinstance(level, str):
-                level = int(level)
-
-            if debug:
-                logger.info(f'get file tree etype: {etype}, path: {path} level: {level}')
-
-            query_conditions = {
-                'user_id': user_id,
-                'is_deleted': False,
-                'block_id': 0
-            }
-            
-            if etype is not None and etype != "":
-                query_conditions['etype'] = etype
-
-            if path is not None and path != "" and etype in ['note', 'file']:
-                query_conditions['addr__startswith'] = path
-
-            query = StoreEntry.objects.filter(**query_conditions).only(
-                'idx', 'addr', 'etype', 'title', 'meta'
-            )
-            
-            if level != -1:
-                if etype in ['note', 'file']:
-                    path_level = 0
-                    if path:
-                        path_clean = path.strip('/')
-                        if path_clean:
-                            path_level = path_clean.count('/') + 1
-                        if debug:
-                            logger.info(f'path: {path}, path_level: {path_level}')
-                    
-                    query = query.exclude(
-                        addr__regex=f'^[^/]*/([^/]*/){{{level+path_level}}}'
-                    )
-            
-            entries = query.order_by('addr')
-            
-            if debug:
-                logger.info('entries: %s' % len(entries))
-            root = []
-            path_dict = {}
-            count = 0
-            for entry in entries:
-                if entry.etype != 'web':
-                    file_path = entry.addr
-                else:
-                    if entry.meta and 'update_path' in entry.meta:
-                        file_path = entry.meta['update_path']
-                    elif entry.meta and 'resource_path' in entry.meta:
-                        file_path = entry.meta['resource_path']
-                    else:
-                        file_path = entry.title
-
-                if path != "" and path is not None and file_path.startswith(path):
-                    rel_path = file_path[len(path):].lstrip('/')
-                else:
-                    rel_path = file_path
-
-                arr = rel_path.split('/')
-                if level != -1 and len(arr) > level:
-                    current_path = ""
-                    current_level = root
-                    self._build_tree_node(path_dict, current_level, current_path, arr[:level], path=path, is_last_level=True)
-                    continue
-
-                current_path = ""
-                current_level = root
-                self._build_tree_node(path_dict, current_level, current_path, arr, entry=entry, path=path)
-                count += 1
-            if debug:
-                logger.info('count: %s' % count)
-            return Response(root)
-            
-        except Exception as e:
-            logger.error(f"Error getting file tree: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return Response(
-                {"error": "Failed to get file tree"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-    def move(self, request):
-        """
-        Move file or folder to another location
-        """
-        try:
-            user_id = get_user_id(request)
-            if user_id is None:
-                return do_result(False, "User_id is empty")
-
-            source = request.GET.get("source", request.POST.get("source", None))
-            target = request.GET.get("target", request.POST.get("target", None))
-            is_folder = request.GET.get("is_folder", request.POST.get("is_folder", "false")).lower() == "true"
-            etype = request.GET.get("etype", request.POST.get("etype", None))
-
-            if not source or not target:
-                return do_result(False, "Source or target is empty")
-
-            source = source.strip()
-            target = target.strip()
-
-            if source == target:
-                return do_result(True, "Source and target are same")
-
-            logger.debug(f'Move: {source} -> {target} (is_folder: {is_folder})')
-
-            if not is_folder:
-                entry = StoreEntry.objects.filter(user_id=user_id, addr=source, etype=etype, block_id=0).first()
-                if not entry:
-                    normalized_source = source.replace('\\', '/').replace('//', '/')
-                    entry = StoreEntry.objects.filter(user_id=user_id, addr=normalized_source, etype=etype, block_id=0).first()
-                if entry:
-                    dic = entry.__dict__.copy()
-                    ret = rename_file(user_id, entry.addr, target, dic)
-                    if ret:
-                        return do_result(True, "Move success")
-                else:
-                    logger.warning(f"Source file not found: {source}")
-                    return do_result(False, "Source file not found")
-            else:
-                dirname = source if source.endswith('/') else source + '/'
-                entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
-                
-                logger.debug(f"Move entries: {len(entries)} {dirname}")
-                for entry in entries:
-                    rel_path = entry.addr[len(dirname):]
-                    new_dst = os.path.join(target, rel_path)
-                    dic = entry.__dict__.copy()
-                    ret = rename_file(user_id, entry.addr, new_dst, dic, False);
-                    if not ret:
-                        return do_result(False, "Move failed")
-                return do_result(True, "Move success")
-
-            return do_result(False, "Move failed")
-        except Exception as e:
-            logger.error(f"Error moving file/folder: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return Response(
-                {"error": "Failed to move file/folder"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 

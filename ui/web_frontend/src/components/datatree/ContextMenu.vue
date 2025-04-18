@@ -9,6 +9,10 @@
                 <el-icon><DocumentAdd /></el-icon>
                 <span>{{ t('tree.newFile') }}</span>
             </el-menu-item>
+            <el-menu-item v-if="showImport" @click="handleImport">
+                <el-icon><Upload /></el-icon>
+                <span>{{ t('tree.importNote') }}</span>
+            </el-menu-item>
             <el-divider v-if="showNewFolder || showNewFile" />
             <el-menu-item v-if="showRename" @click="handleRename">
                 <el-icon><Edit /></el-icon>
@@ -20,15 +24,17 @@
             </el-menu-item>
         </el-menu>
     </div>
+    <ImportDialog ref="importDialogRef" />
 </template>
 
 <script setup>
-import { Delete, FolderAdd, DocumentAdd, Edit } from '@element-plus/icons-vue'
+import { Upload, Delete, FolderAdd, DocumentAdd, Edit } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { nextTick, computed } from 'vue'
-import { deleteData, renameData, loadTreeData } from './apiUtils'
+import { nextTick, computed, ref } from 'vue'
+import { deleteData, deleteDir, renameData, loadTreeData, importNotes } from './apiUtils'
 import { mapTreeItem, findAndAddNode, findNode, findData } from './treeUtils'
+import ImportDialog from './ImportDialog.vue'
 
 const { t } = useI18n()
 
@@ -44,13 +50,17 @@ const props = defineProps({
 const emit = defineEmits([
     'update:visible',
     'refresh-tree',
-    'close-menu'
+    'close-menu',
+    'new-file'
 ])
 
 const showNewFolder = computed(() => ['note', 'file'].includes(props.etype_value))
 const showNewFile = computed(() => ['note', 'file'].includes(props.etype_value))
 const showRename = computed(() => ['note', 'file', 'chat', 'record'].includes(props.etype_value))
 const showDelete = computed(() => true)
+const showImport = computed(() => props.etype_value === 'file')
+
+const importDialogRef = ref(null)
 
 const handleNewFolder = async () => {
     if (!props.rightClickNode) return;
@@ -174,7 +184,6 @@ const handleRename = async () => {
         );
         if (!newName || newName === props.rightClickNode.data.title) return;
         const newPath = props.rightClickNode.data.addr.replace(/[^/]+$/, newName);
-        //console.log('Renaming to:', newName, ' at path:', newPath);
         const existingNode = await findData(props.treeData, newPath);
         if (existingNode) {
             ElMessage.error(t('tree.nameAlreadyExists'));
@@ -201,19 +210,6 @@ const handleDelete = async () => {
     try {
         if (isFolder) {
             const response_data = await loadTreeData(props.etype_value, path, -1);
-
-            const getAllFiles = (items) => {
-                let files = [];
-                items.forEach(item => {
-                    if (!item.is_folder) {
-                        files.push(item.id);
-                    } else if (item.children) {
-                        files = files.concat(getAllFiles(item.children));
-                    }
-                });
-                return files;
-            };
-
             const files = getAllFiles(response_data);
             if (files.length > 0) {
                 await ElMessageBox.confirm(
@@ -225,9 +221,7 @@ const handleDelete = async () => {
                         type: 'warning'
                     }
                 );
-                for (const fileId of files) {
-                    await deleteData(fileId);
-                }
+                await deleteDir(path, props.etype_value);
                 ElMessage.success(t('tree.deleteFolderSuccess'));
             }
         } else {
@@ -254,11 +248,79 @@ const handleDelete = async () => {
     }
 };
 
+const getAllFiles = (items) => {
+    let files = [];
+    items.forEach(item => {
+        if (!item.is_folder) {
+            files.push(item.addr);
+        } else if (item.children) {
+            files = files.concat(getAllFiles(item.children));
+        }
+    });
+    return files;
+};
+
+const handleImport = async () => {
+    if (!props.rightClickNode) return;
+    
+    try {
+        const path = props.rightClickNode.data.addr;
+        let count = 0;
+        if (props.rightClickNode.data.is_folder) {
+            const response_data = await loadTreeData(props.etype_value, path, -1);
+            let files = getAllFiles(response_data);
+            if (files.length === 0) {
+                ElMessage.error(t('tree.noFilesToImport'));
+                return;
+            }
+            const supportedExtensions = ['pdf', 'docx', 'doc', 'md', 
+                    'txt', 'epub', 'mobi', 'html'];
+            files = files.filter(file => {
+                const ext = file.split('.').pop().toLowerCase();
+                return supportedExtensions.includes(ext);
+            });
+            if (files.length === 0) {
+                ElMessage.error(t('tree.noFilesToImport'));
+                return;
+            }
+            count = files.length;
+        }
+
+        const result = await importDialogRef.value?.show(props.rightClickNode.data.is_folder, 
+                            'note', count);
+
+        if (result) {
+            let target = result.vault
+            if (result.path) {
+                target += '/' + result.path
+            }
+            if (target.length > 0 && !target.endsWith('/')) {
+                target += '/'
+            }
+            await importNotes(
+                props.rightClickNode.data.addr, 
+                target,
+                result.overwrite
+            )
+            emit('refresh-tree')
+            ElMessage.success(t('tree.importSuccess'))
+        }
+    } catch (error) {
+        if (error !== 'cancel') {
+            console.error('Import error:', error)
+            ElMessage.error(t('tree.importFailed'))
+        }
+    } finally {
+        emit('close-menu')
+    }
+};
+
 defineExpose({
     handleNewFolder,
     handleNewFile,
     handleRename,
-    handleDelete
+    handleDelete,
+    handleImport
 });
 </script>
 

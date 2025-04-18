@@ -369,12 +369,33 @@ const handleDrop = async (draggingNode, dropNode, type) => {
 
 const handleContextMenu = (event, data, node) => {
     event.preventDefault();
+    
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    
+    const estimatedMenuHeight = 200;
+    const estimatedMenuWidth = 150;
+    
+    let top = event.clientY;
+    let left = event.clientX;
+    
+    if (top + estimatedMenuHeight > viewportHeight) {
+        top = viewportHeight - estimatedMenuHeight - 5;
+    }
+    
+    if (left + estimatedMenuWidth > viewportWidth) {
+        left = viewportWidth - estimatedMenuWidth - 5;
+    }
+    
+    top = Math.max(5, top);
+    left = Math.max(5, left);
+    
     contextMenuVisible.value = true;
     rightClickNode.value = { "node": node, "data": data };
     contextMenuStyle.value = {
         position: 'fixed',
-        left: `${event.clientX}px`,
-        top: `${event.clientY}px`,
+        left: `${left}px`,
+        top: `${top}px`,
         zIndex: 9999
     };
 

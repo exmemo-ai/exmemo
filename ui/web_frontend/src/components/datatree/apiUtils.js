@@ -55,6 +55,18 @@ export const deleteData = async (idx) => {
     }
 };
 
+export const deleteDir = async (path, etype) => {
+    try {
+        const response = await axios.delete(getURL() + 'api/entry/tool/', {
+            params: { rtype: 'delete', path: path, etype: etype, is_folder: true }
+        });
+        return response.data;
+    } catch (error) {
+        parseBackendError(error);
+        throw error;
+    }
+}
+
 export const renameData = async (sourceId, targetId, etype, is_folder) => {
     try {
         setDefaultAuthHeader();
@@ -73,4 +85,67 @@ export const renameData = async (sourceId, targetId, etype, is_folder) => {
         parseBackendError(error);
         throw error;
     }
-}
+};
+
+export const importNotes = async (sourcePath, targetPath, overwrite) => {
+    try {
+        let func = 'api/entry/tool/'
+        const response = await axios.get(getURL() + func, {
+            params: {
+                rtype: 'import',
+                source: sourcePath,
+                target: targetPath,
+                overwrite: overwrite
+            }
+        });
+        return response.data;
+    } catch (error) {
+        parseBackendError(error);
+        throw error;
+    }
+};
+
+const pathArrayToTree = (paths) => {
+    const root = { name: '', children: {}, isFile: false };
+    if (!Array.isArray(paths)) {
+        return root;
+    }
+
+    const validPaths = paths.filter(path => typeof path === 'string');
+    validPaths.forEach(path => {
+        if (!path) return;
+        const parts = path.split('/').filter(Boolean);
+        let current = root;
+        
+        parts.forEach((part, index) => {
+            if (!current.children[part]) {
+                current.children[part] = {
+                    name: part,
+                    children: {},
+                    isFile: index === parts.length - 1 && part.length === 40
+                };
+            }
+            current = current.children[part];
+        });
+    });
+    return root;
+};
+
+export const getDir = async (etype, path="") => {
+    try {
+        let func = 'api/entry/tool/'
+        const response = await axios.get(getURL() + func, {
+            params: {
+                rtype: 'getdir',
+                etype: etype,
+                path: path
+            }
+        });
+        const treeStructure = pathArrayToTree(response.data.dirs);
+        return treeStructure;
+    } catch (error) {
+        parseBackendError(error);
+        throw error;
+    }
+};
+

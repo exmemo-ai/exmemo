@@ -427,9 +427,23 @@
         "nameInvalid": "Name cannot contain slashes", 
         "nameAlreadyExists": "Name already exists",
         "renameFailed": "Rename failed",
-        "deleteFolderConfirmation": "This action will delete all files in the directory (total {count}), continue?",
-        "listView": "List View",
-        "treeView": "Tree View"
+        "deleteFolderConfirmation": "This operation will delete all files in the directory (total {count}), do you want to continue?",
+        "importConfirmation": "This operation will import all files in the directory (total {count}), do you want to continue?",
+        "importNote": "Import File to Note",
+        "vault": "Vault",
+        "path": "Path",
+        "enterVaultName": "Please enter vault name",
+        "overwriteExisting": "Overwrite existing files",
+        "vaultRequired": "Vault name is required",
+        "noFilesToImport": "No files to import",
+        "importSuccess": "Import successful",
+        "importFailed": "Import failed",
+        "deleteFolderSuccess": "Folder deleted successfully",
+        "selectVault": "Select vault",
+        "selectPath": "Select path",
+        "pathOptional": "Input path (optional)",
+        "manualInput": "Manual input",
+        "select": "Select"
     },
     "compress": {
         "unzipSettings": "Unzip settings",
@@ -477,11 +491,12 @@
     "folderNameNoSlash": "Folder name cannot contain slashes",
     "deleteFolder": "Delete folder",
     "confirmDeleteFolder": "Are you sure you want to delete this folder and all its bookmarks?",
-    "deleteFolderSuccess": "Folder deleted successfully",
     "bookmarkTitle": "Title",
     "selectFolder": "Select Folder",
     "customOrder": "Custom Order",
     "foundResults": "Results",
     "webSource": "Data sources include all read-later pages uploaded through the 'Bookmark Sync' browser extension, WeChat client, or web frontend.",
-    "noResults": "No results"
+    "noResults": "No results",
+    "listView": "List View",
+    "treeView": "Tree View"
 }

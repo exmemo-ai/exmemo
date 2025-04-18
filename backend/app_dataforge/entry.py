@@ -202,7 +202,7 @@ def _create_content_blocks(dic, content, use_embedding, debug=False):
     return ret_emb
 
 def save_entry(dic, abstract, content, update_content=True, debug=False):
-    logger.info(f'save {dic}')
+    logger.info(f'save {str(dic)[:200]}')
     use_embedding = EmbeddingTools.use_embedding()
     ret_emb = True
     try:
@@ -322,7 +322,10 @@ def delete_entry(uid, filelist):
     logger.debug(f"real delete total {len(filelist)}")
     for item in filelist:
         addr = item["addr"]
-        entrys = StoreEntry.objects.filter(user_id=uid, addr=addr)
+        filter_args = {"user_id": uid, "addr": addr}
+        if "etype" in item:
+            filter_args["etype"] = item["etype"]
+        entrys = StoreEntry.objects.filter(**filter_args)
         logger.warning(f"real delete {uid} addr {addr}, {entrys.count()}")
         for entry in entrys:
             if entry.block_id == 0:

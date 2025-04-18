@@ -29,35 +29,20 @@
                 </div>
                 <div v-if="form.etype === 'file'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
                     <input type="file" ref="fileInput" @change="handleFileUpload" width="100%">
-                    <div class="form-row">
-                        <div class="label-container">
-                            <el-text>{{ $t('opt.path') }}</el-text>
-                        </div>
-                        <div class="content-container">
-                            <el-input type="text" v-model="file_input_path"></el-input>
-                        </div>
-                    </div>
+                    <PathSelector
+                        v-model:path="file_input_path"
+                        :etype="form.etype"
+                    />
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
                     <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
                 </div>
                 <div v-if="form.etype === 'note'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
-                    <div class="form-row">
-                        <div class="label-container">
-                            <el-text>{{ $t('opt.vault') }}</el-text>
-                        </div>
-                        <div class="content-container">
-                            <el-input type="text" v-model="input_vault"></el-input>
-                        </div>
-                    </div>  
-                    <div class="form-row">
-                        <div class="label-container">
-                            <el-text>{{ $t('opt.path') }}</el-text>
-                        </div>
-                        <div class="content-container">
-                            <el-input type="text" v-model="input_path"></el-input>
-                        </div>
-                    </div>
+                    <PathSelector
+                        v-model:vault="input_vault"
+                        v-model:path="input_path"
+                        :etype="form.etype"
+                    />
                 </div>
             </div>
         </div>
@@ -84,12 +69,14 @@ import SettingService from '@/components/settings/settingService'
 import { confirmOpenNote } from './dataUtils';
 import SaveIcon from '@/components/icons/SaveIcon.vue'
 import UnzipDialog from './UnzipDialog.vue'
+import PathSelector from '@/components/common/PathSelector.vue'
 
 export default {
     components: {
         DataEditor,
         SaveIcon,
-        UnzipDialog
+        UnzipDialog,
+        PathSelector,
     },
     data() {
         return {
@@ -125,7 +112,7 @@ export default {
         }
     },
     methods: {
-        openDialog(onSuccess, options = {}) {
+        async openDialog(onSuccess, options = {}) {
             this.onSuccess = onSuccess;
             this.dialogVisible = true;
             this.dialogTitle = options?.title ?? this.$t('new');
@@ -159,7 +146,7 @@ export default {
             this.form.addr = '';
             this.form.raw = ''
             this.calcFilePath();
-            console.log(this.form)
+            console.log(this.form);
         },
         closeDialog() {
             this.dialogVisible = false;

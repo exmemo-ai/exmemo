@@ -273,7 +273,8 @@ class SyncAPIView(APIView):
                     last_sync_time > value["mtime"]
                 ):  # Local files deleted after last sync
                     cloud_remove_list.append(
-                        {"addr": value["addr"], "idx": str(value["idx"])}
+                        {"addr": value["addr"], "idx": str(value["idx"]), 
+                         "etype": "note"}
                     )
                     # Deletions should be more cautious, print logs, for test
                     if count < 10:  # Only display the first 10

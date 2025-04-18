@@ -1,5 +1,4 @@
 import json
-import os
 from loguru import logger
 from datetime import datetime
 from rest_framework.views import APIView
@@ -9,8 +8,7 @@ from django.utils.translation import gettext as _
 from backend.common.user.utils import parse_common_args
 from rest_framework.response import Response
 from django.utils import timezone
-from app_dataforge.entry import check_entry_exist
-from app_dataforge.views import delete_entry
+from app_dataforge.entry import check_entry_exist, delete_entry
 from app_dataforge.misc_tools import add_url
 from app_dataforge.models import StoreEntry
 
