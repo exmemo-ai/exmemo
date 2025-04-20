@@ -269,5 +269,8 @@
 @media screen and (max-width: 768px) {
     .main-content.content-note {
         flex-direction: column;
-    }    
+    }
+    .el-table .cell {
+        padding: 2px !important;
+    }
 }
