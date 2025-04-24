@@ -15,7 +15,7 @@ def is_compressed_file(path):
     ext = get_ext(path).lower()
     return ext in ['.zip', '.rar']
 
-def uncompress_file(dic_item, tmp_path, is_createSubDir, debug=False):
+def uncompress_file(dic_item, tmp_path, is_createSubDir, progress_callback=None, task_id=None, debug=False):
     try:
         base_dir = os.path.dirname(dic_item["addr"])
         filename = os.path.splitext(os.path.basename(dic_item["addr"]))[0]
@@ -40,7 +40,10 @@ def uncompress_file(dic_item, tmp_path, is_createSubDir, debug=False):
                 target_dir = base_dir
 
             filename = os.path.basename(dic_item["addr"])
-            ret, dic = EntryFeatureTool.get_instance().parse(dic_item, filename)
+            #ret, dic = EntryFeatureTool.get_instance().parse(dic_item, filename) # in add_data
+
+            total_files = sum([len(files) for _, _, files in os.walk(temp_dir)])
+            processed_files = 0
 
             for root, _, files in os.walk(temp_dir):
                 if debug: logger.debug(f"root {root} {files}")
@@ -50,17 +53,21 @@ def uncompress_file(dic_item, tmp_path, is_createSubDir, debug=False):
                     new_addr = os.path.join(target_dir, rel_path)
                     if debug: logger.debug(f"file {new_addr}")
                     
-                    new_dic = dic.copy()
+                    new_dic = dic_item.copy()
                     new_dic["addr"] = new_addr
                     new_dic["title"] = file
                     if debug: logger.debug(f'dic {new_dic}')
                     ret, ret_emb, info = add_data(new_dic, file_path, use_llm=False)
                     if ret:
                         ret_list.append({"addr": new_addr})
+                    
+                    processed_files += 1
+                    if progress_callback:
+                        progress = (processed_files * 100) // total_files
+                        progress_callback(progress, task_id)
             
             if debug: logger.info(f'unzip list {ret_list}')
             return True, True, ret_list
-            
     except Exception as e:
         logger.error(f"Error extracting compressed file: {str(e)}")
         import traceback

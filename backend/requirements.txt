@@ -68,3 +68,5 @@ tzlocal==5.2
 
 py7zr==0.22.0
 patool==4.0.0
+celery==5.5.1
+redis==5.2.1

@@ -1,0 +1,121 @@
+import os
+from loguru import logger
+from django.utils.translation import gettext as _
+
+from backend.common.files import utils_filemanager, filecache
+from backend.common.parser.converter import convert
+from backend.common.utils.file_tools import get_ext
+from .models import StoreEntry
+from .entry import delete_entry, add_data
+from .zipfile import is_compressed_file, uncompress_file
+
+def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, progress_callback=None, task_id=None):
+    if addr.startswith("/"):
+        addr = addr[1:]
+    dic_item = dic.copy()
+    if vault is not None:
+        dic_item["addr"] = os.path.join(vault, addr)
+    else:
+        dic_item["addr"] = addr
+    dic_item["md5"] = md5
+
+    if is_unzip and is_compressed_file(file_path):
+        return uncompress_file(dic_item, file_path, is_createSubDir, progress_callback, task_id)
+    else:
+        return add_data(dic_item, file_path)
+
+        
+def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, 
+                 progress_callback=None, task_id=None):
+    debug = False
+    success_list = []
+    if len(file_paths) > 0 and len(filemd5s) == 0:
+        filemd5s = [None] * len(file_paths)
+
+    total = len(file_paths)
+    emb_status = "success" 
+    for idx, (file_path, addr, md5) in enumerate(zip(file_paths, filepaths, filemd5s)):
+        logger.info(f"update_files idx:{idx}, path:{file_path}, addr:{addr}, md5:{md5}")
+        if len(file_paths) == 1:
+            ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, 
+                                           progress_callback, task_id) # for single file
+        else:
+            ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir)
+        if not ret_emb:
+            emb_status = "failed"
+        if ret:
+            success_list.append(addr)
+        if progress_callback:
+            progress_callback((idx + 1) * 100 / total, task_id)    
+    if debug:
+        logger.info(f"upload_files success {str(success_list)[:200]}")
+
+    return success_list, emb_status
+
+def real_import(user_id, process_list, progress_callback=None, task_id=None, debug=False):
+    success_list = []
+    try:
+        total = len(process_list)
+        for idx, (base_src_path, dst_path, need_delete) in enumerate(process_list):
+            if need_delete:
+                delete_entry(user_id, [{"addr": dst_path, "etype": "note"}])
+            
+            src_ext = get_ext(base_src_path) 
+            src_path = filecache.get_tmpfile(src_ext)
+            ret = utils_filemanager.get_file_manager().get_file(
+                user_id, base_src_path, src_path
+            )
+            if not ret:
+                logger.warning(f"Failed to get source file: {base_src_path}")
+                continue
+            
+            filecache.TmpFileManager.get_instance().add_file(src_path)
+            
+            md_path = filecache.get_tmpfile('.md')
+            ret = convert(src_path, md_path)
+            if not ret:
+                logger.warning(f"Failed to convert file: {base_src_path}")
+                continue
+
+            if debug: logger.info(f"## convert file {src_path} to {md_path}")
+            with open(md_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            dic = {
+                "user_id": user_id,
+                "etype": "note", 
+                "addr": dst_path,
+                "title": os.path.basename(dst_path),
+                "raw": content
+            }
+            ret, ret_emb, info = add_data(dic, md_path)
+            if ret:
+                success_list.append(dst_path)
+            if progress_callback:
+                progress_callback((idx + 1) * 100 / total, task_id)
+        return success_list
+    except Exception as e:
+        logger.error(f"Error during import: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+    
+def real_refresh(user_id, addr, etype, is_folder, progress_callback=None, task_id=None, debug=False):
+    if not is_folder:
+        entries = StoreEntry.objects.filter(user_id=user_id, addr=addr, etype=etype, block_id=0).first()
+    else:
+        if not addr.endswith("/"):
+            addr = addr + "/"
+        entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=addr,
+                                          etype=etype, block_id=0).first()
+    success_list = []
+    for idx, entry in enumerate(entries):
+        dic = entry.to_dict()
+        ret, ret_emb, detail = add_data(dic)
+        if ret:
+            success_list.append(entry.addr)
+        if progress_callback:
+            progress_callback((idx + 1) * 100 / len(entries), task_id)
+
+    return success_list
+

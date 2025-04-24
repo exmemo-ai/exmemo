@@ -9,6 +9,7 @@ from knox import views as knox_views
 urlpatterns = [
     path("api/entry/", include("app_dataforge.urls")),
     path("api/message/", include("app_message.urls")),
+    path("api/tasks/", include("user_tasks.urls")),
     #
     path("api/ai/", include("app_ai.urls")),
     path("api/web/", WebAPIView.as_view(), name="web-api"),

@@ -59,6 +59,7 @@ export async function saveEntry({
             }
             formData.append('unzip', form.unzip);
             formData.append('createSubDir', form.createSubDir);
+            formData.append('is_async', true);
         }
     } else if (form.etype === 'web') {
         if (form.addr === '') {
@@ -104,7 +105,9 @@ export async function saveEntry({
                 cancelToken: cancelTokenSource.token
             });
             if (response.data.status === 'success') {
-                if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
+                if (!response.data.task_id) {
+                    if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
+                }
                 onSuccess?.(response.data);
                 return response.data;
             } else {

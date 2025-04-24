@@ -63,3 +63,6 @@ OPENAI_API_KEY="sk-"
 
 # Time zone setting
 TIMEZONE='Asia/Shanghai'
+
+# CELERY
+USE_CELERY='True'

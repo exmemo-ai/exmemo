@@ -87,7 +87,7 @@ export const renameData = async (sourceId, targetId, etype, is_folder) => {
     }
 };
 
-export const importNotes = async (sourcePath, targetPath, overwrite) => {
+export const importNotes = async (sourcePath, targetPath, is_folder, is_async, overwrite) => {
     try {
         let func = 'api/entry/tool/'
         const response = await axios.get(getURL() + func, {
@@ -95,7 +95,9 @@ export const importNotes = async (sourcePath, targetPath, overwrite) => {
                 rtype: 'import',
                 source: sourcePath,
                 target: targetPath,
-                overwrite: overwrite
+                is_folder: is_folder,
+                is_async: is_async,
+                overwrite: overwrite, 
             }
         });
         return response.data;
@@ -148,4 +150,24 @@ export const getDir = async (etype, path="") => {
         throw error;
     }
 };
+
+export const refreshData = async (path, etype, is_folder) => {
+    try {
+        setDefaultAuthHeader();
+        const response = await axios.get(getURL() + 'api/entry/tool/', {
+            params: {
+                rtype: 'refreshdata',
+                etype: etype,
+                path: path, 
+                is_folder: is_folder,
+                is_async: true
+            }
+        });
+        return response.data;
+    }
+    catch (error) {
+        parseBackendError(error);
+        throw error;
+    }
+}
 

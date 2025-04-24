@@ -98,39 +98,32 @@ class Session:
         if len(abstract) > 1024:
             abstract = abstract[:1024] + "\n..."
 
-        if obj is None or obj.get("ctype") == DEFAULT_CATEGORY:            
+        if obj is None:
+            dic = {
+                "abstract": abstract,
+                "status": "collect",
+                "atype": "subjective",
+                "user_id": self.user_id,
+                "ctype": DEFAULT_CATEGORY,
+                "etype": "chat",
+                "raw": raw,
+                "source": self.source,
+                "addr": self.sid,
+                "meta": {"sid": self.sid, "is_group": self.is_group, 
+                        "messages": messages},
+            }
+        else:
+            dic = obj
+
+        if dic.get("ctype") == DEFAULT_CATEGORY or dic.get("ctype") is None:            
             string = self.reduce_message()
             if len(string) > 0:
-                ret_title, info_title = EntryFeatureTool.get_instance().get_title(self.user_id, string)
-                type_dic = EntryFeatureTool.get_instance().get_type_by_llm(self.user_id, string, etype='chat')
-                ctype = type_dic['ctype']
-            else:
-                ret_title = False
-                ctype = DEFAULT_CATEGORY
-            if ret_title:
-                title = info_title
-            else:
-                title = self.get_name()
-            if len(title) > TITLE_MAX_LENGTH:
-                title = title[:TITLE_MAX_LENGTH] + "..."
-        else:
-            title = self.get_name()
-            ctype = obj.get("ctype")
+                ret, dic = EntryFeatureTool.get_instance().parse(dic, string)
+            if 'title' not in dic or dic['title'] is None:
+                dic['title'] = self.get_name()
+            if len(dic['title']) > TITLE_MAX_LENGTH:
+                dic['title'] = dic['title'][:TITLE_MAX_LENGTH] + "..."
 
-        dic = {
-            "title": title,
-            "abstract": abstract,
-            "status": "collect",
-            "atype": "subjective",
-            "user_id": self.user_id,
-            "ctype": ctype,
-            "etype": "chat",
-            "raw": raw,
-            "source": self.source,
-            "addr": self.sid,
-            "meta": {"sid": self.sid, "is_group": self.is_group, 
-                    "messages": messages},
-        }
         if obj is None:
             return True, dic
         return False, dic

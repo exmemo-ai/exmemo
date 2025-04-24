@@ -22,11 +22,14 @@ from backend.common.utils.net_tools import do_result, get_backend_addr
 from backend.common.utils.web_tools import get_url_content
 from backend.common.utils.file_tools import get_content_type, get_ext
 from backend.common.parser.converter import convert, is_support
+from backend.settings import USE_CELERY
 
 from .entry import delete_entry, add_data, get_entry_list, rename_file
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
-from .zipfile import is_compressed_file, uncompress_file
+from .zipfile import is_compressed_file
+from .file_tools import update_files
+from .tasks import update_files_task
 
 MAX_LEVEL = 2
 
@@ -39,28 +42,6 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return ListSerializer
         return DetailSerializer
-
-    def update_file(self, dic, addr, file, md5, vault=None, is_unzip=False, is_createSubDir=True):
-        if addr.startswith("/"):
-            addr = addr[1:]
-        dic_item = dic.copy()
-        if vault is not None:
-            dic_item["addr"] = os.path.join(vault, addr)
-        else:
-            dic_item["addr"] = addr
-        dic_item["md5"] = md5
-        
-        ext = get_ext(addr).lower()
-        tmp_path = filecache.get_tmpfile(ext)
-        data = file.file.read()
-        logger.debug(f"## save to db {tmp_path} len {len(data)}")
-        with open(tmp_path, "wb") as f:
-            f.write(data)
-
-        if is_unzip and is_compressed_file(tmp_path):
-            return uncompress_file(dic_item, tmp_path, is_createSubDir)
-        else:
-            return add_data(dic_item, tmp_path)
 
     def create(self, request, *args, **kwargs):
         logger.info("now create instance")
@@ -79,6 +60,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             dic["idx"] = request.POST.get("idx", None)
             dic["user_id"] = get_user_id(request)
             dic["source"] = request.POST.get("source", "web")
+            is_async = request.POST.get("is_async", "false").lower() == "true"
             if dic["etype"] == "web":
                 addr = request.POST.get("addr", None)
                 if not addr.startswith("http"):
@@ -102,22 +84,43 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     logger.info(
                         f"do_upload files {files}, filepaths {filepaths},  filemd5s {filemd5s}"
                     )
-                success_list = []
-                if len(files) > 0 and len(filemd5s) == 0:
-                    filemd5s = [None] * len(files)
-                emb_status = "success"
-                for file, addr, md5 in zip(files, filepaths, filemd5s):
-                    ret, ret_emb, detail = self.update_file(dic, addr, file, md5, vault, is_unzip, is_createSubDir)
-                    if not ret_emb:
-                        emb_status = "failed"
-                    if ret:
-                        success_list.append(addr)
-                if debug:
-                    logger.info(f"upload_files success {success_list}")
-                if len(success_list) > 0:
-                    return do_result(True, {"list": success_list, "emb_status": emb_status})
+
+                tmp_file_paths = []
+                for file in files:
+                    ext = get_ext(file.name)
+                    tmp_path = filecache.get_tmpfile(ext)
+                    with open(tmp_path, "wb") as f:
+                        for chunk in file.chunks():
+                            f.write(chunk)
+                    tmp_file_paths.append(tmp_path)
+
+                is_zip_file = False
+                if is_unzip:
+                    for file in files:
+                        if is_compressed_file(file.name):
+                            is_zip_file = True
+                            break
+                
+                if USE_CELERY and is_async and (len(files) > 1 or is_zip_file):
+                    task_id = update_files_task.delay(
+                        dic['user_id'], 
+                        tmp_file_paths,
+                        filepaths,
+                        filemd5s,
+                        dic,
+                        vault,
+                        is_unzip,
+                        is_createSubDir
+                    )
+                    return do_result(True, {"task_id": str(task_id)})
                 else:
-                    return do_result(False, _("no_update_needed"))
+                    success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir)
+                    if debug:
+                        logger.info(f"upload_files success {success_list}")
+                    if len(success_list) > 0:
+                        return do_result(True, {"list": success_list, "emb_status": emb_status})
+                    else:
+                        return do_result(False, _("no_update_needed"))
         except Exception as e:
             traceback.print_exc()
             logger.warning(f"upload_files failed {e}")

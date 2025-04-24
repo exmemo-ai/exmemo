@@ -8,15 +8,16 @@ from rest_framework import status
 from rest_framework.views import APIView
 from knox.auth import TokenAuthentication
 
-from backend.common.files import utils_filemanager, filecache
 from backend.common.user.utils import parse_common_args, get_user_id
 from backend.common.utils.net_tools import do_result
-from backend.common.utils.file_tools import get_ext
-from backend.common.parser.converter import convert, is_support
+from backend.common.parser.converter import is_support
+from backend.settings import USE_CELERY
 
 from .feature import EntryFeatureTool
-from .entry import delete_entry, add_data, get_type_options, rename_file
+from .entry import delete_entry, get_type_options, rename_file
 from .models import StoreEntry
+from .tasks import import_task
+from .file_tools import real_import, real_refresh
 
 MAX_LEVEL = 2
 
@@ -47,6 +48,8 @@ class EntryAPIView(APIView):
             return self.delete(request)
         elif rtype == "getdir":
             return self.get_dir(request)
+        elif rtype == "refreshdata":
+            return self.refresh_data(request)
         else:
             return do_result(False, _("unknown_action"))
 
@@ -56,6 +59,7 @@ class EntryAPIView(APIView):
         return get_type_options(ctype)
 
     def extract(self, request):
+        # Extract file features by user
         dic = {}
         args = parse_common_args(request)
         dic["etype"] = request.GET.get("etype", request.POST.get("etype", "record"))
@@ -265,6 +269,8 @@ class EntryAPIView(APIView):
 
             source = request.GET.get("source", request.POST.get("source", None))
             target = request.GET.get("target", request.POST.get("target", None))
+            is_folder = request.GET.get("is_folder", request.POST.get("is_folder", "false")).lower() == "true"
+            is_async = request.GET.get("is_async", request.POST.get("is_async", "false")).lower() == "true"
             overwrite = request.GET.get("overwrite", request.POST.get("overwrite", "false")).lower() == "true"
 
             if not source or not target:
@@ -275,7 +281,10 @@ class EntryAPIView(APIView):
 
             logger.debug(f'Import: {source} -> {target}')
 
-            entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=source, etype='file', block_id=0)
+            if is_folder:
+                entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=source, etype='file', block_id=0)
+            else:
+                entries = StoreEntry.objects.filter(user_id=user_id, addr=source, etype='file', block_id=0)
             if not entries.exists():
                 return do_result(False, "Source file not found")
             
@@ -298,55 +307,21 @@ class EntryAPIView(APIView):
                     if not overwrite:
                         logger.warning(f"Target file exists and skip: {dst_path}")
                         continue
-                    process_list.append((entry, dst_path, True))
+                    process_list.append((entry.path, dst_path, True))
                 else:
-                    process_list.append((entry, dst_path, False))
+                    process_list.append((entry.path, dst_path, False))
 
             if not process_list:
                 return do_result(False, _("no_update_needed"))
-
-            success_list = []
-            for entry, dst_path, need_delete in process_list:
-                if need_delete:
-                    delete_entry(user_id, [{"addr": dst_path, "etype": "note"}])
-                
-                src_ext = get_ext(entry.path) 
-                src_path = filecache.get_tmpfile(src_ext)
-                ret = utils_filemanager.get_file_manager().get_file(
-                    user_id, entry.path, src_path
-                )
-                if not ret:
-                    logger.warning(f"Failed to get source file: {entry.path}")
-                    continue
-                
-                filecache.TmpFileManager.get_instance().add_file(src_path)
-                
-                md_path = filecache.get_tmpfile('.md')
-                ret = convert(src_path, md_path)
-                if not ret:
-                    logger.warning(f"Failed to convert file: {entry.path}")
-                    continue
-
-                if debug: logger.info(f"## convert file {src_path} to {md_path}")
-                with open(md_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-
-                dic = {
-                    "user_id": user_id,
-                    "etype": "note", 
-                    "addr": dst_path,
-                    "title": os.path.basename(dst_path),
-                    "raw": content
-                }
-
-                ret, ret_emb, info = add_data(dic, md_path)
-                if ret:
-                    success_list.append(dst_path)
-
-            if not success_list:
-                return do_result(False, _("no_update_needed")) 
-            return do_result(True, {"list": success_list})
-
+            
+            if USE_CELERY and is_async:
+                task_id = import_task.delay(user_id, process_list, debug=debug)
+                return do_result(True, {"task_id": str(task_id)})
+            else:
+                success_list = real_import(user_id, process_list, debug=debug)
+                if not success_list:
+                    return do_result(False, _("no_update_needed")) 
+                return do_result(True, {"list": success_list})
         except Exception as e:
             logger.error(f"Error importing file: {str(e)}")
             import traceback
@@ -467,3 +442,32 @@ class EntryAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def refresh_data(self, request):
+        try:
+            user_id = get_user_id(request)
+            if user_id is None:
+                return do_result(False, "User_id is empty")
+            is_folder = request.GET.get("is_folder", request.POST.get("is_folder", "false")).lower() == "true"
+            etype = request.GET.get("etype", request.POST.get("etype", None))
+            path = request.GET.get("path", request.POST.get("path", None))
+            is_async = request.GET.get("is_async", request.POST.get("is_async", "false")).lower() == "true"
+            if not etype:
+                return do_result(False, "Etype is empty")
+            if not path:
+                return do_result(False, "Path is empty")
+            if is_folder and USE_CELERY and is_async:
+                return do_result(False, "Folder refresh not supported in async mode")
+            else:
+                success_list = real_refresh(user_id, path, etype, is_folder)
+                if len(success_list) > 0:
+                    return do_result(True, "Refresh data success")
+                else:
+                    return do_result(False, "Refresh data failed")
+        except Exception as e:
+            logger.error(f"Error refreshing data: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {"error": "Failed to refresh data"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

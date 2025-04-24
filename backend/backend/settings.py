@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "app_ai",
     "app_bm_syncex",
     "app_bm_keeper",
+    "user_tasks",
     "backend.common.user",
     "rest_framework",
     "corsheaders",
@@ -155,6 +156,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
+
+USE_CELERY = os.getenv("USE_CELERY", "True").lower() == "true"
 
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en-US")
 

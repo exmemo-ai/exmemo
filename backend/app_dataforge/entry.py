@@ -92,7 +92,6 @@ def add_file(dic, path, use_llm=True):
 
     user = UserManager.get_instance().get_user(dic["user_id"])
     filename = os.path.basename(dic["addr"])
-    ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
     update_content = True
 
     if dic["etype"] == "note":
@@ -142,6 +141,7 @@ def add_file(dic, path, use_llm=True):
                 logger.warning(f"parse meta failed {e}")
                 dic["meta"] = meta_data
         
+    ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
 
     abstract = None
     if (dic['etype'] == 'note' and user.get("note_get_abstract")) or (dic['etype'] == 'file' and user.get("file_get_abstract")):
