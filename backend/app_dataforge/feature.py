@@ -102,9 +102,49 @@ class EntryFeatureTool:
             }
         })
 
+    def _need_llm(self, dic, user, force=False):
+        """判断是否需要使用LLM提取特征"""
+        # 检查已有值
+        if dic["ctype"] is not None and dic.get("meta", {}).get("description"):
+            return False
+            
+        if is_image_file(dic.get("content", "")):
+            dic["ctype"] = IMAGE_CATEGORY
+            return False
+            
+        if dic["etype"] == "note":
+            if not force and not user.get("note_get_category") and not user.get("note_get_abstract"):
+                return False
+        elif dic["etype"] == "file":
+            if not force and not user.get("file_get_category") and not user.get("file_get_abstract"):
+                return False
+        elif dic["etype"] == "web":
+            if not force and not user.get("web_get_category") and not user.get("web_get_abstract"):
+                return False
+                
+        return True
+
+    def _process_llm_features(self, dic, features, force):
+        """处理LLM返回的特征并更新dic"""
+        if "category" in features:
+            if force or dic["ctype"] is None:
+                dic["ctype"] = features["category"].get("ctype")
+            if force or dic["status"] is None:
+                dic["status"] = dic["status"] or features["category"].get("status")
+            if force or dic["atype"] is None:
+                dic["atype"] = dic["atype"] or features["category"].get("atype")
+
+        if dic["title"] is None and "title" in features: # not check force
+            dic["title"] = features["title"]
+
+        if "summary" in features:
+            if 'meta' not in dic:
+                dic['meta'] = {}
+            if 'description' not in dic['meta'] or force:
+                dic['meta']['description'] = features.get("summary")
+
     def parse(self, dic, content, use_llm=True, force=False, debug=False):
         user = UserManager.get_instance().get_user(dic["user_id"])
-        description = None
 
         required_fields = ["ctype", "status", "atype", "title"]
         for field in required_fields:
@@ -117,60 +157,35 @@ class EntryFeatureTool:
                     dic["user_id"], content, dic["etype"], use_llm=use_llm, debug=debug
                 )
                 if ret:
-                    if dic["title"] is None and "title" in features:
-                        dic["title"] = features["title"]
-                    if "category" in features:
-                        if dic["ctype"] is None:
-                            dic["ctype"] = features["category"].get("ctype")
-                        if dic["status"] is None:
-                            dic["status"] = features["category"].get("status")
-                        if dic["atype"] is None:
-                            dic["atype"] = features["category"].get("atype")
-                    if "summary" in features:
-                        description = features["summary"]
+                    self._process_llm_features(dic, features, force)
         elif dic["etype"] in ["note", "file"]:
             if dic["title"] is None:
                 dic["title"] = os.path.basename(content)
-            if dic["ctype"] is None:
-                if is_image_file(content):
-                    dic["ctype"] = IMAGE_CATEGORY
-                elif (dic["etype"] == "note" and user.get("note_get_category") == False and not force) or \
-                     (dic["etype"] == "file" and user.get("file_get_category") == False and not force):
-                    dic["ctype"] = DEFAULT_CATEGORY
-                else:
-                    ret, features = get_features_by_llm(
-                        dic["user_id"], dic["title"], dic["etype"], 
-                        use_llm=use_llm, debug=debug
-                    )
-                    if ret and "category" in features:
-                        dic["ctype"] = features["category"].get("ctype")
-                        dic["status"] = dic["status"] or features["category"].get("status")
-                        dic["atype"] = dic["atype"] or features["category"].get("atype")
-                    if "summary" in features:
-                        description = features["summary"]
+            if self._need_llm(dic, user, force) and use_llm:
+                ret, features = get_features_by_llm(
+                    dic["user_id"], dic["title"], dic["etype"], use_llm=use_llm, debug=debug
+                )
+                if ret:
+                    self._process_llm_features(dic, features, force)
             dic["status"] = dic["status"] or "collect"
             if dic["etype"] == "note":
                 dic["atype"] = dic["atype"] or "subjective"
             else:
                 dic["atype"] = dic["atype"] or "third_party"
-        elif dic["etype"] == "web":
-            if dic["title"] is None or (dic["ctype"] is None and user.get("web_get_category") != False):
+        elif dic["etype"] == "web":            
+            if dic["title"] is None or self._need_llm(dic, user, force):
                 title, web_content = get_url_content(content)
                 if dic["title"] is None:
                     dic["title"] = title
-                if dic["ctype"] is None and user.get("web_get_category") != False:
+                if self._need_llm(dic, user, force) and use_llm:
                     ret, features = get_features_by_llm(
-                        dic["user_id"], web_content, dic["etype"], 
+                        dic["user_id"], web_content, dic["etype"],
                         title=title, use_llm=use_llm, debug=debug
                     )
-                    if ret and "category" in features:
-                        dic["ctype"] = features["category"].get("ctype")
-                        dic["status"] = dic["status"] or features["category"].get("status")
-                        dic["atype"] = dic["atype"] or features["category"].get("atype")
-                    if "summary" in features:
-                        description = features["summary"]
+                    if ret:
+                        self._process_llm_features(dic, features, force)
             dic["status"] = dic["status"] or "collect"
-            dic["atype"] = dic["atype"] or "third_party"                        
+            dic["atype"] = dic["atype"] or "third_party"                   
 
         # Set default values
         dic["ctype"] = dic["ctype"] or DEFAULT_CATEGORY
@@ -187,15 +202,6 @@ class EntryFeatureTool:
             if dic.get('source') == 'bookmark':
                 base_path = self.get_base_path(dic["path"], title_copy)
                 self.update_bookmark_paths(dic, new_title, base_path)
-
-        # fill description
-        if description is not None:
-            if 'meta' not in dic:
-                dic['meta'] = {}
-            if 'description' not in dic['meta']:
-                dic['meta']['description'] = description
-            else:
-                dic['meta']['description'] = dic['meta']['description'] or description
 
         return True, dic
 

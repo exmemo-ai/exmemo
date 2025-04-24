@@ -55,14 +55,7 @@ def add_data(dic, path=None, use_llm=True):
         return False, False, _("unknown_type_colon_") + dic["etype"]
 
 def add_chat(dic, use_llm=True):
-    abstract = None
-    if 'abstract' in dic:
-        abstract = dic["abstract"]
-        del dic["abstract"]
-    else:
-        if 'raw' in dic:
-            abstract = dic["raw"]
-    return save_entry(dic, abstract, dic["raw"])
+    return _save_entry(dic, dic["raw"])
 
 def get_file_content_by_path(path, user):
     meta_data = {}
@@ -115,41 +108,29 @@ def add_file(dic, path, use_llm=True):
     if "created_time" not in dic:
         dic["created_time"] = mtime_datetime
 
-    meta_data = {}
+    meta_dic = {}
     content = None
     if update_content:
         if (dic['etype'] == 'note' and user.get("note_save_content")) or (dic['etype'] == 'file' and user.get("file_save_content")):
-            meta_data, content = get_file_content_by_path(path, user)
+            meta_dic, content = get_file_content_by_path(path, user)
         elif converter.is_markdown(path):
             parser = MarkdownParser(path)
-            meta_data = convert_dic_to_json(parser.fm)
-            content = None
-        else:
-            meta_data = {}
-            content = None
-        if meta_data is None:
-            meta_data = {}
+            meta_dic = convert_dic_to_json(parser.fm)
+    if meta_dic is None:
+        meta_dic = {}
 
     if 'meta' not in dic:
-        dic["meta"] = meta_data
-    else:
-        if isinstance(dic["meta"], str):
-            try:
-                dic["meta"] = json.loads(dic["meta"])
-                dic["meta"].update(meta_data)
-            except Exception as e:
-                logger.warning(f"parse meta failed {e}")
-                dic["meta"] = meta_data
-        
+        dic["meta"] = {}
+    if isinstance(dic["meta"], str):
+        try:
+            dic["meta"] = json.loads(dic["meta"])
+        except Exception as e:
+            logger.warning(f"parse meta failed {e}")
+            dic["meta"] = {}
+
+    dic['meta'].update(meta_dic)
     ret, dic = EntryFeatureTool.get_instance().parse(dic, filename, use_llm=use_llm)
-
-    abstract = None
-    if (dic['etype'] == 'note' and user.get("note_get_abstract")) or (dic['etype'] == 'file' and user.get("file_get_abstract")):
-        ret, detail = get_file_abstract(path, dic["user_id"])
-        if ret:
-            abstract = detail
-
-    return save_entry(dic, abstract, content, update_content)
+    return _save_entry(dic, content, update_content)
 
 
 def filter_model_fields(data):
@@ -201,10 +182,13 @@ def _create_content_blocks(dic, content, use_embedding, debug=False):
         logger.info(f'saved blocks {idx}')
     return ret_emb
 
-def save_entry(dic, abstract, content, update_content=True, debug=False):
+def _save_entry(dic, content, update_content=True, debug=False):
     logger.info(f'save {str(dic)[:200]}')
     use_embedding = EmbeddingTools.use_embedding()
     ret_emb = True
+    abstract = None
+    if "meta" in dic and "description" in dic["meta"]:
+        abstract = dic["meta"]["description"]
     try:
         dic["updated_time"] = timezone.now().astimezone(pytz.UTC)
         if "idx" in dic and dic["idx"]:
@@ -267,7 +251,7 @@ def add_record(dic, use_llm=True):
     ret, dic_new = EntryFeatureTool.get_instance().parse(
         dic, dic["raw"], use_llm=use_llm
     )
-    ret, ret_emb, detail = save_entry(dic_new, dic["raw"], dic["raw"])
+    ret, ret_emb, detail = _save_entry(dic_new, dic["raw"])
     if ret:
         if "ctype" in dic_new and dic_new["ctype"] is not None:
             detail = _("record_successful_comma__type_colon_") + dic_new["ctype"]
@@ -287,18 +271,14 @@ def add_web(dic, use_llm=True, debug=False):
         # insert to db directly
         dic['ctype'] = DEFAULT_CATEGORY # if it has ctype, will not download web content
         ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=False, debug=debug)
-        ret, ret_emb, detail = save_entry(dic, None, None, debug=debug)
+        ret, ret_emb, detail = _save_entry(dic, None, debug=debug)
     else:
-        if user.get("web_get_abstract"):
-            abstract = get_web_abstract(dic['user_id'], dic["addr"])
-        else:
-            abstract = None
         ret, dic = EntryFeatureTool.get_instance().parse(dic, dic["addr"], use_llm=use_llm, debug=debug)
         if user.get("web_save_content"):
             title, content = get_url_content(dic["addr"])
-            ret, ret_emb, detail = save_entry(dic, abstract, content)
+            ret, ret_emb, detail = _save_entry(dic, content)
         else:
-            ret, ret_emb, detail = save_entry(dic, abstract, None)
+            ret, ret_emb, detail = _save_entry(dic, None)
 
     if ret:
         if "ctype" in dic and dic["ctype"] is not None:

@@ -94,13 +94,9 @@ class Session:
         obj = self.get_item_from_db()
         messages = [item.to_dict() for item in self.messages]
         raw = self.get_raw()
-        abstract = raw
-        if len(abstract) > 1024:
-            abstract = abstract[:1024] + "\n..."
 
         if obj is None:
             dic = {
-                "abstract": abstract,
                 "status": "collect",
                 "atype": "subjective",
                 "user_id": self.user_id,
