@@ -24,11 +24,11 @@ from backend.common.utils.file_tools import get_content_type, get_ext
 from backend.common.parser.converter import convert, is_support
 from backend.settings import USE_CELERY
 
-from .entry import delete_entry, add_data, get_entry_list, rename_file
+from .entry import delete_entry, add_data, get_entry_list
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
 from .zipfile import is_compressed_file
-from .file_tools import update_files
+from .file_tools import update_files, rename_file
 from .tasks import update_files_task
 
 MAX_LEVEL = 2

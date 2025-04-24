@@ -34,15 +34,15 @@ Content: "{content}"
 3. Summary (within 200 characters)
 
 Please format your response as a JSON object like:
-{
+{{
     "title": "brief title",
-    "category": {
+    "category": {{
         "ctype": "chosen category",
         "atype": "chosen authority",
         "status": "chosen status"
-    },
+    }},
     "summary": "content summary"
-}
+}}
 """
 
 PROMPT_COMPREHENSIVE = PromptTemplate(

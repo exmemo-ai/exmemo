@@ -2,6 +2,7 @@ import os
 import re
 import traceback
 import pandas as pd
+from typing import Dict, Any, Tuple
 from loguru import logger
 from django.utils.translation import gettext as _
 from backend.settings import BASE_DATA_DIR
@@ -143,68 +144,113 @@ class EntryFeatureTool:
             if 'description' not in dic['meta'] or force:
                 dic['meta']['description'] = features.get("summary")
 
-    def parse(self, dic, content, use_llm=True, force=False, debug=False):
-        user = UserManager.get_instance().get_user(dic["user_id"])
+    def parse(self, dic: Dict[str, Any], content: str, use_llm: bool = True, 
+              force: bool = False, debug: bool = False) -> Tuple[bool, Dict[str, Any]]:
+        """解析并填充条目的元数据"""
+        try:
+            self._init_default_values(dic)
+            
+            handlers = {
+                'record': self._parse_record,
+                'chat': self._parse_record,
+                'note': self._parse_note,
+                'file': self._parse_file,
+                'web': self._parse_web
+            }
+            
+            handler = handlers.get(dic['etype'])
+            if handler:
+                handler(dic, content, use_llm, force, debug)
+                
+            self._process_title_length(dic)
+            return True, dic
+            
+        except Exception as e:
+            logger.error(f"特征提取失败: {e}")
+            return False, dic
 
-        required_fields = ["ctype", "status", "atype", "title"]
-        for field in required_fields:
+    def _init_default_values(self, dic: Dict[str, Any]) -> None:
+        """初始化字典默认值"""
+        fields = ['ctype', 'status', 'atype', 'title'] 
+        for field in fields:
             if field not in dic or pd.isnull(dic[field]) or len(str(dic[field])) == 0:
                 dic[field] = None
 
-        if dic["etype"] in ["record", "chat"]:
-            if dic["title"] is None or dic["ctype"] is None or dic["status"] is None:
-                ret, features = get_features_by_llm(
-                    dic["user_id"], content, dic["etype"], use_llm=use_llm, debug=debug
-                )
-                if ret:
-                    self._process_llm_features(dic, features, force)
-        elif dic["etype"] in ["note", "file"]:
+    def _parse_record(self, dic: Dict[str, Any], content: str,
+                     use_llm: bool, force: bool, debug: bool) -> None:
+        """处理记录和聊天类型"""
+        if dic["title"] is None or dic["ctype"] is None or dic["status"] is None:
+            ret, features = get_features_by_llm(
+                dic["user_id"], content, dic["etype"], use_llm=use_llm, debug=debug
+            )
+            if ret:
+                self._process_llm_features(dic, features, force)
+
+    def _parse_note(self, dic: Dict[str, Any], content: str,
+                    use_llm: bool, force: bool, debug: bool) -> None:
+        """处理笔记类型"""
+        user = UserManager.get_instance().get_user(dic["user_id"])
+        
+        if dic["title"] is None:
+            dic["title"] = os.path.basename(content)
+            
+        if self._need_llm(dic, user, force) and use_llm:
+            ret, features = get_features_by_llm(
+                dic["user_id"], dic["title"], dic["etype"], use_llm=use_llm, debug=debug
+            )
+            if ret:
+                self._process_llm_features(dic, features, force)
+                
+        dic["status"] = dic["status"] or "collect"
+        dic["atype"] = dic["atype"] or "subjective"
+
+    def _parse_file(self, dic: Dict[str, Any], content: str,
+                    use_llm: bool, force: bool, debug: bool) -> None:
+        """处理文件类型"""
+        user = UserManager.get_instance().get_user(dic["user_id"])
+        
+        if dic["title"] is None:
+            dic["title"] = os.path.basename(content)
+            
+        if self._need_llm(dic, user, force) and use_llm:
+            ret, features = get_features_by_llm(
+                dic["user_id"], dic["title"], dic["etype"], use_llm=use_llm, debug=debug
+            )
+            if ret:
+                self._process_llm_features(dic, features, force)
+                
+        dic["status"] = dic["status"] or "collect"
+        dic["atype"] = dic["atype"] or "third_party"
+
+    def _parse_web(self, dic: Dict[str, Any], content: str,
+                   use_llm: bool, force: bool, debug: bool) -> None:
+        """处理网页类型"""
+        user = UserManager.get_instance().get_user(dic["user_id"])
+        
+        if dic["title"] is None or self._need_llm(dic, user, force):
+            title, web_content = get_url_content(content)
             if dic["title"] is None:
-                dic["title"] = os.path.basename(content)
+                dic["title"] = title
             if self._need_llm(dic, user, force) and use_llm:
                 ret, features = get_features_by_llm(
-                    dic["user_id"], dic["title"], dic["etype"], use_llm=use_llm, debug=debug
+                    dic["user_id"], web_content, dic["etype"],
+                    title=title, use_llm=use_llm, debug=debug
                 )
                 if ret:
                     self._process_llm_features(dic, features, force)
-            dic["status"] = dic["status"] or "collect"
-            if dic["etype"] == "note":
-                dic["atype"] = dic["atype"] or "subjective"
-            else:
-                dic["atype"] = dic["atype"] or "third_party"
-        elif dic["etype"] == "web":            
-            if dic["title"] is None or self._need_llm(dic, user, force):
-                title, web_content = get_url_content(content)
-                if dic["title"] is None:
-                    dic["title"] = title
-                if self._need_llm(dic, user, force) and use_llm:
-                    ret, features = get_features_by_llm(
-                        dic["user_id"], web_content, dic["etype"],
-                        title=title, use_llm=use_llm, debug=debug
-                    )
-                    if ret:
-                        self._process_llm_features(dic, features, force)
-            dic["status"] = dic["status"] or "collect"
-            dic["atype"] = dic["atype"] or "third_party"                   
+                    
+        dic["status"] = dic["status"] or "collect"
+        dic["atype"] = dic["atype"] or "third_party"
 
-        # Set default values
-        dic["ctype"] = dic["ctype"] or DEFAULT_CATEGORY
-        dic["status"] = dic["status"] or DEFAULT_STATUS
-        dic["atype"] = dic["atype"] or "subjective"
-        dic["title"] = dic["title"] or content
-
-        # Check if title is too long
-        if len(dic["title"]) > TITLE_MAX_LENGTH:
-            title_copy = dic["title"]
-            new_title = dic["title"][:TITLE_MAX_LENGTH] + "..."
-            dic["title"] = new_title
-            # Update path, add wanglei
+    def _process_title_length(self, dic: Dict[str, Any]) -> None:
+        """处理标题长度限制"""
+        if dic.get('title') and len(dic['title']) > TITLE_MAX_LENGTH:
+            title_copy = dic['title']
+            new_title = dic['title'][:TITLE_MAX_LENGTH] + '...'
+            dic['title'] = new_title
             if dic.get('source') == 'bookmark':
                 base_path = self.get_base_path(dic["path"], title_copy)
                 self.update_bookmark_paths(dic, new_title, base_path)
-
-        return True, dic
-
 
 def get_features_by_llm(user_id, content, etype, title=None, use_llm=True, debug=False):
     """
@@ -273,6 +319,5 @@ def get_features_by_llm(user_id, content, etype, title=None, use_llm=True, debug
         
     except Exception as e:
         logger.warning(f"get_content_features failed: {e}")
-        if debug:
-            traceback.print_exc()
+        traceback.print_exc()
         return False, None

@@ -14,10 +14,10 @@ from backend.common.parser.converter import is_support
 from backend.settings import USE_CELERY
 
 from .feature import EntryFeatureTool
-from .entry import delete_entry, get_type_options, rename_file
+from .entry import delete_entry, get_type_options
 from .models import StoreEntry
 from .tasks import import_task
-from .file_tools import real_import, real_refresh
+from .file_tools import real_import, real_refresh, rename_file
 
 MAX_LEVEL = 2
 
