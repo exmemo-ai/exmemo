@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import StoreEntry
+from .entry_item import EntryItem
 
 
 class StoreEntrySerializer(serializers.ModelSerializer):
@@ -27,3 +28,7 @@ class StoreEntrySerializer(serializers.ModelSerializer):
 
     def get_type(self, obj):
         return obj.get_type_display()
+
+    def to_representation(self, instance):
+        entry_item = EntryItem.from_model(instance)
+        return entry_item.to_dict()

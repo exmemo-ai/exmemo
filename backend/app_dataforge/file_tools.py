@@ -5,16 +5,12 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from backend.common.files import utils_filemanager, filecache
-from backend.common.utils.file_tools import get_ext, is_plain_text, convert_to_md
-from backend.common.utils.text_tools import convert_dic_to_json
+from backend.common.utils.file_tools import get_ext
 from backend.common.parser import converter
-from backend.common.parser.md_parser import MarkdownParser
 from .models import StoreEntry
-from .entry import delete_entry, add_data
+from .entry import delete_entry, add_data, REL_DIR_FILES, REL_DIR_NOTES
 from .zipfile import is_compressed_file, uncompress_file
 
-REL_DIR_FILES = "files"
-REL_DIR_NOTES = "notes"
 
 def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, progress_callback=None, task_id=None):
     if addr.startswith("/"):
@@ -79,7 +75,7 @@ def real_import(user_id, process_list, progress_callback=None, task_id=None, deb
             filecache.TmpFileManager.get_instance().add_file(src_path)
             
             md_path = filecache.get_tmpfile('.md')
-            ret = convert(src_path, md_path)
+            ret = converter.convert(src_path, md_path)
             if not ret:
                 logger.warning(f"Failed to convert file: {base_src_path}")
                 continue
@@ -125,29 +121,6 @@ def real_refresh(user_id, addr, etype, is_folder, progress_callback=None, task_i
             progress_callback((idx + 1) * 100 / len(entries), task_id)
 
     return success_list
-
-
-def get_file_content_by_path(path, user):
-    meta_data = {}
-    content = None
-    ret_convert = False
-
-    if converter.is_markdown(path):
-        md_path = path
-        ret_convert = True
-    elif converter.is_support(path):
-        md_path = filecache.get_tmpfile(".md")
-        ret_convert, md_path = convert_to_md(
-            path, md_path, force=True, use_ocr=user.privilege.b_ocr
-        )
-    logger.info('after convert')
-    if ret_convert:
-        parser = MarkdownParser(md_path)
-        meta_data = convert_dic_to_json(parser.fm)
-        content = parser.content
-    if content is None and is_plain_text(path):
-        content = open(path, "r").read()
-    return meta_data, content
 
 def rename_file(uid, oldaddr, newaddr, dic, debug=False):
     if debug:

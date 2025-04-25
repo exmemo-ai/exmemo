@@ -2,7 +2,7 @@ import os
 import re
 import traceback
 import pandas as pd
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Union
 from loguru import logger
 from django.utils.translation import gettext as _
 from backend.settings import BASE_DATA_DIR
@@ -16,6 +16,7 @@ from backend.common.utils.text_tools import replace_chinese_punctuation_with_eng
 from backend.common.user.user import UserManager
 from backend.settings import LANGUAGE_CODE
 from .prompt import PROMPT_COMPREHENSIVE
+from .entry_item import EntryItem
 
 DEFAULT_CATEGORY = _("unclassified")
 IMAGE_CATEGORY = _("image")
@@ -92,63 +93,67 @@ class EntryFeatureTool:
             return base_path
         return path
 
-    def update_bookmark_paths(self, dic, new_title, base_path):
+    def update_bookmark_paths(self, entry: EntryItem, new_title: str, base_path: str) -> None:
         new_path = f"{base_path}/{new_title}"
-        dic.update({
-            "path": new_path,
-            "meta": {
-                **dic.get("meta", {}),
-                "update_path": new_path,
-                "resource_path": new_path
-            }
+        entry.path = new_path
+        if entry.meta is None:
+            entry.meta = {}
+        entry.meta.update({
+            "update_path": new_path,
+            "resource_path": new_path
         })
 
-    def _need_llm(self, dic, user, force=False):
+    def _need_llm(self, entry: EntryItem, user: Dict[str, Any], force: bool = False) -> bool:
         """判断是否需要使用LLM提取特征"""
         # 检查已有值
-        if dic["ctype"] is not None and dic.get("meta", {}).get("description"):
+        if entry.ctype is not None and entry.meta.get("description"):
             return False
             
-        if is_image_file(dic.get("content", "")):
-            dic["ctype"] = IMAGE_CATEGORY
+        if is_image_file(entry.title or ""):
+            entry.ctype = IMAGE_CATEGORY
             return False
             
-        if dic["etype"] == "note":
+        if entry.etype == "note":
             if not force and not user.get("note_get_category") and not user.get("note_get_abstract"):
                 return False
-        elif dic["etype"] == "file":
+        elif entry.etype == "file":
             if not force and not user.get("file_get_category") and not user.get("file_get_abstract"):
                 return False
-        elif dic["etype"] == "web":
+        elif entry.etype == "web":
             if not force and not user.get("web_get_category") and not user.get("web_get_abstract"):
                 return False
                 
         return True
 
-    def _process_llm_features(self, dic, features, force):
-        """处理LLM返回的特征并更新dic"""
+    def _process_llm_result(self, entry: EntryItem, features: Dict[str, Any], force: bool) -> None:
+        """处理LLM返回的特征并更新entry"""
         if "category" in features:
-            if force or dic["ctype"] is None:
-                dic["ctype"] = features["category"].get("ctype")
-            if force or dic["status"] is None:
-                dic["status"] = dic["status"] or features["category"].get("status")
-            if force or dic["atype"] is None:
-                dic["atype"] = dic["atype"] or features["category"].get("atype")
+            cat = features["category"]
+            if force or entry.ctype is None:
+                entry.ctype = cat.get("ctype")
+            if force or entry.status is None:
+                entry.status = entry.status or cat.get("status")
+            if force or entry.atype is None:
+                entry.atype = entry.atype or cat.get("atype")
 
-        if dic["title"] is None and "title" in features: # not check force
-            dic["title"] = features["title"]
+        if entry.title is None and "title" in features:
+            entry.title = features["title"]
 
         if "summary" in features:
-            if 'meta' not in dic:
-                dic['meta'] = {}
-            if 'description' not in dic['meta'] or force:
-                dic['meta']['description'] = features.get("summary")
+            if entry.meta is None:
+                entry.meta = {}
+            if 'description' not in entry.meta or force:
+                entry.meta['description'] = features.get("summary")
 
-    def parse(self, dic: Dict[str, Any], content: str, use_llm: bool = True, 
-              force: bool = False, debug: bool = False) -> Tuple[bool, Dict[str, Any]]:
+    def parse(self, entry: Union[Dict[str, Any], EntryItem], content: str, use_llm: bool = True, 
+              force: bool = False, debug: bool = False) -> Tuple[bool, Union[Dict[str, Any], EntryItem]]:
         """解析并填充条目的元数据"""
         try:
-            self._init_default_values(dic)
+            # 如果输入是字典，转换为EntryItem
+            if isinstance(entry, dict):
+                entry = EntryItem.from_dict(entry)
+            
+            self._init_default_values(entry)
             
             handlers = {
                 'record': self._parse_record,
@@ -158,99 +163,99 @@ class EntryFeatureTool:
                 'web': self._parse_web
             }
             
-            handler = handlers.get(dic['etype'])
+            handler = handlers.get(entry.etype)
             if handler:
-                handler(dic, content, use_llm, force, debug)
+                handler(entry, content, use_llm, force, debug)
                 
-            self._process_title_length(dic)
-            return True, dic
+            self._process_title_length(entry)
+            return True, entry
             
         except Exception as e:
             logger.error(f"特征提取失败: {e}")
-            return False, dic
+            return False, entry
 
-    def _init_default_values(self, dic: Dict[str, Any]) -> None:
-        """初始化字典默认值"""
-        fields = ['ctype', 'status', 'atype', 'title'] 
+    def _init_default_values(self, entry: EntryItem) -> None:
+        """初始化默认值"""
+        fields = ['ctype', 'status', 'atype', 'title']
         for field in fields:
-            if field not in dic or pd.isnull(dic[field]) or len(str(dic[field])) == 0:
-                dic[field] = None
+            if getattr(entry, field, None) in (None, ''):  
+                setattr(entry, field, None)
 
-    def _parse_record(self, dic: Dict[str, Any], content: str,
+    def _parse_record(self, entry: EntryItem, content: str,
                      use_llm: bool, force: bool, debug: bool) -> None:
         """处理记录和聊天类型"""
-        if dic["title"] is None or dic["ctype"] is None or dic["status"] is None:
+        if entry.title is None or entry.ctype is None or entry.status is None:
             ret, features = get_features_by_llm(
-                dic["user_id"], content, dic["etype"], use_llm=use_llm, debug=debug
+                entry.user_id, content, entry.etype, use_llm=use_llm, debug=debug
             )
             if ret:
-                self._process_llm_features(dic, features, force)
+                self._process_llm_result(entry, features, force)
 
-    def _parse_note(self, dic: Dict[str, Any], content: str,
+    def _parse_note(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
         """处理笔记类型"""
-        user = UserManager.get_instance().get_user(dic["user_id"])
+        user = UserManager.get_instance().get_user(entry.user_id)
         
-        if dic["title"] is None:
-            dic["title"] = os.path.basename(content)
+        if entry.title is None:
+            entry.title = os.path.basename(content)
             
-        if self._need_llm(dic, user, force) and use_llm:
+        if self._need_llm(entry, user, force) and use_llm:
             ret, features = get_features_by_llm(
-                dic["user_id"], dic["title"], dic["etype"], use_llm=use_llm, debug=debug
+                entry.user_id, entry.title, entry.etype, use_llm=use_llm, debug=debug
             )
             if ret:
-                self._process_llm_features(dic, features, force)
+                self._process_llm_result(entry, features, force)
                 
-        dic["status"] = dic["status"] or "collect"
-        dic["atype"] = dic["atype"] or "subjective"
+        entry.status = entry.status or "collect"
+        entry.atype = entry.atype or "subjective"
 
-    def _parse_file(self, dic: Dict[str, Any], content: str,
+    def _parse_file(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
         """处理文件类型"""
-        user = UserManager.get_instance().get_user(dic["user_id"])
+        user = UserManager.get_instance().get_user(entry.user_id)
         
-        if dic["title"] is None:
-            dic["title"] = os.path.basename(content)
+        if entry.title is None:
+            entry.title = os.path.basename(content)
             
-        if self._need_llm(dic, user, force) and use_llm:
+        if self._need_llm(entry, user, force) and use_llm:
             ret, features = get_features_by_llm(
-                dic["user_id"], dic["title"], dic["etype"], use_llm=use_llm, debug=debug
+                entry.user_id, entry.title, entry.etype, use_llm=use_llm, debug=debug
             )
             if ret:
-                self._process_llm_features(dic, features, force)
+                self._process_llm_result(entry, features, force)
                 
-        dic["status"] = dic["status"] or "collect"
-        dic["atype"] = dic["atype"] or "third_party"
+        entry.status = entry.status or "collect"
+        entry.atype = entry.atype or "third_party"
 
-    def _parse_web(self, dic: Dict[str, Any], content: str,
+    def _parse_web(self, entry: EntryItem, content: str,
                    use_llm: bool, force: bool, debug: bool) -> None:
         """处理网页类型"""
-        user = UserManager.get_instance().get_user(dic["user_id"])
+        user = UserManager.get_instance().get_user(entry.user_id)
         
-        if dic["title"] is None or self._need_llm(dic, user, force):
+        if entry.title is None or self._need_llm(entry, user, force):
             title, web_content = get_url_content(content)
-            if dic["title"] is None:
-                dic["title"] = title
-            if self._need_llm(dic, user, force) and use_llm:
+            if entry.title is None:
+                entry.title = title
+            if self._need_llm(entry, user, force) and use_llm:
                 ret, features = get_features_by_llm(
-                    dic["user_id"], web_content, dic["etype"],
+                    entry.user_id, web_content, entry.etype,
                     title=title, use_llm=use_llm, debug=debug
                 )
                 if ret:
-                    self._process_llm_features(dic, features, force)
+                    self._process_llm_result(entry, features, force)
                     
-        dic["status"] = dic["status"] or "collect"
-        dic["atype"] = dic["atype"] or "third_party"
+        entry.status = entry.status or "collect"
+        entry.atype = entry.atype or "third_party"
 
-    def _process_title_length(self, dic: Dict[str, Any]) -> None:
+    def _process_title_length(self, entry: EntryItem) -> None:
         """处理标题长度限制"""
-        if dic.get('title') and len(dic['title']) > TITLE_MAX_LENGTH:
-            title_copy = dic['title']
-            new_title = dic['title'][:TITLE_MAX_LENGTH] + '...'
-            dic['title'] = new_title
-            if dic.get('source') == 'bookmark':
-                base_path = self.get_base_path(dic["path"], title_copy)
-                self.update_bookmark_paths(dic, new_title, base_path)
+        if entry.title and len(entry.title) > TITLE_MAX_LENGTH:
+            title_copy = entry.title
+            new_title = entry.title[:TITLE_MAX_LENGTH] + '...'
+            entry.title = new_title
+            if entry.source == 'bookmark':
+                base_path = self.get_base_path(entry.path, title_copy)
+                self.update_bookmark_paths(entry, new_title, base_path)
 
 def get_features_by_llm(user_id, content, etype, title=None, use_llm=True, debug=False):
     """
