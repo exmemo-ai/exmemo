@@ -40,8 +40,6 @@ def uncompress_file(dic_item, tmp_path, is_createSubDir, progress_callback=None,
                 target_dir = base_dir
 
             filename = os.path.basename(dic_item["addr"])
-            #ret, dic = EntryFeatureTool.get_instance().parse(dic_item, filename) # in add_data
-
             total_files = sum([len(files) for _, _, files in os.walk(temp_dir)])
             processed_files = 0
 

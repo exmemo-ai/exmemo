@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from loguru import logger
-import pytz
 from threading import Timer
 
 from django.utils import timezone
@@ -9,8 +8,9 @@ from backend.common.utils.sys_tools import get_timezone
 from backend.common.user.user import UserManager, DEFAULT_CHAT_LLM_SHOW_COUNT, DEFAULT_CHAT_LLM_MEMORY_COUNT, DEFAULT_USER, DEFAULT_CHAT_MAX_CONTEXT_COUNT
 from backend.common.user.utils import parse_common_args
 from app_dataforge.entry import get_entry_list, add_data
+from app_dataforge.entry_item import EntryItem
 from app_dataforge.models import StoreEntry
-from app_dataforge.feature import TITLE_MAX_LENGTH, DEFAULT_CATEGORY, EntryFeatureTool
+from app_dataforge.feature import DEFAULT_CATEGORY
 from backend.common.files.utils_file import count_tokens
 
 MAX_SESSIONS = 1000
@@ -48,6 +48,10 @@ class Session:
         self.source = source
         self.current_content = ""
         self.args = {}
+        self.status = "collect"
+        self.atype = "subjective"
+        self.ctype = DEFAULT_CATEGORY
+        self.meta = {}
         self.sync_idx = -1
         self.last_chat_time = timezone.now().astimezone(get_timezone())
 
@@ -77,81 +81,7 @@ class Session:
             show_count = int(show_count)
     
         self.messages = []
-        obj = self.get_item_from_db()
-        if obj is not None:
-            self.sid = obj["meta"]["sid"]
-            self.sname = obj["title"]
-            self.is_group = obj["meta"]["is_group"]
-            self.source = obj["source"]
-            for idx, item in enumerate(obj["meta"]["messages"]):
-                self.messages.append(Message(idx, item["sender"], item["content"], item["created_time"]))
-            logger.debug(f"load_from_db success, sid {self.sid}, len {len(self.messages)}")
-        else:
-            logger.warning(f"load_from_db failed, sid {self.sid}")
-        self.messages = self.messages[-show_count:]
-
-    def get_session_desc(self):
-        obj = self.get_item_from_db()
-        messages = [item.to_dict() for item in self.messages]
-        raw = self.get_raw()
-
-        if obj is None:
-            dic = {
-                "status": "collect",
-                "atype": "subjective",
-                "user_id": self.user_id,
-                "ctype": DEFAULT_CATEGORY,
-                "etype": "chat",
-                "raw": raw,
-                "source": self.source,
-                "addr": self.sid,
-                "meta": {"sid": self.sid, "is_group": self.is_group, 
-                        "messages": messages},
-            }
-        else:
-            dic = obj
-
-        if dic.get("ctype") == DEFAULT_CATEGORY or dic.get("ctype") is None:            
-            string = self.reduce_message()
-            if len(string) > 0:
-                ret, dic = EntryFeatureTool.get_instance().parse(dic, string)
-            if 'title' not in dic or dic['title'] is None:
-                dic['title'] = self.get_name()
-            if len(dic['title']) > TITLE_MAX_LENGTH:
-                dic['title'] = dic['title'][:TITLE_MAX_LENGTH] + "..."
-
-        if obj is None:
-            return True, dic
-        return False, dic
-
-    def save_to_db(self):
-        if self.is_logged_in() == False:
-            return
-        if len(self.messages) == 0:
-            return
-        is_new, dic = self.get_session_desc()
-        if is_new:
-            ret, ret_emb, info = add_data(dic)
-            logger.info(f"save_to_db add_data ret {ret}, {ret_emb}, {info}")
-        else:
-            logger.info(f"save_to_db update")
-            #logger.info(f"save_to_db update {dic}")
-            StoreEntry.objects.filter(
-                user_id=self.user_id,
-                addr=self.sid
-            ).update(title=dic["title"],
-                     ctype=dic["ctype"],
-                     raw=dic["raw"], 
-                     meta=dic["meta"])
-            logger.info(f"update entry success")
-        self.sync_idx = len(self.messages)
-        logger.info(f"sync_idx {self.sync_idx}, len {len(self.messages)}")
-
-    def sync(self):
-        if self.sync_idx < len(self.messages):
-            self.save_to_db()
-
-    def get_item_from_db(self):
+        obj = None
         condition = {"user_id": self.user_id, "etype": "chat", "addr": self.sid}
         fields = [
             "idx",
@@ -171,8 +101,50 @@ class Session:
         ]
         queryset = get_entry_list(None, condition, 1, fields)
         if queryset is not None and len(queryset) > 0:
-            return queryset[0]
-        return None
+            obj = queryset[0]
+            self.sid = obj["meta"]["sid"]
+            self.sname = obj["title"]
+            self.is_group = obj["meta"]["is_group"]
+            self.source = obj["source"]
+            self.status = obj["status"]
+            self.atype = obj["atype"]
+            self.ctype = obj["ctype"]
+            self.meta = obj["meta"]
+            for idx, item in enumerate(obj["meta"]["messages"]):
+                self.messages.append(Message(idx, item["sender"], item["content"], item["created_time"]))
+            logger.debug(f"load_from_db success, sid {self.sid}, len {len(self.messages)}")
+        else:
+            logger.warning(f"load_from_db failed, sid {self.sid}")
+        self.messages = self.messages[-show_count:]
+
+    def save_to_db(self):
+        if self.is_logged_in() == False or len(self.messages) == 0:
+            return
+            
+        messages = [item.to_dict() for item in self.messages]
+        self.meta.update({"sid": self.sid, "is_group": self.is_group, "messages": messages})
+        entry = EntryItem(
+            user_id=self.user_id,
+            etype="chat",
+            status=self.status,
+            atype=self.atype,
+            ctype=self.ctype,
+            raw=self.get_raw(),
+            source=self.source,
+            addr=self.sid,
+            meta=self.meta,
+        )
+        
+        data = {'reduce_msg': self.reduce_message(), 'default_title': self.get_name()}
+        ret, ret_emb, info = add_data(entry, data)
+        logger.info(f"save_to_db entry: {ret}, {ret_emb}, {info}")
+        
+        self.sync_idx = len(self.messages)
+        logger.info(f"sync_idx {self.sync_idx}, len {len(self.messages)}")
+
+    def sync(self):
+        if self.sync_idx < len(self.messages):
+            self.save_to_db()
 
     def get_raw(self):
         arr = []

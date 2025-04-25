@@ -83,10 +83,6 @@ class EntryFeatureTool:
             EntryFeatureTool._instance = EntryFeatureTool()
         return EntryFeatureTool._instance
 
-    def __init__(self):
-        self.category_loader = CategoryConfigLoader.get_instance()
-        self.calist = self.category_loader.get_categories_list()
-
     def get_base_path(self, path, title):
         if title in path:
             base_path = path.split(title)[0].rstrip('/')
@@ -96,8 +92,6 @@ class EntryFeatureTool:
     def update_bookmark_paths(self, entry: EntryItem, new_title: str, base_path: str) -> None:
         new_path = f"{base_path}/{new_title}"
         entry.path = new_path
-        if entry.meta is None:
-            entry.meta = {}
         entry.meta.update({
             "update_path": new_path,
             "resource_path": new_path
@@ -139,20 +133,13 @@ class EntryFeatureTool:
         if entry.title is None and "title" in features:
             entry.title = features["title"]
 
-        if "summary" in features:
-            if entry.meta is None:
-                entry.meta = {}
-            if 'description' not in entry.meta or force:
-                entry.meta['description'] = features.get("summary")
+        if "summary" in features and ('description' not in entry.meta or force):
+            entry.meta['description'] = features.get("summary")
 
-    def parse(self, entry: Union[Dict[str, Any], EntryItem], content: str, use_llm: bool = True, 
-              force: bool = False, debug: bool = False) -> Tuple[bool, Union[Dict[str, Any], EntryItem]]:
+    def parse(self, entry: EntryItem, content: str, use_llm: bool = True, 
+              force: bool = False, debug: bool = False) -> Tuple[bool, EntryItem]:
         """解析并填充条目的元数据"""
-        try:
-            # 如果输入是字典，转换为EntryItem
-            if isinstance(entry, dict):
-                entry = EntryItem.from_dict(entry)
-            
+        try:            
             self._init_default_values(entry)
             
             handlers = {

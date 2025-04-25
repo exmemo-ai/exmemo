@@ -15,6 +15,7 @@ from backend.settings import USE_CELERY
 
 from .feature import EntryFeatureTool
 from .entry import delete_entry, get_type_options
+from .entry_item import EntryItem
 from .models import StoreEntry
 from .tasks import import_task
 from .file_tools import real_import, real_refresh, rename_file
@@ -60,20 +61,21 @@ class EntryAPIView(APIView):
 
     def extract(self, request):
         # Extract file features by user
-        dic = {}
         args = parse_common_args(request)
-        dic["etype"] = request.GET.get("etype", request.POST.get("etype", "record"))
-        dic["user_id"] = args["user_id"]
-        logger.debug(f"etype {dic['etype']}")
+        entry = EntryItem(
+            user_id=args["user_id"],
+            etype=request.GET.get("etype", request.POST.get("etype", "record"))
+        )
+        logger.debug(f"etype {entry.etype}")
         ret = False
-        if dic["etype"] in ["record", "chat"]:
+        if entry.etype in ["record", "chat"]:
             raw = request.GET.get("raw", request.POST.get("raw", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw, force=True)
-        elif dic["etype"] in ["web", "note", "file"]:
+            ret = EntryFeatureTool.get_instance().parse(entry, raw, force=True)
+        elif entry.etype in ["web", "note", "file"]:
             addr = request.GET.get("addr", request.POST.get("addr", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, addr, force=True)
+            ret = EntryFeatureTool.get_instance().parse(entry, addr, force=True)
         if ret:
-            return do_result(True, {"dic": dic_new})
+            return do_result(True, {"dic": entry.to_model_dict(for_json=True)})
         else:
             return do_result(False, {"info": "extract failed"})
         

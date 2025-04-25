@@ -41,10 +41,10 @@ class EntryItem:
     
     def to_dict(self) -> Dict[str, Any]:
         dic = {k: v for k, v in self.__dict__.items() if v is not None}
-        logger.error(f"dic {dic}")
+        #logger.error(f"dic {dic}")
         return dic
     
-    def to_model_dict(self) -> Dict[str, Any]:
+    def to_model_dict(self, for_json=False) -> Dict[str, Any]:
         model_fields = {}
         for f in StoreEntry._meta.get_fields():
             max_length = getattr(f, "max_length", None)
@@ -60,6 +60,11 @@ class EntryItem:
                             f"Field '{k}' value too long ({len(v)}), truncating to {model_fields[k]} chars"
                         )
                         v = v[:model_fields[k]]
+                if for_json:
+                    if isinstance(v, uuid.UUID):
+                        v = str(v)
+                    elif isinstance(v, datetime):
+                        v = v.isoformat()
                 filtered_data[k] = v
         return filtered_data
 
@@ -70,3 +75,8 @@ class EntryItem:
             for k in cls.__dataclass_fields__ 
             if hasattr(model, k)
         })
+        
+    def clone(self, **kwargs) -> 'EntryItem':
+        data = self.to_dict()
+        data.update(kwargs)
+        return self.from_dict(data)

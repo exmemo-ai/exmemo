@@ -6,7 +6,7 @@ import os
 import json
 import pytz
 import traceback
-from typing import Optional
+from typing import Optional, Any
 from loguru import logger
 from django.utils import timezone
 from django.db.models import Q
@@ -42,8 +42,12 @@ class EntryService:
             cls._instance = cls()
         return cls._instance
 
-    def process_entry(self, data: dict, path=None, use_llm=True):
-        entry_item = EntryItem.from_dict(data)
+    def process_entry(self, obj: dict | EntryItem, data=None, use_llm=True):
+        if isinstance(obj, dict):
+            entry_item = EntryItem.from_dict(obj)
+        else:
+            entry_item = obj
+            
         handlers = {
             "file": self._process_file_entry,
             "note": self._process_file_entry,
@@ -56,38 +60,41 @@ class EntryService:
         if not handler:
             return False, False, _("unknown_type_colon_") + entry_item.etype
 
-        return handler(entry_item, path, use_llm)
+        return handler(entry_item, data, use_llm)
 
-    def _process_chat_entry(self, entry: EntryItem, path: str, use_llm=True):
+    def _process_chat_entry(self, entry: EntryItem, data: Any, use_llm: bool = True):
+        # 默认title与ctype同时存在
+        if ((entry.ctype == DEFAULT_CATEGORY or entry.ctype is None) 
+            and data is not None and 'reduce_msg' in data 
+            and data['reduce_msg'] is not None and len(data['reduce_msg']) > 0):
+            EntryFeatureTool.get_instance().parse(entry, data['reduce_msg'], use_llm=use_llm)
+        if entry.title is None and data is not None and 'default_title' in data:
+            entry.title = data['default_title']
         return EntryStorage.save_entry(entry, entry.raw)
 
-    def _process_file_entry(self, entry: EntryItem, path: str, use_llm: bool = True):
-        mtime_datetime = timezone.now().astimezone(pytz.UTC)
-
+    def _process_file_entry(self, entry: EntryItem, data: Any, use_llm: bool = True):
+        has_new_content = True # 只在文件内容发生变化和第一次上传时为True
         user = UserManager.get_instance().get_user(entry.user_id)
         filename = os.path.basename(entry.addr)
-        has_new_content = True # 只在文件内容发生变化和第一次上传时为True
 
         if entry.etype == "note":
             entry.path = os.path.join(REL_DIR_NOTES, entry.addr)
         else:
             entry.path = os.path.join(REL_DIR_FILES, entry.addr)
-        if path is None:
+            
+        if data is None:
             if entry.idx is None:
                 return False, False, _("save_file_failed_excl_")
             has_new_content = False
         else:
             ret = utils_filemanager.get_file_manager().save_file(
-                entry.user_id, entry.path, path
+                entry.user_id, entry.path, data
             )
             if not ret:
                 return False, False, _("save_file_failed_excl_")
 
         if has_new_content and entry.md5 is None:
-            entry.md5 = utils_md.get_file_md5(path)
-
-        if entry.created_time is None:
-            entry.created_time = mtime_datetime
+            entry.md5 = utils_md.get_file_md5(data)
 
         meta_dic = {}
         content = None
@@ -95,51 +102,39 @@ class EntryService:
             if (entry.etype == "note" and user.get("note_save_content")) or (
                 entry.etype == "file" and user.get("file_save_content")
             ):
-                meta_dic, content = get_file_content_by_path(path, user)
-            elif converter.is_markdown(path):
-                parser = MarkdownParser(path)
+                meta_dic, content = get_file_content_by_path(data, user)
+            elif converter.is_markdown(data):
+                parser = MarkdownParser(data)
                 meta_dic = convert_dic_to_json(parser.fm)
-        if meta_dic is None:
-            meta_dic = {}
-
-        if entry.meta is None:
-            entry.meta = {}
-        if isinstance(entry.meta, str):
-            try:
-                entry.meta = json.loads(entry.meta)
-            except Exception as e:
-                logger.warning(f"parse meta failed {e}")
-                entry.meta = {}
 
         entry.meta.update(meta_dic)
-        ret, entry = EntryFeatureTool.get_instance().parse(
+        ret = EntryFeatureTool.get_instance().parse(
             entry, filename, use_llm=use_llm
         )
         return EntryStorage.save_entry(entry, content, has_new_content)
 
-    def _process_record_entry(self, entry: EntryItem, path: str, use_llm: bool = True):
+    def _process_record_entry(self, entry: EntryItem, data: Any, use_llm: bool = True):
         current_time = timezone.now().astimezone(pytz.UTC)
         entry.addr = f'record_{current_time.strftime("%Y%m%d_%H%M%S")}'
-        ret, entry_new = EntryFeatureTool.get_instance().parse(
+        ret = EntryFeatureTool.get_instance().parse(
             entry, entry.raw, use_llm=use_llm
         )
         ret, ret_emb, detail = EntryStorage.save_entry(
-            entry_new, entry.raw
+            entry, entry.raw
         )
         if ret:
-            if entry_new.ctype is not None:
-                detail = _("record_successful_comma__type_colon_") + entry_new.ctype
+            if entry.ctype is not None:
+                detail = _("record_successful_comma__type_colon_") + entry.ctype
         return ret, ret_emb, detail
 
-    def _process_web_entry(self, entry: EntryItem, path: str, use_llm=True, debug=False):
+    def _process_web_entry(self, entry: EntryItem, data: Any, use_llm: bool = True, debug: bool = False):
         """
         Download the file from the URL, parse the file, and store the data from the file into the database;
         This only handles plain web pages, does not consider files
         """
         user = UserManager.get_instance().get_user(entry.user_id)
         has_error = (
-            entry.meta is not None
-            and "error" in entry.meta
+            "error" in entry.meta 
             and entry.meta["error"] is not None
         )
         need_download = (
@@ -147,14 +142,14 @@ class EntryService:
         )
         if has_error or not need_download:
             entry.ctype = DEFAULT_CATEGORY
-            ret, entry = EntryFeatureTool.get_instance().parse(
+            ret = EntryFeatureTool.get_instance().parse(
                 entry, entry.addr, use_llm=False, debug=debug
             )
             ret, ret_emb, detail = EntryStorage.save_entry(
                 entry, None, debug=debug
             )
         else:
-            ret, entry = EntryFeatureTool.get_instance().parse(
+            ret = EntryFeatureTool.get_instance().parse(
                 entry, entry.addr, use_llm=use_llm, debug=debug
             )
             if user.get("web_save_content"):
@@ -202,7 +197,7 @@ class EntryStorage:
             entry.updated_time = timezone.now().astimezone(pytz.UTC)
             
             abstract = None
-            if isinstance(entry.meta, dict) and "description" in entry.meta:
+            if "description" in entry.meta:
                 abstract = entry.meta["description"]
             
             ret_emb = True
@@ -274,8 +269,7 @@ class EntryStorage:
         entry_dict = entry.to_model_dict()
         entry_dict['block_id'] = 0
         entry_dict['emb_model'] = EmbeddingTools.get_model_name()
-        if 'created_time' not in entry_dict:
-            entry_dict['created_time'] = timezone.now().astimezone(pytz.UTC)
+        
         if abstract:
             entry_dict['raw'] = abstract
             if EmbeddingTools.use_embedding():
@@ -342,8 +336,8 @@ class EntryStorage:
                     entry.delete()
 
 
-def add_data(dic, path=None, use_llm=True):
-    return EntryService.get_instance().process_entry(dic, path, use_llm)
+def add_data(obj, data=None, use_llm=True):
+    return EntryService.get_instance().process_entry(obj, data, use_llm)
 
 
 def filter_model_fields(data):
