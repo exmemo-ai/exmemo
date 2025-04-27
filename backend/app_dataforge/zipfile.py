@@ -55,7 +55,7 @@ def uncompress_file(dic_item, tmp_path, is_createSubDir, progress_callback=None,
                     new_dic["addr"] = new_addr
                     new_dic["title"] = file
                     if debug: logger.debug(f'dic {new_dic}')
-                    ret, ret_emb, info = add_data(new_dic, file_path, use_llm=False)
+                    ret, ret_emb, info = add_data(new_dic, {"path":file_path}, use_llm=False)
                     if ret:
                         ret_list.append({"addr": new_addr})
                     

@@ -86,7 +86,6 @@ class Session:
         fields = [
             "idx",
             "block_id",
-            "raw",
             "title",
             "etype",
             "atype",
@@ -122,6 +121,7 @@ class Session:
             return
             
         messages = [item.to_dict() for item in self.messages]
+        content = self.get_raw()
         self.meta.update({"sid": self.sid, "is_group": self.is_group, "messages": messages})
         entry = EntryItem(
             user_id=self.user_id,
@@ -129,13 +129,12 @@ class Session:
             status=self.status,
             atype=self.atype,
             ctype=self.ctype,
-            raw=self.get_raw(),
             source=self.source,
             addr=self.sid,
             meta=self.meta,
         )
         
-        data = {'reduce_msg': self.reduce_message(), 'default_title': self.get_name()}
+        data = {'reduce_msg': self.reduce_message(), 'default_title': self.get_name(), 'content': content}
         ret, ret_emb, info = add_data(entry, data)
         logger.info(f"save_to_db entry: {ret}, {ret_emb}, {info}")
         

@@ -17,11 +17,11 @@ export async function saveEntry({
     const formData = new FormData();
 
     if (form.etype === 'record') {
-        if (form.raw === '') {
+        if (form.content === '') {
             ElMessage.error(t('inputRecordContent'));
             return false;
         }
-        formData.append('raw', form.raw);
+        formData.append('content', form.content);
     } else if (form.etype === 'file'||form.etype === 'note') {
         if (!file && (form.idx === null || form.idx === undefined)) {
             if (form.etype === 'file') {

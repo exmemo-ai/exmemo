@@ -39,6 +39,14 @@ class EntryItem:
         filtered_data = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
         return cls(**filtered_data)
     
+    @classmethod
+    def from_model(cls, model: 'StoreEntry') -> 'EntryItem':
+        return cls(**{
+            k: getattr(model, k) 
+            for k in cls.__dataclass_fields__ 
+            if hasattr(model, k)
+        })
+    
     def to_dict(self) -> Dict[str, Any]:
         dic = {k: v for k, v in self.__dict__.items() if v is not None}
         #logger.error(f"dic {dic}")

@@ -53,10 +53,9 @@ class RecordAgent(BaseAgent):
             dic = {
                 "user_id": sdata.user_id,
                 "etype": "record",
-                "raw": content,
                 "source": "wechat",
             }
-            ret, ret_emb, info = add_data(dic)
+            ret, ret_emb, info = add_data(dic, {"content": content})
             return info
 
     @agent_function(_("export_records"))
@@ -274,7 +273,7 @@ class FileAgent(BaseAgent):
         dic["etype"] = "file"
         dic["source"] = "wechat"
         dic["addr"] = addr
-        ret, ret_emb, info = add_data(dic, base_path)
+        ret, ret_emb, info = add_data(dic, {"path": base_path})
         return info
 
 def msg_add_url(url, sdata, status):

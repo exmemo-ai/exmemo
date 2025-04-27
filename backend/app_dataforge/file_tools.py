@@ -10,7 +10,7 @@ from backend.common.parser import converter
 from .models import StoreEntry
 from .entry import delete_entry, add_data, REL_DIR_FILES, REL_DIR_NOTES
 from .zipfile import is_compressed_file, uncompress_file
-
+from .entry_item import EntryItem
 
 def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, progress_callback=None, task_id=None):
     if addr.startswith("/"):
@@ -25,7 +25,7 @@ def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, pro
     if is_unzip and is_compressed_file(file_path):
         return uncompress_file(dic_item, file_path, is_createSubDir, progress_callback, task_id)
     else:
-        return add_data(dic_item, file_path)
+        return add_data(dic_item, {"path":file_path})
 
         
 def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, 
@@ -81,17 +81,14 @@ def real_import(user_id, process_list, progress_callback=None, task_id=None, deb
                 continue
 
             if debug: logger.info(f"## convert file {src_path} to {md_path}")
-            with open(md_path, 'r', encoding='utf-8') as f:
-                content = f.read()
 
             dic = {
                 "user_id": user_id,
                 "etype": "note", 
                 "addr": dst_path,
                 "title": os.path.basename(dst_path),
-                "raw": content
             }
-            ret, ret_emb, info = add_data(dic, md_path)
+            ret, ret_emb, info = add_data(dic, {"path":md_path})
             if ret:
                 success_list.append(dst_path)
             if progress_callback:
@@ -105,16 +102,31 @@ def real_import(user_id, process_list, progress_callback=None, task_id=None, deb
     
 def real_refresh(user_id, addr, etype, is_folder, progress_callback=None, task_id=None, debug=False):
     if not is_folder:
-        entries = StoreEntry.objects.filter(user_id=user_id, addr=addr, etype=etype, block_id=0).first()
+        entries = StoreEntry.objects.filter(user_id=user_id, addr=addr, etype=etype, block_id=0)
     else:
         if not addr.endswith("/"):
             addr = addr + "/"
         entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=addr,
-                                          etype=etype, block_id=0).first()
+                          etype=etype, block_id=0, is_deleted=False)
     success_list = []
+    if entries is None:
+        logger.warning(f"Entry not found for user {user_id}, addr {addr}, etype {etype}")
+        return success_list
     for idx, entry in enumerate(entries):
-        dic = entry.to_dict()
-        ret, ret_emb, detail = add_data(dic)
+        entry = EntryItem.from_model(entry).to_dict()
+        if etype == "file" or etype == "note":
+            ext = get_ext(entry.path)
+            file_path = filecache.get_tmpfile(ext)
+            ret = utils_filemanager.get_file_manager().get_file(
+                user_id, entry.path, file_path
+            )
+            if not ret:
+                logger.warning(f"Failed to get file: {entry.path}")
+                continue
+            filecache.TmpFileManager.get_instance().add_file(file_path)
+            ret, ret_emb, detail = add_data(entry, {"path":file_path if (etype == "file" or etype == "note") else None})
+        else:
+            ret, ret_emb, detail = add_data(entry)
         if ret:
             success_list.append(entry.addr)
         if progress_callback:

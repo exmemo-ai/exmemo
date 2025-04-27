@@ -5,8 +5,7 @@ To handle file-related operations
 import os
 import json
 import pytz
-import traceback
-from typing import Optional, Any
+from typing import Any
 from loguru import logger
 from django.utils import timezone
 from django.db.models import Q
@@ -27,6 +26,7 @@ from backend.common.user.user import UserManager
 from .models import StoreEntry
 from .feature import EntryFeatureTool, DEFAULT_CATEGORY
 from .entry_item import EntryItem
+from .entry_storage import EntryStorage
 
 REL_DIR_FILES = "files"
 REL_DIR_NOTES = "notes"
@@ -35,25 +35,19 @@ DESC_LENGTH = 50
 
 
 class EntryService:
-
-    @classmethod
-    def get_instance(cls):
-        if not hasattr(cls, "_instance"):
-            cls._instance = cls()
-        return cls._instance
-
-    def process_entry(self, obj: dict | EntryItem, data=None, use_llm=True):
+    @staticmethod
+    def process_entry(obj: dict | EntryItem, data=None, use_llm=True):
         if isinstance(obj, dict):
             entry_item = EntryItem.from_dict(obj)
         else:
             entry_item = obj
             
         handlers = {
-            "file": self._process_file_entry,
-            "note": self._process_file_entry,
-            "record": self._process_record_entry,
-            "chat": self._process_chat_entry,
-            "web": self._process_web_entry,
+            "file": EntryService._process_file_entry,
+            "note": EntryService._process_file_entry,
+            "record": EntryService._process_record_entry,
+            "chat": EntryService._process_chat_entry,
+            "web": EntryService._process_web_entry,
         }
 
         handler = handlers.get(entry_item.etype)
@@ -62,7 +56,8 @@ class EntryService:
 
         return handler(entry_item, data, use_llm)
 
-    def _process_chat_entry(self, entry: EntryItem, data: Any, use_llm: bool = True):
+    @staticmethod
+    def _process_chat_entry(entry: EntryItem, data: Any, use_llm: bool = True):
         # 默认title与ctype同时存在
         if ((entry.ctype == DEFAULT_CATEGORY or entry.ctype is None) 
             and data is not None and 'reduce_msg' in data 
@@ -70,10 +65,34 @@ class EntryService:
             EntryFeatureTool.get_instance().parse(entry, data['reduce_msg'], use_llm=use_llm)
         if entry.title is None and data is not None and 'default_title' in data:
             entry.title = data['default_title']
-        return EntryStorage.save_entry(entry, entry.raw)
+        content = None
+        if data is not None and 'content' in data:
+            content = data['content']
+        return EntryStorage.save_entry(entry, content)
 
-    def _process_file_entry(self, entry: EntryItem, data: Any, use_llm: bool = True):
-        has_new_content = True # 只在文件内容发生变化和第一次上传时为True
+
+    @staticmethod
+    def _process_record_entry(entry: EntryItem, data: Any, use_llm: bool = True):
+        current_time = timezone.now().astimezone(pytz.UTC)
+        if entry.addr is None:
+            entry.addr = f'record_{current_time.strftime("%Y%m%d_%H%M%S")}'
+        content = None
+        if data is not None and 'content' in data:
+            content = data['content']
+        ret = EntryFeatureTool.get_instance().parse(
+            entry, content, use_llm=use_llm
+        )
+        ret, ret_emb, detail = EntryStorage.save_entry(
+            entry, content
+        )
+        if ret:
+            if entry.ctype is not None:
+                detail = _("record_successful_comma__type_colon_") + entry.ctype
+        return ret, ret_emb, detail
+    
+
+    @staticmethod
+    def _process_file_entry(entry: EntryItem, data: Any, use_llm: bool = True):
         user = UserManager.get_instance().get_user(entry.user_id)
         filename = os.path.basename(entry.addr)
 
@@ -82,19 +101,25 @@ class EntryService:
         else:
             entry.path = os.path.join(REL_DIR_FILES, entry.addr)
             
-        if data is None:
+        if data is not None and "path" in data:
+            path = data["path"]
+        else:
+            path = data
+
+        if path is None:
+            has_new_content = False
             if entry.idx is None:
                 return False, False, _("save_file_failed_excl_")
-            has_new_content = False
         else:
+            has_new_content = True
             ret = utils_filemanager.get_file_manager().save_file(
-                entry.user_id, entry.path, data
+                entry.user_id, entry.path, path
             )
             if not ret:
                 return False, False, _("save_file_failed_excl_")
 
         if has_new_content and entry.md5 is None:
-            entry.md5 = utils_md.get_file_md5(data)
+            entry.md5 = utils_md.get_file_md5(path)
 
         meta_dic = {}
         content = None
@@ -102,32 +127,21 @@ class EntryService:
             if (entry.etype == "note" and user.get("note_save_content")) or (
                 entry.etype == "file" and user.get("file_save_content")
             ):
-                meta_dic, content = get_file_content_by_path(data, user)
-            elif converter.is_markdown(data):
-                parser = MarkdownParser(data)
+                meta_dic, content = get_file_content_by_path(path, user)
+            elif converter.is_markdown(path):
+                parser = MarkdownParser(path)
                 meta_dic = convert_dic_to_json(parser.fm)
 
-        entry.meta.update(meta_dic)
+        if meta_dic is not None:
+            entry.meta.update(meta_dic)
         ret = EntryFeatureTool.get_instance().parse(
             entry, filename, use_llm=use_llm
         )
         return EntryStorage.save_entry(entry, content, has_new_content)
 
-    def _process_record_entry(self, entry: EntryItem, data: Any, use_llm: bool = True):
-        current_time = timezone.now().astimezone(pytz.UTC)
-        entry.addr = f'record_{current_time.strftime("%Y%m%d_%H%M%S")}'
-        ret = EntryFeatureTool.get_instance().parse(
-            entry, entry.raw, use_llm=use_llm
-        )
-        ret, ret_emb, detail = EntryStorage.save_entry(
-            entry, entry.raw
-        )
-        if ret:
-            if entry.ctype is not None:
-                detail = _("record_successful_comma__type_colon_") + entry.ctype
-        return ret, ret_emb, detail
 
-    def _process_web_entry(self, entry: EntryItem, data: Any, use_llm: bool = True, debug: bool = False):
+    @staticmethod
+    def _process_web_entry(entry: EntryItem, data: Any, use_llm: bool = True, debug: bool = False):
         """
         Download the file from the URL, parse the file, and store the data from the file into the database;
         This only handles plain web pages, does not consider files
@@ -161,7 +175,6 @@ class EntryService:
                 ret, ret_emb, detail = EntryStorage.save_entry(
                     entry, None
                 )
-
         if ret:
             if entry.ctype is not None:
                 if entry.status == "todo":
@@ -177,167 +190,6 @@ class EntryService:
                     "storage_successful_comma__found_url_exception_error_colon__{error}"
                 ).format(error=entry.meta["error"])
         return ret, ret_emb, detail
-
-
-class EntryStorage:
-    """处理 Entry 的存储相关操作"""
-
-    @classmethod
-    def save_entry(
-        cls,
-        entry: EntryItem,
-        content: Optional[str] = None,
-        has_new_content: bool = True,
-        debug: bool = False
-    ) -> tuple:
-        """保存条目到数据库"""
-        logger.info(f"save {str(entry.to_dict())[:200]}")
-        
-        try:
-            entry.updated_time = timezone.now().astimezone(pytz.UTC)
-            
-            abstract = None
-            if "description" in entry.meta:
-                abstract = entry.meta["description"]
-            
-            ret_emb = True
-            if entry.idx and StoreEntry.objects.filter(idx=entry.idx, block_id=0).exists():
-                ret_emb = cls._update_entry(entry, has_new_content, content, abstract)
-            else:
-                ret_emb = cls._create_entry(entry, content, abstract)
-
-            return (
-                True, 
-                ret_emb,
-                _("update_success") if entry.idx else _("add_success")
-            )
-            
-        except Exception as e:
-            logger.error(f"save_entry failed: {str(e)}")
-            traceback.print_exc()
-            return False, False, _("add_failed")
-
-    @classmethod
-    def _update_entry(cls, entry: EntryItem, has_new_content: bool, content: Optional[str] = None, abstract: Optional[str] = None):
-        ret_emb = True
-        if has_new_content:
-            # 存在 has_new_content=True and content=None 的情况, 如：文件更新，但用户选择不保存内容
-            StoreEntry.objects.filter(
-                user_id=entry.user_id,
-                addr=entry.addr,
-                block_id__gt=0
-            ).delete()
-
-            db_entry = StoreEntry.objects.get(idx=entry.idx)
-            for key, value in entry.to_model_dict().items():
-                setattr(db_entry, key, value)
-            
-            if abstract:
-                db_entry.raw = abstract
-                if EmbeddingTools.use_embedding():
-                    ret, embeddings = EmbeddingTools.do_embedding([abstract], True)
-                    if ret:
-                        db_entry.embeddings = embeddings[0]
-            db_entry.save()
-            if content:
-                ret_emb = cls._save_content_blocks(entry, content)
-        else: # 没有新文件上传/更新文件，只改属性值
-            entries = StoreEntry.objects.filter(
-                user_id=entry.user_id,
-                addr=entry.addr
-            )
-            entry_dict = entry.to_model_dict()
-            exclude_fields = ['idx', 'embeddings', 'emb_model', 'block_id', 'raw']
-            for field in exclude_fields:
-                entry_dict.pop(field, None)
-            for db_entry in entries:
-                for key, value in entry_dict.items():
-                    if key != 'meta':
-                        setattr(db_entry, key, value)
-                db_entry.save()
-        return ret_emb
-
-    @classmethod 
-    def _create_entry(cls, entry: EntryItem, content: Optional[str] = None, abstract: Optional[str] = None):
-        ret_emb = True
-        if entry.addr:
-            StoreEntry.objects.filter(
-                user_id=entry.user_id,
-                addr=entry.addr
-            ).delete()
-            
-        entry_dict = entry.to_model_dict()
-        entry_dict['block_id'] = 0
-        entry_dict['emb_model'] = EmbeddingTools.get_model_name()
-        
-        if abstract:
-            entry_dict['raw'] = abstract
-            if EmbeddingTools.use_embedding():
-                ret, embeddings = EmbeddingTools.do_embedding([abstract], True)
-                if ret:
-                    entry_dict['embeddings'] = embeddings[0]
-        StoreEntry.objects.create(**entry_dict)
-        if content:
-            ret_emb = cls._save_content_blocks(entry, content)
-        return ret_emb
-
-    @classmethod
-    def _save_content_blocks(cls, entry: EntryItem, content: str, debug: bool=False) -> bool:
-        if not content:
-            return True
-            
-        blocks = EmbeddingTools.split(content) or [content]        
-        use_embedding = EmbeddingTools.use_embedding()
-        if not use_embedding:
-            embeddings = [None] * len(blocks)
-        else:
-            ret, embeddings = EmbeddingTools.do_embedding(blocks, True)
-            if debug:
-                logger.debug(f"embeddings {ret} {len(embeddings)}")
-
-            if not ret:
-                return False
-                
-        for idx, (block_text, embedding) in enumerate(zip(blocks, embeddings), 1):
-            block_entry = entry.clone(
-                block_id=idx+1,
-                raw=block_text,
-                embeddings=embedding,
-                idx=None,
-                meta=None
-            )
-            StoreEntry.objects.create(**block_entry.to_model_dict())
-            
-        return True
-
-
-    @classmethod
-    def delete_entry(cls, uid, filelist):
-        """删除条目"""
-        logger.debug(f"real delete total {len(filelist)}")
-        for item in filelist:
-            addr = item["addr"]
-            filter_args = {"user_id": uid, "addr": addr}
-            if "etype" in item:
-                filter_args["etype"] = item["etype"]
-            entrys = StoreEntry.objects.filter(**filter_args)
-            logger.warning(f"real delete {uid} addr {addr}, {entrys.count()}")
-            for entry in entrys:
-                if entry.block_id == 0:
-                    if entry.path is not None:
-                        utils_filemanager.get_file_manager().delete_file(
-                            uid, entry.path
-                        )
-                        logger.info(f"real delete server file {entry.path}")
-                    entry.is_deleted = True
-                    entry.updated_time = timezone.now().astimezone(pytz.UTC)
-                    entry.save()
-                else:
-                    entry.delete()
-
-
-def add_data(obj, data=None, use_llm=True):
-    return EntryService.get_instance().process_entry(obj, data, use_llm)
 
 
 def filter_model_fields(data):
@@ -374,13 +226,13 @@ def regerate_embedding(uid, addr, emb_model):
     call from app_sync
     """
     use_embedding = EmbeddingTools.use_embedding()
-    entrys = StoreEntry.objects.filter(user_id=uid, addr=addr)
-    if len(entrys) == 0 or not use_embedding:
+    entries = StoreEntry.objects.filter(user_id=uid, addr=addr)
+    if len(entries) == 0 or not use_embedding:
         return False
-    all_splits = [entry.raw for entry in entrys]
+    all_splits = [entry.raw for entry in entries]
     ret_emb, embeddings = EmbeddingTools.do_embedding(all_splits, True)
     if ret_emb:
-        for entry, embedding in zip(entrys, embeddings):
+        for entry, embedding in zip(entries, embeddings):
             entry.embeddings = embedding
             entry.emb_model = emb_model
             entry.save()
@@ -531,6 +383,10 @@ def get_file_content_by_path(path, user):
     if content is None and is_plain_text(path):
         content = open(path, "r").read()
     return meta_data, content
+
+
+def add_data(obj, data=None, use_llm=True):
+    return EntryService.process_entry(obj, data, use_llm)
 
 
 def delete_entry(uid, filelist):

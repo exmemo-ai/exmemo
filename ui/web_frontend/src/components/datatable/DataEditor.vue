@@ -98,12 +98,14 @@ export default {
             const formData = new FormData();
             formData.append('rtype', 'extract');
             formData.append('etype', this.form.etype);
-            if (this.form.etype === 'record' || this.form.etype === 'chat') {
-                formData.append('raw', this.form.raw);
+            if (this.form.etype === 'record') {
+                formData.append('info', this.form.content);
+            } else if (this.form.etype === 'chat') {
+                formData.append('info', this.form.raw);
             } else if (this.form.etype === 'web') {
-                formData.append('addr', this.form.addr);
+                formData.append('info', this.form.addr);
             } else if (this.form.etype === 'file' || this.form.etype === 'note') {
-                formData.append('addr', this.file_path);
+                formData.append('info', this.file_path);
             }
             axios.post(getURL() + func, formData).then(response => {
                 console.log('ret1', response);

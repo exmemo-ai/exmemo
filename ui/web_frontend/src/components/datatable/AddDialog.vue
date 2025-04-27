@@ -35,7 +35,7 @@
                     />
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
-                    <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
+                    <el-input type="textarea" :rows="6" v-model="form.content" :placeholder="$t('recordContent')"></el-input>
                 </div>
                 <div v-if="form.etype === 'note'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
                     <PathSelector
@@ -94,7 +94,7 @@ export default {
             form: {
                 idx: null,
                 title: '',
-                raw: '',
+                content: '',
                 ctype: '',
                 etype: 'record',
                 atype: '',
@@ -144,7 +144,7 @@ export default {
             this.form.idx = null;
             this.form.title = this.calcTitle(this.input_path);
             this.form.addr = '';
-            this.form.raw = ''
+            this.form.content = '';
             this.calcFilePath();
             console.log(this.form);
         },

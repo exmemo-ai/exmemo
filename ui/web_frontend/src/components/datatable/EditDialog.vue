@@ -47,7 +47,7 @@
                             $t('path') }}: {{file_path}}</span>
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
-                    <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
+                    <el-input type="textarea" :rows="6" v-model="form.content" :placeholder="$t('recordContent')"></el-input>
                 </div>
                 <div v-if="form.etype === 'chat'" width="100%">
                     <div 
@@ -85,7 +85,7 @@
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import DataEditor from './DataEditor.vue'
-import { downloadFile } from './dataUtils'
+import { downloadFile, fetchItem } from './dataUtils'
 import { Delete, Edit, View, Download } from '@element-plus/icons-vue'
 import SaveIcon from '@/components/icons/SaveIcon.vue'
 
@@ -107,10 +107,12 @@ export default {
             file_path: null,
             file: null,
             dialogVisible: false,
+            record_content: '',
             form: {
                 idx: null,
                 title: '',
                 raw: '',
+                content: '',
                 ctype: '',
                 etype: 'record',
                 atype: '',
@@ -122,7 +124,7 @@ export default {
         };
     },
     methods: {
-        openDialog(onSuccess, row) {
+        async openDialog(onSuccess, row) {
             this.onSuccess = onSuccess;
             this.form.idx = row.idx;
             this.form.ctype = row.ctype;
@@ -134,6 +136,14 @@ export default {
             this.form.addr = row.addr;
             this.file_path = this.form.addr;
             this.base_title = row.title;
+
+            if (this.form.etype === 'record') {
+                const result = await fetchItem(this.form.idx);
+                if (result.success && result.data.content) {
+                    this.form.content = result.data.content;
+                }
+            }
+
             console.log(this.form);
             this.dialogVisible = true;
         },

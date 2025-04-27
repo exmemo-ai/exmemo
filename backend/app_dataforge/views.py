@@ -30,6 +30,7 @@ from .serializers import ListSerializer, DetailSerializer
 from .zipfile import is_compressed_file
 from .file_tools import update_files, rename_file
 from .tasks import update_files_task
+from .entry_storage import EntryStorage
 
 MAX_LEVEL = 2
 
@@ -56,6 +57,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             dic["title"] = request.POST.get("title", None)
             dic["atype"] = request.POST.get("atype", None)
             dic["raw"] = request.POST.get("raw", None)
+            dic['content'] = request.POST.get("content", None)
             dic["status"] = request.POST.get("status", "collect")
             dic["idx"] = request.POST.get("idx", None)
             dic["user_id"] = get_user_id(request)
@@ -71,7 +73,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(True, str(info["content"]))
                 return do_result(True, str(info))
             elif dic["etype"] == "record":  # maybe more then one entry
-                ret, ret_emb, info = add_data(dic)
+                ret, ret_emb, info = add_data(dic, data = {'content': dic["content"]})
                 return do_result(ret, info)
             elif dic["etype"] == "file" or dic["etype"] == "note":
                 vault = request.POST.get("vault", None)
@@ -207,7 +209,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             if instance.etype == 'record' or instance.etype == 'chat':
                 serializer = self.get_serializer(instance)
                 data = serializer.data
-                data['content'] = instance.raw
+                data['content'] = EntryStorage.get_content(instance.user_id, instance.addr)
                 return Response(data)
             elif instance.etype == 'web':
                 serializer = self.get_serializer(instance)
@@ -308,8 +310,10 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 if not ret:
                     return do_result(False, _("update_failed"))
                 return do_result(True, _("update_successfully"))
-        
-        ret, ret_emb, info = add_data(dic)
+        elif instance.etype == "record":
+            ret, ret_emb, info = add_data(dic, data = {'content': dic["content"]})
+        else:
+            ret, ret_emb, info = add_data(dic)
         if not ret:
             return do_result(False, _("update_failed"))
         return do_result(True, _("update_successfully"))

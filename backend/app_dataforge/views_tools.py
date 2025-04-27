@@ -17,7 +17,7 @@ from .feature import EntryFeatureTool
 from .entry import delete_entry, get_type_options
 from .entry_item import EntryItem
 from .models import StoreEntry
-from .tasks import import_task
+from .tasks import import_task, refresh_task
 from .file_tools import real_import, real_refresh, rename_file
 
 MAX_LEVEL = 2
@@ -68,12 +68,8 @@ class EntryAPIView(APIView):
         )
         logger.debug(f"etype {entry.etype}")
         ret = False
-        if entry.etype in ["record", "chat"]:
-            raw = request.GET.get("raw", request.POST.get("raw", None))
-            ret = EntryFeatureTool.get_instance().parse(entry, raw, force=True)
-        elif entry.etype in ["web", "note", "file"]:
-            addr = request.GET.get("addr", request.POST.get("addr", None))
-            ret = EntryFeatureTool.get_instance().parse(entry, addr, force=True)
+        info = request.GET.get("info", request.POST.get("info", None))
+        ret = EntryFeatureTool.get_instance().parse(entry, info, force=True)
         if ret:
             return do_result(True, {"dic": entry.to_model_dict(for_json=True)})
         else:
@@ -458,7 +454,8 @@ class EntryAPIView(APIView):
             if not path:
                 return do_result(False, "Path is empty")
             if is_folder and USE_CELERY and is_async:
-                return do_result(False, "Folder refresh not supported in async mode")
+                task_id = refresh_task(self, user_id, path, etype, is_folder)
+                return do_result(True, {"task_id": str(task_id)})
             else:
                 success_list = real_refresh(user_id, path, etype, is_folder)
                 if len(success_list) > 0:
