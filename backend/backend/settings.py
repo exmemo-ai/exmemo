@@ -157,7 +157,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-USE_CELERY = os.getenv("USE_CELERY", "True").lower() == "true"
+USE_CELERY = os.getenv("USE_CELERY", "False").lower() == "true"
 
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en-US")
 
