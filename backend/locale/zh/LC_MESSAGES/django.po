@@ -101,6 +101,18 @@ msgstr "更新失败"
 msgid "unknown_action"
 msgstr "未知操作"
 
+#: app_dataforge/view_tools.py:321
+msgid "no_file_to_import"
+msgstr "无文件导入"
+
+#: app_dataforge/view_tools.py:462
+msgid "refreshSuccess"
+msgstr "更新成功"
+
+#: app_dataforge/view_tools.py:464
+msgid "refreshFailed"
+msgstr "更新失败"
+
 #: app_diet/diet.py:17
 msgid "you_are_a_clinical_nutritionist"
 msgstr "你是一位临床营养师"

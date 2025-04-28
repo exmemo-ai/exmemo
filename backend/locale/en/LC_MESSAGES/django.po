@@ -102,6 +102,18 @@ msgstr "Update failed"
 msgid "unknown_action"
 msgstr "Unknown action"
 
+#: app_dataforge/view_tools.py:321
+msgid "no_file_to_import"
+msgstr "No file to import"
+
+#: app_dataforge/view_tools.py:462
+msgid "refreshSuccess"
+msgstr "Refresh success"
+
+#: app_dataforge/view_tools.py:464
+msgid "refreshFailed"
+msgstr "Refresh failed"
+
 #: app_diet/diet.py:17
 msgid "you_are_a_clinical_nutritionist"
 msgstr "You are a clinical nutritionist"

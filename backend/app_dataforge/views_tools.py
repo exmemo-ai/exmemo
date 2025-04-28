@@ -34,7 +34,7 @@ class EntryAPIView(APIView):
 
     def api(self, request):
         rtype = request.GET.get("rtype", request.POST.get("rtype", "feature"))
-        logger.error(f"rtype {rtype}")
+        logger.info(f"rtype {rtype}")
         if rtype == "feature":
             return self.feature(request)
         elif rtype == "extract":
@@ -75,7 +75,8 @@ class EntryAPIView(APIView):
         else:
             return do_result(False, {"info": "extract failed"})
         
-    def _build_tree_node(self, path_dict, current_level, current_path, path_parts, entry=None, path=None, is_last_level=False):
+    def _build_tree_node(self, path_dict, current_level, current_path, path_parts, 
+                         entry=None, path=None, is_last_level=False):
         for i, part in enumerate(path_parts):
             if not part:
                 continue
@@ -155,8 +156,10 @@ class EntryAPIView(APIView):
             path_dict = {}
             count = 0
             for entry in entries:
-                if entry.etype != 'web':
+                if entry.etype == 'note' or entry.etype == 'file':
                     file_path = entry.addr
+                elif entry.etype == 'chat' or entry.etype == 'chat_record':
+                    file_path = entry.title
                 else:
                     if entry.meta and 'update_path' in entry.meta:
                         file_path = entry.meta['update_path']
@@ -165,7 +168,9 @@ class EntryAPIView(APIView):
                     else:
                         file_path = entry.title
 
-                if path != "" and path is not None and file_path.startswith(path):
+                if file_path is None or file_path == "":
+                    rel_path = ""
+                elif path != "" and path is not None and file_path.startswith(path):
                     rel_path = file_path[len(path):].lstrip('/')
                 else:
                     rel_path = file_path
@@ -310,7 +315,7 @@ class EntryAPIView(APIView):
                     process_list.append((entry.path, dst_path, False))
 
             if not process_list:
-                return do_result(False, _("no_update_needed"))
+                return do_result(False, _("no_file_to_import"))
             
             if USE_CELERY and is_async:
                 task_id = import_task.delay(user_id, process_list, debug=debug)
@@ -318,7 +323,7 @@ class EntryAPIView(APIView):
             else:
                 success_list = real_import(user_id, process_list, debug=debug)
                 if not success_list:
-                    return do_result(False, _("no_update_needed")) 
+                    return do_result(False, _("no_file_to_import")) 
                 return do_result(True, {"list": success_list})
         except Exception as e:
             logger.error(f"Error importing file: {str(e)}")
@@ -454,14 +459,14 @@ class EntryAPIView(APIView):
             if not path:
                 return do_result(False, "Path is empty")
             if is_folder and USE_CELERY and is_async:
-                task_id = refresh_task(self, user_id, path, etype, is_folder)
+                task_id = refresh_task.delay(user_id, path, etype, is_folder)
                 return do_result(True, {"task_id": str(task_id)})
             else:
                 success_list = real_refresh(user_id, path, etype, is_folder)
                 if len(success_list) > 0:
-                    return do_result(True, "Refresh data success")
+                    return do_result(True, _("refreshSuccess"))
                 else:
-                    return do_result(False, "Refresh data failed")
+                    return do_result(False, _("refreshFailed"))
         except Exception as e:
             logger.error(f"Error refreshing data: {str(e)}")
             import traceback

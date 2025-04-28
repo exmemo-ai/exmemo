@@ -336,7 +336,7 @@ const handleImport = async () => {
 
 const handleRefresh = async () => {
     if (!props.rightClickNode) return;
-    emit('refresh-item', props.rightClickNode.data.addr, props.rightClickNode.data.is_folder);
+    emit('refresh-item', props.rightClickNode.data.id, props.rightClickNode.data.is_folder);
     emit('close-menu');
 };
 

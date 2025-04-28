@@ -4,82 +4,86 @@
       <div class="form-item">
         <div class="path-header">
           <span>{{ $t('tree.vault') }}</span>
-          <el-radio-group v-model="vaultInputType" size="small">
-            <el-radio-button label="manual">{{ $t('tree.manualInput') }}</el-radio-button>
-            <el-radio-button label="select">{{ $t('tree.select') }}</el-radio-button>
-          </el-radio-group>
         </div>
-        <el-input 
-          v-if="vaultInputType === 'manual'"
-          v-model="localVault" 
-          :placeholder="$t('tree.enterVaultName')"
-          @update:modelValue="handleVaultChange"
-        />
-        <el-select
-          v-else
-          v-model="localVault"
-          :placeholder="$t('tree.selectVault')"
-          clearable
-          @change="handleVaultChange"
-        >
-          <el-option
-            v-for="vault in vaultOptions"
-            :key="vault.name"
-            :label="vault.name"
-            :value="vault.name"
+        <div class="input-group">
+          <el-input
+            v-model="localVault"
+            :placeholder="$t('tree.enterVaultName')"
+            @update:modelValue="handleVaultChange"
           />
-        </el-select>
+          <el-button @click="showVaultSelect = true">
+            {{ $t('tree.select') }}
+          </el-button>
+        </div>
       </div>
       <div class="form-item" v-if="localVault">
         <div class="path-header">
           <span>{{ $t('tree.path') }}</span>
-          <el-radio-group v-model="pathInputType" size="small">
-            <el-radio-button label="manual">{{ $t('tree.manualInput') }}</el-radio-button>
-            <el-radio-button label="select">{{ $t('tree.select') }}</el-radio-button>
-          </el-radio-group>
         </div>
-        <el-input 
-          v-if="pathInputType === 'manual'"
-          v-model="localPath" 
-          :placeholder="$t('tree.pathOptional')"
-          @update:modelValue="handlePathChange"
-        />
-        <el-cascader
-          v-else
-          v-model="selectedPath"
-          :options="pathOptions"
-          :props="cascaderProps"
-          :placeholder="$t('tree.selectPath')"
-          clearable
-          @change="handleCascaderChange"
-        />
+        <div class="input-group">
+          <el-input
+            v-model="localPath"
+            :placeholder="$t('tree.pathOptional')"
+            @update:modelValue="handlePathChange"
+          />
+          <el-button @click="showPathSelect = true">
+            {{ $t('tree.select') }}
+          </el-button>
+        </div>
       </div>
     </template>
     
     <div class="form-item" v-else>
       <div class="path-header">
         <span>{{ $t('tree.path') }}</span>
-        <el-radio-group v-model="pathInputType" size="small">
-          <el-radio-button label="manual">{{ $t('tree.manualInput') }}</el-radio-button>
-          <el-radio-button label="select">{{ $t('tree.select') }}</el-radio-button>
-        </el-radio-group>
       </div>
-      <el-input 
-        v-if="pathInputType === 'manual'"
-        v-model="localPath" 
-        :placeholder="$t('tree.pathOptional')"
-        @update:modelValue="handlePathChange"
-      />
+      <div class="input-group">
+        <el-input
+          v-model="localPath"
+          :placeholder="$t('tree.pathOptional')"
+          @update:modelValue="handlePathChange"
+        />
+        <el-button @click="showPathSelect = true">
+          {{ $t('tree.select') }}
+        </el-button>
+      </div>
+    </div>
+
+    <el-dialog
+      v-model="showVaultSelect"
+      :title="$t('tree.selectVault')"
+      :width="dialogWidth"
+    >
+      <el-select
+        v-model="localVault"
+        :placeholder="$t('tree.selectVault')"
+        style="width: 100%"
+        @change="handleVaultSelectConfirm"
+      >
+        <el-option
+          v-for="vault in vaultOptions"
+          :key="vault.name"
+          :label="vault.name"
+          :value="vault.name"
+        />
+      </el-select>
+    </el-dialog>
+
+    <el-dialog
+      v-model="showPathSelect"
+      :title="$t('tree.selectPath')"
+      :width="dialogWidth"
+    >
       <el-cascader
-        v-else
+        v-if="showPathSelect"
         v-model="selectedPath"
         :options="pathOptions"
         :props="cascaderProps"
-        :placeholder="$t('tree.selectPath')"
-        clearable
-        @change="handleCascaderChange"
+        style="width: 100%"
+        @expand-change="handleExpandChange"
+        @change="handleCascaderConfirm"
       />
-    </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -112,8 +116,18 @@ const cascaderProps = {
   label: 'name',
   children: 'children',
   checkStrictly: true,
-  emitPath: true
+  emitPath: true,
+  multiple: false,
+  expandTrigger: 'click'
 }
+
+const showVaultSelect = ref(false)
+const showPathSelect = ref(false)
+const dialogWidth = ref(window.innerWidth <= 768 ? '70%' : '30%')
+
+window.addEventListener('resize', () => {
+  dialogWidth.value = window.innerWidth <= 768 ? '70%' : '30%'
+})
 
 watch(() => props.etype, async (newEtype) => {
   if (!newEtype) return
@@ -176,9 +190,34 @@ const handlePathChange = (value) => {
 }
 
 const handleCascaderChange = (value) => {
-  const pathValue = value ? value.join('/') : ''
-  localPath.value = pathValue
-  emit('update:path', pathValue)
+  let selectedPathValue = value ? value.join('/') : ''
+  
+  if (localPath.value) {
+    const pathParts = localPath.value.split('/')
+    const lastPart = pathParts[pathParts.length - 1]
+    
+    if (lastPart && lastPart.includes('.')) {
+      selectedPathValue = selectedPathValue ? `${selectedPathValue}/${lastPart}` : lastPart
+    }
+  }
+  
+  localPath.value = selectedPathValue
+  emit('update:path', selectedPathValue)
+}
+
+const handleVaultSelectConfirm = (value) => {
+  handleVaultChange(value)
+  showVaultSelect.value = false
+}
+
+const handleExpandChange = () => {
+  // 防止展开时自动关闭对话框
+}
+
+const handleCascaderConfirm = (value) => {
+  if (!value) return
+  handleCascaderChange(value)
+  showPathSelect.value = false
 }
 </script>
 
@@ -206,25 +245,16 @@ const handleCascaderChange = (value) => {
   color: var(--el-text-color-primary);
 }
 
-:deep(.el-radio-button__inner) {
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid var(--el-border-color-lighter);
-  background-color: transparent;
+.input-group {
+  display: flex;
+  gap: 8px;
 }
 
-:deep(.el-radio-button:first-child .el-radio-button__inner) {
-  border-radius: 3px 0 0 3px;
+.input-group .el-input {
+  flex: 1;
 }
 
-:deep(.el-radio-button:last-child .el-radio-button__inner) {
-  border-radius: 0 3px 3px 0;
-}
-
-:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
-  background-color: var(--el-color-primary-light-8);
-  border-color: var(--el-color-primary-light-5);
-  color: var(--el-color-primary);
-  box-shadow: none;
+:deep(.el-dialog__body) {
+  padding: 20px;
 }
 </style>

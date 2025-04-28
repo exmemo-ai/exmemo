@@ -148,10 +148,10 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         get entry list by page
         """
         debug = True  # for test
-        count_limit = 100
+        count_limit = -1
         query_args = {}
         user_id = get_user_id(request)
-        if user_id == None:
+        if user_id is None:
             return Response([])
         else:
             query_args["user_id"] = user_id
@@ -184,23 +184,17 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         if max_count != -1:
             count_limit = max_count
         queryset = get_entry_list(keywords, query_args, count_limit)
-        logger.debug(f"list total: {len(queryset)}")
 
-        if max_count == -1: # get item by page
+        if max_count == -1:
+            # Use DRF pagination for unlimited results
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
                 return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        data = sorted(serializer.data, key=lambda x: x["ctype"])
-        paginator = PageNumberPagination()
-        if queryset.count() > 0:
-            paginator.page_size = queryset.count()
         else:
-            paginator.page_size = 10
-        page = paginator.paginate_queryset(queryset, self.request)
-        return paginator.get_paginated_response(data)
+            # Limit results if max_count is specified
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         try:

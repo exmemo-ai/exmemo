@@ -268,7 +268,7 @@ def escape_regex(s):
     return "".join("\\" + c if c in special_chars else c for c in s)
 
 
-def get_entry_list(keywords, query_args, max_count, fields=None):
+def get_entry_list(keywords, query_args, max_count=-1, fields=None):
     query_args["block_id"] = 0
     query_args["is_deleted"] = False
     if fields is None:
@@ -294,18 +294,16 @@ def get_entry_list(keywords, query_args, max_count, fields=None):
 
         queryset = StoreEntry.objects.filter(
             addr__iregex=escaped_keywords, **query_args
-        ).values(*fields)[:max_count]
+        ).values(*fields)
 
-        if len(queryset) == 0:
+        if not queryset.exists():
             # find by title
             q_obj = Q()
             for keyword in escaped_keyword_arr:
                 q_obj &= Q(title__iregex=keyword)
-            queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)[
-                :max_count
-            ]
+            queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)
 
-        if len(queryset) == 0:
+        if not queryset.exists():
             # find by raw
             q_obj = Q()
             for keyword in escaped_keyword_arr:
@@ -313,12 +311,10 @@ def get_entry_list(keywords, query_args, max_count, fields=None):
             query_args_2 = query_args.copy()
             query_args_2.pop("block_id")
             queryset = StoreEntry.objects.filter(q_obj, **query_args_2).values(*fields)
-            if len(queryset) > 0:
-                queryset = queryset.order_by("addr", "block_id").distinct("addr")[
-                    :max_count
-                ]
+            if queryset.exists():
+                queryset = queryset.order_by("addr", "block_id").distinct("addr")
 
-        if len(queryset) == 0:
+        if not queryset.exists():
             # find by title trigram
             queryset = (
                 StoreEntry.objects.filter(**query_args)
@@ -326,11 +322,15 @@ def get_entry_list(keywords, query_args, max_count, fields=None):
                     similarity=TrigramSimilarity("title", keywords),
                 )
                 .filter(similarity__gt=0.05)
-                .order_by("-similarity")[:max_count]
+                .order_by("-similarity")
                 .values(*fields)
             )
     else:
-        queryset = StoreEntry.objects.filter(**query_args).values(*fields)[:max_count]
+        queryset = StoreEntry.objects.filter(**query_args).values(*fields)
+
+    # Apply slicing only if max_count > 0
+    if max_count > 0:
+        queryset = queryset[:max_count]
     return queryset
 
 

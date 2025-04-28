@@ -102,18 +102,22 @@ def real_import(user_id, process_list, progress_callback=None, task_id=None, deb
     
 def real_refresh(user_id, addr, etype, is_folder, progress_callback=None, task_id=None, debug=False):
     if not is_folder:
-        entries = StoreEntry.objects.filter(user_id=user_id, addr=addr, etype=etype, block_id=0)
+        entries = StoreEntry.objects.filter(user_id=user_id, idx=addr, etype=etype, block_id=0, is_deleted=False)
     else:
         if not addr.endswith("/"):
             addr = addr + "/"
-        entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=addr,
+        if etype == 'web':
+            entries = StoreEntry.objects.filter(user_id=user_id, path__startswith=addr,
+                          etype=etype, block_id=0, is_deleted=False)
+        else:
+            entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=addr,
                           etype=etype, block_id=0, is_deleted=False)
     success_list = []
-    if entries is None:
-        logger.warning(f"Entry not found for user {user_id}, addr {addr}, etype {etype}")
+    if entries.count() == 0:
+        logger.warning(f"real_refresh {user_id} {addr} etype:{etype}, is_folder:{is_folder}, {len(entries)}")
         return success_list
-    for idx, entry in enumerate(entries):
-        entry = EntryItem.from_model(entry).to_dict()
+    for i, entry in enumerate(entries):
+        entry = EntryItem.from_model(entry)
         if etype == "file" or etype == "note":
             ext = get_ext(entry.path)
             file_path = filecache.get_tmpfile(ext)
@@ -130,7 +134,7 @@ def real_refresh(user_id, addr, etype, is_folder, progress_callback=None, task_i
         if ret:
             success_list.append(entry.addr)
         if progress_callback:
-            progress_callback((idx + 1) * 100 / len(entries), task_id)
+            progress_callback((i + 1) * 100 / len(entries), task_id)
 
     return success_list
 

@@ -449,4 +449,5 @@ export default {
 .task-counter:hover {
     transform: scale(1.1);
 }
+</style>
 
