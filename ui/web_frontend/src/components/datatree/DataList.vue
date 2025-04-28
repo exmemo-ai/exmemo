@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
         <el-container style="flex: 0; width: 100%;">
-            <app-navbar :title="t('dataManagement')" :info="'DataManager2'" />
+            <app-navbar ref="navbar" :title="t('dataManagement')" :info="'DataManager2'"/>
         </el-container>
         <el-container style="flex: 1; width: 100%; overflow: hidden;">
             <el-aside class="file-tree-aside" :class="{ 'collapse-aside': isCollapse }" :style="{ width: computedAsideWidth }">
@@ -97,8 +97,10 @@
             :tree-ref="treeRef"
             @update:visible="contextMenuVisible = $event"
             @refresh-tree="refreshTree"
+            @refresh-item="refreshItem"
             @close-menu="closeContextMenu"
             @new-file="handleNewFileData"
+            @task-started="startTask"
         />
     </div>
 </template>
@@ -113,7 +115,7 @@ import AddDialog from '@/components/datatable/AddDialog.vue'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import ContextMenu from './ContextMenu.vue'
 import { mapTreeData, updateNodeChildren, findNode } from './treeUtils'
-import { loadTreeData, getFeatureOptions, renameData } from './apiUtils'
+import { loadTreeData, getFeatureOptions, renameData, refreshData } from './apiUtils'
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 import { MdPreview } from 'md-editor-v3'
 import { downloadFile } from '../datatable/dataUtils'
@@ -134,6 +136,7 @@ const contextMenuStyle = ref({
 });
 const rightClickNode = ref(null);
 const addDialog = ref(null);
+const navbar = ref(null);
 
 const defaultProps = {
     children: 'children',
@@ -251,6 +254,24 @@ const refreshTree = async () => {
         const expandedNodes = getExpandedNodes();
         await initializeTree();
         await expandNodes(expandedNodes);
+    }
+};
+
+const refreshItem = async (addr, is_folder) => {
+    if (!addr) return;
+    const response_data = await refreshData(addr, etype_value.value, is_folder);
+    if (response_data.status !== 'success') {
+        ElMessage.error(response_data.info || t('tree.refreshFailed'));
+        return;
+    } else {
+        if ("task_id" in response_data) {
+            if (navbar.value) {
+                navbar.value.startTaskCheck(response_data.task_id);
+            }
+            ElMessage.success(t('task.taskStarted'));
+        } else {
+            ElMessage.success(t('tree.refreshSuccess'));
+        }
     }
 };
 
@@ -409,14 +430,23 @@ const closeContextMenu = () => {
     document.removeEventListener('click', closeContextMenu);
 };
 
-const handleNewFileData = (data) => {
-    addDialog.value.openDialog(async () => {
+const handleNewFileSuccess = async (response_data) => {
+    if (response_data.task_id) {
+        if (navbar.value) {
+            navbar.value.startTaskCheck(response_data.task_id);
+        }
+        ElMessage.success(t('task.taskStarted'));
+    } else {
         await refreshTree();
         const exNode = await findNode(treeRef, rightClickNode.value.data.id);
         if (exNode) {
             exNode.expand();
         }
-    }, data);
+    }
+};
+
+const handleNewFileData = (data) => {
+    addDialog.value.openDialog(handleNewFileSuccess, data);
 };
 
 const download = () => {
@@ -445,6 +475,14 @@ const computedAsideWidth = computed(() => {
 
 const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
+};
+
+const startTask = () => {
+    console.log('startTask');
+    if (navbar.value) {
+        console.log('navbar', navbar.value);
+        navbar.value.startTaskCheck();
+    }
 };
 
 onMounted(async () => {

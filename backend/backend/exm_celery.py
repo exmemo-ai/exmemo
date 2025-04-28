@@ -1,13 +1,14 @@
 import os
 from celery import Celery
+from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
 app = Celery('exmemo')
 
 app.conf.update(
-    broker_url='redis://192.168.10.166:6379/0',
-    result_backend='redis://192.168.10.166:6379/1',
+    broker_url=f'redis://{settings.BACKEND_ADDR_OUTER}:6379/0',
+    result_backend=f'redis://{settings.BACKEND_ADDR_OUTER}:6379/1',
     task_serializer='json',
     accept_content=['json'],
     timezone='Asia/Shanghai',

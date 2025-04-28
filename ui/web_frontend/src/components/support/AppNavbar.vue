@@ -6,6 +6,9 @@
                 <h3 class="title">{{ appName }}</h3>
             </div>
             <div class="user-controls">
+                <div v-if="taskCount > 0" class="task-counter" @click="gotoTasks">
+                    {{ taskCount }}
+                </div>
                 <el-dropdown v-if="isLogin" trigger="click">
                     <div class="user-dropdown-trigger">
                         <el-avatar :size="32" :src="userAvatar">
@@ -23,6 +26,12 @@
                                     <Setting />
                                 </el-icon>
                                 <span>{{ $t('userSetting') }}</span>
+                            </el-dropdown-item>
+                            <el-dropdown-item @click="gotoTasks">
+                                <el-icon>
+                                    <Loading />
+                                </el-icon>
+                                <span>{{ $t('task.taskManager') }}</span>
                             </el-dropdown-item>
                             <el-dropdown-item @click="openGitHub">
                                 <el-icon>
@@ -51,7 +60,6 @@
                 <el-tab-pane name="DataTable" :label="$t('listView')"></el-tab-pane>
                 <el-tab-pane name="ReadingTools" :label="$t('learnTools')"></el-tab-pane>
                 <el-tab-pane name="BMManager" :label="$t('bookmarkManager')"></el-tab-pane>
-                <!--<el-tab-pane name="SupportTools" :label="$t('assistantTools')"></el-tab-pane>-->
             </el-tabs>
             <el-icon class="clipboard-icon" @click="openClipboard" size="small" :title="$t('paste.openClipboard')">
                 <ClipboardIcon />
@@ -85,8 +93,9 @@
 import logo from '@/assets/images/logo.png'
 import axios from 'axios';
 import { setDefaultAuthHeader,getURL } from './conn';
-import { Setting, ArrowDown, SwitchButton, Link } from '@element-plus/icons-vue'
+import { Setting, ArrowDown, SwitchButton, Link, Loading } from '@element-plus/icons-vue'
 import ClipboardIcon from '@/components/icons/ClipboardIcon.vue'
+import { taskService } from '@/components/tasks/taskUtils'
 
 export default {
     name: 'AppNavbar',
@@ -95,7 +104,8 @@ export default {
         ArrowDown,
         SwitchButton,
         ClipboardIcon,
-        Link
+        Link,
+        Loading
     },
     props: {
         title: {
@@ -117,6 +127,9 @@ export default {
             userAvatar: '',
             dialogVisible: false,
             pastedContent: '',
+            checkTaskTimer: null,
+            taskCount: 0,
+            checkInterval: 2000,
         };
     },
     methods: {
@@ -252,31 +265,66 @@ export default {
                 case 'BMManager':
                     this.gotoBMManager();
                     break;
+                case 'TaskManager':
+                    this.gotoTasks();
+                    break;
             }
         },
         gotoDataTree() {
             this.$router.push('/list');
         },
+        gotoTasks() {
+            this.$router.push('/user_tasks');
+        },
         openGitHub() {
             window.open('https://github.com/exmemo-ai/exmemo', '_blank');
         },
-    },
-    watch: {
-        info: {
-            immediate: true,
-            handler(newInfo) {
-                this.activeTab = newInfo;
+        async checkTasks(initial = false) {
+            try {
+                const tasks = await taskService.getRunningTasks()
+                const runningTasks = tasks.filter(task => ['PENDING', 'STARTED'].includes(task.status))
+                this.taskCount = runningTasks.length
+                
+                if (this.taskCount == 0 && this.checkTaskTimer) {
+                    clearInterval(this.checkTaskTimer)
+                    this.checkTaskTimer = null
+                    this.checkInterval = 2000
+                    if (!initial) {
+                        this.$message({
+                            message: this.$t('task.taskCompleted'),
+                            type: 'success',
+                        })
+                    }
+                } else {
+                    clearInterval(this.checkTaskTimer)
+                    this.checkInterval = Math.min(this.checkInterval * 2, 60000)
+                    this.checkTaskTimer = setInterval(() => this.checkTasks(), this.checkInterval)
+                }
+            } catch (error) {
+                console.error('Error checking tasks:', error)
             }
-        }
+        },
+
+        startTaskCheck() {
+            console.log('Starting task check...');
+            if (!this.checkTaskTimer) {
+                this.checkInterval = 2000;
+                this.checkTaskTimer = setInterval(() => this.checkTasks(), this.checkInterval);
+            }
+        },
     },
     mounted() {
         this.isLogin = this.checkLogin(this);
         if (this.isLogin) {
             this.login_user = localStorage.getItem('username');
         }
-        this.activeTab = this.info; // 初始化选中状态
+        this.activeTab = this.info;
+        this.checkTasks(true);
     },
     beforeDestroy() {
+        if (this.checkTaskTimer) {
+            clearInterval(this.checkTaskTimer);
+        }
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
@@ -375,4 +423,30 @@ export default {
 .clipboard-icon:hover {
     color: var(--el-color-primary);
 }
-</style>
+
+.title-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #f56c6c;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: all 0.3s;
+}
+
+.task-counter:hover {
+    transform: scale(1.1);
+}
+

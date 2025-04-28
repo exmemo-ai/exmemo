@@ -13,6 +13,10 @@
                 <el-icon><Upload /></el-icon>
                 <span>{{ t('tree.importNote') }}</span>
             </el-menu-item>
+            <el-menu-item v-if="showRefresh" @click="handleRefresh">
+                <el-icon><RefreshRight /></el-icon>
+                <span>{{ t('tree.refresh') }}</span>
+            </el-menu-item>
             <el-divider v-if="showNewFolder || showNewFile" />
             <el-menu-item v-if="showRename" @click="handleRename">
                 <el-icon><Edit /></el-icon>
@@ -28,7 +32,7 @@
 </template>
 
 <script setup>
-import { Upload, Delete, FolderAdd, DocumentAdd, Edit } from '@element-plus/icons-vue'
+import { Upload, Delete, FolderAdd, DocumentAdd, Edit, RefreshRight } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, computed, ref } from 'vue'
@@ -51,7 +55,8 @@ const emit = defineEmits([
     'update:visible',
     'refresh-tree',
     'close-menu',
-    'new-file'
+    'new-file',
+    'task-started'
 ])
 
 const showNewFolder = computed(() => ['note', 'file'].includes(props.etype_value))
@@ -59,6 +64,7 @@ const showNewFile = computed(() => ['note', 'file'].includes(props.etype_value))
 const showRename = computed(() => ['note', 'file', 'chat', 'record'].includes(props.etype_value))
 const showDelete = computed(() => true)
 const showImport = computed(() => props.etype_value === 'file')
+const showRefresh = computed(() => ['web', 'file', 'note'].includes(props.etype_value))
 
 const importDialogRef = ref(null)
 
@@ -297,13 +303,26 @@ const handleImport = async () => {
             if (target.length > 0 && !target.endsWith('/')) {
                 target += '/'
             }
-            await importNotes(
+            const response_data = await importNotes(
                 props.rightClickNode.data.addr, 
                 target,
+                props.rightClickNode.data.is_folder,
+                props.rightClickNode.data.is_folder,
                 result.overwrite
             )
-            emit('refresh-tree')
-            ElMessage.success(t('tree.importSuccess'))
+            if (response_data.task_id) {
+                emit('task-started');
+                ElMessage({
+                    message: 'Importing data, please check the task status.', // later add to message.json
+                    type: 'success',
+                    duration: 5000
+                });
+            } else if (response_data.status === 'success') {
+                ElMessage.success(t('tree.importSuccess'))
+                //emit('refresh-tree')
+            } else {
+                ElMessage.error(t('tree.importFailed'))
+            }
         }
     } catch (error) {
         if (error !== 'cancel') {
@@ -315,12 +334,19 @@ const handleImport = async () => {
     }
 };
 
+const handleRefresh = async () => {
+    if (!props.rightClickNode) return;
+    emit('refresh-item', props.rightClickNode.data.addr, props.rightClickNode.data.is_folder);
+    emit('close-menu');
+};
+
 defineExpose({
     handleNewFolder,
     handleNewFile,
     handleRename,
     handleDelete,
-    handleImport
+    handleImport,
+    handleRefresh
 });
 </script>
 
