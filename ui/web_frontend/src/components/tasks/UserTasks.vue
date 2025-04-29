@@ -68,16 +68,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Delete, VideoPause, Refresh } from '@element-plus/icons-vue'
 import { taskService } from './taskUtils'
+import { useI18n } from 'vue-i18n'
 
 const tasks = ref({
   items: [],
   total: 0
 })
 const loading = ref(false)
+const { t } = useI18n()
 
 const getStatusType = (status) => {
   const types = {

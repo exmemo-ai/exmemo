@@ -281,19 +281,22 @@ export default {
         },
         async checkTasks(initial = false) {
             try {
-                const tasks = await taskService.getRunningTasks()
+                const response_data = await taskService.getRunningTasks()
+                const tasks = response_data.results
                 const runningTasks = tasks.filter(task => ['PENDING', 'STARTED'].includes(task.status))
                 this.taskCount = runningTasks.length
                 
-                if (this.taskCount == 0 && this.checkTaskTimer) {
-                    clearInterval(this.checkTaskTimer)
-                    this.checkTaskTimer = null
-                    this.checkInterval = 2000
-                    if (!initial) {
-                        this.$message({
-                            message: this.$t('task.taskCompleted'),
-                            type: 'success',
-                        })
+                if (this.taskCount == 0) {
+                    if (this.checkTaskTimer) {
+                        clearInterval(this.checkTaskTimer)
+                        this.checkTaskTimer = null
+                        this.checkInterval = 2000
+                        if (!initial) {
+                            this.$message({
+                                message: this.$t('task.taskCompleted'),
+                                type: 'success',
+                            })
+                        }
                     }
                 } else {
                     clearInterval(this.checkTaskTimer)

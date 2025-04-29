@@ -93,14 +93,15 @@
             :menu-style="contextMenuStyle"
             :right-click-node="rightClickNode"
             :etype_value="etype_value"
-            :tree-data="treeData"
+            v-model:tree-data="treeData"
             :tree-ref="treeRef"
             @update:visible="contextMenuVisible = $event"
-            @refresh-tree="refreshTree"
-            @refresh-item="refreshItem"
-            @close-menu="closeContextMenu"
+            @refresh="refreshTree"
+            @item-refresh="refreshItem"
+            @update:tree-data="treeData = $event"
+            @close="closeContextMenu"
             @new-file="handleNewFileData"
-            @task-started="startTask"
+            @task-start="startTask"
         />
     </div>
 </template>
@@ -265,10 +266,7 @@ const refreshItem = async (addr, is_folder) => {
         return;
     } else {
         if ("task_id" in response_data) {
-            if (navbar.value) {
-                navbar.value.startTaskCheck(response_data.task_id);
-            }
-            ElMessage.success(t('task.taskStarted'));
+            startTask();
         } else {
             ElMessage.success(t('tree.refreshSuccess'));
         }
@@ -377,11 +375,15 @@ const handleDrop = async (draggingNode, dropNode, type) => {
         }
 
         const response_data = await renameData(sourceAddr, targetAddr, etype_value.value, isFolder);
-        if (response_data.status !== 'success') {
-            ElMessage.error(response_data.info || t('tree.moveFailed'));
-            return;
+        if (response_data.task_id) {
+            startTask();
+        } else {
+            if (response_data.status !== 'success') {
+                ElMessage.error(response_data.info || t('tree.moveFailed'));
+            } else {
+                await refreshTree();
+            }
         }
-        await refreshTree();
     } catch (error) {
         console.error('Move error:', error);
         parseBackendError(error);
@@ -394,7 +396,7 @@ const handleContextMenu = (event, data, node) => {
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     
-    const estimatedMenuHeight = 200;
+    const estimatedMenuHeight = 220;
     const estimatedMenuWidth = 150;
     
     let top = event.clientY;
@@ -432,10 +434,7 @@ const closeContextMenu = () => {
 
 const handleNewFileSuccess = async (response_data) => {
     if (response_data.task_id) {
-        if (navbar.value) {
-            navbar.value.startTaskCheck(response_data.task_id);
-        }
-        ElMessage.success(t('task.taskStarted'));
+        startTask();
     } else {
         await refreshTree();
         const exNode = await findNode(treeRef, rightClickNode.value.data.id);
@@ -479,6 +478,11 @@ const toggleCollapse = () => {
 
 const startTask = () => {
     console.log('startTask');
+    ElMessage({
+                    message: t("task.taskStarted"),
+                    type: 'success',
+                    duration: 5000
+                });
     if (navbar.value) {
         console.log('navbar', navbar.value);
         navbar.value.startTaskCheck();

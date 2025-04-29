@@ -155,3 +155,67 @@ def rename_file(uid, oldaddr, newaddr, dic, debug=False):
                                   updated_time = timezone.now().astimezone(pytz.UTC))
         return True
     return False
+
+def real_delete(user_id, path, etype, is_folder, progress_callback=None, task_id=None):
+    success_list = []
+    try:
+        if not is_folder:
+            entries = StoreEntry.objects.filter(user_id=user_id, addr=path, etype=etype, block_id=0)
+            if not entries:
+                normalized_path = path.replace('\\', '/').replace('//', '/')
+                entries = StoreEntry.objects.filter(user_id=user_id, addr=normalized_path, etype=etype, block_id=0)
+        else:
+            dirname = path if path.endswith('/') else path + '/'
+            entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
+            
+        if entries.count() == 0:
+            logger.warning(f"real_delete {user_id} {path} etype:{etype}, is_folder:{is_folder}")
+            return success_list
+
+        for i, entry in enumerate(entries):
+            delete_entry(user_id, [{"addr": entry.addr, "etype": etype}])
+            success_list.append(entry.addr)
+            if progress_callback:
+                progress_callback((i + 1) * 100 / len(entries), task_id)
+                
+        return success_list
+    except Exception as e:
+        logger.error(f"Error during delete: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def real_move(user_id, source, target, etype, is_folder, progress_callback=None, task_id=None):
+    success_list = []
+    try:
+        if not is_folder:
+            entry = StoreEntry.objects.filter(user_id=user_id, addr=source, etype=etype, block_id=0).first()
+            if not entry:
+                normalized_source = source.replace('\\', '/').replace('//', '/')
+                entry = StoreEntry.objects.filter(user_id=user_id, addr=normalized_source, etype=etype, block_id=0).first()
+            if entry:
+                dic = entry.__dict__.copy()
+                ret = rename_file(user_id, entry.addr, target, dic)
+                if ret:
+                    success_list.append(target)
+        else:
+            dirname = source if source.endswith('/') else source + '/'
+            entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
+            
+            total = len(entries)
+            for i, entry in enumerate(entries):
+                rel_path = entry.addr[len(dirname):]
+                new_dst = os.path.join(target, rel_path)
+                dic = entry.__dict__.copy()
+                ret = rename_file(user_id, entry.addr, new_dst, dic)
+                if ret:
+                    success_list.append(new_dst)
+                if progress_callback:
+                    progress_callback((i + 1) * 100 / total, task_id)
+
+        return success_list
+    except Exception as e:
+        logger.error(f"Error during move: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None

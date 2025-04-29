@@ -53,10 +53,12 @@ const props = defineProps({
 
 const emit = defineEmits([
     'update:visible',
-    'refresh-tree',
-    'close-menu',
+    'refresh',
+    'item-refresh',
+    'close',
     'new-file',
-    'task-started'
+    'task-start',
+    'update:tree-data',
 ])
 
 const showNewFolder = computed(() => ['note', 'file'].includes(props.etype_value))
@@ -112,15 +114,16 @@ const handleNewFolder = async () => {
             children: []
         };
         const newFolder = mapTreeItem(folderData);
-
+        
+        // 创建新的树数据副本
+        const newTreeData = JSON.parse(JSON.stringify(props.treeData || []));
+        
         if (parentId === '') {
-            if (!props.treeData) {
-                props.treeData = [];
-            }
-            props.treeData.push(newFolder);
+            newTreeData.push(newFolder);
+            emit('update:tree-data', newTreeData);
         } else {
-            if (findAndAddNode(props.treeData, parentId, newFolder)) {
-                props.treeData = [...props.treeData];
+            if (findAndAddNode(newTreeData, parentId, newFolder)) {
+                emit('update:tree-data', newTreeData);
                 await nextTick();
                 const exNode = await findNode(props.treeRef, parentId);
                 if (exNode) {
@@ -135,7 +138,7 @@ const handleNewFolder = async () => {
             ElMessage.error(t('tree.createFolderFailed'));
         }
     } finally {
-        emit('close-menu');
+        emit('close');
     }
 };
 
@@ -167,7 +170,7 @@ const handleNewFile = async () => {
         data['path'] += '/';
     }
     emit('new-file', data);
-    emit('close-menu');
+    emit('close');
 };
 
 const handleRename = async () => {
@@ -195,15 +198,23 @@ const handleRename = async () => {
             ElMessage.error(t('tree.nameAlreadyExists'));
             return;
         }
-        await renameData(props.rightClickNode.data.addr, newPath, props.etype_value, props.rightClickNode.data.is_folder);
-        emit('refresh-tree');
+        const response_data = await renameData(props.rightClickNode.data.addr, newPath, props.etype_value, props.rightClickNode.data.is_folder);
+        if (response_data.task_id) {
+            emit('task-start');
+        } else {
+            if (response_data.status === 'success') {
+                emit('refresh');
+            } else {
+                ElMessage.error(t('renameFailed'));
+            }
+        }
     } catch (error) {
         if (error !== 'cancel') {
             console.error('Rename error:', error);
             ElMessage.error(t('renameFailed'));
         }
     } finally {
-        emit('close-menu');
+        emit('close');
     }
 };
 
@@ -227,8 +238,14 @@ const handleDelete = async () => {
                         type: 'warning'
                     }
                 );
-                await deleteDir(path, props.etype_value);
-                ElMessage.success(t('tree.deleteFolderSuccess'));
+                const response_data = await deleteDir(path, props.etype_value);
+                if (response_data.task_id) {
+                    emit('task-start');
+                } else if (response_data.status === 'success') {
+                    ElMessage.success(t('tree.deleteFolderSuccess'));
+                } else {
+                    ElMessage.error(t('deleteFail'))
+                }
             }
         } else {
             await ElMessageBox.confirm(
@@ -243,14 +260,14 @@ const handleDelete = async () => {
             await deleteData(props.rightClickNode.data.id);
             ElMessage.success(t('deleteSuccess'));
         }
-        emit('refresh-tree');
+        emit('refresh');
     } catch (error) {
         if (error !== 'cancel') {
             console.error('Delete error:', error);
             ElMessage.error(t('deleteFail'));
         }
     } finally {
-        emit('close-menu');
+        emit('close');
     }
 };
 
@@ -307,19 +324,13 @@ const handleImport = async () => {
                 props.rightClickNode.data.addr, 
                 target,
                 props.rightClickNode.data.is_folder,
-                props.rightClickNode.data.is_folder,
                 result.overwrite
             )
             if (response_data.task_id) {
-                emit('task-started');
-                ElMessage({
-                    message: 'Importing data, please check the task status.', // later add to message.json
-                    type: 'success',
-                    duration: 5000
-                });
+                emit('task-start');
             } else if (response_data.status === 'success') {
                 ElMessage.success(t('tree.importSuccess'))
-                //emit('refresh-tree')
+                //emit('refresh')
             } else {
                 ElMessage.error(t('tree.importFailed'))
             }
@@ -330,14 +341,14 @@ const handleImport = async () => {
             ElMessage.error(t('tree.importFailed'))
         }
     } finally {
-        emit('close-menu')
+        emit('close')
     }
 };
 
 const handleRefresh = async () => {
     if (!props.rightClickNode) return;
-    emit('refresh-item', props.rightClickNode.data.id, props.rightClickNode.data.is_folder);
-    emit('close-menu');
+    emit('item-refresh', props.rightClickNode.data.id, props.rightClickNode.data.is_folder);
+    emit('close');
 };
 
 defineExpose({

@@ -14,11 +14,11 @@ from backend.common.parser.converter import is_support
 from backend.settings import USE_CELERY
 
 from .feature import EntryFeatureTool
-from .entry import delete_entry, get_type_options
+from .entry import get_type_options
 from .entry_item import EntryItem
 from .models import StoreEntry
-from .tasks import import_task, refresh_task
-from .file_tools import real_import, real_refresh, rename_file
+from .tasks import import_task, refresh_task, delete_task, move_task
+from .file_tools import real_import, real_refresh, real_delete, real_move
 
 MAX_LEVEL = 2
 
@@ -212,6 +212,7 @@ class EntryAPIView(APIView):
             source = request.GET.get("source", request.POST.get("source", None))
             target = request.GET.get("target", request.POST.get("target", None))
             is_folder = request.GET.get("is_folder", request.POST.get("is_folder", "false")).lower() == "true"
+            is_async = request.GET.get("is_async", request.POST.get("is_async", "false")).lower() == "true"
             etype = request.GET.get("etype", request.POST.get("etype", None))
 
             if not source or not target:
@@ -225,34 +226,16 @@ class EntryAPIView(APIView):
 
             logger.debug(f'Move: {source} -> {target} (is_folder: {is_folder})')
 
-            if not is_folder:
-                entry = StoreEntry.objects.filter(user_id=user_id, addr=source, etype=etype, block_id=0).first()
-                if not entry:
-                    normalized_source = source.replace('\\', '/').replace('//', '/')
-                    entry = StoreEntry.objects.filter(user_id=user_id, addr=normalized_source, etype=etype, block_id=0).first()
-                if entry:
-                    dic = entry.__dict__.copy()
-                    ret = rename_file(user_id, entry.addr, target, dic)
-                    if ret:
-                        return do_result(True, "Move success")
-                else:
-                    logger.warning(f"Source file not found: {source}")
-                    return do_result(False, "Source file not found")
+            if is_folder and USE_CELERY and is_async:
+                task_id = move_task.delay(user_id, source, target, etype, is_folder)
+                return do_result(True, {"task_id": str(task_id)})
             else:
-                dirname = source if source.endswith('/') else source + '/'
-                entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
-                
-                logger.debug(f"Move entries: {len(entries)} {dirname}")
-                for entry in entries:
-                    rel_path = entry.addr[len(dirname):]
-                    new_dst = os.path.join(target, rel_path)
-                    dic = entry.__dict__.copy()
-                    ret = rename_file(user_id, entry.addr, new_dst, dic, False);
-                    if not ret:
-                        return do_result(False, "Move failed")
-                return do_result(True, "Move success")
+                success_list = real_move(user_id, source, target, etype, is_folder)
+                if len(success_list) > 0:
+                    return do_result(True, _("moveSuccess"))
+                else:
+                    return do_result(False, _("moveFailed"))
 
-            return do_result(False, "Move failed")
         except Exception as e:
             logger.error(f"Error moving file/folder: {str(e)}")
             import traceback
@@ -347,6 +330,7 @@ class EntryAPIView(APIView):
             path = request.GET.get("path", request.POST.get("path", None))
             etype = request.GET.get("etype", request.POST.get("etype", None))
             is_folder = request.GET.get("is_folder", request.POST.get("is_folder", "false")).lower() == "true"
+            is_async = request.GET.get("is_async", request.POST.get("is_async", "false")).lower() == "true"
 
             if not path:
                 return do_result(False, "Source is empty")
@@ -355,32 +339,22 @@ class EntryAPIView(APIView):
 
             logger.debug(f'Delete: {path} (is_folder: {is_folder}) etype: {etype}')
 
-            if not is_folder:
-                entry = StoreEntry.objects.filter(user_id=user_id, addr=path, etype=etype, block_id=0).first()
-                if not entry:
-                    normalized_path = path.replace('\\', '/').replace('//', '/')
-                    entry = StoreEntry.objects.filter(user_id=user_id, addr=normalized_path, etype=etype, block_id=0).first()
-                if entry:
-                    delete_entry(user_id, [{"addr": entry.addr, "etype": etype}])
-                    return do_result(True, "Delete success")
-                else:
-                    logger.warning(f"Source file not found: {path}")
-                    return do_result(False, "Source file not found")
+            if is_folder and USE_CELERY and is_async:
+                task_id = delete_task.delay(user_id, path, etype, is_folder)
+                return do_result(True, {"task_id": str(task_id)})
             else:
-                dirname = path if path.endswith('/') else path + '/'
-                entries = StoreEntry.objects.filter(user_id=user_id, etype=etype, addr__startswith=dirname, block_id=0)
-                
-                logger.debug(f"Delete entries: {len(entries)} {dirname}")
-                for entry in entries:
-                    delete_entry(user_id, [{"addr": entry.addr, "etype": etype}])
-                
-                return do_result(True, "Delete success")
+                success_list = real_delete(user_id, path, etype, is_folder)
+                if len(success_list) > 0:
+                    return do_result(True, _("deleteSuccess"))
+                else:
+                    return do_result(False, _("deleteFailed"))
+
         except Exception as e:
             logger.error(f"Error deleting file/folder: {str(e)}")
             import traceback
             traceback.print_exc()
             return Response(
-                {"error": "Failed to delete file/folder"}, 
+                {"error": "Failed to delete file/folder"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

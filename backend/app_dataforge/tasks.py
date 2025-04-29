@@ -1,7 +1,7 @@
 from celery import shared_task
 from loguru import logger
 from user_tasks.models import UserTask
-from .file_tools import real_import, update_files, real_refresh
+from .file_tools import real_import, update_files, real_refresh, real_delete, real_move
 
 def update_progress(progress, task_id):
     task = UserTask.objects.get(task_id=task_id)
@@ -106,6 +106,76 @@ def refresh_task(self, user_id, addr, etype, is_folder):
             task.status = 'FAILURE'
             task.result = {'error': 'Refresh failed'}
             task.save()            
+        return success_list
+    except Exception as e:
+        if user_id:
+            task = UserTask.objects.get(task_id=self.request.id)
+            task.status = 'FAILURE'
+            task.result = {'error': str(e)}
+            task.save()
+        raise
+
+@shared_task(bind=True)
+def delete_task(self, user_id, path, etype, is_folder):
+    logger.info(f"Task {self.request.id} started with args: {user_id}, {path}, {etype}, {is_folder}")
+    if user_id:
+        UserTask.objects.create(
+            user_id=user_id,
+            task_id=self.request.id,
+            status='PENDING',
+            task_name='delete_task',
+        )
+    try:
+        success_list = real_delete(
+            user_id, path, etype, is_folder,
+            progress_callback=update_progress,
+            task_id = self.request.id,
+        )
+        if success_list is not None:
+            task = UserTask.objects.get(task_id=self.request.id)
+            task.status = 'SUCCESS'
+            task.result = {'success_list': success_list}
+            task.save()
+        else:
+            task = UserTask.objects.get(task_id=self.request.id)
+            task.status = 'FAILURE'
+            task.result = {'error': 'Delete failed'}
+            task.save()
+        return success_list
+    except Exception as e:
+        if user_id:
+            task = UserTask.objects.get(task_id=self.request.id)
+            task.status = 'FAILURE'
+            task.result = {'error': str(e)}
+            task.save()
+        raise
+
+@shared_task(bind=True)
+def move_task(self, user_id, source, target, etype, is_folder):
+    logger.info(f"Task {self.request.id} started with args: {user_id}, {source}, {target}, {etype}, {is_folder}")
+    if user_id:
+        UserTask.objects.create(
+            user_id=user_id,
+            task_id=self.request.id,
+            status='PENDING',
+            task_name='move_task',
+        )
+    try:
+        success_list = real_move(
+            user_id, source, target, etype, is_folder,
+            progress_callback=update_progress,
+            task_id = self.request.id,
+        )
+        if success_list is not None:
+            task = UserTask.objects.get(task_id=self.request.id)
+            task.status = 'SUCCESS'
+            task.result = {'success_list': success_list}
+            task.save()
+        else:
+            task = UserTask.objects.get(task_id=self.request.id)
+            task.status = 'FAILURE'
+            task.result = {'error': 'Move failed'}
+            task.save()
         return success_list
     except Exception as e:
         if user_id:

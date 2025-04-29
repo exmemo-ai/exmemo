@@ -58,7 +58,7 @@ export const deleteData = async (idx) => {
 export const deleteDir = async (path, etype) => {
     try {
         const response = await axios.delete(getURL() + 'api/entry/tool/', {
-            params: { rtype: 'delete', path: path, etype: etype, is_folder: true }
+            params: { rtype: 'delete', path: path, etype: etype, is_folder: true, is_async: true }
         });
         return response.data;
     } catch (error) {
@@ -78,6 +78,7 @@ export const renameData = async (sourceId, targetId, etype, is_folder) => {
                 target: targetId,
                 is_folder: is_folder,
                 etype: etype,
+                is_async: true
             }
         });
         return response.data;
@@ -96,7 +97,7 @@ export const importNotes = async (sourcePath, targetPath, is_folder, is_async, o
                 source: sourcePath,
                 target: targetPath,
                 is_folder: is_folder,
-                is_async: is_async,
+                is_async: true,
                 overwrite: overwrite, 
             }
         });
