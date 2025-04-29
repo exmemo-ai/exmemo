@@ -187,7 +187,7 @@ const handleMouseUp = () => {
 };
 
 const loadNode = async (node, resolve) => {
-    console.log('loadNode', etype_value.value)
+    console.log('loadNode', etype_value.value, node.data?.title)
     /*
     if (node.level === 0) {
         const data = await loadTreeData();

@@ -9,6 +9,7 @@ export const mapTreeItem = (item) => ({
 });
 
 export const mapTreeData = (data) => {
+    //console.log('mapTreeData', data);
     if (!Array.isArray(data)) return [];
     
     const folders = data.filter(item => item.is_folder);

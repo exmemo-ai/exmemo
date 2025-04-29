@@ -179,7 +179,8 @@ class EntryAPIView(APIView):
                 if level != -1 and len(arr) > level:
                     current_path = ""
                     current_level = root
-                    self._build_tree_node(path_dict, current_level, current_path, arr[:level], path=path, is_last_level=True)
+                    self._build_tree_node(path_dict, current_level, current_path, arr[:len(arr)-1],
+                                          path=path, is_last_level=True)
                     continue
 
                 current_path = ""
