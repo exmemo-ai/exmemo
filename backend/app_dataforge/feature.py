@@ -153,7 +153,12 @@ class EntryFeatureTool:
             handler = handlers.get(entry.etype)
             if handler:
                 handler(entry, content, use_llm, force, debug)
-                
+
+            entry.status = entry.status or DEFAULT_STATUS
+            entry.atype = entry.atype or "subjective"
+            entry.ctype = entry.ctype or DEFAULT_CATEGORY
+            entry.title = entry.title or content
+
             self._process_title_length(entry)
             return True, entry
             
