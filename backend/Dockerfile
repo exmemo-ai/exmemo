@@ -28,4 +28,4 @@ COPY . /opt/exmemo/backend
 
 WORKDIR /opt/exmemo/backend
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8005"]
+CMD ["shell/run.sh"]
