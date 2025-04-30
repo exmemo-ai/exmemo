@@ -2,6 +2,7 @@ import pytz
 import traceback
 from typing import Optional
 from loguru import logger
+import numpy as np
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -53,7 +54,8 @@ class EntryStorage:
             if abstract:
                 need_new_embedding = (
                     db_entry.raw != abstract or
-                    not db_entry.embeddings or
+                    db_entry.embeddings is None or
+                    len(db_entry.embeddings) == 0 or
                     db_entry.emb_model != EmbeddingTools.get_model_name()
                 )
                 
@@ -144,8 +146,8 @@ class EntryStorage:
                 embeddings.append(None)
                 if has_existing:
                     old_block = existing_blocks[i]
-                    if (old_block.raw == block_text and 
-                        old_block.embeddings and 
+                    if (safe_equals(old_block.raw, block_text) and 
+                        old_block.embeddings is not None and 
                         old_block.emb_model == EmbeddingTools.get_model_name()):
                         embeddings[i] = old_block.embeddings
                         continue
@@ -168,7 +170,7 @@ class EntryStorage:
                 block_id=i+1,
                 raw=block_text,
                 embeddings=embedding,
-                emb_model=EmbeddingTools.get_model_name() if embedding else None,
+                emb_model=EmbeddingTools.get_model_name() if embedding is not None else None,
                 idx=None,
                 meta=None
             )
@@ -218,3 +220,26 @@ class EntryStorage:
                     entry.save()
                 else:
                     entry.delete()
+
+def safe_equals(a, b) -> bool:
+    try:
+        def normalize(value):
+            if value is None:
+                return ""
+            if isinstance(value, np.ndarray):
+                return str(value.tolist()).strip()
+            if hasattr(value, 'tolist'):
+                return str(value.tolist()).strip()
+            if isinstance(value, (list, tuple)):
+                return str(list(value)).strip()
+            return str(value).strip()
+            
+        if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
+            return np.array_equal(a, b)
+        if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+            return a == b
+            
+        return normalize(a) == normalize(b)
+    except Exception as e:
+        logger.error(f"Error comparing values: {str(e)}")
+        return False

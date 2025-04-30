@@ -1,10 +1,11 @@
+import uuid
+import pytz
+import json
 from loguru import logger
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Dict, Any
-import uuid
 from django.utils import timezone
-import pytz
 from .models import StoreEntry
 from backend.common.utils.text_tools import convert_dic_to_json
 
@@ -38,16 +39,29 @@ class EntryItem:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'EntryItem':
         filtered_data = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
+        if 'meta' in filtered_data and isinstance(filtered_data['meta'], str):
+            try:
+                filtered_data['meta'] = json.loads(filtered_data['meta'])
+            except Exception as e:
+                logger.error(f"Failed to parse meta string to dict: {e}")
+                filtered_data['meta'] = {}
         return cls(**filtered_data)
     
     @classmethod
     def from_model(cls, model: 'StoreEntry') -> 'EntryItem':
-        return cls(**{
+        data = {
             k: getattr(model, k) 
             for k in cls.__dataclass_fields__ 
             if hasattr(model, k)
-        })
-    
+        }
+        if 'meta' in data and isinstance(data['meta'], str):
+            try:
+                data['meta'] = json.loads(data['meta'])
+            except Exception as e:
+                logger.error(f"Failed to parse meta string to dict: {e}")
+                data['meta'] = {}
+        return cls(**data)
+        
     def to_dict(self) -> Dict[str, Any]:
         dic = {k: v for k, v in self.__dict__.items() if v is not None}
         #logger.error(f"dic {dic}")
@@ -78,14 +92,6 @@ class EntryItem:
                     v = convert_dic_to_json(v)
                 filtered_data[k] = v
         return filtered_data
-
-    @classmethod
-    def from_model(cls, model: 'StoreEntry') -> 'EntryItem':
-        return cls(**{
-            k: getattr(model, k) 
-            for k in cls.__dataclass_fields__ 
-            if hasattr(model, k)
-        })
         
     def clone(self, **kwargs) -> 'EntryItem':
         data = self.to_dict()
