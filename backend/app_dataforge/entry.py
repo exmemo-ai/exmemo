@@ -130,9 +130,9 @@ class EntryService:
                 meta_dic, content = get_file_content_by_path(path, user)
             elif converter.is_markdown(path):
                 parser = MarkdownParser(path)
-                meta_dic = convert_dic_to_json(parser.fm)
+                meta_dic = parser.fm
 
-        if meta_dic is not None:
+        if meta_dic is not None and isinstance(meta_dic, dict):
             entry.meta.update(meta_dic)
         ret = EntryFeatureTool.get_instance().parse(
             entry, filename, use_llm=use_llm
@@ -378,7 +378,7 @@ def get_file_content_by_path(path, user):
     logger.info("after convert")
     if ret_convert:
         parser = MarkdownParser(md_path)
-        meta_data = convert_dic_to_json(parser.fm)
+        meta_data = parser.fm
         content = parser.content
     if content is None and is_plain_text(path):
         content = open(path, "r").read()

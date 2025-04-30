@@ -6,6 +6,7 @@ import uuid
 from django.utils import timezone
 import pytz
 from .models import StoreEntry
+from backend.common.utils.text_tools import convert_dic_to_json
 
 @dataclass
 class EntryItem:
@@ -73,6 +74,8 @@ class EntryItem:
                         v = str(v)
                     elif isinstance(v, datetime):
                         v = v.isoformat()
+                if k == 'meta' and isinstance(v, dict):
+                    v = convert_dic_to_json(v)
                 filtered_data[k] = v
         return filtered_data
 
