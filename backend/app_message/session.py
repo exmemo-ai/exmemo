@@ -85,6 +85,7 @@ class Session:
         condition = {"user_id": self.user_id, "etype": "chat", "addr": self.sid}
         fields = [
             "idx",
+            "user_id",
             "block_id",
             "title",
             "etype",
@@ -100,16 +101,16 @@ class Session:
         ]
         queryset = get_entry_list(None, condition, 1, fields)
         if queryset is not None and len(queryset) > 0:
-            obj = queryset[0]
-            self.sid = obj["meta"]["sid"]
-            self.sname = obj["title"]
-            self.is_group = obj["meta"]["is_group"]
-            self.source = obj["source"]
-            self.status = obj["status"]
-            self.atype = obj["atype"]
-            self.ctype = obj["ctype"]
-            self.meta = obj["meta"]
-            for idx, item in enumerate(obj["meta"]["messages"]):
+            obj = EntryItem.from_dict(queryset[0])
+            self.sid = obj.meta["sid"]
+            self.sname = obj.title
+            self.is_group = obj.meta["is_group"]
+            self.source = obj.source
+            self.status = obj.status
+            self.atype = obj.atype
+            self.ctype = obj.ctype
+            self.meta = obj.meta
+            for idx, item in enumerate(obj.meta["messages"]):
                 self.messages.append(Message(idx, item["sender"], item["content"], item["created_time"]))
             logger.debug(f"load_from_db success, sid {self.sid}, len {len(self.messages)}")
         else:
