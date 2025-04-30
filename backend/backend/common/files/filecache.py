@@ -28,7 +28,7 @@ def set_tmpfile_dir(dir):
 
 def get_tmpfile(ext):
     now = datetime.datetime.now()
-    timestr = now.strftime("%Y%m%d_%H%M%S")
+    timestr = now.strftime("%Y%m%d_%H%M%S_%f")
     tmp_path = os.path.join(get_tmpfile_dir(), f"{timestr}{ext}")
     file_dir = os.path.dirname(tmp_path)
     if not os.path.exists(file_dir):

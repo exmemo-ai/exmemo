@@ -41,7 +41,7 @@ def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_creat
         logger.info(f"update_files idx:{idx}, path:{file_path}, addr:{addr}, md5:{md5}")
         if len(file_paths) == 1:
             ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, 
-                                           progress_callback, task_id) # for single file
+                                           progress_callback, task_id) # for single file, such as: zip
         else:
             ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir)
         if not ret_emb:
