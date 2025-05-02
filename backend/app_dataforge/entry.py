@@ -159,6 +159,8 @@ class EntryService:
             ret = EntryFeatureTool.get_instance().parse(
                 entry, entry.addr, use_llm=False, debug=debug
             )
+            if entry.path is None:
+                entry.path = entry.title
             ret, ret_emb, detail = EntryStorage.save_entry(
                 entry, None, debug=debug
             )
@@ -166,6 +168,8 @@ class EntryService:
             ret = EntryFeatureTool.get_instance().parse(
                 entry, entry.addr, use_llm=use_llm, debug=debug
             )
+            if entry.path is None:
+                entry.path = entry.title
             if user.get("web_save_content"):
                 title, content = get_url_content(entry.addr)
                 ret, ret_emb, detail = EntryStorage.save_entry(
