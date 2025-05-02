@@ -291,6 +291,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return do_result(False, str(serializer.errors))
         dic.update(serializer.validated_data) # data: base + request
         
+        ret = False
         if instance.etype in ["file", "note"]:
             # check rename
             if 'addr' in serializer.validated_data and instance.addr != serializer.validated_data['addr']:
@@ -301,11 +302,13 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 else:
                     return do_result(True, _("update_successfully"))
             # check update file
-            if request.FILES:
+            elif request.FILES:
                 ret, ret_emb, detail = self.update_file(dic, instance.addr, request.FILES['files'], None)
                 if not ret:
                     return do_result(False, _("update_failed"))
                 return do_result(True, _("update_successfully"))
+            else:
+                ret, ret_emb, info = add_data(dic)
         elif instance.etype == "record":
             ret, ret_emb, info = add_data(dic, data = {'content': dic["content"]})
         else:
