@@ -2,7 +2,7 @@
     <div>
         <div class="translate-header">
             <div class="translate-counter">
-                {{ $t('trans.remainToReview', { count: getShowListLength() }) }}
+                {{ $t('trans.remainToReview', { count: getShowListLength(), idx:currentIndex }) }}
             </div>
         </div>
         <div class="translate-common-style">

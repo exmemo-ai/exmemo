@@ -271,7 +271,7 @@
         "freq": "优先级",
         "todayLearned": "今日已复习",
         "summary": "统计",
-        "remainToReview": "剩余: {count}",
+        "remainToReview": "剩余: {idx}/{count}",
         "todayLearn": "今日学习",
         "options": "可选项",
         "noLongerWrite": "不再默写", 

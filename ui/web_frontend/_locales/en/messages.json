@@ -269,7 +269,7 @@
         "goNext": "Next",
         "finish": "Finish",
         "freq": "Frequency",
-        "remainToReview": "Remain: {count}",
+        "remainToReview": "Remain: {idx}/{count}",
         "todayLearn": "Today's learn",
         "options": "Options",
         "noLongerWrite": "No longer dictation",
