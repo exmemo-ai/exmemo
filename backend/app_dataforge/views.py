@@ -28,7 +28,7 @@ from .entry import delete_entry, add_data, get_entry_list
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
 from .zipfile import is_compressed_file
-from .file_tools import update_files, rename_file
+from .file_tools import update_files, rename_file, update_file
 from .tasks import update_files_task
 from .entry_storage import EntryStorage
 
@@ -303,7 +303,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(True, _("update_successfully"))
             # check update file
             elif request.FILES:
-                ret, ret_emb, detail = self.update_file(dic, instance.addr, request.FILES['files'], None)
+                ret, ret_emb, detail = update_file(dic, instance.addr, request.FILES['files'], None,
+                                                   vault=None, is_unzip=False, is_createSubDir=False)
                 if not ret:
                     return do_result(False, _("update_failed"))
                 return do_result(True, _("update_successfully"))
