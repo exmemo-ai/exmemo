@@ -303,7 +303,15 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(True, _("update_successfully"))
             # check update file
             elif request.FILES:
-                ret, ret_emb, detail = update_file(dic, instance.addr, request.FILES['files'], None,
+                ext = get_ext(instance.addr)
+                tmp_path = filecache.get_tmpfile(ext)
+                with open(tmp_path, "wb") as f:
+                    file = request.FILES['files']
+                    logger.error(f"file {file}")
+                    for chunk in file.chunks():
+                        f.write(chunk)
+                    f.close()
+                ret, ret_emb, detail = update_file(dic, instance.addr, tmp_path, None,
                                                    vault=None, is_unzip=False, is_createSubDir=False)
                 if not ret:
                     return do_result(False, _("update_failed"))

@@ -115,7 +115,7 @@ class LocalFileManager:
                 shutil.copyfile(path, path_dst)
             return True
         except Exception as e:
-            logger.info(f"filename {filename}, path {path}")
+            logger.info(f"filename {filename}, path {path}, path_dst {path_dst}")
             traceback.print_exc()
             logger.warning(f"save_file failed {e}")
             return False
