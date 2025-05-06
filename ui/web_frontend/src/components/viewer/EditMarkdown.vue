@@ -26,9 +26,10 @@
                     :showCodeRowNumber="true"
                     @onChange="handleContentChange"
                     @on-save="saveContent"
+                    @onUploadImg="handleImageChange"
                     :toolbars="customToolbars"
+                    preview-theme="github"
                     :showToolbar="true"
-                    :preview="isLandscape ? true: false"
                     :scroll-auto="true"
                     :footers="['markdownTotal']"
                 >
@@ -73,7 +74,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
-import { MdEditor, NormalToolbar } from 'md-editor-v3';
+import { MdEditor, NormalToolbar, config } from 'md-editor-v3';
 import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from '@/components/datatable/dataUtils';
 import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue';
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
@@ -81,6 +82,7 @@ import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/datatable/AddDialog.vue'
+import { handleImageLoad, handleImageUpload } from './imageUtils';
 
 const { t } = useI18n();
 const appName = 'ExMemo';
@@ -115,6 +117,7 @@ const customToolbars = computed(() => {
         'unorderedList',
         'orderedList',
         'task',
+        'image',
         '=',
         'previewOnly',
         'save',
@@ -135,7 +138,7 @@ const customToolbars = computed(() => {
         'codeRow',
         'code',
         'link',
-        //'image',
+        'image', // later adjust position
         'table',
         'mermaid',
         'formula',
@@ -487,6 +490,43 @@ const handleResize = () => {
     console.log('visualHeight', visualHeight);
     document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
 }
+
+const handleImageChange = async (files, callback) => {
+    const success = await handleImageUpload(files, callback);
+    if (success) {
+        isContentModified.value = true;
+    }
+};
+
+config({
+  markdownItConfig: (md) => {
+    const defaultImageRender = md.renderer.rules.image;
+    md.renderer.rules.image = (tokens, idx, options, env, self) => {
+      const token = tokens[idx];
+      const srcIndex = token.attrIndex('src');
+      if (srcIndex >= 0) {
+        const srcAttr = token.attrs[srcIndex];
+        const src = srcAttr[1];
+        // later use for View/Edit, check http/https
+        if (!src.startsWith('http://') && !src.startsWith('https://')) {
+          srcAttr[1] = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          handleImageLoad(src).then(newSrc => {
+            if (newSrc) {
+              const images = document.querySelectorAll(`img[data-original-src="${src}"]`);
+              images.forEach(img => {
+                img.src = newSrc;
+              });
+            }
+          });
+          const html = defaultImageRender(tokens, idx, options, env, self);
+          return html.replace('<img', `<img data-original-src="${src}"`);
+        }
+      }
+      return defaultImageRender(tokens, idx, options, env, self);
+    };
+  }
+});
+
 
 onBeforeUnmount(() => {
     if (speakerPlayer.value) {

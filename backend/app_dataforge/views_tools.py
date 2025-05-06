@@ -1,5 +1,8 @@
 import os
+import traceback
+import base64
 from loguru import logger
+from urllib.parse import unquote
 
 from django.utils.translation import gettext as _
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +15,8 @@ from backend.common.user.utils import parse_common_args, get_user_id
 from backend.common.utils.net_tools import do_result
 from backend.common.parser.converter import is_support
 from backend.settings import USE_CELERY
+from backend.common.utils.file_tools import get_content_type, get_ext
+from backend.common.files import utils_filemanager, filecache
 
 from .feature import EntryFeatureTool
 from .entry import get_type_options
@@ -51,6 +56,8 @@ class EntryAPIView(APIView):
             return self.get_dir(request)
         elif rtype == "refreshdata":
             return self.refresh_data(request)
+        elif rtype == "getimage":
+            return self.get_image(request)
         else:
             return do_result(False, _("unknown_action"))
 
@@ -448,5 +455,53 @@ class EntryAPIView(APIView):
             traceback.print_exc()
             return Response(
                 {"error": "Failed to refresh data"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get_image(self, request):
+        try:
+            user_id = get_user_id(request)
+            if user_id is None:
+                return do_result(False, "User_id is empty")
+
+            etype = request.GET.get("etype", request.POST.get("etype", None))
+            addr = request.GET.get("addr", request.POST.get("addr", None))
+
+            if not etype or not addr:
+                return do_result(False, "Etype or addr is empty")
+                
+            # 解码 URL 编码的字符
+            addr = unquote(addr)
+
+            # logger.debug(f"get_image user_id: {user_id}, etype: {etype}, addr: {addr}")
+            entry = StoreEntry.objects.filter(
+                user_id=user_id,
+                etype=etype,
+                addr=addr,
+                is_deleted=False
+            ).first()
+
+            if not entry:
+                return do_result(False, "Entry not found")
+
+            if not entry.path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                return do_result(False, "Not an image file")
+
+            file_path = filecache.get_tmpfile(get_ext(entry.path))
+            if utils_filemanager.get_file_manager().get_file(user_id, entry.path, file_path):
+                with open(file_path, "rb") as f:
+                    image_content = f.read()
+                    content_type = get_content_type(file_path)
+                    image_base64 = base64.b64encode(image_content).decode('utf-8')
+                    return do_result(True, {
+                        'data_url': f'data:{content_type};base64,{image_base64}'
+                    })
+            return do_result(False, "Failed to read image file")
+
+        except Exception as e:
+            logger.error(f"Error getting image: {str(e)}")
+            traceback.print_exc()
+            return Response(
+                {"error": "Failed to get image"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

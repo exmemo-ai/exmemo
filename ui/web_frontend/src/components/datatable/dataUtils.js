@@ -34,7 +34,7 @@ export async function saveEntry({
         if (file) {
             formData.append('files', file);
             let fileName = file.name;
-            if (form.title !== '') {
+            if (form.title && form.title !== '') {
                 if (fileName.indexOf('.') > 0) {
                     const fileExt = fileName.split('.').pop();
                     const titleExt = form.title.split('.').pop();
