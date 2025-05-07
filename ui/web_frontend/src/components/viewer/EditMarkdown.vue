@@ -83,7 +83,7 @@ import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/datatable/AddDialog.vue'
-import { handleImageLoad, handleImageUpload } from './imageUtils';
+import { getMarkdownItConfig, uploadPendingImages, cleanupTempImages, addTempImage } from './imageUtils';
 import ImageProcessDialog from '@/components/viewer/ImageProcessDialog.vue';
 
 const { t } = useI18n();
@@ -218,7 +218,8 @@ const saveContent = async () => {
     }
 
     try {
-        const blob = new Blob([markdownContent.value], { type: 'text/plain' });
+        let finalContent = await uploadPendingImages(markdownContent.value);
+        const blob = new Blob([finalContent], { type: 'text/plain' });
         const file = new File([blob], 'temp.md', { type: 'text/plain' });
         const result = await saveEntry({
             onSuccess: null,
@@ -231,6 +232,8 @@ const saveContent = async () => {
         if (result) {
             ElMessage.success(t('saveSuccess'));
             isContentModified.value = false;
+            markdownContent.value = finalContent;
+            cleanupTempImages(finalContent);
         }
     } catch (error) {
         console.error(t('saveFail'), error);
@@ -498,6 +501,7 @@ const handleImageChange = async (files, callback) => {
     if (files.length === 0) return;
 
     const file = files[0];
+    /*
     const url = URL.createObjectURL(file);
     const processed = await new Promise(resolve => {
         imageProcessRef.value.open(url, async (result) => {
@@ -505,10 +509,7 @@ const handleImageChange = async (files, callback) => {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('opt', 'ocr');
-                const response = await fetch('api/entry/tool/', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('api/entry/tool/', { method: 'POST', body: formData });
                 const data = await response.json();
                 resolve(data);
             } else {
@@ -516,41 +517,32 @@ const handleImageChange = async (files, callback) => {
             }
         });
     });
+    if (processed?.file instanceof Blob) {
+        const imageId = addTempImage(processed.file);
+        if (imageId) {
+            callback([imageId]);
+            isContentModified.value = true;
+        }
+    } else {
+        console.error('Invalid processed file:', processed);
+        ElMessage.error(t('uploadFail'));
+    }
+    */
 
-    /*
-    const success = await handleImageUpload([processed.file], callback);
-    if (success) {
-        isContentModified.value = true;
-    } */
+    if (file instanceof Blob) {
+        const imageId = addTempImage(file);
+        if (imageId) {
+            callback([imageId]);
+            isContentModified.value = true;
+        }
+    } else {
+        console.error('Invalid processed file:', processed);
+        ElMessage.error(t('uploadFail'));
+    }
 };
 
 config({
-  markdownItConfig: (md) => {
-    const defaultImageRender = md.renderer.rules.image;
-    md.renderer.rules.image = (tokens, idx, options, env, self) => {
-      const token = tokens[idx];
-      const srcIndex = token.attrIndex('src');
-      if (srcIndex >= 0) {
-        const srcAttr = token.attrs[srcIndex];
-        const src = srcAttr[1];
-        // later use for View/Edit, check http/https
-        if (!src.startsWith('http://') && !src.startsWith('https://')) {
-          srcAttr[1] = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-          handleImageLoad(src).then(newSrc => {
-            if (newSrc) {
-              const images = document.querySelectorAll(`img[data-original-src="${src}"]`);
-              images.forEach(img => {
-                img.src = newSrc;
-              });
-            }
-          });
-          const html = defaultImageRender(tokens, idx, options, env, self);
-          return html.replace('<img', `<img data-original-src="${src}"`);
-        }
-      }
-      return defaultImageRender(tokens, idx, options, env, self);
-    };
-  }
+    markdownItConfig: getMarkdownItConfig
 });
 
 
