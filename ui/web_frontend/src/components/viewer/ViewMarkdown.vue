@@ -190,7 +190,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
-import { MdPreview, MdCatalog } from 'md-editor-v3'
+import { MdPreview, MdCatalog, config } from 'md-editor-v3'
 import { saveEntry, downloadFile, fetchItem } from '../datatable/dataUtils';
 import { HighlightManager } from '@/components/viewer/HighlightManager'
 import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue'
@@ -205,6 +205,7 @@ import AIDialog from '@/components/ai/AIDialog.vue'
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import { translateFunc } from '@/components/translate/TransFunction'
+import { getMarkdownItConfig } from './imageUtils'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -495,6 +496,10 @@ onMounted(() => {
             showTranslatePopup.value = false
         }
     })
+})
+
+config({
+    markdownItConfig: getMarkdownItConfig
 })
 
 const handleBeforeUnload = async (e) => {

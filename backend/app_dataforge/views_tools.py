@@ -489,6 +489,14 @@ class EntryAPIView(APIView):
             ).first()
 
             if not entry:
+                entry = StoreEntry.objects.filter(
+                    user_id=user_id,
+                    etype=etype,
+                    addr__endswith=addr,
+                    is_deleted=False
+                ).first()
+                
+            if not entry:
                 return do_result(False, "Entry not found")
 
             if not entry.path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):

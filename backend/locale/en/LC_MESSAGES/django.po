@@ -66,6 +66,10 @@ msgstr "Run failed"
 msgid "unclassified"
 msgstr "Unclassified"
 
+#: app_dataforge/feature.py:22
+msgid "image"
+msgstr "Image"
+
 #: app_dataforge/feature.py:153
 msgid "to_be_organized"
 msgstr "To be organized"

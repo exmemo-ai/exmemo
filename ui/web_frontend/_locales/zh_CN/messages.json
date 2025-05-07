@@ -529,5 +529,18 @@
     "webSource": "数据来源包括所有通过“书签同步”浏览器扩展、微信端或前端上传的待读网页。",
     "noResults": "无结果",
     "listView": "列表视图",
-    "treeView": "目录视图"
+    "treeView": "目录视图",
+    "img": {
+        "imgTitle": "图片编辑",
+        "adjustment": "调整",
+        "grayscale": "灰度",
+        "brightness": "亮度",
+        "contrast": "对比度",
+        "ocr": "文字识别",
+        "extractText": "提取文字",
+        "insertImage": "插入图片",
+        "insertBoth": "插入图片和文字",
+        "insertText": "插入文字",
+        "noTextPleaseExtract": "无文本内容，请先提取文字"
+    }
 }

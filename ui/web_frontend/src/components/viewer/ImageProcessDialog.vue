@@ -1,57 +1,69 @@
 <template>
-  <el-dialog v-model="visible" :title="t('imageProcess.title')" width="80%">
+  <el-dialog v-model="visible" :title="t('img.imgTitle')" class="image-process-dialog">
     <div class="image-process-container">
       <div class="preview-container">
         <canvas ref="canvas" style="border: 1px solid #ccc;"></canvas>
       </div>
       <div class="controls">
         <el-tabs v-model="activeTab">
-          <el-tab-pane :label="t('imageProcess.adjustment')" name="adjust">
+          <el-tab-pane :label="t('img.adjustment')" name="adjust">
             <el-button-group>
-              <el-button @click="rotateLeft">
+              <el-button @click="resetImage">
                 <el-icon><Refresh /></el-icon>
               </el-button>
               <el-button @click="rotateRight">
                 <el-icon><RefreshRight /></el-icon>
               </el-button>
-              <el-button @click="invertColors">
-                {{ t('imageProcess.invert') }}
-              </el-button>
               <el-button @click="convertToGrayscale">
-                {{ t('imageProcess.grayscale') }}
+                {{ t('img.grayscale') }}
               </el-button>
             </el-button-group>
-            <el-slider v-model="brightness" :min="-100" :max="100" @change="handleImageAdjust">
-              {{ t('imageProcess.brightness') }}
-            </el-slider>
-            <el-slider v-model="contrast" :min="-100" :max="100" @change="handleImageAdjust">
-              {{ t('imageProcess.contrast') }}
-            </el-slider>
+            <!-- 横向排列label和slider -->
+            <div class="slider-row">
+              <span class="slider-label">{{ t('img.brightness') }}</span>
+              <el-slider v-model="brightness" :min="-100" :max="100" @change="handleImageAdjust" />
+            </div>
+            <div class="slider-row">
+              <span class="slider-label">{{ t('img.contrast') }}</span>
+              <el-slider v-model="contrast" :min="-100" :max="100" @change="handleImageAdjust" />
+            </div>
           </el-tab-pane>
-          <el-tab-pane :label="t('imageProcess.ocr')" name="ocr">
-            <el-button @click="handleOCR">{{ t('imageProcess.extractText') }}</el-button>
+          <el-tab-pane :label="t('img.ocr')" name="ocr">
+            <el-button @click="handleOCR">{{ t('img.extractText') }}</el-button>
             <el-input v-model="ocrText" type="textarea" rows="4" />
           </el-tab-pane>
         </el-tabs>
       </div>
     </div>
     <template #footer>
-      <el-button @click="visible = false">{{ t('cancel') }}</el-button>
-      <el-button type="primary" @click="handleConfirm">{{ t('confirm') }}</el-button>
+      <span class="dialog-footer">
+        <el-button @click="visible = false">{{ t('cancel') }}</el-button>
+        <el-button type="primary" @click="handleConfirm('imageOnly')" v-if="activeTab !== 'ocr'">
+          {{ t('img.insertImage') }}
+        </el-button>
+        <el-button type="primary" @click="handleConfirm('imageAndText')" v-if="activeTab === 'ocr'">
+          {{ t('img.insertBoth') }}
+        </el-button>
+        <el-button type="primary" @click="handleConfirm('textOnly')" v-if="activeTab === 'ocr'">
+          {{ t('img.insertText') }}
+        </el-button>
+      </span>
     </template>
   </el-dialog>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { Refresh, RefreshRight } from '@element-plus/icons-vue';
+import { ref, onBeforeUnmount, nextTick } from 'vue';
+import { RefreshRight, Refresh } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn'
 import { Canvas, FabricImage, filters } from 'fabric';
+import { ElMessage } from 'element-plus';
 
 let fabricCanvas = null;
 let fabricImage = null;
+let originalImageData = null;
 
 const props = defineProps({
   modelValue: Boolean,
@@ -67,6 +79,7 @@ const activeTab = ref('adjust');
 const brightness = ref(0);
 const contrast = ref(0);
 const ocrText = ref('');
+const isGrayscale = ref(false);
 let callbackFn = null;
 
 const canvas = ref(null);
@@ -96,7 +109,6 @@ const initCanvas = async () => {
       height: 300,
       selection: false
     });
-    console.log('Canvas initialized successfully');
 
     if (previewUrl.value) {
       loadImage(previewUrl.value);
@@ -125,19 +137,19 @@ const loadImage = async (url) => {
     );
     
     fabricImage.scale(scale);
-    //fabricImage.center(); // later
     fabricCanvas.add(fabricImage);
     fabricCanvas.requestRenderAll();
+    
+    originalImageData = {
+      angle: fabricImage.angle,
+      filters: [],
+      scale: scale,
+      left: fabricImage.left,
+      top: fabricImage.top
+    };
 
   } catch (error) {
     console.error('Failed to load image:', error);
-  }
-};
-
-const rotateLeft = () => {
-  if (fabricImage) {
-    fabricImage.rotate(fabricImage.angle - 90);
-    fabricCanvas.renderAll();
   }
 };
 
@@ -148,41 +160,62 @@ const rotateRight = () => {
   }
 };
 
-const invertColors = () => {
-  if (!fabricImage) return;
-  const filter = new filters.Invert();
-  fabricImage.filters.push(filter);
-  fabricImage.applyFilters();
-  fabricCanvas.renderAll();
-};
-
 const convertToGrayscale = () => {
   if (!fabricImage) return;
-  const filter = new filters.Grayscale();
-  fabricImage.filters.push(filter);
-  fabricImage.applyFilters();
-  fabricCanvas.renderAll();
+  isGrayscale.value = !isGrayscale.value;
+  applyFilters();
 };
 
 const handleImageAdjust = () => {
   if (!fabricImage) return;
+  applyFilters();
+};
+
+const applyFilters = () => {
+  if (!fabricImage) return;
   fabricImage.filters = [];
+  
+  if (isGrayscale.value) {
+    fabricImage.filters.push(new filters.Grayscale());
+  }
+  
   if (brightness.value !== 0) {
     fabricImage.filters.push(new filters.Brightness({
       brightness: brightness.value / 100
     }));
   }
+  
   if (contrast.value !== 0) {
     fabricImage.filters.push(new filters.Contrast({
       contrast: contrast.value / 100
     }));
   }
+  
   fabricImage.applyFilters();
   fabricCanvas.renderAll();
 };
 
+const resetImage = () => {
+  if (!fabricImage || !originalImageData) return;
+  
+  fabricImage.set({
+    angle: originalImageData.angle,
+    left: originalImageData.left,
+    top: originalImageData.top,
+    scaleX: originalImageData.scale,
+    scaleY: originalImageData.scale
+  });
+  
+  fabricImage.filters = [];
+  fabricImage.applyFilters();
+  fabricCanvas.renderAll();
+  
+  brightness.value = 0;
+  contrast.value = 0;
+  isGrayscale.value = false;
+};
+
 const open = async (url, callback) => {
-  console.log('Opening image process dialog with URL:', url);
   try {
     if (fabricCanvas) {
       fabricCanvas.dispose();
@@ -196,6 +229,7 @@ const open = async (url, callback) => {
     contrast.value = 0;
     ocrText.value = '';
     activeTab.value = 'adjust';
+    originalImageData = null;
     
     await nextTick();
     await initCanvas();
@@ -216,25 +250,38 @@ const getProcessedImage = () => {
   });
 };
 
-const handleConfirm = () => {
+const handleConfirm = (mode = 'imageOnly') => {
   try {
-    visible.value = false;
     if (callbackFn) {
-      if (activeTab.value === 'ocr') {
-        callbackFn({
-          needServerProcess: true,
-          file: ocrText.value,
-          params: { ocr: true }
-        });
-      } else {
-        const processedImageData = getProcessedImage();
-        if (!processedImageData) {
-          throw new Error('Failed to get processed image');
-        }
-        callbackFn({
-          needServerProcess: false,
-          file: processedImageData
-        });
+      const processedImageData = getProcessedImage();
+      if (!processedImageData && mode !== 'textOnly') {
+        throw new Error('Failed to get processed image');
+      }
+      
+      switch (mode) {
+        case 'imageOnly':
+          callbackFn({ file: processedImageData });
+          visible.value = false;
+          break;
+        case 'textOnly':
+          if (!ocrText.value || ocrText.value.trim() === '') {
+            ElMessage.error(t('img.noTextPleaseExtract'));
+            return;
+          }
+          callbackFn({ text: ocrText.value });
+          visible.value = false;
+          break;
+        case 'imageAndText':
+          if (!ocrText.value || ocrText.value.trim() === '') {
+            ElMessage.error(t('img.noTextPleaseExtract'));
+            return;
+          }
+          callbackFn({
+            text: ocrText.value,
+            file: processedImageData
+          });
+          visible.value = false;
+          break;
       }
     }
   } catch (error) {
@@ -244,10 +291,17 @@ const handleConfirm = () => {
 };
 
 const handleOCR = async () => {
+  const processedImageData = getProcessedImage();
+  if (!processedImageData) {
+    console.error('Failed to get processed image');
+    return;
+  }
+
+  const base64Data = processedImageData.split(',')[1];
+  const blob = await fetch(`data:image/png;base64,${base64Data}`).then(res => res.blob());
+  
   const formData = new FormData();
-  const response = await fetch(previewUrl.value);
-  const blob = await response.blob();
-  formData.append('file', blob);
+  formData.append('file', blob, 'processed_image.png');
   formData.append('rtype', 'processimage');
   formData.append('opt', 'ocr');
 
@@ -317,5 +371,28 @@ canvas {
 
 .el-slider {
   margin: 10px 0;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+.slider-label {
+  min-width: 70px;
+  margin-right: 16px;
+  text-align: right;
+  color: #606266;
+  font-size: 14px;
+}
+
+.image-process-dialog :deep(.el-dialog) {
+  width: 60%;
+}
+
+@media screen and (max-width: 768px) {
+  .image-process-dialog :deep(.el-dialog) {
+    width: 80%;
+  }
 }
 </style>

@@ -65,6 +65,10 @@ msgstr "运行失败"
 msgid "unclassified"
 msgstr "未知类别"
 
+#: app_dataforge/feature.py:22
+msgid "image"
+msgstr "图片"
+
 #: app_dataforge/feature.py:153
 msgid "to_be_organized"
 msgstr "待整理"

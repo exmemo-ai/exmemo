@@ -525,5 +525,18 @@
     "webSource": "Data sources include all read-later pages uploaded through the 'Bookmark Sync' browser extension, WeChat client, or web frontend.",
     "noResults": "No results",
     "listView": "List View",
-    "treeView": "Tree View"
+    "treeView": "Tree View",
+    "img": {
+        "imgTitle": "Image processing",
+        "adjustment": "Adjustment",
+        "grayscale": "Gray",
+        "brightness": "Brightness",
+        "contrast": "对比度",
+        "ocr": "OCR",
+        "extractText": "Extract text",
+        "insertImage": "Insert image",
+        "insertBoth": "Insert both",
+        "insertText": "Insert text",
+        "noTextPleaseExtract": "No text, please extract first"
+    }    
 }

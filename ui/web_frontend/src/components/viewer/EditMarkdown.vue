@@ -141,10 +141,10 @@ const customToolbars = computed(() => {
         'codeRow',
         'code',
         'link',
-        'image', // later adjust position
         'table',
         'mermaid',
         'formula',
+        'image',
         '=',
         'revoke',
         'next',
@@ -184,22 +184,28 @@ const handleContentChange = () => {
     isContentModified.value = true;
 }
 
-const saveAs = async () => {
+const getCurrentPathInfo = () => {
     let vault = '';
     let path = '';
     if (!form.value.addr) {
         vault = getDefaultVault('note', null);
         path = getDefaultPath('note', null, null);
     } else {
-        vault = form.value.addr.split('/')[0];
-        path = form.value.addr.split('/').slice(1).join('/');
-        path = path.replace(/(\.[^.]*)$/, '_copy$1');
+        const parts = form.value.addr.split('/');
+        vault = parts[0];
+        path = parts.slice(1).join('/');
     }
+    return { vault, path };
+}
+
+const saveAs = async () => {
+    const { vault, path } = getCurrentPathInfo();
+    const modifiedPath = path.replace(/(\.[^.]*)$/, '_copy$1');
     addDialog.value.openDialog(null, {
         etype: 'note',
         content: markdownContent.value,
         vault: vault,
-        path: path,
+        path: modifiedPath,
         atype: form.value.atype,
         ctype: form.value.ctype,
         status: form.value.status,
@@ -218,7 +224,8 @@ const saveContent = async () => {
     }
 
     try {
-        let finalContent = await uploadPendingImages(markdownContent.value);
+        const { vault } = getCurrentPathInfo();
+        let finalContent = await uploadPendingImages(markdownContent.value, vault);
         const blob = new Blob([finalContent], { type: 'text/plain' });
         const file = new File([blob], 'temp.md', { type: 'text/plain' });
         const result = await saveEntry({
@@ -498,27 +505,48 @@ const handleResize = () => {
 }
 
 const handleImageChange = async (files, callback) => {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+        return;
+    } else if (files.length > 1) {
+        for (const file of files) {
+            if (file instanceof Blob) {
+                const imageId = addTempImage(file);
+                if (imageId) {
+                    callback([imageId]);
+                    isContentModified.value = true;
+                }
+            }
+        }
+        return
+    }
 
     const file = files[0];
-    /*
     const url = URL.createObjectURL(file);
     const processed = await new Promise(resolve => {
         imageProcessRef.value.open(url, async (result) => {
-            if (result.needServerProcess) {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('opt', 'ocr');
-                const response = await fetch('api/entry/tool/', { method: 'POST', body: formData });
-                const data = await response.json();
-                resolve(data);
-            } else {
-                resolve(result);
-            }
+            resolve(result);
         });
     });
-    if (processed?.file instanceof Blob) {
-        const imageId = addTempImage(processed.file);
+
+    if (processed?.file) {
+        const base64Data = processed.file.split(',')[1];
+        const binaryStr = atob(base64Data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const originalName = file.name;
+        const lastDotIndex = originalName.lastIndexOf('.');
+        const nameWithoutExt = lastDotIndex !== -1 ? originalName.slice(0, lastDotIndex) : originalName;
+        const extension = lastDotIndex !== -1 ? originalName.slice(lastDotIndex) : '.png';
+        const newFileName = `${nameWithoutExt}_edit${extension}`;
+        const blob = new Blob([bytes], { type: 'image/png' });
+        Object.defineProperty(blob, 'name', {
+            value: newFileName,
+            writable: false
+        });
+        
+        const imageId = addTempImage(blob);
         if (imageId) {
             callback([imageId]);
             isContentModified.value = true;
@@ -527,17 +555,21 @@ const handleImageChange = async (files, callback) => {
         console.error('Invalid processed file:', processed);
         ElMessage.error(t('uploadFail'));
     }
-    */
-
-    if (file instanceof Blob) {
-        const imageId = addTempImage(file);
-        if (imageId) {
-            callback([imageId]);
-            isContentModified.value = true;
+    if (processed?.text) {
+        const text = processed.text;
+        if (text.length > 0) {
+            if (mdEditor.value) {
+                mdEditor.value?.insert(() => {
+                    return {
+                        targetValue: text + '\n\n',
+                        select: true,
+                        deviationStart: 0,
+                        deviationEnd: 0
+                    };
+                });
+                isContentModified.value = true;
+            }
         }
-    } else {
-        console.error('Invalid processed file:', processed);
-        ElMessage.error(t('uploadFail'));
     }
 };
 

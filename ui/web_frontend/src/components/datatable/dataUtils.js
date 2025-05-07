@@ -60,6 +60,9 @@ export async function saveEntry({
             formData.append('unzip', form.unzip);
             formData.append('createSubDir', form.createSubDir);
             formData.append('is_async', true);
+            if (form?.vault) {
+                formData.append('vault', form.vault);
+            }
         }
     } else if (form.etype === 'web') {
         if (form.addr === '') {
