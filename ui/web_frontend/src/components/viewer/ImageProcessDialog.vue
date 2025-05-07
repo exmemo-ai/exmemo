@@ -1,5 +1,9 @@
 <template>
-  <el-dialog v-model="visible" :title="t('img.imgTitle')" class="image-process-dialog">
+  <el-dialog
+    v-model="visible"
+    :title="t('img.imgTitle')"
+    :width="dialogWidth"
+  >
     <div class="image-process-container">
       <div class="preview-container">
         <canvas ref="canvas" style="border: 1px solid #ccc;"></canvas>
@@ -53,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeUnmount, nextTick } from 'vue';
+import { ref, onBeforeUnmount, nextTick, computed, onMounted } from 'vue';
 import { RefreshRight, Refresh } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
@@ -64,6 +68,16 @@ import { ElMessage } from 'element-plus';
 let fabricCanvas = null;
 let fabricImage = null;
 let originalImageData = null;
+
+const dialogWidth = computed(() => {
+    return window.innerWidth <= 768 ? '90%' : '40%'
+})
+
+onMounted(() => {
+    window.addEventListener('resize', () => {
+        dialogWidth.value = window.innerWidth <= 768 ? '80%' : '60%'
+    })
+})
 
 const props = defineProps({
   modelValue: Boolean,
@@ -370,13 +384,13 @@ canvas {
 }
 
 .el-slider {
-  margin: 10px 0;
+  margin: 0;
 }
 
 .slider-row {
   display: flex;
   align-items: center;
-  margin: 10px 0;
+  margin: 5px 0;
 }
 .slider-label {
   min-width: 70px;
@@ -384,15 +398,5 @@ canvas {
   text-align: right;
   color: #606266;
   font-size: 14px;
-}
-
-.image-process-dialog :deep(.el-dialog) {
-  width: 60%;
-}
-
-@media screen and (max-width: 768px) {
-  .image-process-dialog :deep(.el-dialog) {
-    width: 80%;
-  }
 }
 </style>
