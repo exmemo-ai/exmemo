@@ -3,6 +3,12 @@ import { saveEntry } from '../datatable/dataUtils';
 import axios from 'axios';
 import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn'
 
+const encodeSpecialChars = (str) => {
+    return str.replace(/[ !@#$%^&*()+=[\]{};:,.<>?~\\]/g, (char) => {
+        return encodeURIComponent(char);
+    });
+};
+
 export const handleImageUpload = async (files, callback) => {
     try {
         const imgUrls = [];
@@ -24,7 +30,8 @@ export const handleImageUpload = async (files, callback) => {
             if (result && result.status === 'success') {
                 if (result.list) {
                     for (const item of result.list) {
-                        imgUrls.push(item);
+                        const encodedItem = encodeSpecialChars(item);
+                        imgUrls.push(encodedItem);
                     }
                 }
             } else {

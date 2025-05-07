@@ -63,6 +63,7 @@
             @insert-note="handleInsertAIAnswer"
         />
         <AddDialog ref="addDialog" />
+        <ImageProcessDialog ref="imageProcessRef" />
     </div>
 </template>
 
@@ -83,6 +84,7 @@ import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtil
 import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/datatable/AddDialog.vue'
 import { handleImageLoad, handleImageUpload } from './imageUtils';
+import ImageProcessDialog from '@/components/viewer/ImageProcessDialog.vue';
 
 const { t } = useI18n();
 const appName = 'ExMemo';
@@ -99,6 +101,7 @@ const aiDialogVisible = ref(false);
 const defaultReferenceType = ref('');
 const addDialog = ref(null)
 const etype = "editor"
+const imageProcessRef = ref(null);
 
 const currentFileName = computed(() => {
     if (form.value && form.value.title) {
@@ -492,10 +495,33 @@ const handleResize = () => {
 }
 
 const handleImageChange = async (files, callback) => {
-    const success = await handleImageUpload(files, callback);
+    if (files.length === 0) return;
+
+    const file = files[0];
+    const url = URL.createObjectURL(file);
+    const processed = await new Promise(resolve => {
+        imageProcessRef.value.open(url, async (result) => {
+            if (result.needServerProcess) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('opt', 'ocr');
+                const response = await fetch('api/entry/tool/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                resolve(data);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+
+    /*
+    const success = await handleImageUpload([processed.file], callback);
     if (success) {
         isContentModified.value = true;
-    }
+    } */
 };
 
 config({

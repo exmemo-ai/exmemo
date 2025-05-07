@@ -25,6 +25,11 @@ from .models import StoreEntry
 from .tasks import import_task, refresh_task, delete_task, move_task
 from .file_tools import real_import, real_refresh, real_delete, real_move
 
+from rest_framework.decorators import api_view, authentication_classes, permission_classes 
+from PIL import Image, ImageEnhance
+from io import BytesIO
+import backend.common.parser.ocr_baidu as ocr_baidu
+
 MAX_LEVEL = 2
 
 class EntryAPIView(APIView):
@@ -58,6 +63,8 @@ class EntryAPIView(APIView):
             return self.refresh_data(request)
         elif rtype == "getimage":
             return self.get_image(request)
+        elif rtype == "processimage":
+            return self.process_image(request)
         else:
             return do_result(False, _("unknown_action"))
 
@@ -505,3 +512,52 @@ class EntryAPIView(APIView):
                 {"error": "Failed to get image"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    def process_image(self, request):
+        try:
+            user_id = get_user_id(request)
+            if user_id is None:
+                return do_result(False, "User_id is empty")
+
+            image_file = request.FILES.get('file')
+            if not image_file:
+                return do_result(False, "No image file provided")
+
+            file_path = filecache.get_tmpfile(get_ext(image_file.name))
+            with open(file_path, 'wb+') as destination:
+                for chunk in image_file.chunks():
+                    destination.write(chunk)
+
+            opt = request.GET.get("opt", request.POST.get("opt", None))
+            if opt and opt == "ocr":
+                try:
+                    text = ocr_baidu.img_to_str_baidu(file_path, debug=True)
+                    if text is None:
+                        logger.error("OCR result is None")
+                        return do_result(False, "OCR processing returned empty result")
+                    logger.info(f"OCR processing completed successfully {text}.")
+                    return do_result(True, {"text": text})
+                except AttributeError as ae:
+                    logger.error(f"OCR API initialization error: {str(ae)}")
+                    return do_result(False, "OCR service not properly initialized")
+                except Exception as e:
+                    logger.error(f"OCR processing error: {str(e)}")
+            opt = request.GET.get("opt", request.POST.get("opt", None))
+            if opt and opt == "ocr":
+                try:
+                    text = ocr_baidu.img_to_str_baidu(file_path)
+                    return do_result(True, {"text": text})
+                except Exception as e:
+                    logger.error(f"OCR error: {str(e)}")
+                    return do_result(False, "OCR processing failed")
+
+            return do_result(True, {"message": "Image processed successfully"})
+
+        except Exception as e:
+            logger.error(f"Image processing error: {str(e)}")
+            traceback.print_exc()
+            return Response(
+                {"error": "Failed to process image"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
