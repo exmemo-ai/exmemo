@@ -504,13 +504,63 @@ const handleResize = () => {
     document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
 }
 
+const resizeImageIfNeeded = (file) => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const MAX_SIZE = 1024;
+                let width = img.width;
+                let height = img.height;
+                let needResize = false;
+                
+                if (width > MAX_SIZE || height > MAX_SIZE) {
+                    needResize = true;
+                    if (width > height) {
+                        height = Math.round(height * (MAX_SIZE / width));
+                        width = MAX_SIZE;
+                    } else {
+                        width = Math.round(width * (MAX_SIZE / height));
+                        height = MAX_SIZE;
+                    }
+                }
+                
+                if (!needResize) {
+                    resolve(file);
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    if (file.name) {
+                        Object.defineProperty(blob, 'name', {
+                            value: file.name,
+                            writable: false
+                        });
+                    }
+                    resolve(blob);
+                }, file.type || 'image/jpeg', 0.4);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
 const handleImageChange = async (files, callback) => {
     if (files.length === 0) {
         return;
     } else if (files.length > 1) {
         for (const file of files) {
             if (file instanceof Blob) {
-                const imageId = addTempImage(file);
+                const resizedFile = await resizeImageIfNeeded(file);
+                const imageId = addTempImage(resizedFile);
                 if (imageId) {
                     callback([imageId]);
                     isContentModified.value = true;
@@ -521,7 +571,8 @@ const handleImageChange = async (files, callback) => {
     }
 
     const file = files[0];
-    const url = URL.createObjectURL(file);
+    const resizedFile = await resizeImageIfNeeded(file);
+    const url = URL.createObjectURL(resizedFile);
     const processed = await new Promise(resolve => {
         imageProcessRef.value.open(url, async (result) => {
             resolve(result);

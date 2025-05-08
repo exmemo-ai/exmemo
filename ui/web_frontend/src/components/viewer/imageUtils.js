@@ -67,6 +67,7 @@ class TempImageManager {
                 try {
                     const form = { etype: 'note', vault: vault };
                     const path = imageId;
+                    //console.log('Uploading image:', image.file, 'to path:', path);
                     const result = await saveEntry({
                         onSuccess: null,
                         form,

@@ -1,28 +1,25 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="t('img.imgTitle')"
-    :width="dialogWidth"
-  >
+  <el-dialog v-model="visible" :title="t('img.imgTitle')" :width="dialogWidth">
     <div class="image-process-container">
-      <div class="preview-container">
-        <canvas ref="canvas" style="border: 1px solid #ccc;"></canvas>
-      </div>
+      <canvas ref="canvas" style="border: 1px solid #ccc;"></canvas>
       <div class="controls">
         <el-tabs v-model="activeTab">
           <el-tab-pane :label="t('img.adjustment')" name="adjust">
             <el-button-group>
               <el-button @click="resetImage">
-                <el-icon><Refresh /></el-icon>
+                <el-icon>
+                  <Refresh />
+                </el-icon>
               </el-button>
               <el-button @click="rotateRight">
-                <el-icon><RefreshRight /></el-icon>
+                <el-icon>
+                  <RefreshRight />
+                </el-icon>
               </el-button>
               <el-button @click="convertToGrayscale">
                 {{ t('img.grayscale') }}
               </el-button>
             </el-button-group>
-            <!-- 横向排列label和slider -->
             <div class="slider-row">
               <span class="slider-label">{{ t('img.brightness') }}</span>
               <el-slider v-model="brightness" :min="-100" :max="100" @change="handleImageAdjust" />
@@ -34,7 +31,7 @@
           </el-tab-pane>
           <el-tab-pane :label="t('img.ocr')" name="ocr">
             <el-button @click="handleOCR">{{ t('img.extractText') }}</el-button>
-            <el-input v-model="ocrText" type="textarea" rows="4" />
+            <el-input v-model="ocrText" type="textarea" :rows="4" />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -69,14 +66,19 @@ let fabricCanvas = null;
 let fabricImage = null;
 let originalImageData = null;
 
-const dialogWidth = computed(() => {
-    return window.innerWidth <= 768 ? '90%' : '40%'
+let dialogWidth = computed(() => {
+  return window.innerWidth <= 768 ? '90%' : '60%'
+})
+
+let dialogHeight = computed(() => {
+  return window.innerWidth <= 768 ? '70%' : '70%'
 })
 
 onMounted(() => {
-    window.addEventListener('resize', () => {
-        dialogWidth.value = window.innerWidth <= 768 ? '80%' : '60%'
-    })
+  window.addEventListener('resize', () => {
+    dialogWidth.value = window.innerWidth <= 768 ? '90%' : '60%'
+    dialogHeight.value = window.innerWidth <= 768 ? '70%' : '70%'
+  })
 })
 
 const props = defineProps({
@@ -95,13 +97,7 @@ const contrast = ref(0);
 const ocrText = ref('');
 const isGrayscale = ref(false);
 let callbackFn = null;
-
 const canvas = ref(null);
-
-const onDialogOpen = async () => {
-  await nextTick();
-  await initCanvas();
-};
 
 const initCanvas = async () => {
   if (!canvas.value) {
@@ -115,12 +111,9 @@ const initCanvas = async () => {
       fabricCanvas = null;
     }
 
-    canvas.value.width = 400;
-    canvas.value.height = 300;
-    
     fabricCanvas = new Canvas(canvas.value, {
-      width: 400,
-      height: 300,
+      width: parseInt(dialogWidth.value * 0.8),
+      height: parseInt(dialogHeight.value * 0.6),
       selection: false
     });
 
@@ -142,18 +135,22 @@ const loadImage = async (url) => {
     fabricImage = await FabricImage.fromURL(url, {
       crossOrigin: 'anonymous'
     });
-    
+
     fabricCanvas.clear();
-    
+
     const scale = Math.min(
-      (fabricCanvas.width / fabricImage.width) * 0.9,
-      (fabricCanvas.height / fabricImage.height) * 0.9
+      (fabricCanvas.width / fabricImage.width),
+      (fabricCanvas.height / fabricImage.height)
     );
-    
+
     fabricImage.scale(scale);
+    fabricImage.set({
+      left: (fabricCanvas.width - fabricImage.width * scale) / 2,
+      top: (fabricCanvas.height - fabricImage.height * scale) / 2
+    });
     fabricCanvas.add(fabricImage);
     fabricCanvas.requestRenderAll();
-    
+
     originalImageData = {
       angle: fabricImage.angle,
       filters: [],
@@ -168,10 +165,9 @@ const loadImage = async (url) => {
 };
 
 const rotateRight = () => {
-  if (fabricImage) {
-    fabricImage.rotate(fabricImage.angle + 90);
-    fabricCanvas.renderAll();
-  }
+  if (!fabricImage) return;
+  fabricImage.rotate(fabricImage.angle + 90);
+  fabricCanvas.renderAll();
 };
 
 const convertToGrayscale = () => {
@@ -188,30 +184,30 @@ const handleImageAdjust = () => {
 const applyFilters = () => {
   if (!fabricImage) return;
   fabricImage.filters = [];
-  
+
   if (isGrayscale.value) {
     fabricImage.filters.push(new filters.Grayscale());
   }
-  
+
   if (brightness.value !== 0) {
     fabricImage.filters.push(new filters.Brightness({
       brightness: brightness.value / 100
     }));
   }
-  
+
   if (contrast.value !== 0) {
     fabricImage.filters.push(new filters.Contrast({
       contrast: contrast.value / 100
     }));
   }
-  
+
   fabricImage.applyFilters();
   fabricCanvas.renderAll();
 };
 
 const resetImage = () => {
   if (!fabricImage || !originalImageData) return;
-  
+
   fabricImage.set({
     angle: originalImageData.angle,
     left: originalImageData.left,
@@ -219,11 +215,11 @@ const resetImage = () => {
     scaleX: originalImageData.scale,
     scaleY: originalImageData.scale
   });
-  
+
   fabricImage.filters = [];
   fabricImage.applyFilters();
   fabricCanvas.renderAll();
-  
+
   brightness.value = 0;
   contrast.value = 0;
   isGrayscale.value = false;
@@ -235,7 +231,7 @@ const open = async (url, callback) => {
       fabricCanvas.dispose();
       fabricCanvas = null;
     }
-    
+
     previewUrl.value = url;
     visible.value = true;
     callbackFn = callback;
@@ -244,34 +240,70 @@ const open = async (url, callback) => {
     ocrText.value = '';
     activeTab.value = 'adjust';
     originalImageData = null;
-    
     await nextTick();
     await initCanvas();
-    if (fabricCanvas) {
-      loadImage(url);
-    }
   } catch (error) {
     console.error('Failed to open image process dialog:', error);
     callback?.(null);
   }
 };
 
-const getProcessedImage = () => {
-  if (!fabricCanvas) return null;
-  return fabricCanvas.toDataURL({
-    format: 'png',
-    quality: 1
-  });
+const getProcessedImage = async () => {
+  console.log('getProcessedImage', fabricCanvas, fabricImage);
+  if (!fabricCanvas || !fabricImage) return null;
+
+  try {
+    const img = new Image();
+    const imageLoadPromise = new Promise((resolve, reject) => {
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.crossOrigin = 'anonymous';
+      img.src = previewUrl.value;
+    });
+    const loadedImg = await imageLoadPromise;
+
+    const originalWidth = loadedImg.naturalWidth || 800;
+    const originalHeight = loadedImg.naturalHeight || 600;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = originalWidth;
+    tempCanvas.height = originalHeight;
+    
+    const tempFabricCanvas = new Canvas(tempCanvas);    
+    const tempImage = new FabricImage(loadedImg, {
+      scaleX: 1,
+      scaleY: 1,
+      left: 0,
+      top: 0,
+      originX: 'left',
+      originY: 'top',
+      angle: fabricImage.angle
+    });
+
+    tempImage.filters = [...fabricImage.filters];    
+    tempImage.applyFilters();
+    tempFabricCanvas.add(tempImage);
+    tempFabricCanvas.renderAll();
+    
+    const dataURL = tempFabricCanvas.toDataURL({
+      format: 'png',
+      quality: 1
+    });
+    tempFabricCanvas.dispose();
+    return dataURL;
+  } catch (error) {
+    console.error('get image failed:', error);
+    return null;
+  }
 };
 
-const handleConfirm = (mode = 'imageOnly') => {
+const handleConfirm = async (mode = 'imageOnly') => {
   try {
     if (callbackFn) {
-      const processedImageData = getProcessedImage();
+      const processedImageData = await getProcessedImage();
       if (!processedImageData && mode !== 'textOnly') {
         throw new Error('Failed to get processed image');
       }
-      
+
       switch (mode) {
         case 'imageOnly':
           callbackFn({ file: processedImageData });
@@ -305,7 +337,7 @@ const handleConfirm = (mode = 'imageOnly') => {
 };
 
 const handleOCR = async () => {
-  const processedImageData = getProcessedImage();
+  const processedImageData = await getProcessedImage();
   if (!processedImageData) {
     console.error('Failed to get processed image');
     return;
@@ -313,7 +345,7 @@ const handleOCR = async () => {
 
   const base64Data = processedImageData.split(',')[1];
   const blob = await fetch(`data:image/png;base64,${base64Data}`).then(res => res.blob());
-  
+
   const formData = new FormData();
   formData.append('file', blob, 'processed_image.png');
   formData.append('rtype', 'processimage');
@@ -349,7 +381,6 @@ const close = () => {
 
 defineExpose({
   open,
-  visible,
   close
 });
 </script>
@@ -359,14 +390,6 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.preview-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  min-height: 300px;
 }
 
 canvas {
@@ -392,6 +415,7 @@ canvas {
   align-items: center;
   margin: 5px 0;
 }
+
 .slider-label {
   min-width: 70px;
   margin-right: 16px;
