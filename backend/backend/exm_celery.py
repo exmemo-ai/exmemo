@@ -6,9 +6,12 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
 app = Celery('exmemo')
 
+redis_host = os.environ.get('REDIS_HOST', settings.BACKEND_ADDR_OUTER)
+redis_port = os.environ.get('REDIS_PORT', '6379')
+
 app.conf.update(
-    broker_url=f'redis://{settings.BACKEND_ADDR_OUTER}:6379/0',
-    result_backend=f'redis://{settings.BACKEND_ADDR_OUTER}:6379/1',
+    broker_url=f'redis://{redis_host}:{redis_port}/0',
+    result_backend=f'redis://{redis_host}:{redis_port}/1',
     task_serializer='json',
     accept_content=['json'],
     timezone='Asia/Shanghai',
