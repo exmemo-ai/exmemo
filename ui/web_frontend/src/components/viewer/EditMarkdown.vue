@@ -555,6 +555,7 @@ const resizeImageIfNeeded = (file) => {
 
 const handleImageChange = async (files, callback) => {
     if (files.length === 0) {
+        callback([]);
         return;
     } else if (files.length > 1) {
         for (const file of files) {
@@ -567,8 +568,9 @@ const handleImageChange = async (files, callback) => {
                 }
             }
         }
-        return
+        return;
     }
+    callback([]);
 
     const file = files[0];
     const resizedFile = await resizeImageIfNeeded(file);
