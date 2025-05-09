@@ -26,7 +26,6 @@
                     :showCodeRowNumber="true"
                     @onChange="handleContentChange"
                     @on-save="saveContent"
-                    @onUploadImg="handleImageChange"
                     :toolbars="customToolbars"
                     preview-theme="github"
                     :showToolbar="true"
@@ -37,6 +36,11 @@
                         <NormalToolbar :title="t('saveAs')" @onClick="saveAs">
                             <template #trigger>
                                 <el-icon><SaveAsIcon /></el-icon>
+                            </template>
+                        </NormalToolbar>
+                        <NormalToolbar :title="t('img.insertImage')" @onClick="uploadImage">
+                            <template #trigger>
+                                <el-icon><Picture /></el-icon>
                             </template>
                         </NormalToolbar>
                     </template>
@@ -79,6 +83,7 @@ import { MdEditor, NormalToolbar, config } from 'md-editor-v3';
 import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from '@/components/datatable/dataUtils';
 import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue';
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
+import { Picture } from '@element-plus/icons-vue';
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
@@ -120,7 +125,7 @@ const customToolbars = computed(() => {
         'unorderedList',
         'orderedList',
         'task',
-        'image',
+        1,
         '=',
         'previewOnly',
         'save',
@@ -144,7 +149,7 @@ const customToolbars = computed(() => {
         'table',
         'mermaid',
         'formula',
-        'image',
+        1,
         '=',
         'revoke',
         'next',
@@ -624,6 +629,32 @@ const handleImageChange = async (files, callback) => {
             }
         }
     }
+};
+
+const uploadImage = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = (event) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            handleImageChange(Array.from(files), (urls) => {
+                if (urls && urls.length > 0) {
+                    mdEditor.value?.insert(() => {
+                        return {
+                            targetValue: `![image](${urls[0]})\n`,
+                            select: false,
+                            deviationStart: 0,
+                            deviationEnd: 0
+                        };
+                    });
+                }
+            });
+        }
+    };
+    input.click();
 };
 
 config({
