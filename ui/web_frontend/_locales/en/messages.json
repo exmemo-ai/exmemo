@@ -537,6 +537,11 @@
         "insertImage": "Insert image",
         "insertBoth": "Insert both",
         "insertText": "Insert text",
-        "noTextPleaseExtract": "No text, please extract first"
+        "noTextPleaseExtract": "No text, please extract first",
+        "crop": "Crop",
+        "exitCrop": "Exit crop",
+        "applyCrop": "Apply crop",
+        "cropSuccess": "Crop successful",
+        "cropFailed": "Crop failed"
     }    
 }

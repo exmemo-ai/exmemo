@@ -541,6 +541,11 @@
         "insertImage": "插入图片",
         "insertBoth": "插入图片和文字",
         "insertText": "插入文字",
-        "noTextPleaseExtract": "无文本内容，请先提取文字"
+        "noTextPleaseExtract": "无文本内容，请先提取文字",
+        "crop": "裁剪",
+        "exitCrop": "退出裁剪",
+        "applyCrop": "应用裁剪",
+        "cropSuccess": "裁剪成功",
+        "cropFailed": "裁剪失败"
     }
 }
