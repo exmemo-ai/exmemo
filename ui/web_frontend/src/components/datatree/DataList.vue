@@ -66,10 +66,13 @@
                             </el-button>
                         </template>
                         <template v-else-if="etype_value === 'note'">
+                            <el-button size="small" @click="download" :title="t('download')">
+                                <el-icon><Download /></el-icon>
+                            </el-button>
                             <el-button size="small" @click="viewContent" :title="t('view')">
                                 <el-icon><View /></el-icon>
                             </el-button>
-                            <el-button size="small" @click="editNote" :title="t('edit')">
+                            <el-button size="small" v-if="isMarkdownFile" @click="editNote" :title="t('edit')">
                                 <el-icon><Edit /></el-icon>
                             </el-button>
                         </template>
@@ -488,6 +491,11 @@ const startTask = () => {
         navbar.value.startTaskCheck();
     }
 };
+
+const isMarkdownFile = computed(() => {
+    if (!currentNode.value || !currentNode.value.addr) return false;
+    return currentNode.value.addr.toLowerCase().endsWith('.md');
+});
 
 onMounted(async () => {
     mounted.value = true;

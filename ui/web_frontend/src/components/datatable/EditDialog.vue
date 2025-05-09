@@ -22,10 +22,11 @@
                     <el-button v-if="form.etype !== 'record'" size="small" @click="viewContent" :title="$t('view')">
                         <el-icon><View /></el-icon>
                     </el-button>
-                    <el-button v-if="form.etype === 'note'" size="small" @click="editNote" :title="$t('edit')">
+                    <el-button v-if="(form.etype === 'note' && file_path && file_path.toLowerCase().endsWith('.md'))" 
+                              size="small" @click="editNote" :title="$t('edit')">
                         <el-icon><Edit /></el-icon>
                     </el-button>
-                    <el-button v-if="form.etype === 'file'" size="small" @click="download" :title="$t('download')">
+                    <el-button v-if="form.etype === 'file' || form.etype === 'note'" size="small" @click="download" :title="$t('download')">
                         <el-icon><Download /></el-icon>
                     </el-button>
                 </div>
