@@ -1,8 +1,8 @@
 import { saveEntry } from '../datatable/dataUtils';
 import axios from 'axios';
 import { getURL, setDefaultAuthHeader, parseBackendError } from '@/components/support/conn'
+import SettingService from '@/components/settings/settingService'
 
-const IMAGE_DIR = 'attachments_2025'
 const IMAGE_PREFIX = 'Pasted_image_'
 
 const encodeSpecialChars = (str) => {
@@ -11,19 +11,26 @@ const encodeSpecialChars = (str) => {
     });
 };
 
-const getImagePattern = (fullPath = true) => {
-    const imagePath = fullPath ? `${IMAGE_DIR}/${IMAGE_PREFIX}` : IMAGE_PREFIX;
+const getImagePattern = (image_storage_location, fullPath = true) => {
+    const imagePath = fullPath ? `${image_storage_location}/${IMAGE_PREFIX}` : IMAGE_PREFIX;
     return `!\\[.*?\\]\\((${imagePath}[^)]+)\\)`;
 };
 
 class TempImageManager {
     constructor() {
         this.imageMap = new Map();
+        this.initialize();
+    }
+
+    async initialize() {
+        const settingService = SettingService.getInstance();
+        await settingService.loadSetting();
+        this.image_storage_location = settingService.getSetting('image_storage_location', 'attachments');
     }
 
     getPrefix(fullPath = true) {
         if (fullPath) {
-            return `${IMAGE_DIR}/${IMAGE_PREFIX}`;
+            return `${this.image_storage_location}/${IMAGE_PREFIX}`;
         }
         return IMAGE_PREFIX;
     }
@@ -57,7 +64,7 @@ class TempImageManager {
     }
 
     async uploadPendingImages(content, vault) {
-        const imageIds = Array.from(content.matchAll(new RegExp(getImagePattern(), 'g')))
+        const imageIds = Array.from(content.matchAll(new RegExp(getImagePattern(this.image_storage_location), 'g')))
             .map(match => match[1])
             .filter(id => this.imageMap.has(id));
 
@@ -94,7 +101,7 @@ class TempImageManager {
     }
 
     cleanupTempImages(content) {
-        const usedIds = Array.from(content.matchAll(new RegExp(getImagePattern(), 'g')))
+        const usedIds = Array.from(content.matchAll(new RegExp(getImagePattern(this.image_storage_location), 'g')))
             .map(match => match[1]);
         for (const [imageId, image] of this.imageMap) {
             if (!usedIds.includes(imageId)) {
@@ -167,8 +174,55 @@ export const handleImageLoad = async (src) => {
         }
         return src;
     } catch (error) {
-        console.error('Error loading image:', error);
+        parseBackendError(error);
         return src;
     }
-    return src;
+};
+
+export const resizeImageIfNeeded = (file, max_size=1024) => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                let needResize = false;
+                
+                if (width > max_size || height > max_size) {
+                    needResize = true;
+                    if (width > height) {
+                        height = Math.round(height * (max_size / width));
+                        width = max_size;
+                    } else {
+                        width = Math.round(width * (max_size / height));
+                        height = max_size;
+                    }
+                }
+                
+                if (!needResize) {
+                    resolve(file);
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    if (file.name) {
+                        Object.defineProperty(blob, 'name', {
+                            value: file.name,
+                            writable: false
+                        });
+                    }
+                    resolve(blob);
+                }, file.type || 'image/jpeg', 0.4);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
 };

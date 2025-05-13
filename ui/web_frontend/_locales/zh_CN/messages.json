@@ -219,7 +219,8 @@
         "contentEmpty": "内容为空",
         "notSupport": "不支持剪切板",
         "permissionDenied": "剪切板权限被拒绝",
-        "contentNotSupport": "不支持打开当前内容"
+        "contentNotSupport": "不支持打开当前内容",
+        "getContentFailed": "提取网页失败，如需在些查看，请将网页内容复制到剪切板"
     },
     "opt": {
         "vault": "仓库",
@@ -378,7 +379,12 @@
         "truncateFirstLast": "保留首尾",
         "bookmarkDownloadWeb": "导入书签时下载网页",
         "truncateDesc": "在调用大型处理文本时，如果内容过长做截断处理",
-        "browserTTS": "浏览器TTS"
+        "browserTTS": "浏览器TTS",
+        "imageSettings": "图片设置",
+        "imageStorageLocation": "图片存储位置",
+        "baiduOCRAppId": "百度OCR APPID",
+        "baiduOCRApiKey": "百度OCR API Key",
+        "baiduOCRSecretKey": "百度OCR Secret Key"
     },
     "player": {
         "prevPara": "上一段",

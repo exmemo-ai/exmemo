@@ -88,7 +88,7 @@ import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/datatable/AddDialog.vue'
-import { getMarkdownItConfig, uploadPendingImages, cleanupTempImages, addTempImage } from './imageUtils';
+import { getMarkdownItConfig, uploadPendingImages, cleanupTempImages, addTempImage, resizeImageIfNeeded } from './imageUtils';
 import ImageProcessDialog from '@/components/viewer/ImageProcessDialog.vue';
 
 const { t } = useI18n();
@@ -509,55 +509,6 @@ const handleResize = () => {
     document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
 }
 
-const resizeImageIfNeeded = (file) => {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const MAX_SIZE = 1024;
-                let width = img.width;
-                let height = img.height;
-                let needResize = false;
-                
-                if (width > MAX_SIZE || height > MAX_SIZE) {
-                    needResize = true;
-                    if (width > height) {
-                        height = Math.round(height * (MAX_SIZE / width));
-                        width = MAX_SIZE;
-                    } else {
-                        width = Math.round(width * (MAX_SIZE / height));
-                        height = MAX_SIZE;
-                    }
-                }
-                
-                if (!needResize) {
-                    resolve(file);
-                    return;
-                }
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                canvas.toBlob((blob) => {
-                    if (file.name) {
-                        Object.defineProperty(blob, 'name', {
-                            value: file.name,
-                            writable: false
-                        });
-                    }
-                    resolve(blob);
-                }, file.type || 'image/jpeg', 0.4);
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-};
-
 const handleImageChange = async (files, callback) => {
     if (files.length === 0) {
         callback([]);
@@ -578,7 +529,7 @@ const handleImageChange = async (files, callback) => {
     callback([]);
 
     const file = files[0];
-    const resizedFile = await resizeImageIfNeeded(file);
+    const resizedFile = await resizeImageIfNeeded(file, 1600);
     const url = URL.createObjectURL(resizedFile);
     const processed = await new Promise(resolve => {
         imageProcessRef.value.open(url, async (result) => {
@@ -587,33 +538,47 @@ const handleImageChange = async (files, callback) => {
     });
 
     if (processed?.file) {
-        const base64Data = processed.file.split(',')[1];
-        const binaryStr = atob(base64Data);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-            bytes[i] = binaryStr.charCodeAt(i);
-        }
-        const originalName = file.name;
-        const lastDotIndex = originalName.lastIndexOf('.');
-        const nameWithoutExt = lastDotIndex !== -1 ? originalName.slice(0, lastDotIndex) : originalName;
-        const extension = lastDotIndex !== -1 ? originalName.slice(lastDotIndex) : '.png';
-        const newFileName = `${nameWithoutExt}_edit${extension}`;
-        const blob = new Blob([bytes], { type: 'image/png' });
-        Object.defineProperty(blob, 'name', {
-            value: newFileName,
-            writable: false
-        });
+        let processedFile = processed.file;
         
-        const imageId = addTempImage(blob);
+        if (typeof processedFile === 'string' && processedFile.startsWith('data:')) {
+            try {
+                const base64Data = processedFile.split(',')[1];
+                const binaryStr = atob(base64Data);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                
+                const originalName = file.name;
+                const lastDotIndex = originalName.lastIndexOf('.');
+                const nameWithoutExt = lastDotIndex !== -1 ? originalName.slice(0, lastDotIndex) : originalName;
+                const extension = lastDotIndex !== -1 ? originalName.slice(lastDotIndex) : '.png';
+                const newFileName = `${nameWithoutExt}_edit${extension}`;
+                
+                const mimeType = processedFile.split(';')[0].split(':')[1];
+                processedFile = new Blob([bytes], { type: mimeType || 'image/png' });
+                Object.defineProperty(processedFile, 'name', {
+                    value: newFileName,
+                    writable: false
+                });
+            } catch (e) {
+                console.error('Failed to convert base64 to Blob:', e);
+                ElMessage.error(t('image.processingFailed'));
+                return;
+            }
+        } else if (!(processedFile instanceof Blob)) {
+            console.error('Invalid processed file type:', typeof processedFile);
+            ElMessage.error(t('image.invalidFileFormat'));
+            return;
+        }
+        
+        const finalResizedFile = await resizeImageIfNeeded(processedFile, 1024);
+        const imageId = addTempImage(finalResizedFile);
         if (imageId) {
             callback([imageId]);
             isContentModified.value = true;
         }
-    } else {
-        console.error('Invalid processed file:', processed);
-        ElMessage.error(t('uploadFail'));
-    }
-    if (processed?.text) {
+    } else if (processed?.text) {
         const text = processed.text;
         if (text.length > 0) {
             if (mdEditor.value) {
@@ -628,6 +593,9 @@ const handleImageChange = async (files, callback) => {
                 isContentModified.value = true;
             }
         }
+    } else {
+        console.error('Invalid processed result:', processed);
+        ElMessage.error(t('uploadFail'));
     }
 };
 

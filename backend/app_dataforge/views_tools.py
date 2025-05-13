@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from knox.auth import TokenAuthentication
 
+from backend.common.user.user import UserManager
 from backend.common.user.utils import parse_common_args, get_user_id
 from backend.common.utils.net_tools import do_result
 from backend.common.parser.converter import is_support
@@ -524,6 +525,8 @@ class EntryAPIView(APIView):
     def process_image(self, request):
         try:
             user_id = get_user_id(request)
+            user = UserManager.get_instance().get_user(user_id)
+
             if user_id is None:
                 return do_result(False, "User_id is empty")
 
@@ -537,9 +540,16 @@ class EntryAPIView(APIView):
                     destination.write(chunk)
 
             opt = request.GET.get("opt", request.POST.get("opt", None))
+
             if opt and opt == "ocr":
+                baidu_ocr_app_id = user.get_engine_type('baidu_ocr_app_id', None)
+                baidu_ocr_api_key = user.get_engine_type('baidu_ocr_api_key', None)
+                baidu_ocr_secret_key = user.get_engine_type('baidu_ocr_secret_key', None)
                 try:
-                    text = ocr_baidu.img_to_str_baidu(file_path, debug=True)
+                    text = ocr_baidu.img_to_str_baidu(file_path, baidu_ocr_app_id=baidu_ocr_app_id,
+                                                       api_key=baidu_ocr_api_key,
+                                                       secret_key=baidu_ocr_secret_key,
+                                                       debug=True)
                     if text is None:
                         logger.error("OCR result is None")
                         return do_result(False, "OCR processing returned empty result")
@@ -550,13 +560,6 @@ class EntryAPIView(APIView):
                     return do_result(False, "OCR service not properly initialized")
                 except Exception as e:
                     logger.error(f"OCR processing error: {str(e)}")
-            opt = request.GET.get("opt", request.POST.get("opt", None))
-            if opt and opt == "ocr":
-                try:
-                    text = ocr_baidu.img_to_str_baidu(file_path)
-                    return do_result(True, {"text": text})
-                except Exception as e:
-                    logger.error(f"OCR error: {str(e)}")
                     return do_result(False, "OCR processing failed")
 
             return do_result(True, {"message": "Image processed successfully"})

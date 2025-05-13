@@ -290,6 +290,10 @@ const fetchWeb = async (url) => {
         const res = await axios.post(getURL() + 'api/web/', formData);
         if (res.data.status === 'success') {
             ElMessage.info(t('paste.openClipboardContent'));
+            if (!res.data.content && !res.data.title) {
+                ElMessage.warning(t('paste.getContentFailed'));
+                return;
+            }
             form.value = {
                 content: res.data.content,
                 title: res.data.title,

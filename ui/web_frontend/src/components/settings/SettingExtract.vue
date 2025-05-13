@@ -94,6 +94,26 @@
           </div>
         </div>
 
+        <div class="settings-section">
+          <div class="settings-section-header">
+              {{ $t('settings.imageSettings') }}
+          </div>
+          <div class="settings-section-content">
+            <el-form-item :label="$t('settings.imageStorageLocation')">
+              <el-input v-model="image_storage_location" placeholder="/path/to/images" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.baiduOCRAppId')" >
+              <el-input v-model="baidu_ocr_app_id" autocomplete="off" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.baiduOCRApiKey')" >
+              <el-input v-model="baidu_ocr_api_key" autocomplete="off" />
+            </el-form-item>
+            <el-form-item :label="$t('settings.baiduOCRSecretKey')">
+              <el-input v-model="baidu_ocr_secret_key" autocomplete="off" />
+            </el-form-item>
+          </div>
+        </div>
+
     </el-form>
 </template>
 
@@ -122,7 +142,12 @@ export default {
       note_get_abstract: false,
       truncate_content: true,
       truncate_max_length: 1024,
-      truncate_mode: 'first'
+      truncate_mode: 'first',
+      // image settings
+      image_storage_location: 'attachments',
+      baidu_ocr_app_id: '',
+      baidu_ocr_api_key: '',
+      baidu_ocr_secret_key: ''
     }
   },
   async created() {
@@ -130,7 +155,9 @@ export default {
     Object.keys(this.$data).forEach(key => {
       if (settings.setting) {
         if (key in settings.setting) {
-          this[key] = settings.setting[key];
+          if (settings.setting[key] !== '') {
+            this[key] = settings.setting[key];
+          }
         }
       }
     });

@@ -219,7 +219,8 @@
         "contentEmpty": "Content is empty",
         "notSupport": "Clipboard not supported",
         "permissionDenied": "Clipboard permission denied",
-        "contentNotSupport": "Content not supported"
+        "contentNotSupport": "Content not supported",
+        "getContentFailed": "Failed to get content, please copy the webpage content to clipboard to view here"
     },    
     "opt": {
         "vault": "Vault",
@@ -379,7 +380,12 @@
         "truncateFirstLast": "Keep beginning and end",
         "bookmarkDownloadWeb": "Download webpage when importing bookmarks",
         "truncateDesc": "When processing long texts with LLM, truncate if content exceeds maximum length",
-        "browserTTS": "Browser TTS"
+        "browserTTS": "Browser TTS",
+        "imageSettings": "Image settings",
+        "imageStorageLocation": "Image storage location",
+        "baiduOCRAppId": "Baidu OCR App ID",
+        "baiduOCRApiKey": "Baidu OCR API Key",
+        "baiduOCRSecretKey": "Baidu OCR Secret Key"
     },
     "player": {
         "prevPara": "Prev Para",

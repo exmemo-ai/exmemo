@@ -147,7 +147,8 @@ class SettingAPIView(APIView):
             'llm_chat_prompt', 'llm_chat_show_count',
             'llm_chat_max_context_count', 'llm_chat_memory_count',
             'truncate_max_length', 'truncate_mode',
-            'learn_word_voc', 'default_vault'
+            'learn_word_voc', 'default_vault', 'image_storage_location',
+            'baidu_ocr_app_id', 'baidu_ocr_api_key', 'baidu_ocr_secret_key',
         ]
         
         boolean_settings = [

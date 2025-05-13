@@ -18,7 +18,6 @@ from backend.common.llm.llm_hub import EmbeddingTools
 from backend.common.parser import converter, utils_md
 from backend.common.parser.md_parser import MarkdownParser
 from backend.common.utils.file_tools import is_plain_text, convert_to_md
-from backend.common.utils.text_tools import convert_dic_to_json
 from backend.common.utils.regular_tools import regular_keyword
 from backend.common.utils.web_tools import get_url_content
 from backend.common.user.user import UserManager
