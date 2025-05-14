@@ -226,3 +226,64 @@ export const resizeImageIfNeeded = (file, max_size=1024) => {
         reader.readAsDataURL(file);
     });
 };
+
+export const handleSingleImage = async (file, imageProcessRef, addTempImageCallback) => {
+    if (!file || !(file instanceof Blob)) {
+        console.error('Invalid file object');
+        return null;
+    }
+
+    const resizedFile = await resizeImageIfNeeded(file, 1600);
+    const url = URL.createObjectURL(resizedFile);
+    
+    const processed = await new Promise(resolve => {
+        imageProcessRef.open(url, async (result) => {
+            resolve(result);
+        });
+    });
+
+    if (processed?.file) {
+        let processedFile = processed.file;
+        
+        if (typeof processedFile === 'string' && processedFile.startsWith('data:')) {
+            try {
+                const base64Data = processedFile.split(',')[1];
+                const binaryStr = atob(base64Data);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                
+                const originalName = file.name;
+                const lastDotIndex = originalName.lastIndexOf('.');
+                const nameWithoutExt = lastDotIndex !== -1 ? originalName.slice(0, lastDotIndex) : originalName;
+                const extension = lastDotIndex !== -1 ? originalName.slice(lastDotIndex) : '.png';
+                const newFileName = `${nameWithoutExt}_edit${extension}`;
+                
+                const mimeType = processedFile.split(';')[0].split(':')[1];
+                processedFile = new Blob([bytes], { type: mimeType || 'image/png' });
+                Object.defineProperty(processedFile, 'name', {
+                    value: newFileName,
+                    writable: false
+                });
+            } catch (e) {
+                console.error('Failed to convert base64 to Blob:', e);
+                return { error: 'processing_failed' };
+            }
+        } else if (!(processedFile instanceof Blob)) {
+            console.error('Invalid processed file type:', typeof processedFile);
+            return { error: 'invalid_format' };
+        }
+        
+        const finalResizedFile = await resizeImageIfNeeded(processedFile, 1024);
+        const imageId = addTempImage(finalResizedFile);
+        if (imageId) {
+            return { type: 'image', imageId };
+        }
+        return { error: 'failed_to_add_temp_image' };
+    } else if (processed?.text) {
+        return { type: 'text', text: processed.text };
+    }
+    
+    return { error: 'unknown_error' };
+};

@@ -27,7 +27,6 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
   constructor(callback) {
     const safeCallback = (entries, observer) => {
       try {
-        // 过滤掉无效的entries
         const validEntries = entries.filter(entry => {
           const target = entry.target;
           return target && typeof target.getBoundingClientRect === 'function';

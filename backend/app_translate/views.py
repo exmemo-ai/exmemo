@@ -438,7 +438,7 @@ class TranslateLearnView(APIView):
             sorted_dates = sorted_dates[-30:]
             
         result = {date: dic_count[date] for date in sorted_dates}
-        logger.error(f'@@@@ {result}')
+        #logger.error(f'@@@@ {result}')
         return result
 
     def summary(self, args, request):

@@ -29,6 +29,7 @@
                     :toolbars="customToolbars"
                     preview-theme="github"
                     :showToolbar="true"
+                    :preview="isLandscape ? true: false"
                     :scroll-auto="true"
                     :footers="['markdownTotal']"
                 >
@@ -88,7 +89,7 @@ import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
 import AddDialog from '@/components/datatable/AddDialog.vue'
-import { getMarkdownItConfig, uploadPendingImages, cleanupTempImages, addTempImage, resizeImageIfNeeded } from './imageUtils';
+import { getMarkdownItConfig, uploadPendingImages, cleanupTempImages, addTempImage, resizeImageIfNeeded, handleSingleImage } from './imageUtils';
 import ImageProcessDialog from '@/components/viewer/ImageProcessDialog.vue';
 
 const { t } = useI18n();
@@ -529,73 +530,31 @@ const handleImageChange = async (files, callback) => {
     callback([]);
 
     const file = files[0];
-    const resizedFile = await resizeImageIfNeeded(file, 1600);
-    const url = URL.createObjectURL(resizedFile);
-    const processed = await new Promise(resolve => {
-        imageProcessRef.value.open(url, async (result) => {
-            resolve(result);
-        });
-    });
-
-    if (processed?.file) {
-        let processedFile = processed.file;
-        
-        if (typeof processedFile === 'string' && processedFile.startsWith('data:')) {
-            try {
-                const base64Data = processedFile.split(',')[1];
-                const binaryStr = atob(base64Data);
-                const bytes = new Uint8Array(binaryStr.length);
-                for (let i = 0; i < binaryStr.length; i++) {
-                    bytes[i] = binaryStr.charCodeAt(i);
-                }
-                
-                const originalName = file.name;
-                const lastDotIndex = originalName.lastIndexOf('.');
-                const nameWithoutExt = lastDotIndex !== -1 ? originalName.slice(0, lastDotIndex) : originalName;
-                const extension = lastDotIndex !== -1 ? originalName.slice(lastDotIndex) : '.png';
-                const newFileName = `${nameWithoutExt}_edit${extension}`;
-                
-                const mimeType = processedFile.split(';')[0].split(':')[1];
-                processedFile = new Blob([bytes], { type: mimeType || 'image/png' });
-                Object.defineProperty(processedFile, 'name', {
-                    value: newFileName,
-                    writable: false
-                });
-            } catch (e) {
-                console.error('Failed to convert base64 to Blob:', e);
-                ElMessage.error(t('image.processingFailed'));
-                return;
-            }
-        } else if (!(processedFile instanceof Blob)) {
-            console.error('Invalid processed file type:', typeof processedFile);
-            ElMessage.error(t('image.invalidFileFormat'));
-            return;
-        }
-        
-        const finalResizedFile = await resizeImageIfNeeded(processedFile, 1024);
-        const imageId = addTempImage(finalResizedFile);
-        if (imageId) {
-            callback([imageId]);
+    const result = await handleSingleImage(file, imageProcessRef.value, addTempImage);
+    
+    if (result.type === 'image') {
+        callback([result.imageId]);
+        isContentModified.value = true;
+    } else if (result.type === 'text') {
+        if (result.text.length > 0 && mdEditor.value) {
+            mdEditor.value?.insert(() => {
+                return {
+                    targetValue: result.text + '\n\n',
+                    select: true,
+                    deviationStart: 0,
+                    deviationEnd: 0
+                };
+            });
             isContentModified.value = true;
         }
-    } else if (processed?.text) {
-        const text = processed.text;
-        if (text.length > 0) {
-            if (mdEditor.value) {
-                mdEditor.value?.insert(() => {
-                    return {
-                        targetValue: text + '\n\n',
-                        select: true,
-                        deviationStart: 0,
-                        deviationEnd: 0
-                    };
-                });
-                isContentModified.value = true;
-            }
-        }
-    } else {
-        console.error('Invalid processed result:', processed);
-        ElMessage.error(t('uploadFail'));
+    } else if (result.error) {
+        const errorMessages = {
+            'processing_failed': t('image.processingFailed'),
+            'invalid_format': t('image.invalidFileFormat'),
+            'unknown_error': t('uploadFail'),
+            'failed_to_add_temp_image': t('uploadFail')
+        };
+        ElMessage.error(errorMessages[result.error] || t('uploadFail'));
     }
 };
 

@@ -91,7 +91,9 @@
                     </div>
                     <div class="content-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp"
                         @contextmenu.prevent">
-                        <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
+                        <MdPreview :editorId="previewId" 
+                            preview-theme="github"
+                            :modelValue="markdownContent" :previewTheme="'default'"
                             :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
 
                         <div v-show="contextMenuVisible" class="context-menu"
@@ -963,22 +965,4 @@ const parsePaper = async () => {
     font-weight: bold;
 }
 
-.popup {
-    margin: 2px;
-    position: fixed;
-    width: 200px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    font-size: 12px;
-    z-index: 9999;
-    padding: 8px;
-}
-
-.el-button {
-    padding: 8px 12px;
-}
-
-.el-button-group .el-button {
-    padding: 8px 12px;
-}
 </style>

@@ -87,6 +87,18 @@ let dialogHeight = computed(() => {
   return window.innerWidth <= 768 ? '70%' : '70%'
 })
 
+const actualDialogWidth = computed(() => {
+  const percentage = parseInt(dialogWidth.value) / 100;
+  //console.log('actualDialogWidth', percentage, window.innerWidth);
+  return Math.floor(window.innerWidth * percentage);
+})
+
+const actualDialogHeight = computed(() => {
+  const percentage = parseInt(dialogHeight.value) / 100;
+  //console.log('actualDialogHeight', percentage, window.innerHeight);
+  return Math.floor(window.innerHeight * percentage);
+})
+
 onMounted(() => {
   window.addEventListener('resize', () => {
     dialogWidth.value = window.innerWidth <= 768 ? '90%' : '60%'
@@ -125,11 +137,16 @@ const initCanvas = async () => {
       fabricCanvas = null;
     }
 
+    const width = Math.floor(actualDialogWidth.value * 0.8);
+    const height = Math.floor(actualDialogHeight.value * 0.5);
+
     fabricCanvas = new Canvas(canvas.value, {
-      width: parseInt(dialogWidth.value * 0.8),
-      height: parseInt(dialogHeight.value * 0.6),
+      width: width,
+      height: height,
       selection: false
     });
+    //console.log('Canvas initialized:', dialogHeight.value, dialogWidth.value);
+    //console.log('Canvas initialized:', width, height);
 
     if (previewUrl.value) {
       await loadImage(previewUrl.value);
@@ -720,7 +737,7 @@ canvas {
 }
 
 .el-button-group {
-  margin-bottom: 15px;
+  margin-bottom: 0px;
 }
 
 .el-slider {
@@ -739,5 +756,13 @@ canvas {
   text-align: right;
   color: #606266;
   font-size: 14px;
+}
+
+:deep(.el-dialog__footer) {
+  padding-top: 0 !important;
+}
+
+:deep(.el-dialog) {
+  margin-top: 5vh !important;
 }
 </style>

@@ -113,9 +113,7 @@ const handleNewFolder = async () => {
             need_load: false,
             children: []
         };
-        const newFolder = mapTreeItem(folderData);
-        
-        // 创建新的树数据副本
+        const newFolder = mapTreeItem(folderData);        
         const newTreeData = JSON.parse(JSON.stringify(props.treeData || []));
         
         if (parentId === '') {

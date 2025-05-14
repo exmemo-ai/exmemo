@@ -98,8 +98,7 @@ class EntryFeatureTool:
         })
 
     def _need_llm(self, entry: EntryItem, user: Dict[str, Any], force: bool = False) -> bool:
-        """判断是否需要使用LLM提取特征"""
-        # 检查已有值
+        """check if LLM is needed for feature extraction"""
         if entry.ctype is not None and entry.meta.get("description"):
             return False
             
@@ -120,7 +119,7 @@ class EntryFeatureTool:
         return True
 
     def _process_llm_result(self, entry: EntryItem, features: Dict[str, Any], force: bool) -> None:
-        """处理LLM返回的特征并更新entry"""
+        """process LLM result and update entry"""
         if "category" in features:
             cat = features["category"]
             if force or entry.ctype is None:
@@ -138,7 +137,7 @@ class EntryFeatureTool:
 
     def parse(self, entry: EntryItem, content: str, use_llm: bool = True, 
               force: bool = False, debug: bool = False) -> Tuple[bool, EntryItem]:
-        """解析并填充条目的元数据"""
+        """Parse and fill the entry metadata"""
         try:            
             self._init_default_values(entry)
             
@@ -163,11 +162,10 @@ class EntryFeatureTool:
             return True, entry
             
         except Exception as e:
-            logger.error(f"特征提取失败: {e}")
+            logger.error(f"Feature parse failed: {e}")
             return False, entry
 
     def _init_default_values(self, entry: EntryItem) -> None:
-        """初始化默认值"""
         fields = ['ctype', 'status', 'atype', 'title']
         for field in fields:
             if getattr(entry, field, None) in (None, ''):  
@@ -175,7 +173,7 @@ class EntryFeatureTool:
 
     def _parse_record(self, entry: EntryItem, content: str,
                      use_llm: bool, force: bool, debug: bool) -> None:
-        """处理记录和聊天类型"""
+        """Process record and chat types"""
         if entry.title is None or entry.ctype is None or entry.status is None:
             ret, features = get_features_by_llm(
                 entry.user_id, content, entry.etype, use_llm=use_llm, debug=debug
@@ -185,7 +183,6 @@ class EntryFeatureTool:
 
     def _parse_note(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
-        """处理笔记类型"""
         user = UserManager.get_instance().get_user(entry.user_id)
         
         if entry.title is None:
@@ -203,7 +200,6 @@ class EntryFeatureTool:
 
     def _parse_file(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
-        """处理文件类型"""
         user = UserManager.get_instance().get_user(entry.user_id)
         
         if entry.title is None:
@@ -221,7 +217,6 @@ class EntryFeatureTool:
 
     def _parse_web(self, entry: EntryItem, content: str,
                    use_llm: bool, force: bool, debug: bool) -> None:
-        """处理网页类型"""
         user = UserManager.get_instance().get_user(entry.user_id)
         
         if entry.title is None or self._need_llm(entry, user, force):
@@ -240,7 +235,6 @@ class EntryFeatureTool:
         entry.atype = entry.atype or "third_party"
 
     def _process_title_length(self, entry: EntryItem) -> None:
-        """处理标题长度限制"""
         if entry.title and len(entry.title) > TITLE_MAX_LENGTH:
             title_copy = entry.title
             new_title = entry.title[:TITLE_MAX_LENGTH] + '...'

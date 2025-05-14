@@ -57,7 +57,7 @@ class EntryService:
 
     @staticmethod
     def _process_chat_entry(entry: EntryItem, data: Any, use_llm: bool = True):
-        # 默认title与ctype同时存在
+        # Default title and ctype exist at the same time
         if ((entry.ctype == DEFAULT_CATEGORY or entry.ctype is None) 
             and data is not None and 'reduce_msg' in data 
             and data['reduce_msg'] is not None and len(data['reduce_msg']) > 0):
