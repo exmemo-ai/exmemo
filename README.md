@@ -16,7 +16,7 @@ ExMemo is a personal knowledge management tool designed to record and manage var
 
 The system consists of a database, backend, and multiple frontend components. Distributed storage and databases store user files, texts, and vector data, with support for local deployment to ensure privacy. The backend provides APIs for CRUD operations, handles large model interactions, and processes data. It supports online models like OpenAI, Deepseek, and Qwen, as well as offline models like Ollama. Frontend options include a web service, a WeChat bot, an Obsidian plugin, and a browser extension, allowing users to upload and download data conveniently.
 
-ExMemo also integrates practical tools like calorie calculators, translators, reading aids for academic papers, and English learning helpers, demonstrating the synergy of personal data with large models and tools. Developers can use the backend service to create personalized applications based on user data.
+ExMemo also integrates practical tools like calorie calculators, translators, reading aids for academic papers, and English learning helpers. Additionally, the system provides tree-like file lists and preview functionality, supports batch task processing, and offers enhanced text editing capabilities (including image upload, editing, and OCR). Users can import and extract ZIP files, and convert various text formats to markdown. These tools demonstrate the synergy of personal data with large models and tools. Developers can use the backend service to create personalized applications based on user data.
 
 *Data Manager*
 

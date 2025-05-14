@@ -15,8 +15,8 @@ docker tag node_efrontend:$DATE_STR node_efrontend:latest
 cd ../wechat/
 . install.sh
 cd ../../
-docker-compose --env-file backend/.env --profile production stop
-docker-compose --env-file backend/.env down --volumes --remove-orphans
-docker-compose --env-file backend/.env --profile production up -d
+docker compose --env-file backend/.env --profile production stop
+docker compose --env-file backend/.env down --volumes --remove-orphans
+docker compose --env-file backend/.env --profile production up -d
 
 # Add DOCKER_BUILDKIT to optimize build speed, you need to install buildx: sudo apt-get install docker-buildx
