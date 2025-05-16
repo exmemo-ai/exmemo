@@ -5,7 +5,7 @@ PROXY_ADDR=http://192.168.10.166:12346
 NO_PROXY="192.168.10.166,192.168.10.169,192.168.10.168,192.168.10.165"
 
 echo "Stopping and removing existing containers..."
-docker compose --env-file backend/.env --profile production stop
+docker compose --env-file backend/.env --profile production down
 docker compose --env-file backend/.env down --volumes --remove-orphans
 
 echo "Removing any leftover containers..."
