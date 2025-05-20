@@ -460,6 +460,11 @@
         "refreshSuccess": "更新成功"
     },
     "task": {
+        "update_task": "更新任务",
+        "import_task": "导入任务",
+        "refresh_task": "刷新任务",
+        "delete_task": "删除任务",
+        "move_task": "移动任务",
         "taskStarted": "任务已开始",
         "taskManager": "任务管理",
         "taskCompleted": "任务已完成",

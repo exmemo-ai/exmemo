@@ -17,7 +17,7 @@ def update_files_task(self, user_id, tmp_file_paths, filepaths, filemd5s, dic, v
             user_id=user_id,
             task_id=self.request.id,
             status='PENDING',
-            task_name='update_files_task',
+            task_name='update_task',
         )
     try:
         success_list, emb_status = update_files(

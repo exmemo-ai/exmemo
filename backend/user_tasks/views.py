@@ -96,3 +96,23 @@ class UserTaskViewSet(viewsets.ModelViewSet):
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=False, methods=['delete'])
+    def delete_completed_tasks(self, request):
+        try:
+            user_id = get_user_id(request)
+            completed_tasks = UserTask.objects.filter(
+                user_id=user_id, 
+                status__in=['SUCCESS', 'FAILURE', 'REVOKED']
+            )
+            
+            deleted_count = completed_tasks.count()
+            completed_tasks.delete()
+            return Response({
+                'message': f'Successfully deleted {deleted_count} completed tasks'
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

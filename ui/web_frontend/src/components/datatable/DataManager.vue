@@ -257,7 +257,7 @@ export default {
                     }
                     this.$message({
                         type: 'success',
-                        message: this.t('taskStarted')
+                        message: this.t('task.taskStarted')
                     });
                 } else {
                     this.fetchData();

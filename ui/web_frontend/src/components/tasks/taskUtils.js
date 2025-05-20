@@ -21,5 +21,10 @@ export const taskService = {
     deleteTask: async (taskId) => {
         setDefaultAuthHeader()
         return await axios.delete(getURL() + `/api/tasks/${taskId}/delete_task/`)
+    },
+
+    deleteAllCompletedTasks: async () => {
+        setDefaultAuthHeader()
+        return await axios.delete(getURL() + '/api/tasks/delete_completed_tasks/')
     }
 }

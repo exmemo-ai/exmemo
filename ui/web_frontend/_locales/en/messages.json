@@ -456,6 +456,11 @@
         "refreshSuccess": "Refresh successful"
     },
     "task": {
+        "update_task": "Update",
+        "import_task": "Import",
+        "refresh_task": "Refresh",
+        "delete_task": "Delete",
+        "move_task": "Move",        
         "taskStarted": "Task started",
         "taskManager": "Task manager",
         "taskCompleted": "Task completed", 

@@ -18,7 +18,11 @@
       </template>
 
       <el-table :data="tasks.items" v-loading="loading">
-        <el-table-column prop="task_name" :label="$t('task.taskName')" />
+        <el-table-column prop="task_name" :label="$t('task.taskName')">
+          <template #default="scope">
+            {{ $t(`task.${scope.row.task_name}`, scope.row.task_name) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" :label="$t('task.status')">
           <template #default="scope">
             <el-tag :type="getStatusType(scope.row.status)">
@@ -165,7 +169,7 @@ const startTaskCheck = () => {
 }
 
 const currentPage = ref(1)
-const pageSize = ref(5)
+const pageSize = ref(10)
 const deleteConfirmVisible = ref(false)
 
 const handleSizeChange = (val) => {
@@ -190,20 +194,16 @@ const confirmDeleteAll = () => {
 
 const deleteAllTasks = async () => {
   try {
-    const completedTasks = tasks.value.items.filter(task => 
-      !['PENDING', 'STARTED'].includes(task.status)
-    )
-    
-    for (const task of completedTasks) {
-      await taskService.deleteTask(task.task_id)
-    }
-    
+    await taskService.deleteAllCompletedTasks()
     ElMessage.success(t('task.deletedAllCompleted'))
-    await fetchTasks()
-    deleteConfirmVisible.value = false
+    fetchTasks()
   } catch (error) {
-    console.error('Error deleting all tasks:', error)
-    ElMessage.error(t('task.taskDeleteError'))
+    if (error !== 'cancel') {
+      console.error('Error deleting all tasks:', error)
+      ElMessage.error(t('task.taskDeleteError'))
+    }
+  } finally {
+    deleteConfirmVisible.value = false
   }
 }
 
