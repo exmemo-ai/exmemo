@@ -121,7 +121,6 @@ export default ({
         },
 
         async newSession() {
-            console.log('aaaa')
             try {
                 await this.chat.newSession()
             } catch (error) {

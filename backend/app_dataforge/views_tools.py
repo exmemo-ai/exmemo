@@ -18,6 +18,7 @@ from backend.common.parser.converter import is_support
 from backend.settings import USE_CELERY
 from backend.common.utils.file_tools import get_content_type, get_ext
 from backend.common.files import utils_filemanager, filecache
+import backend.common.parser.ocr_baidu as ocr_baidu
 
 from .feature import EntryFeatureTool
 from .entry import get_type_options
@@ -26,10 +27,6 @@ from .models import StoreEntry
 from .tasks import import_task, refresh_task, delete_task, move_task
 from .file_tools import real_import, real_refresh, real_delete, real_move
 
-from rest_framework.decorators import api_view, authentication_classes, permission_classes 
-from PIL import Image, ImageEnhance
-from io import BytesIO
-import backend.common.parser.ocr_baidu as ocr_baidu
 
 MAX_LEVEL = 2
 
@@ -542,11 +539,11 @@ class EntryAPIView(APIView):
             opt = request.GET.get("opt", request.POST.get("opt", None))
 
             if opt and opt == "ocr":
-                baidu_ocr_app_id = user.get_engine_type('baidu_ocr_app_id', None)
-                baidu_ocr_api_key = user.get_engine_type('baidu_ocr_api_key', None)
-                baidu_ocr_secret_key = user.get_engine_type('baidu_ocr_secret_key', None)
+                baidu_ocr_app_id = user.get('baidu_ocr_app_id', None)
+                baidu_ocr_api_key = user.get('baidu_ocr_api_key', None)
+                baidu_ocr_secret_key = user.get('baidu_ocr_secret_key', None)
                 try:
-                    text = ocr_baidu.img_to_str_baidu(file_path, baidu_ocr_app_id=baidu_ocr_app_id,
+                    text = ocr_baidu.img_to_str_baidu(file_path, app_id=baidu_ocr_app_id,
                                                        api_key=baidu_ocr_api_key,
                                                        secret_key=baidu_ocr_secret_key,
                                                        debug=True)

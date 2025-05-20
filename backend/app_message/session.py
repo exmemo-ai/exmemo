@@ -61,7 +61,8 @@ class Session:
         else:
             arr = self.sid.split('_')
             if len(arr) > 1:
-                return arr[1][:4] + '-' + arr[1][4:6] + '-' + arr[1][6:8] + ' ' + arr[1][8:10] + ':' + arr[1][10:12] + ':' + arr[1][12:14]                
+                time_str = arr[-1]
+                return time_str[:4] + '-' + time_str[4:6] + '-' + time_str[6:8] + ' ' + time_str[8:10] + ':' + time_str[10:12] + ':' + time_str[12:14]                
             return self.sid             
     
     def set_cache(self, key, value):
@@ -322,8 +323,8 @@ class SessionManager:
                 if sess.user_id == user_id and sess.source == source:
                     if len(sess.messages) == 0:
                         logger.info(f'sid {sid}')
-                        if sid.find('_') != -1:
-                            time_str = sid.split('_')[1]
+                        if sid.rfind('_') != -1:
+                            time_str = sid.split('_')[-1]
                             # sid: xx_20241128093936091810
                             last_time = timezone.datetime.strptime(
                                 time_str,
