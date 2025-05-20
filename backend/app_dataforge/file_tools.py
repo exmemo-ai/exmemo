@@ -114,7 +114,7 @@ def real_refresh(user_id, addr, etype, is_folder, progress_callback=None, task_i
                           etype=etype, block_id=0, is_deleted=False)
     success_list = []
     if entries.count() == 0:
-        logger.warning(f"real_refresh {user_id} {addr} etype:{etype}, is_folder:{is_folder}, {len(entries)}")
+        logger.warning(f"real_refresh {user_id} {addr} etype:{etype}, is_folder:{is_folder}, entries {len(entries)}")
         return success_list
     for i, entry in enumerate(entries):
         entry = EntryItem.from_model(entry)

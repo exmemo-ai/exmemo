@@ -87,8 +87,10 @@ class EntryAPIView(APIView):
         else:
             return do_result(False, {"info": "extract failed"})
         
-    def _build_tree_node(self, path_dict, current_level, current_path, path_parts, 
+    def _build_tree_node(self, path_dict, current_level, path_parts, 
                          entry=None, path=None, is_last_level=False):
+        current_path = ""
+        path_parts = [part for part in path_parts if part and len(part) > 0]
         for i, part in enumerate(path_parts):
             if not part:
                 continue
@@ -139,7 +141,7 @@ class EntryAPIView(APIView):
                 query_conditions['etype'] = etype
 
             if path is not None and path != "" and etype in ['note', 'file']:
-                query_conditions['addr__startswith'] = path
+                query_conditions['addr__startswith'] = path + '/'
 
             query = StoreEntry.objects.filter(**query_conditions).only(
                 'idx', 'addr', 'etype', 'title', 'meta'
@@ -189,15 +191,12 @@ class EntryAPIView(APIView):
 
                 arr = rel_path.split('/')
                 if level != -1 and len(arr) > level:
-                    current_path = ""
-                    current_level = root
-                    self._build_tree_node(path_dict, current_level, current_path, arr[:len(arr)-1],
+                    # too many levels, only add dir
+                    self._build_tree_node(path_dict, root, arr[:len(arr)-1],
                                           path=path, is_last_level=True)
                     continue
 
-                current_path = ""
-                current_level = root
-                self._build_tree_node(path_dict, current_level, current_path, arr, entry=entry, path=path)
+                self._build_tree_node(path_dict, root, arr, entry=entry, path=path)
                 count += 1
             if debug:
                 logger.info('count: %s' % count)
