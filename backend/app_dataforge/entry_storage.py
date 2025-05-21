@@ -21,6 +21,7 @@ class EntryStorage:
         debug: bool = False
     ) -> tuple:
         logger.info(f"save {str(entry.to_dict())[:200]}")
+        #logger.info(f"save {str(entry.to_dict())}")
         
         try:
             entry.updated_time = timezone.now().astimezone(pytz.UTC)
@@ -46,7 +47,7 @@ class EntryStorage:
     def _update_entry(entry: EntryItem, has_new_content: bool, content: Optional[str] = None):
         ret_emb = True
         if has_new_content:
-            db_entry = StoreEntry.objects.get(idx=entry.idx)
+            db_entry = StoreEntry.objects.get(idx=entry.idx) # block_id=0
             for key, value in entry.to_model_dict().items():
                 setattr(db_entry, key, value)
             
@@ -79,7 +80,7 @@ class EntryStorage:
                 entry_dict.pop(field, None)
             for db_entry in entries:
                 for key, value in entry_dict.items():
-                    if key != 'meta':
+                    if key != 'meta' or db_entry.block_id == 0:
                         setattr(db_entry, key, value)
                 db_entry.save()
         return ret_emb

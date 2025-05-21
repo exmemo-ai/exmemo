@@ -5,12 +5,12 @@ import SettingService from '@/components/settings/settingService'
 import { t } from '@/utils/i18n'
 
 export async function saveEntry({
-    onSuccess,
     form,
-    path,
-    file,
-    onProgress,
-    onUploadStart, 
+    onSuccess = null,
+    path = null,
+    file = null,
+    onProgress = null,
+    onUploadStart = null, 
     showMessage = true
 }) {
     let func = 'api/entry/data/';
@@ -20,8 +20,9 @@ export async function saveEntry({
         if (form.content === '') {
             ElMessage.error(t('inputRecordContent'));
             return false;
+        } else if (form.content !== undefined) { // whether update content
+            formData.append('content', form.content);
         }
-        formData.append('content', form.content);
     } else if (form.etype === 'file'||form.etype === 'note') {
         if (!file && (form.idx === null || form.idx === undefined)) {
             if (form.etype === 'file') {

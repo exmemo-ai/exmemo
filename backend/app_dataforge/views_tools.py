@@ -1,6 +1,7 @@
 import os
 import traceback
 import base64
+import json
 from loguru import logger
 from urllib.parse import unquote
 
@@ -175,6 +176,12 @@ class EntryAPIView(APIView):
                 elif entry.etype == 'chat' or entry.etype == 'chat_record':
                     file_path = entry.title
                 else:
+                    if isinstance(entry.meta, str):
+                        try:
+                            entry.meta = json.loads(entry.meta)
+                        except Exception as e:
+                            logger.error(f"Error parsing meta: {str(e)}")
+                            entry.meta = {}
                     if entry.meta and 'update_path' in entry.meta:
                         file_path = entry.meta['update_path']
                     elif entry.meta and 'resource_path' in entry.meta:
@@ -241,7 +248,7 @@ class EntryAPIView(APIView):
                 task_id = move_task.delay(user_id, source, target, etype, is_folder)
                 return do_result(True, {"task_id": str(task_id)})
             else:
-                success_list = real_move(user_id, source, target, etype, is_folder)
+                success_list = real_move(user_id, source, target, etype, is_folder, debug=True)
                 if len(success_list) > 0:
                     return do_result(True, _("moveSuccess"))
                 else:

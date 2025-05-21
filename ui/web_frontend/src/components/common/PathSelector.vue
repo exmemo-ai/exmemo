@@ -191,13 +191,16 @@ const handlePathChange = (value) => {
 
 const handleCascaderChange = (value) => {
   let selectedPathValue = value ? value.join('/') : ''
+  if (selectedPathValue && !selectedPathValue.endsWith('/')) {
+    selectedPathValue += '/'
+  }
   
   if (localPath.value) {
     const pathParts = localPath.value.split('/')
     const lastPart = pathParts[pathParts.length - 1]
     
-    if (lastPart && lastPart.includes('.')) {
-      selectedPathValue = selectedPathValue ? `${selectedPathValue}/${lastPart}` : lastPart
+    if (lastPart && lastPart.length > 0) {
+      selectedPathValue = selectedPathValue ? `${selectedPathValue}${lastPart}` : lastPart
     }
   }
   

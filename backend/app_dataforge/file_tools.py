@@ -185,7 +185,7 @@ def real_delete(user_id, path, etype, is_folder, progress_callback=None, task_id
         traceback.print_exc()
         return None
 
-def real_move(user_id, source, target, etype, is_folder, progress_callback=None, task_id=None):
+def real_move(user_id, source, target, etype, is_folder, progress_callback=None, task_id=None, debug=False):
     success_list = []
     try:
         if not is_folder:
@@ -196,7 +196,9 @@ def real_move(user_id, source, target, etype, is_folder, progress_callback=None,
             if entry:
                 dic = entry.__dict__.copy()
                 ret = rename_file(user_id, entry.addr, target, dic)
-                if ret:
+                if not ret:
+                    logger.warning(f"Failed to rename file: {entry.addr} to {target}")
+                else:
                     success_list.append(target)
         else:
             dirname = source if source.endswith('/') else source + '/'

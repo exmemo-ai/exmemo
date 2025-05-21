@@ -20,7 +20,7 @@ from .entry_item import EntryItem
 
 DEFAULT_CATEGORY = _("unclassified")
 IMAGE_CATEGORY = _("image")
-DEFAULT_STATUS = "init"
+DEFAULT_STATUS = "collect"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
 TITLE_MAX_LENGTH = 128
 
@@ -125,9 +125,9 @@ class EntryFeatureTool:
             if force or entry.ctype is None:
                 entry.ctype = cat.get("ctype")
             if force or entry.status is None:
-                entry.status = entry.status or cat.get("status")
+                entry.status = cat.get("status")
             if force or entry.atype is None:
-                entry.atype = entry.atype or cat.get("atype")
+                entry.atype = cat.get("atype")
 
         if entry.title is None and "title" in features:
             entry.title = features["title"]
@@ -180,6 +180,8 @@ class EntryFeatureTool:
             )
             if ret:
                 self._process_llm_result(entry, features, force)
+
+        entry.atype = "subjective"
 
     def _parse_note(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:

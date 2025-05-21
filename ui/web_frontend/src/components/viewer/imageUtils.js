@@ -76,11 +76,9 @@ class TempImageManager {
                     const path = imageId;
                     //console.log('Uploading image:', image.file, 'to path:', path);
                     const result = await saveEntry({
-                        onSuccess: null,
                         form,
                         path,
                         file: image.file,
-                        onProgress: null,
                         showMessage: false
                     });
 

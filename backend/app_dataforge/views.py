@@ -318,7 +318,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             else:
                 ret, ret_emb, info = add_data(dic)
         elif instance.etype == "record":
-            ret, ret_emb, info = add_data(dic, data = {'content': dic["content"]})
+            content = request.data.get("content", None)
+            ret, ret_emb, info = add_data(dic, data = {'content': content})
         else:
             ret, ret_emb, info = add_data(dic)
         if not ret:

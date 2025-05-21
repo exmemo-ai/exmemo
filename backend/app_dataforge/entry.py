@@ -67,7 +67,11 @@ class EntryService:
         content = None
         if data is not None and 'content' in data:
             content = data['content']
-        return EntryStorage.save_entry(entry, content)
+        if content is None:
+            has_new_content = False
+        else:
+            has_new_content = True
+        return EntryStorage.save_entry(entry, content, has_new_content=has_new_content)
 
 
     @staticmethod
@@ -81,8 +85,12 @@ class EntryService:
         ret = EntryFeatureTool.get_instance().parse(
             entry, content, use_llm=use_llm
         )
+        if content is None:
+            has_new_content = False
+        else:
+            has_new_content = True
         ret, ret_emb, detail = EntryStorage.save_entry(
-            entry, content
+            entry, content, has_new_content=has_new_content
         )
         if ret:
             if entry.ctype is not None:
@@ -161,7 +169,8 @@ class EntryService:
             if entry.path is None:
                 entry.path = entry.title
             ret, ret_emb, detail = EntryStorage.save_entry(
-                entry, None, debug=debug
+                entry, None, has_new_content=False,
+                debug=debug
             )
         else:
             ret = EntryFeatureTool.get_instance().parse(
@@ -172,11 +181,11 @@ class EntryService:
             if user.get("web_save_content"):
                 title, content = get_url_content(entry.addr)
                 ret, ret_emb, detail = EntryStorage.save_entry(
-                    entry, content
+                    entry, content, has_new_content=True, debug=debug
                 )
             else:
                 ret, ret_emb, detail = EntryStorage.save_entry(
-                    entry, None
+                    entry, None, has_new_content=False, debug=debug
                 )
         if ret:
             if entry.ctype is not None:

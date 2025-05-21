@@ -235,11 +235,9 @@ const saveContent = async () => {
         const blob = new Blob([finalContent], { type: 'text/plain' });
         const file = new File([blob], 'temp.md', { type: 'text/plain' });
         const result = await saveEntry({
-            onSuccess: null,
             form: form.value,
             path: form.value.addr,
             file: file,
-            onProgress: null,
             showMessage: false
         });
         if (result) {

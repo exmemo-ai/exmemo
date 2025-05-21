@@ -38,6 +38,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, computed, ref } from 'vue'
 import { deleteData, deleteDir, renameData, loadTreeData, importNotes } from './apiUtils'
 import { mapTreeItem, findAndAddNode, findNode, findData } from './treeUtils'
+import { saveEntry } from '@/components/datatable/dataUtils';
 import ImportDialog from './ImportDialog.vue'
 
 const { t } = useI18n()
@@ -196,20 +197,37 @@ const handleRename = async () => {
             ElMessage.error(t('tree.nameAlreadyExists'));
             return;
         }
-        const response_data = await renameData(props.rightClickNode.data.addr, newPath, props.etype_value, props.rightClickNode.data.is_folder);
-        if (response_data.task_id) {
-            emit('task-start');
-        } else {
-            if (response_data.status === 'success') {
+
+        if (props.etype_value === 'chat' || props.etype_value === 'record') {
+            const ret = await saveEntry({
+                form: {
+                    idx: props.rightClickNode.data.id,
+                    etype: props.etype_value,
+                    title: newPath
+                }, showMessage:false
+            });
+            if (ret && ret.status === 'success') {
                 emit('refresh');
             } else {
-                ElMessage.error(t('renameFailed'));
+                ElMessage.error(t('tree.renameFailed'));
+            }
+            console.log('Rename success', ret);
+        } else {
+            const response_data = await renameData(props.rightClickNode.data.addr, newPath, props.etype_value, props.rightClickNode.data.is_folder);
+            if (response_data.task_id) {
+                emit('task-start');
+            } else {
+                if (response_data.status === 'success') {
+                    emit('refresh');
+                } else {
+                    ElMessage.error(t('tree.renameFailed'));
+                }
             }
         }
     } catch (error) {
         if (error !== 'cancel') {
             console.error('Rename error:', error);
-            ElMessage.error(t('renameFailed'));
+            ElMessage.error(t('tree.renameFailed'));
         }
     } finally {
         emit('close');

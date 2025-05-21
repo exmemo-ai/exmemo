@@ -561,11 +561,7 @@ const saveMeta = async (force) => {
 
     try {
         const result = await saveEntry({
-            parentObj: null,
             form: form.value,
-            path: null,
-            file: null,
-            onProgress: null,
             showMessage: false
         })
 
@@ -861,10 +857,7 @@ const handleSave = async () => {
 
     try {
         const result = await saveEntry({
-            parentObj: null,
             form: form.value,
-            path: null,
-            file: null
         })
 
         if (result && result.status === 'success') {
