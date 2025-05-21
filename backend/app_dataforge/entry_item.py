@@ -88,7 +88,7 @@ class EntryItem:
                         v = str(v)
                     elif isinstance(v, datetime):
                         v = v.isoformat()
-                if k == 'meta' and isinstance(v, dict):
+                if k == 'meta' and isinstance(v, dict) and for_json:
                     v = convert_dic_to_json(v)
                 filtered_data[k] = v
         return filtered_data

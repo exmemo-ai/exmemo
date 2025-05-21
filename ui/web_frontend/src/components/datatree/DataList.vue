@@ -85,6 +85,7 @@
                 </div>
                 <div class="description-container" v-if="markdownContent">
                     <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
+                            preview-theme="github"
                             :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
                 </div>
             </el-main>

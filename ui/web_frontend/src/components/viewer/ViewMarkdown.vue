@@ -280,6 +280,14 @@ const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
     if (result.success) {
         form.value = { ...result.data };
+        if (form.value.meta && typeof form.value.meta === 'string') {
+            try {
+                form.value.meta = JSON.parse(form.value.meta)
+            } catch (error) {
+                console.error('Failed to parse meta:', error)
+                form.value.meta = {}
+            }
+        }
         resetContent();
     }
 }
@@ -318,11 +326,14 @@ const resetContent = async () => {
         }
         markdownContent.value = content;
         await nextTick();
+        console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", form.value.meta)
         viewNote.value?.loadNote();
         setTimeout(() => {
             if (form.value.meta?.bookmark?.position) {
+                console.log('scroll to', form.value.meta.bookmark.position)
                 const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
                 if (mdPreviewContent) {
+                    console.log('scrollHeight', mdPreviewContent.scrollHeight)
                     const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight;
                     mdPreviewContent.scrollTop = form.value.meta.bookmark.position * scrollHeight / 100;
                 }
