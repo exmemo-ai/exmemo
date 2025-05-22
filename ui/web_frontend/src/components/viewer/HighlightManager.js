@@ -11,6 +11,15 @@ export class HighlightManager {
         this.savedRanges = [];
     }
 
+    clearHighlightNode() {
+        const highlights = this.container.querySelectorAll('.custom-highlight');
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+        });
+        this.container.normalize();
+    }
+
     addHighlight(colorIndex) {
         const selection = window.getSelection();
         if (!selection.rangeCount) return false;
@@ -19,7 +28,8 @@ export class HighlightManager {
         const selectedText = range.toString().trim();
         if (!selectedText) return false;
 
-        // Store highlight info
+        this.clearHighlightNode();
+
         this.savedRanges.push({
             text: selectedText,
             colorClass: this.colorClasses[colorIndex],
@@ -30,6 +40,7 @@ export class HighlightManager {
             endOffset: range.endOffset
         });
 
+        // console.log('Saved ranges:', this.savedRanges);
         // Apply highlight visually
         this.applyHighlights();
         selection.removeAllRanges();
@@ -97,17 +108,20 @@ export class HighlightManager {
         this.applyHighlights();
     }
 
-    applyHighlights() {
+
+    clearHighlightNode() {
         // Remove all existing highlights
         const highlights = this.container.querySelectorAll('.custom-highlight');
         highlights.forEach(highlight => {
             const parent = highlight.parentNode;
             parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
         });
-
         // Normalize the container to merge adjacent text nodes
         this.container.normalize();
+    }
 
+    applyHighlights() {
+        this.clearHighlightNode();
         // Apply saved highlights
         this.savedRanges.forEach(highlightInfo => {
             try {

@@ -71,6 +71,26 @@ const showRefresh = computed(() => ['web', 'file', 'note'].includes(props.etype_
 
 const importDialogRef = ref(null)
 
+const expandParentNodes = async (path) => {
+    if (!path || !props.treeRef) return;
+    
+    const pathParts = path.split('/');
+    let currentPath = '';
+    
+    for (let i = 0; i < pathParts.length; i++) {
+        if (i > 0) {
+            currentPath += '/';
+        }
+        currentPath += pathParts[i];
+        
+        const node = await findNode(props.treeRef, currentPath);
+        if (node) {
+            await node.expand();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+    }
+};
+
 const handleNewFolder = async () => {
     if (!props.rightClickNode) return;
 
@@ -124,10 +144,7 @@ const handleNewFolder = async () => {
             if (findAndAddNode(newTreeData, parentId, newFolder)) {
                 emit('update:tree-data', newTreeData);
                 await nextTick();
-                const exNode = await findNode(props.treeRef, parentId);
-                if (exNode) {
-                    exNode.expand();
-                }
+                await expandParentNodes(parentId);
             }
         }
         ElMessage.success(t('tree.createFolderSuccess'));
@@ -348,7 +365,8 @@ const handleImport = async () => {
                 ElMessage.success(t('tree.importSuccess'))
                 //emit('refresh')
             } else {
-                ElMessage.error(t('tree.importFailed'))
+                console.log('Import failed:', response_data)
+                ElMessage.error(t('tree.importFailed') + ": " + response_data.info)
             }
         }
     } catch (error) {

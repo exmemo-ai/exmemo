@@ -357,7 +357,8 @@
         "estreat": "摘抄",
         "userDefine": "用户自定义",
         "pleasePreview": "请先切换到预览",
-        "addToNote": "添加到笔记"
+        "addToNote": "添加到笔记",
+        "abstract": "摘要"
     },
     "settings": {
         "bookmark": "书签",
@@ -467,7 +468,7 @@
         "move_task": "移动任务",
         "taskStarted": "任务已开始",
         "taskManager": "任务管理",
-        "taskCompleted": "任务已完成",
+        "taskCompleted": "任务已完成，请手动刷新文件目录",
         "taskList": "后台任务列表",
         "deleteAll": "删除全部",
         "refresh": "刷新",
@@ -550,9 +551,9 @@
         "ocr": "文字识别",
         "extractText": "提取文字",
         "insertImage": "插入图片",
-        "insertBoth": "插入图片和文字",
+        "insertBoth": "插入图+字",
         "insertText": "插入文字",
-        "noTextPleaseExtract": "无文本内容，请先提取文字",
+        "noTextPleaseExtract": "无文本内容，请先文字识别",
         "crop": "裁剪",
         "exitCrop": "退出裁剪",
         "applyCrop": "应用裁剪",

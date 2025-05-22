@@ -196,7 +196,10 @@ class EntryAPIView(APIView):
                 else:
                     rel_path = file_path
 
-                arr = rel_path.split('/')
+                if entry.etype == 'chat' or entry.etype == 'record':
+                    arr = [rel_path]
+                else:
+                    arr = rel_path.split('/')
                 if level != -1 and len(arr) > level:
                     # too many levels, only add dir
                     self._build_tree_node(path_dict, root, arr[:len(arr)-1],
@@ -284,12 +287,14 @@ class EntryAPIView(APIView):
             source = source.strip()
             target = target.strip()
 
-            logger.debug(f'Import: {source} -> {target}')
 
             if is_folder:
                 entries = StoreEntry.objects.filter(user_id=user_id, addr__startswith=source, etype='file', block_id=0)
             else:
                 entries = StoreEntry.objects.filter(user_id=user_id, addr=source, etype='file', block_id=0)
+
+            logger.debug(f'Import: {source} -> {target}, entries: {len(entries)} (is_folder: {is_folder})')
+
             if not entries.exists():
                 return do_result(False, "Source file not found")
             
@@ -317,9 +322,9 @@ class EntryAPIView(APIView):
                     process_list.append((entry.path, dst_path, False))
 
             if not process_list:
-                return do_result(False, _("no_file_to_import"))
+                return do_result(False, _("no_support_file"))
             
-            if USE_CELERY and is_async:
+            if USE_CELERY and is_async and is_folder:
                 task_id = import_task.delay(user_id, process_list, debug=debug)
                 return do_result(True, {"task_id": str(task_id)})
             else:
@@ -549,13 +554,16 @@ class EntryAPIView(APIView):
                 baidu_ocr_api_key = user.get('baidu_ocr_api_key', None)
                 baidu_ocr_secret_key = user.get('baidu_ocr_secret_key', None)
                 try:
-                    text = ocr_baidu.img_to_str_baidu(file_path, app_id=baidu_ocr_app_id,
+                    ret, text = ocr_baidu.img_to_str_baidu(file_path, app_id=baidu_ocr_app_id,
                                                        api_key=baidu_ocr_api_key,
                                                        secret_key=baidu_ocr_secret_key,
                                                        debug=True)
-                    if text is None:
-                        logger.error("OCR result is None")
-                        return do_result(False, "OCR processing returned empty result")
+                    if not ret:
+                        logger.error(f"OCR failed, return {text}")
+                        if text is None or len(text) == 0:
+                            return do_result(False, "OCR processing returned empty result")
+                        else:
+                            return do_result(False, text)
                     logger.info(f"OCR processing completed successfully {text}.")
                     return do_result(True, {"text": text})
                 except AttributeError as ae:

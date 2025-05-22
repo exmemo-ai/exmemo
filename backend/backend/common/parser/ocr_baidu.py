@@ -26,6 +26,7 @@ class BaiduOcr:
         Call baidu ocr to convert the image to text
         demo: print(baidu_ocr.img_to_str('/tmp/5.png'))
         """
+        detail = None
         try:
             with open(image_path, "rb") as fp:
                 image = fp.read()
@@ -38,13 +39,14 @@ class BaiduOcr:
                 )
                 if "error_msg" in result:
                     logger.info(f"result {result}")
+                    detail = result["error_msg"]
                 elif debug:
                     logger.debug(f"result {result}")
                 if "words_result" in result:
-                    return "\n".join([w["words"] for w in result["words_result"]])
+                    return True, "\n".join([w["words"] for w in result["words_result"]])
         except Exception as e:
             print(f"convert img failed {e}")
-        return ""
+        return False, detail
 
 
 # 保持与原有代码的兼容性

@@ -200,7 +200,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            need_web_content = request.query_params.get('need_web_content', 'true').lower() == 'true'
+            full_content = request.query_params.get('full_content', 'true').lower() == 'true'
             if instance.etype == 'record' or instance.etype == 'chat':
                 serializer = self.get_serializer(instance)
                 data = serializer.data
@@ -209,7 +209,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             elif instance.etype == 'web':
                 serializer = self.get_serializer(instance)
                 data = serializer.data
-                if need_web_content:
+                if full_content:
                     title, data['content'] = get_url_content(instance.addr, format='markdown')
                 return Response(data)
             elif instance.etype == 'file' or instance.etype == 'note':
@@ -250,23 +250,28 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                             return Response(data)
                     raise Http404
                 elif is_support(instance.path.lower()): # docx, pdf, txt, html
-                    rel_path = instance.path
-                    user_id = instance.user_id
-                    file_path = filecache.get_tmpfile(get_ext(rel_path))
-                    ret = utils_filemanager.get_file_manager().get_file(
-                        user_id, rel_path, file_path
-                    )
-                    if ret:
-                        filecache.TmpFileManager.get_instance().add_file(file_path)
-                        md_path = filecache.get_tmpfile('.md')
-                        ret = convert(file_path, md_path)
+                    if full_content:
+                        rel_path = instance.path
+                        user_id = instance.user_id
+                        file_path = filecache.get_tmpfile(get_ext(rel_path))
+                        ret = utils_filemanager.get_file_manager().get_file(
+                            user_id, rel_path, file_path
+                        )
                         if ret:
-                            with open(md_path, 'r', encoding='utf-8') as file:
-                                content = file.read()
-                                serializer = self.get_serializer(instance)
-                                data = serializer.data
-                                data['content'] = content
-                                return Response(data)
+                            filecache.TmpFileManager.get_instance().add_file(file_path)
+                            md_path = filecache.get_tmpfile('.md')
+                            ret = convert(file_path, md_path)
+                            if ret:
+                                with open(md_path, 'r', encoding='utf-8') as file:
+                                    content = file.read()
+                                    serializer = self.get_serializer(instance)
+                                    data = serializer.data
+                                    data['content'] = content
+                                    return Response(data)
+                    else:
+                        serializer = self.get_serializer(instance)
+                        data = serializer.data
+                        return Response(data)
                     raise Http404
             # others
             serializer = self.get_serializer(instance)

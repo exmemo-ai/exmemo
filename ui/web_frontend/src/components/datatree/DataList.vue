@@ -12,7 +12,21 @@
                     </el-icon>
                 </div>
                 <div class="tree-header">
-                    <el-text class="tree-title">{{ t('tree.fileTree') }}</el-text>
+                    <div class="filter-section">
+                        <div class="filter-item">
+                            <div class="label-container">
+                                <el-text>{{ t('data') }}</el-text>
+                            </div>
+                            <div class="select-container">
+                                <el-select v-if="mounted && etype_options.length" v-model="etype_value"
+                                    :placeholder="t('selectPlaceholder')" @change="handleEtypeChange">
+                                    <el-option v-for="item in etype_options" :key="item.value" :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                    </div>
                     <el-button class="icon-button" @click="refreshTree">
                         <el-icon>
                             <Refresh />
@@ -41,21 +55,6 @@
 
             <el-main class="main-container list-options">
                 <div class="header-buttons">
-                    <div class="filter-section">
-                        <div class="filter-item">
-                            <div class="label-container">
-                                <el-text>{{ t('data') }}</el-text>
-                            </div>
-                            <div class="select-container">
-                                <el-select v-if="mounted && etype_options.length" v-model="etype_value"
-                                    :placeholder="t('selectPlaceholder')" @change="handleEtypeChange">
-                                    <el-option v-for="item in etype_options" :key="item.value" :label="item.label"
-                                        :value="item.value">
-                                    </el-option>
-                                </el-select>
-                            </div>
-                        </div>
-                    </div>
                     <div class="action-buttons" v-if="currentNode && !currentNode.is_folder">
                         <template v-if="etype_value === 'file'">
                             <el-button size="small" @click="download" :title="t('download')">
@@ -260,6 +259,7 @@ const refreshTree = async () => {
         await initializeTree();
         await expandNodes(expandedNodes);
     }
+    markdownContent.value = '';
 };
 
 const refreshItem = async (addr, is_folder) => {
@@ -328,7 +328,7 @@ const openItem = async (idx) => {
         setDefaultAuthHeader();
         const response = await axios.get(getURL() + func + idx + '/', {
             params: {
-            need_web_content: false
+                full_content: false
             }
         });
         const data = response.data;
@@ -337,13 +337,14 @@ const openItem = async (idx) => {
         if (data.etype) description += `${t('data')}: ${t(data.etype)}\n`;
         if (data.ctype) description += `${t('type')}: ${t(data.ctype)}\n`;
         if (data.status) description += `${t('status')}: ${t(data.status)}\n`;
+        if (data.raw) description += `${t('viewMarkdown.abstract')}: ${data.raw}\n`;
+        if (data.created_time) description += `${t('createdAt')}: ${data.created_time}\n`;
+        if (data.updated_time) description += `${t('lastUpdated')}: ${data.updated_time}\n`;
         if (data.etype === 'web') {
             if (data.addr) description += `${t('webAddress')}: ${data.addr}\n`;
         } else {
             if (data.addr) description += `${t('file')}: ${data.addr}\n`;
         }
-        if (data.created_time) description += `${t('createdAt')}: ${data.created_time}\n`;
-        if (data.updated_time) description += `${t('lastUpdated')}: ${data.updated_time}\n`;
         description += '\n---\n';
         if (data.content) description += `\n${data.content}`;
         markdownContent.value = description

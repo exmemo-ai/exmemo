@@ -107,6 +107,10 @@ msgid "unknown_action"
 msgstr "Unknown action"
 
 #: app_dataforge/view_tools.py:321
+msgid "no_support_file"
+msgstr "No importable file types found"
+
+#: app_dataforge/view_tools.py:321
 msgid "no_file_to_import"
 msgstr "No file to import"
 

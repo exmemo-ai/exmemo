@@ -13,7 +13,7 @@
         </div>
         <div class="content-container">
             <el-input v-model="form.title" :placeholder="form.etype === 'file' || form.etype === 'note' ? $t('autoExtract') : ''"
-                :readonly="form.etype === 'note'"></el-input>
+                ></el-input>
         </div>
     </div>
     <div class="form-row">

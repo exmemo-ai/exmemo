@@ -358,7 +358,8 @@
         "estreat": "Estreat",
         "userDefine": "User define",
         "pleasePreview": "Please preview first",
-        "addToNote": "Add to note"
+        "addToNote": "Add to note",
+        "abstract": "Abstract"
     },
     "settings": {
         "bookmark": "Bookmark",
@@ -463,7 +464,7 @@
         "move_task": "Move",        
         "taskStarted": "Task started",
         "taskManager": "Task manager",
-        "taskCompleted": "Task completed", 
+        "taskCompleted": "Task completed, please refresh the list manually",
         "taskList": "Background task list",
         "deleteAll": "Delete all",
         "refresh": "Refresh",
@@ -548,7 +549,7 @@
         "insertImage": "Insert image",
         "insertBoth": "Insert both",
         "insertText": "Insert text",
-        "noTextPleaseExtract": "No text, please extract first",
+        "noTextPleaseExtract": "No text, please OCR first",
         "crop": "Crop",
         "exitCrop": "Exit crop",
         "applyCrop": "Apply crop",

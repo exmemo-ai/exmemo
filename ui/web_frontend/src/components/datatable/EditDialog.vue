@@ -192,7 +192,7 @@ export default {
             }
         },
         async doSave() {
-            if (this.form.etype === 'file' && this.base_title !== this.form.title) {
+            if ((this.form.etype === 'file' || this.form.etype === 'note') && this.base_title !== this.form.title) {
                 const baseExt = this.file_path.split('.').pop();
                 const newExt = this.form.title.split('.').pop();
                 if (baseExt !== newExt) {

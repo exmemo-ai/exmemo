@@ -163,7 +163,7 @@
                             <el-icon><Files /></el-icon>
                         </el-button>
                         -->
-                        <el-button size="small" v-if="isPaper" @click="parsePaper" :title="t('paperAnalysis')">
+                        <el-button size="small" v-if="isPaper" @click="parsePaper" :loading="paperLoading" :title="t('paperAnalysis')">
                             <el-icon><Search /></el-icon>
                         </el-button>
                         <el-button size="small" @click="saveAsNote" :title="t('viewMarkdown.saveAsNote')">
@@ -326,14 +326,11 @@ const resetContent = async () => {
         }
         markdownContent.value = content;
         await nextTick();
-        console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", form.value.meta)
         viewNote.value?.loadNote();
         setTimeout(() => {
             if (form.value.meta?.bookmark?.position) {
-                console.log('scroll to', form.value.meta.bookmark.position)
                 const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
                 if (mdPreviewContent) {
-                    console.log('scrollHeight', mdPreviewContent.scrollHeight)
                     const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight;
                     mdPreviewContent.scrollTop = form.value.meta.bookmark.position * scrollHeight / 100;
                 }
@@ -344,7 +341,6 @@ const resetContent = async () => {
         markdownContent.value = t('notSupport');
     }
     viewMode.value = 'content';
-    console.log("viewMode", viewMode.value, form.value.etype);
     await nextTick()
     if (form.value.meta?.fontSize) {
         fontSize.value = form.value.meta.fontSize
@@ -621,6 +617,7 @@ const saveAsNote = () => {
 };
 
 const aiDialogVisible = ref(false)
+const paperLoading = ref(false)
 
 const showAIDialog = () => {
     aiDialogVisible.value = true
@@ -634,10 +631,8 @@ const getSelectedContent = () => {
 const getScreenContent = () => {
     const preview = document.querySelector('.md-editor-preview')
     if (!preview) return ''
-
     const previewWrapper = preview.closest('.md-editor-preview-wrapper')
     if (!previewWrapper) return ''
-
     const walker = document.createTreeWalker(
         preview,
         NodeFilter.SHOW_TEXT,
@@ -650,7 +645,6 @@ const getScreenContent = () => {
             }
         }
     )
-
     let visibleText = ''
     let node
     while (node = walker.nextNode()) {
@@ -660,7 +654,6 @@ const getScreenContent = () => {
         const elementTop = rect.top
         const elementBottom = rect.bottom
         const wrapperRect = previewWrapper.getBoundingClientRect()
-
         if (elementBottom > wrapperRect.top && elementTop < wrapperRect.bottom) {
             visibleText += node.textContent.trim() + '\n'
         }
@@ -686,7 +679,6 @@ const readingProgress = ref(0)
 const updateReadingProgress = () => {
     const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
     if (!mdPreviewContent) return
-
     const scrollPosition = mdPreviewContent.scrollTop
     const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight
     const progress = Math.round((scrollPosition / scrollHeight) * 1000) / 10
@@ -771,18 +763,14 @@ const handleTranslate = () => {
     const selection = window.getSelection()
     const text = selection.toString().trim()
     if (!text) return
-
     const rect = selection.getRangeAt(0).getBoundingClientRect()
     translatePosition.value = {
         x: rect.left,
         y: rect.bottom + window.scrollY
     }
-
     if (text.indexOf(' ') === -1 && text.length < 20 && /^[a-zA-Z]+$/.test(text)) {
         let sentence = getSentence(selection.anchorNode)
         let word = getWord(selection.anchorNode)
-        console.log('sentence', sentence)
-        console.log('word', word)
         translateFunc(null, 'word', word, sentence, translateCallback)
     } else {
         translateFunc(null, 'sentence', null, text, translateCallback)
@@ -793,7 +781,6 @@ const getWord = (element) => {
     const text = element.textContent
     const selection = window.getSelection()
     const range = selection.getRangeAt(0)
-
     let start = range.startOffset
     let end = range.endOffset
 
@@ -812,7 +799,6 @@ const getSentence = (element) => {
         let sentences = paragraph.match(/[^\.!\?]+[\.!\?]+/g)
         const text = element.textContent
         let ret = paragraph
-        //console.log('sentence', sentences)
         if (sentences && sentences.length > 0) {
             for (let i = 0; i < sentences.length; i++) {
                 if (text.indexOf(sentences[i]) !== -1) {
@@ -821,7 +807,6 @@ const getSentence = (element) => {
                 }
             }
         }
-        //console.log('ret', ret)
         return ret
     } else {
         return ''
@@ -850,7 +835,6 @@ const handleCopySelection = () => {
     const selection = window.getSelection()
     const text = selection.toString().trim()
     if (!text) return
-
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)
             .then(() => ElMessage.success(t('copySuccess')))
@@ -865,12 +849,10 @@ const handleSave = async () => {
         ElMessage.warning(t('noContent'))
         return
     }
-
     try {
         const result = await saveEntry({
             form: form.value,
         })
-
         if (result && result.status === 'success') {
             getNewIdx()
         }
@@ -882,15 +864,15 @@ const handleSave = async () => {
 
 const getNewIdx = () => {
     const addr = form.value.addr;
-    let func = 'api/entry/data/'
+    let func = 'api/entry/data/';
     let params = {
         keyword: addr,
         etype: 'web',
-        max_count: 1
+        max_count: 1,
     }
     axios.get(getURL() + func, { params: params })
         .then(response => {
-            const results = response.data['results'];
+            const results = response.data;
             if (results && results.length > 0) {
                 form.value.idx = results[0].idx
             }
@@ -913,10 +895,13 @@ const isPaper = computed(() => {
 })
 
 const parsePaper = async () => {
+    paperLoading.value = true
     const formData = new FormData();
     formData.append('content', form.value.addr);
     formData.append('rtype', 'search')
-    axios.post(getURL() + 'api/paper/', formData).then((res) => {
+    
+    try {
+        const res = await axios.post(getURL() + 'api/paper/', formData)
         if (res.data.status == 'success') {
             let note = viewNote.value.editContent;
             if (note.length > 0) {
@@ -924,14 +909,16 @@ const parsePaper = async () => {
             }
             note = note + res.data.info;
             viewNote.value.editContent = note;
-            this.$message({
-                message: this.$t('searchSuccess'),
+            ElMessage({
+                message: t('searchSuccess'),
                 type: 'success'
             });
         }
-    }).catch((err) => {
+    } catch (err) {
         parseBackendError(err);
-    });
+    } finally {
+        paperLoading.value = false;
+    }
 }
 </script>
 
@@ -945,11 +932,9 @@ const parsePaper = async () => {
     margin: 0 auto;
     font-size: v-bind('fontSize + "px"');
 }
-
 :deep(.md-editor-preview-wrapper) {
     padding: 0px;
 }
-
 :deep(.md-editor-catalog) {
     border: none !important;
     height: 100% !important;
@@ -962,8 +947,8 @@ const parsePaper = async () => {
 
 :deep(.md-editor-catalog-list) {
     padding: 10px !important;
+    border-bottom: 1px solid #e6e6e6;
 }
-
 :deep(.el-dropdown-menu__item.is-active) {
     color: #409EFF;
     font-weight: bold;

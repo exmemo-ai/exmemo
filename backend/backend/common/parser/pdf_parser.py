@@ -97,7 +97,7 @@ def parse_image(dir_path, page, idx=None, debug=False):
         img = page.to_image(width=width)
         img.save(file_path)
 
-    text = ocr_baidu.img_to_str_baidu(file_path, debug=debug)
+    ret, text = ocr_baidu.img_to_str_baidu(file_path, debug=debug)
     if debug:
         logger.info(f'img {file_path} has text "{len(text)}"')
     return text

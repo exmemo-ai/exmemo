@@ -40,7 +40,7 @@
             </div>
           </el-tab-pane>
           <el-tab-pane :label="t('img.ocr')" name="ocr">
-            <el-button @click="handleOCR">{{ t('img.extractText') }}</el-button>
+            <el-button @click="handleOCR" :loading="ocrLoading">{{ t('img.extractText') }}</el-button>
             <el-input v-model="ocrText" type="textarea" :rows="4" />
           </el-tab-pane>
         </el-tabs>
@@ -49,13 +49,13 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="visible = false">{{ t('cancel') }}</el-button>
-        <el-button type="primary" @click="handleConfirm('imageOnly')" v-if="activeTab !== 'ocr'">
+        <el-button type="primary" @click="handleConfirm('imageOnly')">
           {{ t('img.insertImage') }}
         </el-button>
-        <el-button type="primary" @click="handleConfirm('imageAndText')" v-if="activeTab === 'ocr'">
+        <el-button type="primary" @click="handleConfirm('imageAndText')">
           {{ t('img.insertBoth') }}
         </el-button>
-        <el-button type="primary" @click="handleConfirm('textOnly')" v-if="activeTab === 'ocr'">
+        <el-button type="primary" @click="handleConfirm('textOnly')">
           {{ t('img.insertText') }}
         </el-button>
       </span>
@@ -124,6 +124,7 @@ const ocrText = ref('');
 const isGrayscale = ref(false);
 let callbackFn = null;
 const canvas = ref(null);
+const ocrLoading = ref(false);
 
 const initCanvas = async () => {
   if (!canvas.value) {
@@ -437,14 +438,20 @@ const handleOCR = async () => {
   formData.append('opt', 'ocr');
 
   try {
+    ocrLoading.value = true;
     setDefaultAuthHeader();
     const response = await axios.post(getURL() + 'api/entry/tool/', formData);
     const data = await response.data;
     if (data.status === 'success') {
       ocrText.value = data.text;
+    } else {
+      ElMessage.error(t('img.ocr') + ":" + data.info);
     }
   } catch (error) {
     console.error('OCR failed:', error);
+    ElMessage.error(t('img.ocr') + ":" + t('operationFailed'));
+  } finally {
+    ocrLoading.value = false;
   }
 };
 

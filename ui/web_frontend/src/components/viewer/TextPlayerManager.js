@@ -153,7 +153,7 @@ export class TextPlayerManager {
         if (sentence) {
             this.currentIndex = index;
             const text = sentence.text;
-            console.log('speak', index, text);
+            console.log('speak', index, text.substring(0, 50));
             
             if (this.containsOnlyPunctuation(text)) {
                 console.log('Skipping punctuation-only sentence:', text);
