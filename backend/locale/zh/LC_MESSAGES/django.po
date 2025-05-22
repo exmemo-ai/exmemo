@@ -106,6 +106,10 @@ msgid "unknown_action"
 msgstr "未知操作"
 
 #: app_dataforge/view_tools.py:321
+msgid "no_support_file"
+msgstr "未找到可导入的文件类型"
+
+#: app_dataforge/view_tools.py:321
 msgid "no_file_to_import"
 msgstr "无文件导入"
 
