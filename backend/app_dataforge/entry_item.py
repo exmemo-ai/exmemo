@@ -62,6 +62,19 @@ class EntryItem:
                 data['meta'] = {}
         return cls(**data)
         
+    @staticmethod
+    def process_date_objects(data: Any) -> Any:
+        if isinstance(data, dict):
+            return {k: EntryItem.process_date_objects(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [EntryItem.process_date_objects(item) for item in data]
+        elif isinstance(data, datetime):
+            return data.isoformat()
+        elif isinstance(data, datetime.date):
+            return data.isoformat()
+        else:
+            return data
+        
     def to_dict(self) -> Dict[str, Any]:
         dic = {k: v for k, v in self.__dict__.items() if v is not None}
         #logger.error(f"dic {dic}")
@@ -88,8 +101,10 @@ class EntryItem:
                         v = str(v)
                     elif isinstance(v, datetime):
                         v = v.isoformat()
-                if k == 'meta' and isinstance(v, dict) and for_json:
-                    v = convert_dic_to_json(v)
+                if k == 'meta' and isinstance(v, dict):
+                    v = self.process_date_objects(v)
+                    if for_json:
+                        v = convert_dic_to_json(v)
                 filtered_data[k] = v
         return filtered_data
         

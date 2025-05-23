@@ -564,7 +564,7 @@ class EntryAPIView(APIView):
                             return do_result(False, "OCR processing returned empty result")
                         else:
                             return do_result(False, text)
-                    logger.info(f"OCR processing completed successfully {text}.")
+                    logger.info(f"OCR processing completed successfully {text[:100]}.")
                     return do_result(True, {"text": text})
                 except AttributeError as ae:
                     logger.error(f"OCR API initialization error: {str(ae)}")
