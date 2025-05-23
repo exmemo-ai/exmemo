@@ -240,6 +240,8 @@ export const handleSingleImage = async (file, imageProcessRef, addTempImageCallb
         });
     });
 
+    let result = { type: 'none', error: null };
+
     if (processed?.file) {
         let processedFile = processed.file;
         
@@ -276,12 +278,22 @@ export const handleSingleImage = async (file, imageProcessRef, addTempImageCallb
         const finalResizedFile = await resizeImageIfNeeded(processedFile, 1024);
         const imageId = addTempImage(finalResizedFile);
         if (imageId) {
-            return { type: 'image', imageId };
+            result.type = 'image';
+            result.imageId = imageId;
+        } else {
+            result.error = 'failed_to_add_temp_image';
         }
-        return { error: 'failed_to_add_temp_image' };
-    } else if (processed?.text) {
-        return { type: 'text', text: processed.text };
     }
     
-    return { error: 'unknown_error' };
+    if (processed?.text) {
+        if (result.type === 'image') {
+            result.type = 'combined';
+            result.text = processed.text;
+        } else {
+            result.type = 'text';
+            result.text = processed.text;
+        }
+    }
+    
+    return result;
 };

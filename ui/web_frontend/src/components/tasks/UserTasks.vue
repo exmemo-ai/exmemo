@@ -35,7 +35,13 @@
             <el-progress :percentage="Math.round(scope.row.progress)" :format="percent => `${percent}%`" />
           </template>
         </el-table-column>
-        <el-table-column prop="created_time" :label="$t('task.createdTime')" />
+        <el-table-column prop="created_time" :label="$t('task.createdTime')">
+          <template #default="scope">
+            <el-tooltip :content="scope.row.created_time" placement="top" effect="light">
+              <div class="single-line-text">{{ scope.row.created_time }}</div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('task.operation')" width="120">
           <template #default="scope">
             <el-tooltip :content="$t('task.deleteRecord')" placement="top">
@@ -59,7 +65,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="deleteConfirmVisible" :title="$t('task.deleteConfirm')" width="30%">
+    <el-dialog v-model="deleteConfirmVisible" :title="$t('task.deleteConfirm')" :width="dialogWidth">
       <span>{{ $t('task.deleteAllConfirm') }}</span>
       <template #footer>
         <span class="dialog-footer">
@@ -72,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Delete, VideoPause, Refresh } from '@element-plus/icons-vue'
 import { taskService } from './taskUtils'
@@ -172,6 +178,18 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const deleteConfirmVisible = ref(false)
 
+const isMobile = computed(() => {
+  return window.innerWidth <= 768
+})
+
+const dialogWidth = computed(() => {
+  return isMobile.value ? '60%' : '30%'
+})
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
 const handleSizeChange = (val) => {
   pageSize.value = val
   currentPage.value = 1
@@ -210,12 +228,14 @@ const deleteAllTasks = async () => {
 onMounted(() => {
   fetchTasks()
   startTaskCheck()
+  window.addEventListener('resize', handleResize)
 })
 
 onBeforeUnmount(() => {
   if (checkTaskTimer.value) {
     clearInterval(checkTaskTimer.value)
   }
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -228,6 +248,13 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.single-line-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .header-operations {

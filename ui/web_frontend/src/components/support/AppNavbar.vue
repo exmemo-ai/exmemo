@@ -246,6 +246,8 @@ export default {
             }
         },
         handleTabClick(tab) {
+            document.documentElement.style.removeProperty('--mainHeight');
+            
             switch (tab.props.name) {
                 case 'ChatTools':
                     this.gotoChat();

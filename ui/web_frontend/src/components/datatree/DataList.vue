@@ -38,7 +38,9 @@
                     @node-click="handleNodeClick" :highlight-current="true" :expand-on-click-node="false"
                     @node-contextmenu="handleContextMenu">
                     <template #default="{ node, data }">
-                        <span class="custom-tree-node">
+                        <span class="custom-tree-node"
+                            @touchstart="onTouchStart($event, data, node)"
+                            @touchend="onTouchEnd">
                             <el-icon v-if="data.is_folder">
                                 <Folder />
                             </el-icon>
@@ -395,8 +397,46 @@ const handleDrop = async (draggingNode, dropNode, type) => {
     }
 };
 
+const longPressTimer = ref(null);
+const longPressDelay = 600;
+const touchStartPosition = ref({ x: 0, y: 0 });
+
+const onTouchStart = (event, data, node) => {
+    touchStartPosition.value = { 
+        x: event.touches[0].clientX, 
+        y: event.touches[0].clientY 
+    };
+    
+    if (longPressTimer.value) {
+        clearTimeout(longPressTimer.value);
+    }
+    
+    longPressTimer.value = setTimeout(() => {
+        handleContextMenu(event, data, node);
+    }, longPressDelay);
+};
+
+const onTouchEnd = () => {
+    if (longPressTimer.value) {
+        clearTimeout(longPressTimer.value);
+        longPressTimer.value = null;
+    }
+};
+
 const handleContextMenu = (event, data, node) => {
     event.preventDefault();
+    
+    let clientX, clientY;
+    
+    if (event.touches && event.touches[0]) {
+        // long press
+        clientX = touchStartPosition.value.x;
+        clientY = touchStartPosition.value.y;
+    } else {
+        // right click
+        clientX = event.clientX;
+        clientY = event.clientY;
+    }
     
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
@@ -404,8 +444,8 @@ const handleContextMenu = (event, data, node) => {
     const estimatedMenuHeight = 220;
     const estimatedMenuWidth = 150;
     
-    let top = event.clientY;
-    let left = event.clientX;
+    let top = clientY;
+    let left = clientX;
     
     if (top + estimatedMenuHeight > viewportHeight) {
         top = viewportHeight - estimatedMenuHeight - 5;
@@ -517,6 +557,10 @@ onMounted(async () => {
         document.removeEventListener('touchmove', handleTouchMove);
         document.removeEventListener('touchend', handleMouseUp);
         window.removeEventListener('resize');
+        
+        if (longPressTimer.value) {
+            clearTimeout(longPressTimer.value);
+        }
     };
 });
 

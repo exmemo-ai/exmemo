@@ -530,11 +530,24 @@ const handleImageChange = async (files, callback) => {
     const file = files[0];
     const result = await handleSingleImage(file, imageProcessRef.value, addTempImage);
     
-    if (result.type === 'image') {
+    if (result.type === 'image' || result.type === 'combined') {
         callback([result.imageId]);
         isContentModified.value = true;
+        
+        if (result.type === 'combined' && result.text && result.text.length > 0 && mdEditor.value) {
+            setTimeout(() => {
+                mdEditor.value?.insert(() => {
+                    return {
+                        targetValue: '\n' + result.text + '\n\n',
+                        select: true,
+                        deviationStart: 0,
+                        deviationEnd: 0
+                    };
+                });
+            }, 100);
+        }
     } else if (result.type === 'text') {
-        if (result.text.length > 0 && mdEditor.value) {
+        if (result.text && result.text.length > 0 && mdEditor.value) {
             mdEditor.value?.insert(() => {
                 return {
                     targetValue: result.text + '\n\n',

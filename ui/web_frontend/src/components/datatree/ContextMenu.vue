@@ -109,14 +109,28 @@ const handleNewFolder = async () => {
 
         let parentPath;
         let parentId;
+        let parentNode = props.rightClickNode;
         if (!props.rightClickNode.data.is_folder) {
             const pathParts = props.rightClickNode.data.addr.split('/');
             pathParts.pop();
             parentPath = pathParts.join('/');
             parentId = parentPath || '';
+            if (parentPath) {
+                parentNode = await findNode(props.treeRef, parentPath);
+            }
         } else {
             parentPath = props.rightClickNode.data.addr;
             parentId = props.rightClickNode.data.id;
+        }
+
+        if (parentNode && parentNode.data.need_load) {
+            console.log('Parent node needs loading first:', parentId);
+            const loadedData = await loadTreeData(props.etype_value, parentId, 1);
+            if (loadedData && loadedData.length > 0) {
+                parentNode.data.children = loadedData.map(item => mapTreeItem(item));
+                parentNode.data.need_load = false;
+                await nextTick();
+            }
         }
 
         const id = `${parentPath}/${folderName}`.replace(/^\//, '');

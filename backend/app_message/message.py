@@ -53,13 +53,13 @@ def msg_search_detail(dic):
                 return obj.addr
         elif obj.etype == "record":
             detail = EntryStorage.get_content(uid, obj.addr)
-            detail = f"\n{_('title')}:\n{obj.title}\n\n_('content'):\n{detail}"
+            detail = f"\n{_('title')}:\n{obj.title}\n\n{_('content')}:\n{detail}"
             return detail
         elif obj.etype == "chat":
             if sdata.source == "web":
                 return {"type": "text", "info": f"[{obj.title}]({WEB_URL}/view_markdown?idx={obj.idx})"}
             else:
-                detail = f"\n{_('title')}:\n{obj.title}\n\n_('content'):\n{obj.raw}"
+                detail = f"\n{_('title')}:\n{obj.title}\n\n{_('content')}:\n{obj.raw}"
             return detail
     return _("failed_to_fetch_files")
 
