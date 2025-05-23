@@ -311,7 +311,6 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 tmp_path = filecache.get_tmpfile(ext)
                 with open(tmp_path, "wb") as f:
                     file = request.FILES['files']
-                    logger.error(f"file {file}")
                     for chunk in file.chunks():
                         f.write(chunk)
                     f.close()

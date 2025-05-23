@@ -309,7 +309,10 @@
         "wordCount": "单词个数",
         "noWordsYet": "暂无单词",
         "current": "当前",
-        "aiSupport": "AI辅助"
+        "aiSupport": "AI辅助",
+        "translating": "翻译中...",
+        "translateSentence": "翻译整句",
+        "definitionInSentence": "句中词义"
     },
     "viewMarkdown": {
         "copiedFrom": "复制自",

@@ -309,7 +309,10 @@
         "wordCount": "Count",
         "noWordsYet": "No words yet",
         "current": "Current",
-        "aiSupport": "AI support"
+        "aiSupport": "AI support",
+        "translating": "Translating...",
+        "translateSentence": "Translate Sent.",
+        "definitionInSentence": "Def. in Sent."
     },
     "viewMarkdown": {
         "copiedFrom": "Copied from",

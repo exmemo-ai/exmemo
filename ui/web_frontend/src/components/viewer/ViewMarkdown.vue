@@ -140,15 +140,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div v-if="showTranslatePopup"
-                            :style="{ top: `${translatePosition.y}px`, left: `${translatePosition.x}px`, maxHeight: '200px', height: 'auto', overflow: 'auto' }"
-                            class="popup">
-                            <div style="display: flex; flex-direction: column; margin: 5px;">
-                                <div style="flex-grow: 0; text-align: left; white-space: pre-line;">
-                                    {{ translatedText }}
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -179,6 +170,12 @@
             @onSpeak="handleSpeak" />
         <AIDialog v-model="aiDialogVisible" :full-content="markdownContent" :selected-content="getSelectedContent()"
             :screen-content="getScreenContent()" :etype="etype" @insert-note="handleInsertAIAnswer" />
+        <TranslatePopup
+            :visible="showTranslatePopup"
+            :position="translatePosition"
+            ref="translatePopup"
+            @alert="showAlert"
+        />
     </div>
 </template>
 
@@ -206,8 +203,8 @@ import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtil
 import AIDialog from '@/components/ai/AIDialog.vue'
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
-import { translateFunc } from '@/components/translate/TransFunction'
 import { getMarkdownItConfig } from './imageUtils'
+import TranslatePopup from '@/components/translate/TranslatePopup.vue'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -504,8 +501,8 @@ onMounted(() => {
                 Math.abs(e.clientY - contextMenuPosition.value.y) > 10)) {
             contextMenuVisible.value = false
         }
-        if (showTranslatePopup.value &&
-            new Date().getTime() - translateTimer.value > 1000) {
+        const popupTime = translatePopup.value ? translatePopup.value.getPopupTime() : 0
+        if (showTranslatePopup.value && new Date().getTime() - popupTime > 1000) {
             showTranslatePopup.value = false
         }
     })
@@ -761,36 +758,26 @@ const handleAskAI = () => {
 const handleTranslate = () => {
     contextMenuVisible.value = false
     const selection = window.getSelection()
-    const text = selection.toString().trim()
-    if (!text) return
+    const selectedText = selection.toString().trim()
+    
+    if (!selectedText) return
+    
     const rect = selection.getRangeAt(0).getBoundingClientRect()
     translatePosition.value = {
         x: rect.left,
         y: rect.bottom + window.scrollY
     }
-    if (text.indexOf(' ') === -1 && text.length < 20 && /^[a-zA-Z]+$/.test(text)) {
-        let sentence = getSentence(selection.anchorNode)
-        let word = getWord(selection.anchorNode)
-        translateFunc(null, 'word', word, sentence, translateCallback)
+    
+    showTranslatePopup.value = true
+    
+    if (selectedText.indexOf(' ') === -1 && selectedText.length < 20 && /^[a-zA-Z]+$/.test(selectedText)) {
+        const node = selection.anchorNode
+        const word = selectedText
+        const sentence = getSentence(node)
+        translatePopup.value.translateWord(word, null, sentence)
     } else {
-        translateFunc(null, 'sentence', null, text, translateCallback)
+        translatePopup.value.translateSelection(selectedText)
     }
-}
-
-const getWord = (element) => {
-    const text = element.textContent
-    const selection = window.getSelection()
-    const range = selection.getRangeAt(0)
-    let start = range.startOffset
-    let end = range.endOffset
-
-    while (start > 0 && !/\s/.test(text[start - 1])) {
-        start--
-    }
-    while (end < text.length && !/\s/.test(text[end])) {
-        end++
-    }
-    return text.substring(start, end).trim()
 }
 
 const getSentence = (element) => {
@@ -801,7 +788,7 @@ const getSentence = (element) => {
         let ret = paragraph
         if (sentences && sentences.length > 0) {
             for (let i = 0; i < sentences.length; i++) {
-                if (text.indexOf(sentences[i]) !== -1) {
+                if (text && text.indexOf(sentences[i]) !== -1) {
                     ret = sentences[i]
                     break
                 }
@@ -819,15 +806,13 @@ const getParagraph = (element) => {
     }
     const container = element.closest('p, div, li')
     if (!container) {
-        return element.textContent?.trim() || ''
+        return element?.textContent?.trim() || ''
     }
     return container.textContent?.trim() || ''
 }
 
-const translateCallback = (info) => {
-    translatedText.value = info
-    showTranslatePopup.value = true
-    translateTimer.value = new Date().getTime()
+const showAlert = (message) => {
+    ElMessage.warning(message)
 }
 
 const handleCopySelection = () => {
@@ -884,8 +869,7 @@ const getNewIdx = () => {
 
 const showTranslatePopup = ref(false)
 const translatePosition = ref({ x: 0, y: 0 })
-const translatedText = ref('')
-const translateTimer = ref(null)
+const translatePopup = ref(null)
 
 const isPaper = computed(() => {
     if (!form.value || !form.value.addr) return false

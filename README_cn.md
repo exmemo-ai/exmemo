@@ -39,7 +39,7 @@ ExMemo 是一款个人知识管理工具，专注于集中记录和管理多种�
 
 ## 2 安装
 
-系统采用模块化管理，通过 PgVector 数据库以及 Python、JavaScript（VUE3）和 TypeScript 等语言实现。为适应不同环境，系统拆分为多个 Docker 镜像。用户通过操作 docker-compose 即可启动所需模块。
+系统采用模块化管理，通过 PgVector 数据库以及 Python、JavaScript（VUE3）和 TypeScript 等语言实现。为适应不同环境，系统拆分为多个 Docker 镜像。用户通过操作 docker compose 即可启动所需模块。
 
 ### 2.1 配置
 
@@ -72,7 +72,7 @@ vi backend/.env
 #### 2.2.1 以生产模式启动
 
 ```shell
-docker-compose --env-file backend/.env --profile production up -d
+docker compose --env-file backend/.env --profile production up -d
 ```
 
 请查看 shell/prod.sh 获取具体命令。
@@ -125,7 +125,7 @@ cd $EXMEMO_DIR/code/exmemo/ui/wechat
 
 ``` shell
 cd $EXMEMO_DIR/code/exmemo/
-docker-compose --env-file backend/.env --profile production up -d ewechat
+docker compose --env-file backend/.env --profile production up -d ewechat
 ```
 
 查看 log 信息：
@@ -141,20 +141,20 @@ $ docker logs ewechat
 如果需要修改和调试前后端代码，请以开发模式启动，并手动运行后端 Python 程序。
 
 ```shell
-docker-compose --env-file backend/.env --profile development up -d
+docker compose --env-file backend/.env --profile development up -d
 docker exec -it ebackend_dev bash
 > cd backend
-> python manage.py runserver 0.0.0.0:8005
+> ./shell/run.sh
 ```
 
-具体方法请参见 shell/dev.sh, shell/run.sh。
+具体方法请参见 shell/dev.sh, backend/shell/run.sh。
 
 ### 3.5 S3 存储：minio
 
 数据默认存储于宿主机目录。若需使用 Minio S3 存储，请在.env 文件中配置 MINIO 相关选项。Minio Docker 不会自动启动，如需在宿主机上启用 Minio 服务，请手动操作。
 
 ```shell
-docker-compose -f docker-compose-dev.yml up -d minio
+docker compose --env-file backend/.env -f docker-compose.yml up -d eminio
 ```
 
 ## 4 更新日志

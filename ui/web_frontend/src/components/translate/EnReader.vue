@@ -15,28 +15,18 @@
             <el-text style="margin: 10px 0;">{{ $t('operationArea') }} ({{ $t('clickToTranslate') }})</el-text>
             <div
                 style="width: 100%; height: 33vh; overflow: auto; text-align: left; white-space: pre-line; margin-top: 10px;">
-                <span v-for="word in words" :key="word" @mousedown="handleMouseDown"
-                    @mouseup="handleMouseUp($event, word)">
+                <span v-for="word in words" :key="word" @mouseup="handleMouseUp($event)">
                     {{ word }}&nbsp;
                 </span>
             </div>
         </div>
 
-        <div v-if="showPopup"
-            :style="{ top: `${popupPosition.y}px`, left: `${popupPosition.x}px`, maxHeight: '200px', height: 'auto', overflow: 'auto' }"
-            class="popup">
-            <div style="display: flex; flex-direction: column; margin: 5px;">
-                <div style="flex-grow: 1;">
-                    <button @click="wordInSentence" style="font-size: 12px;">{{ $t('definitionInSentence')
-                        }}</button>
-                    <button @click="translateSelection" style="font-size: 12px;">{{ $t('translateSelection')
-                        }}</button>
-                </div>
-                <div style="flex-grow: 0; text-align: left; white-space: pre-line;">
-                    {{ showText }}
-                </div>
-            </div>
-        </div>
+        <TranslatePopup
+            :visible="showPopup"
+            :position="popupPosition"
+            ref="translatePopup"
+            @alert="showAlert"
+        />
 
         <CheckDialog ref="checkDialog" />
         <AIDialog
@@ -53,14 +43,15 @@
 import { getURL, parseBackendError, setDefaultAuthHeader } from '@/components/support/conn';
 import axios from 'axios';
 import CheckDialog from './LookupDialog.vue';
-import { translateFunc } from './TransFunction';
-import AIDialog from '@/components/ai/AIDialog.vue'
+import AIDialog from '@/components/ai/AIDialog.vue';
+import TranslatePopup from './TranslatePopup.vue';
 
 export default {
     name: 'EnReader',
     components: {
         CheckDialog,
-        AIDialog
+        AIDialog,
+        TranslatePopup
     },
     data() {
         return {
@@ -68,12 +59,8 @@ export default {
             outerMargin: 50,
             inputText: '',
             words: [],
-            currentWord: '',
             showPopup: false,
             popupPosition: { x: 0, y: 0 },
-            showText: '',
-            popupTime: null,
-            pressTimer: null,
             etype: 'translate',
             aiDialogVisible: false,
         };
@@ -109,132 +96,39 @@ export default {
             console.log('analysis:', this.inputText);
         },
         handleInput() {
-            //this.words = this.inputText.split(' ');
             this.words = this.inputText.split(/(?<=[^\w\n])|(?=[^\w\n])/);
             this.words = this.words.filter((word) => word !== ' ');
         },
-        handleMouseDown() {
-            console.log('down')
-            this.pressTimer = setTimeout(() => {
-                this.pressTimer = null;
-            }, 500);
-        },
-        handleMouseUp(event, word) {
-            console.log('Up', word, 'showPopup:', this.showPopup);
-            if (this.showPopup) {
-                return;
-            }
-            if (this.pressTimer) {
-                clearTimeout(this.pressTimer);
-                this.pressTimer = null;
-                this.handleShortPress(event, word);
-            } else {
-                this.handleLongPress(event, word);
-            }
-        },
-        setPos(event) {
-            this.popupPosition.x = event.clientX;
-            this.popupPosition.y = event.clientY;
-            if (this.popupPosition.x + 200 > window.innerWidth) {
-                this.popupPosition.x = window.innerWidth - 200;
-            } else if (this.popupPosition.x < 0) {
-                this.popupPosition.x = 0;
-            }
-            if (this.popupPosition.y + 100 > window.innerHeight) {
-                this.popupPosition.y = window.innerHeight - 100;
-            } else if (this.popupPosition.y < 0) {
-                this.popupPosition.y = 0;
-            }
-        },
-        handleShortPress(event, word) {
-            // Short press to translate word.
-            console.log("short press", event, word)
-            this.setPos(event);
-            this.currentWord = word;
-            let sentence = this.getSentence(event.target);
-            this.translate('word', word, sentence);
-        },
-        handleLongPress(event, word) {
-            console.log("long press", event, word)
-            let selectedText = window.getSelection().toString();
-            this.setPos(event);
-            if (selectedText) {
-                // Long press with selected text.
-                console.log(selectedText);
-                this.translate('sentence', null, selectedText);
-            } else {
-                let sentence = this.getSentence(event.target);
-                this.translate('word_role', word, sentence)
-            }
-        },
-        wordInSentence() {
-            if (this.currentWord === '') {
-                alert(this.$t('selectWordAlert'));
-            }
-            console.log('wordInSentence');
-            if (window.getSelection().anchorNode.parentElement === null) {
-                return;
-            }
-            let sentence = this.getSentence(window.getSelection().anchorNode.parentElement);
-            this.translate('word_role', this.currentWord, sentence)
-        },
-        translateSelection() {
-            console.log('translateSelection');
-            let selectedText = window.getSelection().toString();
-            if (selectedText) {
-                this.translate('sentence', null, selectedText);
-            } else {
-                alert(this.$t('selectChineseAlert'));
-            }
-        },
-        getSentence(element) {
-            console.log('getSentence:', element);
-            let sentence = [];
-            let text = [];
-            let prev = element.previousSibling;
-            while (prev) {
-                if (prev.nodeName !== 'SPAN' || this.issymbol(prev.textContent)) {
-                    break;
-                }
-                text = [prev.textContent.trim()].concat(text);
-                prev = prev.previousSibling;
-            }
-            sentence = text.concat([element.textContent.trim()]);
-            if (this.issymbol(element.textContent) == false) {
-                let next = element.nextSibling;
-                text = [];
-                while (next) {
-                    if (next.nodeName !== 'SPAN') {
-                        break;
-                    }
-                    text = text.concat([next.textContent.trim()]);
-                    if (this.issymbol(next.textContent)) {
-                        break;
-                    }
-                    next = next.nextSibling;
-                }
-                sentence = sentence.concat(text);
-            }
-            console.log('sentence:', sentence);
-            return sentence.join(" ");
-        },
-        translateCallback(info) {
-            console.log(info);
-            console.log('post result, showPopup:', this.showPopup);
+        handleMouseUp(event) {
+            const selectedText = window.getSelection().toString().trim();            
+            this.setPopPosition(event);
             this.showPopup = true;
-            this.popupTime = new Date().getTime();
-            this.showText = info;
+            
+            if (selectedText) {
+                this.$refs.translatePopup.translateSelection(selectedText);
+            } else {
+                const word = event.target.textContent.trim();
+                if (word) {
+                    this.$refs.translatePopup.translateWord(word, event.target);
+                }
+            }
         },
-        translate(rtype, word, sentence) {
-            translateFunc(this, rtype, word, sentence, this.translateCallback);
-        },
-        issymbol(text) {
-            let regex = /[.,;!?]$/;
-            return regex.test(text.trim());
+        setPopPosition(event) {
+            this.popupPosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+            
+            if (this.popupPosition.x + 220 > window.innerWidth) {
+                this.popupPosition.x = window.innerWidth - 220;
+            }
+            if (this.popupPosition.y + 200 > window.innerHeight) {
+                this.popupPosition.y = window.innerHeight - 200;
+            }
         },
         hidePopup(event) {
-            console.log('hidePopup, event:', event);
-            if (new Date().getTime() - this.popupTime < 1000) {
+            const popupTime = this.$refs.translatePopup ? this.$refs.translatePopup.getPopupTime() : 0;
+            if (new Date().getTime() - popupTime < 1000) {
                 return;
             }
             this.showPopup = false;
@@ -260,6 +154,9 @@ export default {
             }
             return this.inputText;
         },
+        showAlert(message) {
+            alert(message);
+        }
     },
     mounted() {
         this.handleResize()
@@ -272,15 +169,3 @@ export default {
     },
 };
 </script>
-
-<style scoped>
-.popup {
-    margin: 2px;
-    position: absolute;
-    width: 200px;
-    height: 100px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    font-size: 12px;
-}
-</style>
