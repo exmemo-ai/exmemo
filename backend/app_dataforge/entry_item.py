@@ -3,7 +3,7 @@ import pytz
 import json
 from loguru import logger
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, Dict, Any
 from django.utils import timezone
 from .models import StoreEntry
@@ -70,7 +70,7 @@ class EntryItem:
             return [EntryItem.process_date_objects(item) for item in data]
         elif isinstance(data, datetime):
             return data.isoformat()
-        elif isinstance(data, datetime.date):
+        elif isinstance(data, date):
             return data.isoformat()
         else:
             return data
