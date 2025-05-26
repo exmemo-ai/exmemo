@@ -5,23 +5,24 @@ import SettingService from '@/components/settings/settingService'
 import { t } from '@/utils/i18n'
 
 export async function saveEntry({
-    onSuccess,
     form,
-    path,
-    file,
-    onProgress,
-    onUploadStart, 
+    onSuccess = null,
+    path = null,
+    file = null,
+    onProgress = null,
+    onUploadStart = null, 
     showMessage = true
 }) {
     let func = 'api/entry/data/';
     const formData = new FormData();
 
     if (form.etype === 'record') {
-        if (form.raw === '') {
+        if (form.content === '') {
             ElMessage.error(t('inputRecordContent'));
             return false;
+        } else if (form.content !== undefined) { // whether update content
+            formData.append('content', form.content);
         }
-        formData.append('raw', form.raw);
     } else if (form.etype === 'file'||form.etype === 'note') {
         if (!file && (form.idx === null || form.idx === undefined)) {
             if (form.etype === 'file') {
@@ -34,7 +35,7 @@ export async function saveEntry({
         if (file) {
             formData.append('files', file);
             let fileName = file.name;
-            if (form.title !== '') {
+            if (form.title && form.title !== '') {
                 if (fileName.indexOf('.') > 0) {
                     const fileExt = fileName.split('.').pop();
                     const titleExt = form.title.split('.').pop();
@@ -56,6 +57,12 @@ export async function saveEntry({
                 }
             } else {
                 formData.append('filepaths', `${fileName}`);
+            }
+            formData.append('unzip', form.unzip);
+            formData.append('createSubDir', form.createSubDir);
+            formData.append('is_async', true);
+            if (form?.vault) {
+                formData.append('vault', form.vault);
             }
         }
     } else if (form.etype === 'web') {
@@ -102,7 +109,9 @@ export async function saveEntry({
                 cancelToken: cancelTokenSource.token
             });
             if (response.data.status === 'success') {
-                if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
+                if (!response.data.task_id) {
+                    if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
+                }
                 onSuccess?.(response.data);
                 return response.data;
             } else {
@@ -118,7 +127,7 @@ export async function saveEntry({
         if (axios.isCancel(error)) {
             ElMessage({ type: 'info', message: t('operationCancelled') });
         } else {
-            parseBackendError(null, error)
+            parseBackendError(error)
         }
         return false;
     }
@@ -146,7 +155,7 @@ export async function fetchItem(idx) {
         };
     } catch (error) {
         if (error.response && error.response.status === 401) {
-            parseBackendError(null, error);
+            parseBackendError(error);
         } else {
             console.error(error);
             ElMessage.error(t('operationFailed'));
@@ -175,7 +184,7 @@ export const confirmOpenNote = (data) => {
                 }
             })
             .catch(error => {
-                parseBackendError(null, error);
+                parseBackendError(error);
             });
     }
 };
@@ -206,7 +215,7 @@ export const getDefaultPath = (etype, addr, title) => {
     } else if (etype === 'web') {
         path = t('viewMarkdown.webNote');
     } else if (etype === 'chat') {
-        path = t('.viewMarkdown.chatNote');
+        path = t('viewMarkdown.chatNote');
     } else {
         path = t('note');
     }

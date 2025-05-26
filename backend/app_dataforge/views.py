@@ -13,22 +13,25 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
 from knox.auth import TokenAuthentication
 
 from backend.common.files import utils_filemanager, filecache
-from backend.common.user.utils import parse_common_args, get_user_id
+from backend.common.user.utils import get_user_id
 from backend.common.utils.net_tools import do_result, get_backend_addr
 from backend.common.utils.web_tools import get_url_content
 from backend.common.utils.file_tools import get_content_type, get_ext
 from backend.common.parser.converter import convert, is_support
+from backend.settings import USE_CELERY
 
-from .feature import EntryFeatureTool
-from .entry import delete_entry, add_data, get_entry_list, get_type_options, rename_file
+from .entry import delete_entry, add_data, get_entry_list
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
+from .zipfile import is_compressed_file
+from .file_tools import update_files, rename_file, update_file
+from .tasks import update_files_task
+from .entry_storage import EntryStorage
 
+MAX_LEVEL = 2
 
 class StoreEntryViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -40,28 +43,12 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return ListSerializer
         return DetailSerializer
 
-    def update_file(self, dic, addr, file, md5, vault=None):
-        if addr.startswith("/"):
-            addr = addr[1:]
-        dic_item = dic.copy()
-        if vault is not None:
-            dic_item["addr"] = os.path.join(vault, addr)
-        else:
-            dic_item["addr"] = addr
-        dic_item["md5"] = md5
-        tmp_path = filecache.get_tmpfile(get_ext(addr))
-        data = file.file.read()
-        logger.debug("## save to db " + tmp_path + " len " + str(len(data)))
-        with open(tmp_path, "wb") as f:
-            f.write(data)
-        return add_data(dic_item, tmp_path)
-
     def create(self, request, *args, **kwargs):
         logger.info("now create instance")
         """
         update files
         """
-        debug = True
+        debug = False
         try:
             dic = {}
             dic["etype"] = request.POST.get("etype", "note")
@@ -69,10 +56,12 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             dic["title"] = request.POST.get("title", None)
             dic["atype"] = request.POST.get("atype", None)
             dic["raw"] = request.POST.get("raw", None)
+            dic['content'] = request.POST.get("content", None)
             dic["status"] = request.POST.get("status", "collect")
             dic["idx"] = request.POST.get("idx", None)
             dic["user_id"] = get_user_id(request)
             dic["source"] = request.POST.get("source", "web")
+            is_async = request.POST.get("is_async", "false").lower() == "true"
             if dic["etype"] == "web":
                 addr = request.POST.get("addr", None)
                 if not addr.startswith("http"):
@@ -83,10 +72,12 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(True, str(info["content"]))
                 return do_result(True, str(info))
             elif dic["etype"] == "record":  # maybe more then one entry
-                ret, ret_emb, info = add_data(dic)
+                ret, ret_emb, info = add_data(dic, data = {'content': dic["content"]})
                 return do_result(ret, info)
             elif dic["etype"] == "file" or dic["etype"] == "note":
                 vault = request.POST.get("vault", None)
+                is_unzip = request.POST.get("unzip", "false").lower() == "true"
+                is_createSubDir = request.POST.get("createSubDir", "true").lower() == "true"
                 files = request.FILES.getlist("files")
                 filepaths = request.POST.getlist("filepaths")
                 filemd5s = request.POST.getlist("filemd5s")
@@ -94,22 +85,45 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     logger.info(
                         f"do_upload files {files}, filepaths {filepaths},  filemd5s {filemd5s}"
                     )
-                success_list = []
-                if len(files) > 0 and len(filemd5s) == 0:
-                    filemd5s = [None] * len(files)
-                emb_status = "success"
-                for file, addr, md5 in zip(files, filepaths, filemd5s):
-                    ret, ret_emb, detail = self.update_file(dic, addr, file, md5, vault)
-                    if not ret_emb:
-                        emb_status = "failed"
-                    if ret:
-                        success_list.append(addr)
-                if debug:
-                    logger.info(f"upload_files success {success_list}")
-                if len(success_list) > 0:
-                    return do_result(True, {"list": success_list, "emb_status": emb_status})
+
+                tmp_file_paths = []
+                for file in files:
+                    ext = get_ext(file.name)
+                    tmp_path = filecache.get_tmpfile(ext)
+                    with open(tmp_path, "wb") as f:
+                        for chunk in file.chunks():
+                            f.write(chunk)
+                    tmp_file_paths.append(tmp_path)
+
+                is_zip_file = False
+                if is_unzip:
+                    for file in files:
+                        if is_compressed_file(file.name):
+                            is_zip_file = True
+                            break
+                
+                if USE_CELERY and is_async and (len(files) > 1 or is_zip_file):
+                    task_id = update_files_task.delay(
+                        dic['user_id'], 
+                        tmp_file_paths,
+                        filepaths,
+                        filemd5s,
+                        dic,
+                        vault,
+                        is_unzip,
+                        is_createSubDir
+                    )
+                    return do_result(True, {"task_id": str(task_id)})
                 else:
-                    return do_result(False, _("no_update_needed"))
+                    success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir)
+                    if debug:
+                        logger.info(f"upload_files success {str(success_list)[:200]}...")
+                    else:
+                        logger.info(f"upload_files success {len(success_list)}")
+                    if len(success_list) > 0:
+                        return do_result(True, {"list": success_list, "emb_status": emb_status})
+                    else:
+                        return do_result(False, _("no_update_needed"))
         except Exception as e:
             traceback.print_exc()
             logger.warning(f"upload_files failed {e}")
@@ -123,7 +137,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             logger.debug(request)
             instance = self.get_object()
             logger.debug(f"user_id {instance.user_id}")
-            delete_entry(instance.user_id, [{"addr": instance.addr}])
+            delete_entry(instance.user_id, [{"addr": instance.addr, "etype": instance.etype}])
             return do_result(True, None)
         except Exception as e:
             logger.warning(f"destroy failed {e}")
@@ -135,10 +149,10 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         get entry list by page
         """
         debug = True  # for test
-        count_limit = 100
+        count_limit = -1
         query_args = {}
         user_id = get_user_id(request)
-        if user_id == None:
+        if user_id is None:
             return Response([])
         else:
             query_args["user_id"] = user_id
@@ -171,36 +185,32 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         if max_count != -1:
             count_limit = max_count
         queryset = get_entry_list(keywords, query_args, count_limit)
-        logger.debug(f"list total: {len(queryset)}")
 
-        if max_count == -1: # get item by page
+        if max_count == -1:
+            # Use DRF pagination for unlimited results
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
                 return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        data = sorted(serializer.data, key=lambda x: x["ctype"])
-        paginator = PageNumberPagination()
-        if queryset.count() > 0:
-            paginator.page_size = queryset.count()
         else:
-            paginator.page_size = 10
-        page = paginator.paginate_queryset(queryset, self.request)
-        return paginator.get_paginated_response(data)
+            # Limit results if max_count is specified
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
+            full_content = request.query_params.get('full_content', 'true').lower() == 'true'
             if instance.etype == 'record' or instance.etype == 'chat':
                 serializer = self.get_serializer(instance)
                 data = serializer.data
-                data['content'] = instance.raw
+                data['content'] = EntryStorage.get_content(instance.user_id, instance.addr)
                 return Response(data)
             elif instance.etype == 'web':
                 serializer = self.get_serializer(instance)
                 data = serializer.data
-                title, data['content'] = get_url_content(instance.addr, format='markdown')
+                if full_content:
+                    title, data['content'] = get_url_content(instance.addr, format='markdown')
                 return Response(data)
             elif instance.etype == 'file' or instance.etype == 'note':
                 if instance.path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
@@ -240,23 +250,28 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                             return Response(data)
                     raise Http404
                 elif is_support(instance.path.lower()): # docx, pdf, txt, html
-                    rel_path = instance.path
-                    user_id = instance.user_id
-                    file_path = filecache.get_tmpfile(get_ext(rel_path))
-                    ret = utils_filemanager.get_file_manager().get_file(
-                        user_id, rel_path, file_path
-                    )
-                    if ret:
-                        filecache.TmpFileManager.get_instance().add_file(file_path)
-                        md_path = filecache.get_tmpfile('.md')
-                        ret = convert(file_path, md_path)
+                    if full_content:
+                        rel_path = instance.path
+                        user_id = instance.user_id
+                        file_path = filecache.get_tmpfile(get_ext(rel_path))
+                        ret = utils_filemanager.get_file_manager().get_file(
+                            user_id, rel_path, file_path
+                        )
                         if ret:
-                            with open(md_path, 'r', encoding='utf-8') as file:
-                                content = file.read()
-                                serializer = self.get_serializer(instance)
-                                data = serializer.data
-                                data['content'] = content
-                                return Response(data)
+                            filecache.TmpFileManager.get_instance().add_file(file_path)
+                            md_path = filecache.get_tmpfile('.md')
+                            ret = convert(file_path, md_path)
+                            if ret:
+                                with open(md_path, 'r', encoding='utf-8') as file:
+                                    content = file.read()
+                                    serializer = self.get_serializer(instance)
+                                    data = serializer.data
+                                    data['content'] = content
+                                    return Response(data)
+                    else:
+                        serializer = self.get_serializer(instance)
+                        data = serializer.data
+                        return Response(data)
                     raise Http404
             # others
             serializer = self.get_serializer(instance)
@@ -280,6 +295,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return do_result(False, str(serializer.errors))
         dic.update(serializer.validated_data) # data: base + request
         
+        ret = False
         if instance.etype in ["file", "note"]:
             # check rename
             if 'addr' in serializer.validated_data and instance.addr != serializer.validated_data['addr']:
@@ -290,13 +306,26 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 else:
                     return do_result(True, _("update_successfully"))
             # check update file
-            if request.FILES:
-                ret, ret_emb, detail = self.update_file(dic, instance.addr, request.FILES['files'], None)
+            elif request.FILES:
+                ext = get_ext(instance.addr)
+                tmp_path = filecache.get_tmpfile(ext)
+                with open(tmp_path, "wb") as f:
+                    file = request.FILES['files']
+                    for chunk in file.chunks():
+                        f.write(chunk)
+                    f.close()
+                ret, ret_emb, detail = update_file(dic, instance.addr, tmp_path, None,
+                                                   vault=None, is_unzip=False, is_createSubDir=False)
                 if not ret:
                     return do_result(False, _("update_failed"))
                 return do_result(True, _("update_successfully"))
-        
-        ret, ret_emb, info = add_data(dic)
+            else:
+                ret, ret_emb, info = add_data(dic)
+        elif instance.etype == "record":
+            content = request.data.get("content", None)
+            ret, ret_emb, info = add_data(dic, data = {'content': content})
+        else:
+            ret, ret_emb, info = add_data(dic)
         if not ret:
             return do_result(False, _("update_failed"))
         return do_result(True, _("update_successfully"))
@@ -346,45 +375,3 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-
-class EntryAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        return self.api(request)
-
-    def get(self, request):
-        return self.api(request)
-
-    def api(self, request):
-        rtype = request.GET.get("rtype", request.POST.get("rtype", "feature"))
-        if rtype == "feature":
-            return self.feature(request)
-        elif rtype == "extract":
-            return self.extract(request)
-        else:
-            return do_result(False, _("unknown_action"))
-
-    def feature(self, request):
-        ctype = request.GET.get("ctype", request.POST.get("ctype", None))
-        logger.debug(f"ctype {ctype}")
-        return get_type_options(ctype)
-
-    def extract(self, request):
-        dic = {}
-        args = parse_common_args(request)
-        dic["etype"] = request.GET.get("etype", request.POST.get("etype", "record"))
-        dic["user_id"] = args["user_id"]
-        logger.debug(f"etype {dic['etype']}")
-        ret = False
-        if dic["etype"] in ["record", "chat"]:
-            raw = request.GET.get("raw", request.POST.get("raw", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, raw, force=True)
-        elif dic["etype"] in ["web", "note", "file"]:
-            addr = request.GET.get("addr", request.POST.get("addr", None))
-            ret, dic_new = EntryFeatureTool.get_instance().parse(dic, addr, force=True)
-        if ret:
-            return do_result(True, {"dic": dic_new})
-        else:
-            return do_result(False, {"info": "extract failed"})

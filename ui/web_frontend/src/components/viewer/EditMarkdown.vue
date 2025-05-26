@@ -27,6 +27,7 @@
                     @onChange="handleContentChange"
                     @on-save="saveContent"
                     :toolbars="customToolbars"
+                    preview-theme="github"
                     :showToolbar="true"
                     :preview="isLandscape ? true: false"
                     :scroll-auto="true"
@@ -36,6 +37,11 @@
                         <NormalToolbar :title="t('saveAs')" @onClick="saveAs">
                             <template #trigger>
                                 <el-icon><SaveAsIcon /></el-icon>
+                            </template>
+                        </NormalToolbar>
+                        <NormalToolbar :title="t('img.insertImage')" @onClick="uploadImage">
+                            <template #trigger>
+                                <el-icon><Picture /></el-icon>
                             </template>
                         </NormalToolbar>
                     </template>
@@ -62,6 +68,7 @@
             @insert-note="handleInsertAIAnswer"
         />
         <AddDialog ref="addDialog" />
+        <ImageProcessDialog ref="imageProcessRef" />
     </div>
 </template>
 
@@ -73,14 +80,17 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
-import { MdEditor, NormalToolbar } from 'md-editor-v3';
-import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from './dataUtils';
-import TextSpeakPlayer from '@/components/manager/TextPlayer.vue';
+import { MdEditor, NormalToolbar, config } from 'md-editor-v3';
+import { saveEntry, fetchItem, getDefaultPath, getDefaultVault } from '@/components/datatable/dataUtils';
+import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue';
 import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
+import { Picture } from '@element-plus/icons-vue';
 import { useWindowSize } from '@vueuse/core';
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue';
-import AddDialog from '@/components/manager/AddDialog.vue'
+import AddDialog from '@/components/datatable/AddDialog.vue'
+import { getMarkdownItConfig, uploadPendingImages, cleanupTempImages, addTempImage, resizeImageIfNeeded, handleSingleImage } from './imageUtils';
+import ImageProcessDialog from '@/components/viewer/ImageProcessDialog.vue';
 
 const { t } = useI18n();
 const appName = 'ExMemo';
@@ -97,6 +107,7 @@ const aiDialogVisible = ref(false);
 const defaultReferenceType = ref('');
 const addDialog = ref(null)
 const etype = "editor"
+const imageProcessRef = ref(null);
 
 const currentFileName = computed(() => {
     if (form.value && form.value.title) {
@@ -115,6 +126,7 @@ const customToolbars = computed(() => {
         'unorderedList',
         'orderedList',
         'task',
+        1,
         '=',
         'previewOnly',
         'save',
@@ -135,10 +147,10 @@ const customToolbars = computed(() => {
         'codeRow',
         'code',
         'link',
-        //'image',
         'table',
         'mermaid',
         'formula',
+        1,
         '=',
         'revoke',
         'next',
@@ -164,9 +176,9 @@ const fetchContent = async (idx) => {
 const resetContent = async () => {
     if ('content' in form.value && form.value.content !== null) {
         let content = form.value.content;
-        if (form.value.etype === 'note') {
-            content = content.replace(/^---\n[\s\S]*?\n---\n/, '');
-        }
+        //if (form.value.etype === 'note') {
+        //    content = content.replace(/^---\n[\s\S]*?\n---\n/, '');
+        //}
         markdownContent.value = content;
         isContentModified.value = false;
     } else {
@@ -178,22 +190,28 @@ const handleContentChange = () => {
     isContentModified.value = true;
 }
 
-const saveAs = async () => {
+const getCurrentPathInfo = () => {
     let vault = '';
     let path = '';
     if (!form.value.addr) {
         vault = getDefaultVault('note', null);
         path = getDefaultPath('note', null, null);
     } else {
-        vault = form.value.addr.split('/')[0];
-        path = form.value.addr.split('/').slice(1).join('/');
-        path = path.replace(/(\.[^.]*)$/, '_copy$1');
+        const parts = form.value.addr.split('/');
+        vault = parts[0];
+        path = parts.slice(1).join('/');
     }
+    return { vault, path };
+}
+
+const saveAs = async () => {
+    const { vault, path } = getCurrentPathInfo();
+    const modifiedPath = path.replace(/(\.[^.]*)$/, '_copy$1');
     addDialog.value.openDialog(null, {
         etype: 'note',
         content: markdownContent.value,
         vault: vault,
-        path: path,
+        path: modifiedPath,
         atype: form.value.atype,
         ctype: form.value.ctype,
         status: form.value.status,
@@ -212,19 +230,21 @@ const saveContent = async () => {
     }
 
     try {
-        const blob = new Blob([markdownContent.value], { type: 'text/plain' });
+        const { vault } = getCurrentPathInfo();
+        let finalContent = await uploadPendingImages(markdownContent.value, vault);
+        const blob = new Blob([finalContent], { type: 'text/plain' });
         const file = new File([blob], 'temp.md', { type: 'text/plain' });
         const result = await saveEntry({
-            onSuccess: null,
             form: form.value,
             path: form.value.addr,
             file: file,
-            onProgress: null,
             showMessage: false
         });
         if (result) {
             ElMessage.success(t('saveSuccess'));
             isContentModified.value = false;
+            markdownContent.value = finalContent;
+            cleanupTempImages(finalContent);
         }
     } catch (error) {
         console.error(t('saveFail'), error);
@@ -487,6 +507,98 @@ const handleResize = () => {
     console.log('visualHeight', visualHeight);
     document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
 }
+
+const handleImageChange = async (files, callback) => {
+    if (files.length === 0) {
+        callback([]);
+        return;
+    } else if (files.length > 1) {
+        for (const file of files) {
+            if (file instanceof Blob) {
+                const resizedFile = await resizeImageIfNeeded(file);
+                const imageId = addTempImage(resizedFile);
+                if (imageId) {
+                    callback([imageId]);
+                    isContentModified.value = true;
+                }
+            }
+        }
+        return;
+    }
+    callback([]);
+
+    const file = files[0];
+    const result = await handleSingleImage(file, imageProcessRef.value, addTempImage);
+    
+    if (result.type === 'image' || result.type === 'combined') {
+        callback([result.imageId]);
+        isContentModified.value = true;
+        
+        if (result.type === 'combined' && result.text && result.text.length > 0 && mdEditor.value) {
+            setTimeout(() => {
+                mdEditor.value?.insert(() => {
+                    return {
+                        targetValue: '\n' + result.text + '\n\n',
+                        select: true,
+                        deviationStart: 0,
+                        deviationEnd: 0
+                    };
+                });
+            }, 100);
+        }
+    } else if (result.type === 'text') {
+        if (result.text && result.text.length > 0 && mdEditor.value) {
+            mdEditor.value?.insert(() => {
+                return {
+                    targetValue: result.text + '\n\n',
+                    select: true,
+                    deviationStart: 0,
+                    deviationEnd: 0
+                };
+            });
+            isContentModified.value = true;
+        }
+    } else if (result.error) {
+        const errorMessages = {
+            'processing_failed': t('image.processingFailed'),
+            'invalid_format': t('image.invalidFileFormat'),
+            'unknown_error': t('uploadFail'),
+            'failed_to_add_temp_image': t('uploadFail')
+        };
+        ElMessage.error(errorMessages[result.error] || t('uploadFail'));
+    }
+};
+
+const uploadImage = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = (event) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            handleImageChange(Array.from(files), (urls) => {
+                if (urls && urls.length > 0) {
+                    mdEditor.value?.insert(() => {
+                        return {
+                            targetValue: `![image](${urls[0]})\n`,
+                            select: false,
+                            deviationStart: 0,
+                            deviationEnd: 0
+                        };
+                    });
+                }
+            });
+        }
+    };
+    input.click();
+};
+
+config({
+    markdownItConfig: getMarkdownItConfig
+});
+
 
 onBeforeUnmount(() => {
     if (speakerPlayer.value) {

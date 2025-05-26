@@ -29,19 +29,19 @@
                     <el-button @click="optWordList">{{ $t('trans.processWordListSimple') }}</el-button>
                 </div>
             </div>
-            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%" stripe>
-                <el-table-column prop="word" :label="$t('english')" show-overflow-tooltip></el-table-column>
-                <el-table-column prop="meaning" :label="$t('translate')" show-overflow-tooltip></el-table-column>
-                <el-table-column prop="freq" :label="$t('frequency')" :width=70 show-overflow-tooltip></el-table-column>
+            <el-table :data="fileList" @row-click="handleRowClick" style="width: 100%; table-layout: fixed;" stripe>
+                <el-table-column prop="word" :label="$t('english')" :min-width="80" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="meaning" :label="$t('translate')" :min-width="200" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="freq" :label="$t('frequency')" :max-width=70 :min-width=70  show-overflow-tooltip></el-table-column>
                 <!--<el-table-column prop="times" :label="$t('recordCount')" :width=100 show-overflow-tooltip></el-table-column>-->
-                <el-table-column :label="$t('status')" :width=100 show-overflow-tooltip>
+                <el-table-column v-if="!isMobile" :label="$t('status')" :width=100 show-overflow-tooltip>
                     <template v-slot="scope">
                         {{ $t("trans."+scope.row.status) }}
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('operation')" :width=100>
+                <el-table-column v-if="!isMobile" :label="$t('operation')" :width=100>
                     <template v-slot="scope">
-                        <el-button link @click="removeItem(scope.row)">{{ $t('delete') }}</el-button>
+                        <el-button link @click.stop="removeItem(scope.row)">{{ $t('delete') }}</el-button>
                     </template>
                 </el-table-column>
                 <template #empty>
@@ -86,6 +86,7 @@ export default {
     },
     data() {
         return {
+            isMobile: false,
             isLogin: false,
             login_user: '',
             total: 0,
@@ -94,7 +95,7 @@ export default {
             search_text: '',
             fileList: [],
             statusFilter: '',
-            statusOptions: ['learned', 'learning', 'not_learned', 'review', 'to_review'],
+            statusOptions: ['learned', 'learning', 'not_learned', 'review'],
         };
     },
     methods: {
@@ -131,7 +132,7 @@ export default {
                     }
                 }));
             } catch (error) {
-                parseBackendError(this, error);
+                parseBackendError(error);
             }
         },
         searchKeyword() {
@@ -147,7 +148,7 @@ export default {
                     this.fetchData();
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         },
         handleRowClick(row, column, event) {
@@ -158,11 +159,19 @@ export default {
         },
         optWordList() {
             this.$refs.optWordListDialog.openDialog(this);
+        },
+        checkScreen() {
+            this.isMobile = window.innerWidth < 768
         }
     },
     mounted() {
+        this.checkScreen();
+        window.addEventListener('resize', this.checkScreen)
         this.fetchData();
-    }
+    },
+    beforeDestroy() {
+        window.removeEventListener('resize', this.checkScreen)
+    },    
 }
 </script>
 

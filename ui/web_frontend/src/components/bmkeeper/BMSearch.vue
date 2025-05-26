@@ -86,7 +86,7 @@ export default {
           this.hasSearched = true
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
     getFavicon(url) {

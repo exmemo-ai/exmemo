@@ -140,7 +140,7 @@ def query_openai(
     ]
     completion = client.chat.completions.create(model=model_name, messages=message)
 
-    print("completion", completion)
+    #print("completion", completion)
     if completion.choices is None or len(completion.choices) == 0:
         if "result" in completion:
             ret = completion.result

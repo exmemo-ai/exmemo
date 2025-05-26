@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
       <el-container style="flex: 0; width: 100%;">
-        <app-navbar :title="t('dataManagement')" :info="'DataManager'" />
+        <app-navbar ref="navbar" :title="t('dataManagement')" :info="'DataManager'" />
       </el-container>
       <el-container style="flex: 1; width: 100%; overflow: hidden;">
         <el-main class="main-container list-options">
@@ -167,6 +167,7 @@ export default {
             etype_options: [],
             search_text: '',
             fileList: [],
+            navbar: null,
         };
     },
     methods: {
@@ -197,7 +198,7 @@ export default {
                     this.fileList = response.data['results'];
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         },
         searchKeyword() {
@@ -249,7 +250,19 @@ export default {
             }
         },
         openAddDialog() {
-            this.$refs.addDialog.openDialog(() => this.fetchData());
+            this.$refs.addDialog.openDialog((response_data) => {
+                if (response_data.task_id) {
+                    if (this.$refs.navbar) {
+                        this.$refs.navbar.startTaskCheck(response_data.task_id);
+                    }
+                    this.$message({
+                        type: 'success',
+                        message: this.t('task.taskStarted')
+                    });
+                } else {
+                    this.fetchData();
+                }
+            });
         },
         handleRowClick(row) {
             this.$refs.editDialog.openDialog(() => this.fetchData(), row);
@@ -287,7 +300,7 @@ export default {
                     }
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         },
         handleResize() {
@@ -310,6 +323,7 @@ export default {
         await this.getOptions(this, "all");
         await this.$nextTick();
         this.fetchData();
+        this.navbar = this.$refs.navbar;
     },
     onBeforeUnmount() {
         window.removeEventListener('resize', this.handleResize);    

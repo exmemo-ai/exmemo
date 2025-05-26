@@ -64,6 +64,10 @@ class UserSettings:
     truncate_max_length: int = DEFAULT_TRUNCATE_MAX_LENGTH
     truncate_mode: str = DEFAULT_TRUNCATE_MODE
     first_use_prompt: bool = True
+    image_storage_location: str = 'attachments'
+    baidu_ocr_app_id: str = ''
+    baidu_ocr_api_key: str = ''
+    baidu_ocr_secret_key: str = ''    
 
     def get_json(self):
         return asdict(self)

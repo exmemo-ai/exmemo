@@ -1,7 +1,8 @@
 from rest_framework.routers import DefaultRouter
 from rest_framework.documentation import include_docs_urls
 from django.urls import path, include
-from .views import StoreEntryViewSet, EntryAPIView
+from .views import StoreEntryViewSet
+from .views_tools import EntryAPIView
 
 router = DefaultRouter()
 router.register("data", StoreEntryViewSet)

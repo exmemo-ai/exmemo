@@ -16,7 +16,7 @@ ExMemo is a personal knowledge management tool designed to record and manage var
 
 The system consists of a database, backend, and multiple frontend components. Distributed storage and databases store user files, texts, and vector data, with support for local deployment to ensure privacy. The backend provides APIs for CRUD operations, handles large model interactions, and processes data. It supports online models like OpenAI, Deepseek, and Qwen, as well as offline models like Ollama. Frontend options include a web service, a WeChat bot, an Obsidian plugin, and a browser extension, allowing users to upload and download data conveniently.
 
-ExMemo also integrates practical tools like calorie calculators, translators, reading aids for academic papers, and English learning helpers, demonstrating the synergy of personal data with large models and tools. Developers can use the backend service to create personalized applications based on user data.
+ExMemo also integrates practical tools like calorie calculators, translators, reading aids for academic papers, and English learning helpers. Additionally, the system provides tree-like file lists and preview functionality, supports batch task processing, and offers enhanced text editing capabilities (including image upload, editing, and OCR). Users can import and extract ZIP files, and convert various text formats to markdown. These tools demonstrate the synergy of personal data with large models and tools. Developers can use the backend service to create personalized applications based on user data.
 
 *Data Manager*
 
@@ -40,7 +40,7 @@ ExMemo also integrates practical tools like calorie calculators, translators, re
 
 ## 2 Installation
 
-The system employs modular management using PgVector databases and languages like Python, JavaScript (VUE3), and TypeScript. It is containerized with multiple Docker images to suit different environments. Users can start required modules via `docker-compose`.
+The system employs modular management using PgVector databases and languages like Python, JavaScript (VUE3), and TypeScript. It is containerized with multiple Docker images to suit different environments. Users can start required modules via `docker compose`.
 
 ### 2.1 Configuration
 
@@ -73,7 +73,7 @@ At minimum, configure the following: IP addresses, LANGUAGE_CODE, and PGSQL_PASS
 #### 2.2.1 Start in Production Mode
 
 ```shell
-docker-compose --env-file backend/.env --profile production up -d
+docker compose --env-file backend/.env --profile production up -d
 ```
 
 Refer to shell/prod.sh for detailed commands.
@@ -88,7 +88,7 @@ During upgrades, rebuild Docker images, restart Docker Compose, and remove old c
 
 * Always update the frontend, backend, plugins, and .env configuration files together to avoid compatibility issues caused by API changes.
 * Building images consumes significant memory. Release resources if running on a limited cloud server.
-* The database password in docker-compose is only applied during database creation. Update .env and modify the database password using SQL statements if needed.
+* The database password in docker compose is only applied during database creation. Update .env and modify the database password using SQL statements if needed.
 
 ## 3 Additional Configuration
 
@@ -126,7 +126,7 @@ Start the WeChat image:
 
 ```shell
 cd $EXMEMO_DIR/code/exmemo/
-docker-compose --env-file backend/.env --profile production up -d ewechat
+docker compose --env-file backend/.env --profile production up -d ewechat
 ```
 
 Check logs:
@@ -142,20 +142,20 @@ For debugging, ensure the ExMemo plugin initializes correctly. If it fails, veri
 For backend/frontend code modification and debugging, start in development mode and run the backend Python program manually.
 
 ```shell
-docker-compose --env-file backend/.env --profile development up -d
+docker compose --env-file backend/.env --profile development up -d
 docker exec -it ebackend_dev bash
 > cd backend
-> python manage.py runserver 0.0.0.0:8005
+> ./shell/run.sh
 ```
 
-Refer to shell/dev.sh and shell/run.sh for more details.
+Refer to shell/dev.sh and backend/shell/run.sh for more details.
 
 ### 3.5 S3 Storage: Minio
 
 By default, data is stored in the host directory. To use Minio S3 storage, configure Minio options in .env. Minio does not start automatically. To enable Minio on the host, start the service manually:
 
 ```shell
-docker-compose -f docker-compose-dev.yml up -d minio
+docker compose --env-file backend/.env -f docker-compose.yml up -d eminio
 ```
 
 ## 4 Changelog

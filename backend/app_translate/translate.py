@@ -114,6 +114,7 @@ class TranslateWord:
         item_word = self.get_word_info(word, with_gpt, user_id, debug)
         if item_word is None:
             return False, None, None
+        """ parse_sentence_example too long time
         if sentence is not None:
             found = False
             if item_word.example_list is None:
@@ -126,6 +127,7 @@ class TranslateWord:
                 ret, example = parse_sentence_example(user_id, word, sentence, debug=debug)
                 if ret:
                     item_word.example_list.append(example)
+        """
         ret, obj = add_to_db(user_id, item_word.word, item_word.freq, None, 
                         item_word, debug=debug)
         translation = _(

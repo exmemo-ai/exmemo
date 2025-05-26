@@ -27,34 +27,27 @@
                     <el-input type="textarea" :rows="6" v-model="form.addr"
                         placeholder="http://"></el-input>
                 </div>
-                <div v-if="form.etype === 'file'" width="100%">
-                    <input type="file" @change="handleFileUpload" width="100%">
+                <div v-if="form.etype === 'file'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
+                    <input type="file" ref="fileInput" @change="handleFileUpload" width="100%">
+                    <PathSelector
+                        v-model:path="file_input_path"
+                        :etype="form.etype"
+                    />
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
-                    <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
+                    <el-input type="textarea" :rows="6" v-model="form.content" :placeholder="$t('recordContent')"></el-input>
                 </div>
                 <div v-if="form.etype === 'note'" width="100%" style="display: flex; gap: 5px; flex-direction: column;">
-                    <div class="form-row">
-                        <div class="label-container">
-                            <el-text>{{ $t('opt.vault') }}</el-text>
-                        </div>
-                        <div class="content-container">
-                            <el-input type="text" v-model="input_vault"></el-input>
-                        </div>
-                    </div>  
-                    <div class="form-row">
-                        <div class="label-container">
-                            <el-text>{{ $t('opt.path') }}</el-text>
-                        </div>
-                        <div class="content-container">
-                            <el-input type="text" v-model="input_path"></el-input>
-                        </div>
-                    </div>
+                    <PathSelector
+                        v-model:vault="input_vault"
+                        v-model:path="input_path"
+                        :etype="form.etype"
+                    />
                 </div>
             </div>
         </div>
 
-        <hr style="margin: 10px 0;">        
+        <hr style="margin: 10px 0;">
         <DataEditor 
             ref="dataEditor"
             :form="form"
@@ -64,6 +57,7 @@
         />
         <span class="dialog-footer">
         </span>
+        <UnzipDialog ref="unzipDialog" />
     </el-dialog>
 </template>
 
@@ -74,11 +68,15 @@ import DataEditor from './DataEditor.vue'
 import SettingService from '@/components/settings/settingService'
 import { confirmOpenNote } from './dataUtils';
 import SaveIcon from '@/components/icons/SaveIcon.vue'
+import UnzipDialog from './UnzipDialog.vue'
+import PathSelector from '@/components/common/PathSelector.vue'
 
 export default {
     components: {
         DataEditor,
-        SaveIcon
+        SaveIcon,
+        UnzipDialog,
+        PathSelector,
     },
     data() {
         return {
@@ -88,6 +86,7 @@ export default {
             onSuccess: null,
             input_vault: null,
             input_path: null,
+            file_input_path: null,
             file_path: null,
             file: null,
             dialogVisible: false,
@@ -95,7 +94,7 @@ export default {
             form: {
                 idx: null,
                 title: '',
-                raw: '',
+                content: '',
                 ctype: '',
                 etype: 'record',
                 atype: '',
@@ -113,11 +112,14 @@ export default {
         }
     },
     methods: {
-        openDialog(onSuccess, options = {}) {
+        async openDialog(onSuccess, options = {}) {
             this.onSuccess = onSuccess;
             this.dialogVisible = true;
             this.dialogTitle = options?.title ?? this.$t('new');
             this.saveProgress = 0;
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value = '';
+            }
             this.file = null;
             this.file_path = null;
             this.$refs.dataEditor?.resetProgress();
@@ -135,18 +137,22 @@ export default {
             }
             this.input_vault = options?.vault ?? null;
             this.input_path = options?.path ?? null;
+            this.file_input_path = options?.path ?? null;
             this.form.ctype = options?.ctype ?? '';
             this.form.atype = options?.atype ?? '';
             this.form.status = options?.status ?? '';
             this.form.idx = null;
             this.form.title = this.calcTitle(this.input_path);
             this.form.addr = '';
-            this.form.raw = ''
+            this.form.content = '';
             this.calcFilePath();
-            console.log(this.form)
+            console.log(this.form);
         },
         closeDialog() {
             this.dialogVisible = false;
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value = '';
+            }
         },
         handleClose(done) {
             console.log(this.$t('dialogClosed'));
@@ -173,21 +179,27 @@ export default {
             }
         },
         async calcFilePath() {
-            const normalizedPath = this.normalizePath(this.input_path);
-            this.file_path = this.input_vault + '/' + normalizedPath;
-            if (this.form.etype === 'note' && this.file_path && !this.file_path.includes('.')) {
-                this.file_path += '.md';
+            if (this.form.etype === 'file') {
+                this.file_path = this.normalizePath(this.file_input_path);
+            } else {
+                const normalizedPath = this.normalizePath(this.input_path);
+                this.file_path = this.input_vault + '/' + normalizedPath;
+                if (this.form.etype === 'note' && this.file_path && !this.file_path.includes('.')) {
+                    this.file_path += '.md';
+                }
             }
         },
         async doSave() {
             console.log("doSave");
             if (this.form.etype === 'note') {
-                if (this.input_vault && this.input_path) {
+                if (this.input_vault && this.input_path && !this.input_path.endsWith('/')) {
                     this.calcFilePath();
                 } else {
                     ElMessage.error(this.$t('opt.needVaultPath'));
                     return;
                 }
+            } else if (this.form.etype === 'file') {
+                this.calcFilePath();
             }
             await this.$nextTick();
             const ret = await this.$refs.dataEditor.realSave();
@@ -210,10 +222,31 @@ export default {
             }
             return '';
         },
-        handleFileUpload(event) {
-            this.file_path = event.target.files[0].name;
-            this.file = event.target.files[0];
-            this.form.title = this.calcTitle(this.file_path)
+        async handleFileUpload(event) {
+            const uploadedFile = event.target.files[0];
+            const fileName = uploadedFile.name;
+            const fileExt = fileName.split('.').pop().toLowerCase();
+
+            if (['zip', 'rar'].includes(fileExt)) {
+                const result = await this.$refs.unzipDialog.show();
+                this.form.unzip = result.unzip;
+                this.form.createSubDir = result.createSubDir;
+            }
+            // later add check file size here
+
+            this.file = uploadedFile;
+            if (!this.file_input_path) {
+                this.file_input_path = fileName;
+            } else {
+                const hasFileName = this.file_input_path.split('/').pop().includes('.');
+                if (!hasFileName) {
+                    this.file_input_path = this.file_input_path.replace(/\/+$/, '') + '/' + fileName;
+                } else {
+                    this.file_input_path = this.file_input_path.replace(/[^/]+$/, fileName);
+                }
+            }            
+            this.file_path = uploadedFile.name;
+            this.form.title = this.calcTitle(this.file_path);
         },
     },
     mounted() {

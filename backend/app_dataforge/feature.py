@@ -1,33 +1,37 @@
 import os
 import re
-import pandas as pd
 import traceback
+import pandas as pd
+from typing import Dict, Any, Tuple, Union
 from loguru import logger
 from django.utils.translation import gettext as _
-from backend.common.llm.llm_hub import llm_query, llm_query_json
 from backend.settings import BASE_DATA_DIR
-from .prompt import PROMPT_CLASSIFY, PROMPT_TITLE
-from backend.common.utils.text_tools import get_language_name
 from backend.common.utils.web_tools import get_url_content
-from backend.common.utils.text_tools import replace_chinese_punctuation_with_english
 from backend.settings import LANGUAGE_CODE
 from backend.common.files import utils_file
+from backend.common.llm.llm_hub import llm_query_json
+from backend.common.utils.file_tools import is_image_file
+from backend.common.utils.web_tools import truncate_content
+from backend.common.utils.text_tools import replace_chinese_punctuation_with_english, get_language_name
 from backend.common.user.user import UserManager
-
+from backend.settings import LANGUAGE_CODE
+from .prompt import PROMPT_COMPREHENSIVE
+from .entry_item import EntryItem
 
 DEFAULT_CATEGORY = _("unclassified")
-DEFAULT_STATUS = "init"
+IMAGE_CATEGORY = _("image")
+DEFAULT_STATUS = "collect"
 RECORD_ROLE = "You are a personal assistant, and your master is a knowledge worker."
 TITLE_MAX_LENGTH = 128
 
-class EntryFeatureTool:
+class CategoryConfigLoader:
     _instance = None
-
+    
     @staticmethod
     def get_instance():
-        if EntryFeatureTool._instance is None:
-            EntryFeatureTool._instance = EntryFeatureTool()
-        return EntryFeatureTool._instance
+        if CategoryConfigLoader._instance is None:
+            CategoryConfigLoader._instance = CategoryConfigLoader()
+        return CategoryConfigLoader._instance
 
     def __init__(self):
         if LANGUAGE_CODE.lower().find("zh") >= 0:
@@ -36,166 +40,10 @@ class EntryFeatureTool:
             path = os.path.join(BASE_DATA_DIR, "record_keyword_en.xlsx")
         self.df_record = pd.read_excel(path, sheet_name="record")
         self.df_web = pd.read_excel(path, sheet_name="web")
-        # display(self.df_note)
-        self.calist = self.get_all_categories(
-            debug=True
-        )  # Only manual records may have prefix descriptions
+        self.calist = self._get_all_categories(debug=True)
 
-    def get_base_path(self, path, title):
-        if title in path:
-            base_path = path.split(title)[0].rstrip('/')
-            return base_path
-        return path
-
-    def update_bookmark_paths(self, dic, title_copy, new_title, base_path):
-        new_path = f"{base_path}/{new_title}"
-        dic.update({
-            "path": new_path,
-            "meta": {
-                **dic.get("meta", {}),
-                "update_path": new_path,
-                "resource_path": new_path
-            }
-        })
-
-    def parse(self, dic, content, use_llm=True, force=False, debug=False):
-        user = UserManager.get_instance().get_user(dic["user_id"])
-        # from input params
-        if "ctype" not in dic or pd.isnull(dic["ctype"]) or len(dic["ctype"]) == 0:
-            dic["ctype"] = None
-        if "status" not in dic or pd.isnull(dic["status"]) or len(dic["status"]) == 0:
-            dic["status"] = None
-        if "atype" not in dic or pd.isnull(dic["atype"]) or len(dic["atype"]) == 0:
-            dic["atype"] = None
-        if "title" not in dic or pd.isnull(dic["title"]) or len(dic["title"]) == 0:
-            dic["title"] = None
-        if dic["etype"] == "record" or dic["etype"] == "chat":
-            if dic["title"] is None:
-                ret, title = self.get_title(
-                    dic["user_id"], content, use_llm=use_llm, debug=debug
-                )
-                if ret:
-                    dic["title"] = title
-            if dic["ctype"] is None or dic["status"] is None:
-                dic_new, content = self.get_ctype(
-                    dic["user_id"], content, dic["etype"], use_llm=use_llm, debug=debug
-                )
-                if dic["ctype"] is None and "ctype" in dic_new:
-                    dic["ctype"] = dic_new["ctype"]
-                if dic["status"] is None and "status" in dic_new:
-                    dic["status"] = dic_new["status"]
-            if dic["atype"] is None:
-                dic["atype"] = "subjective"
-        elif dic["etype"] == "note":
-            if dic["title"] is None:
-                filename = os.path.basename(content)
-                #dic["title"] = os.path.splitext(filename)[0]
-                dic["title"] = filename
-            if dic["ctype"] is None:
-                if user.get("note_get_category") == False and force == False:
-                    dic["ctype"] = DEFAULT_CATEGORY
-                else:
-                    dic_new, content = self.get_ctype(
-                        dic["user_id"],
-                        dic["title"],
-                        dic["etype"],
-                        use_llm=use_llm,
-                        debug=debug,
-                    )
-                    if "ctype" in dic_new:
-                        dic["ctype"] = dic_new["ctype"]
-            if dic["status"] is None:
-                dic["status"] = "collect"
-            if dic["atype"] is None:
-                dic["atype"] = "subjective"
-        elif dic["etype"] == "file":
-            if dic["title"] is None:
-                filename = os.path.basename(content)
-                dic["title"] = filename
-            if dic["ctype"] is None:
-                if user.get("file_get_category") == False and force == False:
-                    dic["ctype"] = DEFAULT_CATEGORY
-                else:
-                    dic_new, content = self.get_ctype(
-                        dic["user_id"],
-                        dic["title"],
-                        dic["etype"],
-                        use_llm=use_llm,
-                        debug=debug,
-                    )
-                    if "ctype" in dic_new:
-                        dic["ctype"] = dic_new["ctype"]
-            if dic["status"] is None:
-                dic["status"] = "collect"
-            if dic["atype"] is None:
-                dic["atype"] = "objective"
-        elif dic["etype"] == "web":
-            if dic["ctype"] is None:
-                if user.get("web_get_category") == False and force == False:
-                    dic["ctype"] = DEFAULT_CATEGORY
-            if dic["title"] is None or dic["ctype"] is None:
-                #logger.debug(f"get_url_content {dic}")
-                title, web_content = get_url_content(content)
-                if dic["title"] is None:
-                    dic["title"] = title
-                if dic["ctype"] is None:
-                    dic_new, content = self.get_ctype(
-                        dic["user_id"],
-                        web_content,
-                        dic["etype"],
-                        use_llm=use_llm,
-                        debug=debug,
-                    )
-                    if "ctype" in dic_new:
-                        dic["ctype"] = dic_new["ctype"]
-            if dic["status"] is None:
-                dic["status"] = "collect"
-            if dic["atype"] is None:
-                dic["atype"] = "third_party"
-        # if not set, set default value
-        if dic["ctype"] is None:
-            dic["ctype"] = DEFAULT_CATEGORY
-        if dic["status"] is None:
-            dic["status"] = DEFAULT_STATUS
-        if dic["atype"] is None:
-            dic["atype"] = "subjective"
-        if dic["title"] is None:
-            dic["title"] = content
-        if len(dic["title"]) > TITLE_MAX_LENGTH:
-            title_copy = dic["title"]
-            new_title = dic["title"][:TITLE_MAX_LENGTH] + "..."
-            dic["title"] = new_title
-            # Update path, add wanglei
-            if dic['source'] == 'bookmark':
-                base_path = self.get_base_path(dic["path"], title_copy)
-                self.update_bookmark_paths(dic, title_copy, new_title, base_path)
-        return True, dic
-
-    def regular_status(self, dic_base, dic_detect):
-        """
-        Normalized State
-        dic: Extracted state and other information
-        Priority: dic_new > dic_base
-        """
-        if "status" in dic_base and dic_base["status"] in ["todo", "collect"]:
-            # Prioritizing Custom Statuses
-            return dic_base["status"]
-        elif "status" in dic_detect and dic_detect["status"] is not None:
-            status = dic_detect["status"]
-        elif "status" in dic_base and dic_base["status"] is not None:
-            status = dic_base["status"]
-        else:
-            status = "init"
-        map_dic = {_("to_be_organized"): "collect", _("to-do_list"): "todo"}
-        if status in map_dic:
-            status = map_dic[status]
-        logger.info(f"base {dic_base}, detect {dic_detect}, regular status {status}")
-        return status
-
-    def get_all_categories(self, debug=False):
-        """
-        Return all sub-categories
-        """
+    def _get_all_categories(self, debug=False):
+        """Return all sub-categories"""
         clist = []
         for idx, row in self.df_record.iterrows():
             clist.append(row["ctype"])
@@ -206,39 +54,17 @@ class EntryFeatureTool:
             logger.debug(clist)
         return clist
 
-    def get_ctype_by_keyword(self, content, etype, debug=False):
-        if debug:
-            logger.debug(f"keywords list {len(self.calist)}, {self.calist[:3]}...")
-        for l in self.calist:
-            if content.startswith(l):
-                content = content[len(l) :].strip()
-                if content.startswith(".") or content.startswith("。"):
-                    content = content[1:]
-                return True, self.get_regular_ctype(l, etype), content
-        return False, None, content
+    def get_dataframe(self, etype="record"):
+        """Return the appropriate dataframe based on entry type"""
+        return self.df_web if etype == "web" else self.df_record
 
-    def get_ctype(self, user_id, content, etype, use_llm=True, debug=False):
-        """
-        Return category
-        """
-        ret, ctype, content = self.get_ctype_by_keyword(content, etype, debug=debug)
-        if ret:
-            dic = {"ctype": ctype}
-        elif use_llm:
-            dic = self.get_type_by_llm(user_id, content, etype, debug=debug)
-        else:
-            dic = {"ctype": DEFAULT_CATEGORY}
-        dic = self.fill_info(dic)
-        return dic, content
+    def get_categories_list(self):
+        """Return the list of all categories"""
+        return self.calist
 
     def get_regular_ctype(self, keyword, etype):
-        """
-        Return refined category
-        """
-        if etype == "record":
-            df = self.df_record
-        else:
-            df = self.df_web
+        """Return refined category"""
+        df = self.get_dataframe(etype)
         for idx, row in df.iterrows():
             if row["ctype"] == keyword:
                 return row["ctype"]
@@ -248,112 +74,243 @@ class EntryFeatureTool:
                         return row["ctype"]
         return DEFAULT_CATEGORY
 
-    def fill_info(self, dic, debug=True):
-        """
-        Return the complete information of the category, existing information will not be overwritten.
-        """
-        if debug:
-            logger.debug(f"fill_info {dic}")
-        default_info = {"ctype": DEFAULT_CATEGORY, "atype": None, "status": None}
-        if "etype" in dic and dic["etype"] == "web":
-            df = self.df_web
-        else:
-            df = self.df_record
-        for idx, row in df.iterrows():
-            if "ctype" in dic and row["ctype"] == dic["ctype"]:
-                default_info = row.to_dict()
-        for key, value in dic.items():
-            if pd.notnull(value):
-                default_info[key] = value
-        for key, value in default_info.items():
-            if key not in dic:
-                dic[key] = value
-        if debug:
-            logger.debug(f"after fill_info {dic}")
-        return dic
+class EntryFeatureTool:
+    _instance = None
 
-    def get_title(self, user_id, content, use_llm=True, debug=False):
-        """
-        Determine the title through the language model
-        """
-        # Get the first line of content
-        if pd.isnull(content):
-            return False, None
-        content = content.strip()
-        line = content.split("\n")[0]
-        if len(line) <= 15:
-            return True, line
-        try:
-            query = PROMPT_TITLE.format(
-                content=content, language=get_language_name(LANGUAGE_CODE.lower())
+    @staticmethod
+    def get_instance():
+        if EntryFeatureTool._instance is None:
+            EntryFeatureTool._instance = EntryFeatureTool()
+        return EntryFeatureTool._instance
+
+    def get_base_path(self, path, title):
+        if title in path:
+            base_path = path.split(title)[0].rstrip('/')
+            return base_path
+        return path
+
+    def update_bookmark_paths(self, entry: EntryItem, new_title: str, base_path: str) -> None:
+        new_path = f"{base_path}/{new_title}"
+        entry.path = new_path
+        entry.meta.update({
+            "update_path": new_path,
+            "resource_path": new_path
+        })
+
+    def _need_llm(self, entry: EntryItem, user: Dict[str, Any], force: bool = False) -> bool:
+        """check if LLM is needed for feature extraction"""
+        if entry.ctype is not None and entry.meta.get("description"):
+            return False
+            
+        if is_image_file(entry.title or ""):
+            entry.ctype = IMAGE_CATEGORY
+            return False
+            
+        if entry.etype == "note":
+            if not force and not user.get("note_get_category") and not user.get("note_get_abstract"):
+                return False
+        elif entry.etype == "file":
+            if not force and not user.get("file_get_category") and not user.get("file_get_abstract"):
+                return False
+        elif entry.etype == "web":
+            if not force and not user.get("web_get_category") and not user.get("web_get_abstract"):
+                return False
+                
+        return True
+
+    def _process_llm_result(self, entry: EntryItem, features: Dict[str, Any], force: bool) -> None:
+        """process LLM result and update entry"""
+        if "category" in features:
+            cat = features["category"]
+            if force or entry.ctype is None:
+                entry.ctype = cat.get("ctype")
+            if force or entry.status is None:
+                entry.status = cat.get("status")
+            if force or entry.atype is None:
+                entry.atype = cat.get("atype")
+
+        if entry.title is None and "title" in features:
+            entry.title = features["title"]
+
+        if "summary" in features and ('description' not in entry.meta or force):
+            entry.meta['description'] = features.get("summary")
+
+    def parse(self, entry: EntryItem, content: str, use_llm: bool = True, 
+              force: bool = False, debug: bool = False) -> Tuple[bool, EntryItem]:
+        """Parse and fill the entry metadata"""
+        try:            
+            self._init_default_values(entry)
+            
+            handlers = {
+                'record': self._parse_record,
+                'chat': self._parse_record,
+                'note': self._parse_note,
+                'file': self._parse_file,
+                'web': self._parse_web
+            }
+            
+            handler = handlers.get(entry.etype)
+            if handler:
+                handler(entry, content, use_llm, force, debug)
+
+            entry.status = entry.status or DEFAULT_STATUS
+            entry.atype = entry.atype or "subjective"
+            entry.ctype = entry.ctype or DEFAULT_CATEGORY
+            entry.title = entry.title or content
+
+            self._process_title_length(entry)
+            return True, entry
+            
+        except Exception as e:
+            logger.error(f"Feature parse failed: {e}")
+            return False, entry
+
+    def _init_default_values(self, entry: EntryItem) -> None:
+        fields = ['ctype', 'status', 'atype', 'title']
+        for field in fields:
+            if getattr(entry, field, None) in (None, ''):  
+                setattr(entry, field, None)
+
+    def _parse_record(self, entry: EntryItem, content: str,
+                     use_llm: bool, force: bool, debug: bool) -> None:
+        """Process record and chat types"""
+        if entry.title is None or entry.ctype is None or entry.status is None:
+            ret, features = get_features_by_llm(
+                entry.user_id, content, entry.etype, use_llm=use_llm, debug=debug
             )
-            if use_llm:
-                ret, answer, detail = llm_query(
-                    user_id, RECORD_ROLE, query, "record", debug=True
+            if ret:
+                self._process_llm_result(entry, features, force)
+
+        entry.atype = "subjective"
+
+    def _parse_note(self, entry: EntryItem, content: str,
+                    use_llm: bool, force: bool, debug: bool) -> None:
+        user = UserManager.get_instance().get_user(entry.user_id)
+        
+        if entry.title is None:
+            entry.title = os.path.basename(content)
+            
+        if self._need_llm(entry, user, force) and use_llm:
+            ret, features = get_features_by_llm(
+                entry.user_id, entry.title, entry.etype, use_llm=use_llm, debug=debug
+            )
+            if ret:
+                self._process_llm_result(entry, features, force)
+                
+        entry.status = entry.status or "collect"
+        entry.atype = entry.atype or "subjective"
+
+    def _parse_file(self, entry: EntryItem, content: str,
+                    use_llm: bool, force: bool, debug: bool) -> None:
+        user = UserManager.get_instance().get_user(entry.user_id)
+        
+        if entry.title is None:
+            entry.title = os.path.basename(content)
+            
+        if self._need_llm(entry, user, force) and use_llm:
+            ret, features = get_features_by_llm(
+                entry.user_id, entry.title, entry.etype, use_llm=use_llm, debug=debug
+            )
+            if ret:
+                self._process_llm_result(entry, features, force)
+                
+        entry.status = entry.status or "collect"
+        entry.atype = entry.atype or "third_party"
+
+    def _parse_web(self, entry: EntryItem, content: str,
+                   use_llm: bool, force: bool, debug: bool) -> None:
+        user = UserManager.get_instance().get_user(entry.user_id)
+        
+        if entry.title is None or self._need_llm(entry, user, force):
+            title, web_content = get_url_content(content)
+            if entry.title is None:
+                entry.title = title
+            if self._need_llm(entry, user, force) and use_llm:
+                ret, features = get_features_by_llm(
+                    entry.user_id, web_content, entry.etype,
+                    title=title, use_llm=use_llm, debug=debug
                 )
                 if ret:
-                    answer = replace_chinese_punctuation_with_english(answer)
-                    answer = re.sub(r"[^\w\s]", "", answer)
-                    return True, answer
-        except Exception as e:
-            logger.warning(f"failed {e}")
-        return False, None
+                    self._process_llm_result(entry, features, force)
+                    
+        entry.status = entry.status or "collect"
+        entry.atype = entry.atype or "third_party"
 
-    def get_type_by_llm(self, user_id, content, etype, debug=False):
-        """
-        Determine the Category Through the Language Model
-        """
-        if etype == "record" or etype == "chat":
-            df = self.df_record
-        else:
-            df = self.df_web
+    def _process_title_length(self, entry: EntryItem) -> None:
+        if entry.title and len(entry.title) > TITLE_MAX_LENGTH:
+            title_copy = entry.title
+            new_title = entry.title[:TITLE_MAX_LENGTH] + '...'
+            entry.title = new_title
+            if entry.source == 'bookmark':
+                base_path = self.get_base_path(entry.path, title_copy)
+                self.update_bookmark_paths(entry, new_title, base_path)
+
+def get_features_by_llm(user_id, content, etype, title=None, use_llm=True, debug=False):
+    """
+    Returns:
+        (success, {
+            "title": str,
+            "category": {"ctype": str, "atype": str, "status": str},
+            "summary": str
+        })
+    """
+    try:
+        if not use_llm:
+            return False, None
+
+        user = UserManager.get_instance().get_user(user_id)
+        is_truncate=user.get("truncate_content")
+        truncate_mode=user.get("truncate_mode")
+        logger.info(f'get_text_extract {is_truncate} {truncate_mode} {len(content)}')
+
+        if is_truncate:
+            max_length=user.get("truncate_max_length")
+            content = truncate_content(content, title, max_length, truncate_mode)
+            logger.info(f'truncate_content {len(content)}')
+        logger.info(f"get_text_extract: {content[:50]}, len {len(content)}")
+        if len(content) == 0:
+            return False, None
+
+        df = CategoryConfigLoader.get_instance().get_dataframe(etype)
         ctype_list = df["ctype"].unique()
         status_list = df["status"].unique()
         auth_list = df["auth"].unique()
-        if debug:
-            logger.info(
-                f"get_type_by_llm, types {len(ctype_list)}, content {content[:10]}..."
-            )
-        try:
-            lang = utils_file.check_language(content)
-            max_length = 100
-            if lang == "en":
-                max_length = max_length * 4
-            if len(content) > max_length:
-                content = content[:max_length] + "..."
-            query = PROMPT_CLASSIFY.format(
-                content=content,
-                ctype_list=",".join(ctype_list),
-                auth_list=",".join(auth_list),
-                status_list=",".join(status_list),
-                demo=str(
-                    {
-                        "ctype": ctype_list[0],
-                        "atype": auth_list[0],
-                        "status": status_list[0],
-                    }
-                ),
-            )
-            ret, dic, detail = llm_query_json(
-                user_id, RECORD_ROLE, query, "record", debug=True
-            )
-            if "status" in dic and dic["status"] is not None:
-                if dic["status"] not in status_list:
-                    del dic["status"]
-            if "ctype" in dic and dic["ctype"] is not None:
-                if dic["ctype"] not in ctype_list:
-                    del dic["ctype"]
-            if "atype" in dic and dic["atype"] is not None:
-                if dic["atype"] not in auth_list:
-                    del dic["atype"]
-            if 'ctype' not in dic:
-                dic['ctype'] = DEFAULT_CATEGORY
-            if 'status' not in dic:
-                dic['status'] = DEFAULT_STATUS
-            if 'atype' not in dic:
-                dic['atype'] = None
-            return dic
-        except Exception as e:
-            traceback.print_exc()
-            logger.warning(f"failed {e}")
-        return {"ctype": DEFAULT_CATEGORY, "atype": None, "status": None}
+        
+        # later get user setting
+        lang = utils_file.check_language(content)
+        max_length = 400 if lang == "en" else 100
+        truncated_content = content[:max_length] + "..." if len(content) > max_length else content
+        
+        query = PROMPT_COMPREHENSIVE.format(
+            content=truncated_content,
+            language=get_language_name(LANGUAGE_CODE.lower()),
+            ctype_list=",".join(ctype_list),
+            auth_list=",".join(auth_list),
+            status_list=",".join(status_list)
+        )
+        
+        ret, result, detail = llm_query_json(
+            user_id, RECORD_ROLE, query, "data_manager", debug=debug
+        )
+        
+        if not ret or not isinstance(result, dict):
+            return False, None
+            
+        if "category" in result:
+            cat = result["category"]
+            if cat.get("ctype") not in ctype_list:
+                cat["ctype"] = DEFAULT_CATEGORY
+            if cat.get("status") not in status_list:
+                cat["status"] = DEFAULT_STATUS
+            if cat.get("atype") not in auth_list:
+                cat["atype"] = None
+        
+        if "title" in result:
+            result["title"] = replace_chinese_punctuation_with_english(result["title"])
+            result["title"] = re.sub(r"[^\w\s]", "", result["title"])        
+        return True, result
+        
+    except Exception as e:
+        logger.warning(f"get_content_features failed: {e}")
+        traceback.print_exc()
+        return False, None

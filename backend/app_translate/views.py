@@ -149,7 +149,8 @@ class TranslateAPIView(APIView):
         rtype = request.GET.get("rtype", request.POST.get("rtype", "word"))
         word = request.GET.get("word", request.POST.get("word", None))
         sentence = request.GET.get("sentence", request.POST.get("sentence", None))
-        logger.debug(f"translate rtype:{rtype} word:{word} sentence:{sentence}")
+        #logger.debug(f"translate rtype:{rtype} word:{word}")
+        #logger.debug(f"translate sentence:{sentence}")
         if rtype == "word":
             return self.translate_word(args, word, sentence)
         elif rtype == "sentence":
@@ -178,7 +179,7 @@ class TranslateAPIView(APIView):
         try:
             ret, answer = translate.translate_word_role(args["user_id"], word, sentence)
         except Exception as e:
-            logger.warning(f"translate_sentence {e}")
+            logger.warning(f"translate_word_role {e}")
             ret = False
             answer = str(e)
         return do_result(ret, answer)
@@ -281,7 +282,7 @@ class TranslateLearnView(APIView):
         if args['user_id'] is None:
             return do_result(False, {"list": []})
         status = "review"
-        limit = 100
+        limit = 300
         queryset = StoreTranslate.objects.filter(
             user_id=args['user_id'], status=status
             ).order_by("freq").all()
@@ -418,27 +419,27 @@ class TranslateLearnView(APIView):
     def get_review_data(self, args):
         words = StoreTranslate.objects.all().filter(user_id=args['user_id']).values()
         df = pd.DataFrame(list(words))
-        df['last_review_time'] = df['info'].apply(lambda x: x['opt']['last_review_time'] if 'opt' in x and 'last_review_time' in x['opt'] else None)
-        df['last_review_time'] = df['last_review_time'].apply(lambda x: str(x).split('T')[0] if x else None)
         df['review_date_list'] = df['info'].apply(lambda x: x['opt']['review_date_list'] if 'opt' in x and 'review_date_list' in x['opt'] else [])
-        grp = df.groupby('last_review_time').size()
-        grp = grp.sort_index()
+        
+        # 展开所有复习日期并格式化
         review_date_list = df['review_date_list'].tolist()
         review_date_list = [item for item in review_date_list if item]
         review_date_list = [item for sublist in review_date_list for item in sublist]
         review_date_list = [str(item).split('T')[0] for item in review_date_list]
-        review_date_list_unique = list(set(review_date_list))
+        
+        # 统计每天的复习次数
         dic_count = {}
-        for item in review_date_list_unique:
+        for item in review_date_list:
             dic_count[item] = review_date_list.count(item)
-        for key in dic_count:
-            if key in grp:
-                grp[key] = dic_count[key]
-            else:
-                grp[key] = dic_count[key]
-        grp = grp.tail(30)
-        #logger.error(f'@@@@ {grp}')
-        return grp.to_dict()
+            
+        # 按日期排序并只返回最近30天的数据
+        sorted_dates = sorted(dic_count.keys())
+        if len(sorted_dates) > 30:
+            sorted_dates = sorted_dates[-30:]
+            
+        result = {date: dic_count[date] for date in sorted_dates}
+        #logger.error(f'@@@@ {result}')
+        return result
 
     def summary(self, args, request):
         dateStr = request.GET.get("date", request.POST.get("date", None))

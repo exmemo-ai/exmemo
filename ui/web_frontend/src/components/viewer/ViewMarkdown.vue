@@ -23,23 +23,25 @@
                 <div class="editor-toolbar">
                     <div class="button-container-flex">
                         <el-button-group class="basic-buttons" style="margin-right: 5px;">
-                            <el-button size="small" type="primary" @click="selectAll">{{ t('selectAll')
-                            }}</el-button>
-                            <el-button size="small" type="primary" @click="copyContent">{{ t('copy')
-                            }}</el-button>
-                            <el-button size="small" type="primary" v-if="form.etype === 'web'" @click="openWeb">{{
-                                t('viewMarkdown.openWeb') }}</el-button>
-                            <el-button size="small" type="primary" v-if="form.etype === 'file'" @click="download">{{
-                                t('viewMarkdown.downloadFile') }}</el-button>
-                            <!--
-                            <el-button size="small" type="primary" @click="setPlayer">
-                                {{ showPlayer ? t('viewMarkdown.hideRead') : t('viewMarkdown.showRead') }}
+                            <el-button size="small" @click="selectAll" :title="t('selectAll')">
+                                <el-icon><Select /></el-icon>
                             </el-button>
-                            -->
+                            <el-button size="small" @click="copyContent" :title="t('copy')">
+                                <el-icon><DocumentCopy /></el-icon>
+                            </el-button>
+                            <el-button size="small" v-if="form.etype === 'web'" @click="openWeb" :title="t('viewMarkdown.openWeb')">
+                                <el-icon><Link /></el-icon>
+                            </el-button>
+                            <el-button size="small" v-if="form.etype === 'file'" @click="download" :title="t('viewMarkdown.downloadFile')">
+                                <el-icon><Download /></el-icon>
+                            </el-button>
+                            <el-button v-if="!form.idx" size="small" @click="handleSave" :title="t('collect')">
+                                <el-icon><Star /></el-icon>
+                            </el-button>
                         </el-button-group>
 
                         <el-dropdown trigger="click">
-                            <el-button size="small" type="primary">
+                            <el-button size="small">
                                 {{ t('viewMarkdown.highlight') }}
                                 <el-icon class="el-icon--right">
                                     <arrow-down />
@@ -47,14 +49,10 @@
                             </el-button>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item @click="highlightText" :class="{ 'is-active': isHighlightMode }">
-                                        {{ isHighlightMode ? t('viewMarkdown.stopHighlight') :
-                                        t('viewMarkdown.showHighlight') }}
-                                    </el-dropdown-item>
-                                    <el-dropdown-item @click="copyHighlight" :disabled="!isHighlightMode">
+                                    <el-dropdown-item @click="copyHighlight">
                                         {{ t('viewMarkdown.copyHighlight') }}
                                     </el-dropdown-item>
-                                    <el-dropdown-item @click="clearHighlight" :disabled="!isHighlightMode">
+                                    <el-dropdown-item @click="clearHighlight">
                                         {{ t('viewMarkdown.clearHighlight') }}
                                     </el-dropdown-item>
                                 </el-dropdown-menu>
@@ -63,10 +61,14 @@
 
                         <div style="margin-left: auto; margin-right: 5px;">
                             <el-button size="small" class="zoomButton" circle @click="decreaseFontSize">
-                                <el-icon><FontSmallIcon /></el-icon>
+                                <el-icon>
+                                    <FontSmallIcon />
+                                </el-icon>
                             </el-button>
                             <el-button size="small" class="zoomButton" circle @click="increaseFontSize">
-                                <el-icon><FontLargeIcon /></el-icon>
+                                <el-icon>
+                                    <FontLargeIcon />
+                                </el-icon>
                             </el-button>
                         </div>
                         <el-checkbox v-model="showNote" size="small">
@@ -84,28 +86,80 @@
                     </div>
 
                     <div v-show="showCatalog" class="catalog-container">
-                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview-wrapper'" class="md-catalog" />
+                        <MdCatalog :editorId="previewId" :scrollElement="'.md-editor-preview-wrapper'"
+                            class="md-catalog" />
                     </div>
                     <div class="content-container" ref="content" @mouseup="handleMouseUp" @touchend="handleMouseUp"
                         @contextmenu.prevent">
-                        <MdPreview :editorId="previewId" :modelValue="markdownContent" :previewTheme="'default'"
+                        <MdPreview :editorId="previewId" 
+                            preview-theme="github"
+                            :modelValue="markdownContent" :previewTheme="'default'"
                             :preview-lazy="true" ref="mdPreview" style="height: 100%; padding: 0px;" />
+
+                        <div v-show="contextMenuVisible" class="context-menu"
+                            :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
+                            <div class="context-menu-item">
+                                <div class="context-menu-buttons">
+                                    <div class="context-menu-button" :title="t('viewMarkdown.addToNote')"
+                                        @click="handleAddToNote">
+                                        <el-icon>
+                                            <DocumentAdd />
+                                        </el-icon>
+                                    </div>
+                                    <div class="context-menu-button" title="AI" @click="handleAskAI">
+                                        <el-icon>
+                                            <ChatDotSquare />
+                                        </el-icon>
+                                    </div>
+                                    <div class="context-menu-button" :title="t('copy')" @click="handleCopySelection">
+                                        <el-icon>
+                                            <DocumentCopy />
+                                        </el-icon>
+                                    </div>
+                                    <div class="context-menu-button" :title="t('translate')" @click="handleTranslate">
+                                        <el-icon>
+                                            <TranslateIcon />
+                                        </el-icon>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="context-menu-item">
+                                <div class="context-menu-buttons">
+                                    <div v-for="(color, index) in ['pink', 'blue', 'yellow', 'green', 'purple']"
+                                        :key="color" :class="['highlight-color-button', color]"
+                                        @click.stop="highlightSelection(index)"></div>
+                                    <div class="context-menu-button" @click.stop="handleHighlightAction"
+                                        :title="hasHighlight ? t('viewMarkdown.clearHighlight') : ''">
+                                        <el-icon v-if="hasHighlight">
+                                            <Delete />
+                                        </el-icon>
+                                        <el-icon v-else>
+                                            <Close />
+                                        </el-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div v-show="viewMode === 'content-note'" class="editor-container">
-                <div class="editor-toolbar">
+                <div class="editor-toolbar" style="display: flex; justify-content: flex-end;">
                     <el-button-group>
-                        <el-button size="small" type="primary" @click="selectedToNote">{{
-                            t('viewMarkdown.insertSelected') }}</el-button>
                         <!--
-                        <el-button size="small" type="primary" @click="highlightToNote">{{
-                            t('viewMarkdown.insertHighlight') }}</el-button>
-                            -->
-                        <el-button size="small" type="primary" @click="allToNote">{{ t('viewMarkdown.insertAll')
-                        }}</el-button>
-                        <el-button size="small" type="primary" @click="saveAsNote">{{ t('viewMarkdown.saveAsNote')
-                        }}</el-button>
+                        <el-button size="small" @click="selectedToNote" :title="t('viewMarkdown.insertSelected')">
+                            <el-icon><DocumentAdd /></el-icon>
+                        </el-button>
+                        <el-button size="small" @click="allToNote" :title="t('viewMarkdown.insertAll')">
+                            <el-icon><Files /></el-icon>
+                        </el-button>
+                        -->
+                        <el-button size="small" v-if="isPaper" @click="parsePaper" :loading="paperLoading" :title="t('paperAnalysis')">
+                            <el-icon><Search /></el-icon>
+                        </el-button>
+                        <el-button size="small" @click="saveAsNote" :title="t('viewMarkdown.saveAsNote')">
+                            <el-icon><SaveAsIcon /></el-icon>
+                        </el-button>                        
                     </el-button-group>
                 </div>
                 <ViewNote ref="viewNote" :form="form" @note-change="handleNoteChange" />
@@ -114,12 +168,14 @@
 
         <TextSpeakPlayer :text="selectedText" :lang="getLocale()" :getContentCallback="getContent" ref="txtPlayer"
             @onSpeak="handleSpeak" />
-        <AIDialog v-model="aiDialogVisible" 
-            :full-content="markdownContent" 
-            :selected-content="getSelectedContent()"
-            :screen-content="getScreenContent()"
-            :etype="etype"
-            @insert-note="handleInsertAIAnswer" />
+        <AIDialog v-model="aiDialogVisible" :full-content="markdownContent" :selected-content="getSelectedContent()"
+            :screen-content="getScreenContent()" :etype="etype" @insert-note="handleInsertAIAnswer" />
+        <TranslatePopup
+            :visible="showTranslatePopup"
+            :position="translatePosition"
+            ref="translatePopup"
+            @alert="showAlert"
+        />
     </div>
 </template>
 
@@ -133,18 +189,22 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
-import { MdPreview, MdCatalog } from 'md-editor-v3'
-import { saveEntry, downloadFile, fetchItem } from './dataUtils';
-import { HighlightManager } from '@/components/manager/HighlightManager'
-import TextSpeakPlayer from '@/components/manager/TextPlayer.vue'
-import { Expand, Fold, ArrowDown, Plus, Remove } from '@element-plus/icons-vue'
+import { MdPreview, MdCatalog, config } from 'md-editor-v3'
+import { saveEntry, downloadFile, fetchItem } from '../datatable/dataUtils';
+import { HighlightManager } from '@/components/viewer/HighlightManager'
+import TextSpeakPlayer from '@/components/viewer/TextPlayer.vue'
+import { Expand, Fold, ArrowDown, Close, DocumentAdd, ChatDotSquare, DocumentCopy, Delete, Select, Link, Download, Star, Document, Files, Search } from '@element-plus/icons-vue'
 import FontSmallIcon from '@/components/icons/FontSmallIcon.vue'
 import FontLargeIcon from '@/components/icons/FontLargeIcon.vue'
-import ViewNote from '@/components/manager/ViewNote.vue'
+import TranslateIcon from '@/components/icons/TranslateIcon.vue'
+import SaveAsIcon from '@/components/icons/SaveAsIcon.vue'
+import ViewNote from '@/components/viewer/ViewNote.vue'
 import { getSelectedNodeList, getVisibleNodeList, setHighlight } from './DOMUtils';
 import AIDialog from '@/components/ai/AIDialog.vue'
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
+import { getMarkdownItConfig } from './imageUtils'
+import TranslatePopup from '@/components/translate/TranslatePopup.vue'
 
 const { t } = useI18n()
 const appName = 'ExMemo'
@@ -168,13 +228,13 @@ const fontSize = ref(16)
 const clearHighlight = () => {
     highlightManager.value?.clearHighlight()
     metaChanged.value = true
-    scheduleSave()
+    scheduleSave(5)
 }
 
 const copyHighlight = () => {
     if (!highlightManager.value) return
 
-    let text = highlightManager.value.getHighlightedText().join('\n')
+    let text = highlightManager.value.getHighlightedText().join('\n\n')
     text = text + "\n"
     text = text + "\n" + t('title') + ": " + form.value.title
     text = text + "\n" + t('viewMarkdown.detail') + ": " + window.location.href
@@ -217,18 +277,30 @@ const fetchContent = async (idx) => {
     const result = await fetchItem(idx);
     if (result.success) {
         form.value = { ...result.data };
+        if (form.value.meta && typeof form.value.meta === 'string') {
+            try {
+                form.value.meta = JSON.parse(form.value.meta)
+            } catch (error) {
+                console.error('Failed to parse meta:', error)
+                form.value.meta = {}
+            }
+        }
         resetContent();
     }
 }
 
 const fetchWeb = async (url) => {
     const formData = new FormData();
-    formData.append('content', url); 
+    formData.append('content', url);
     formData.append('rtype', 'markdown');
     try {
         const res = await axios.post(getURL() + 'api/web/', formData);
         if (res.data.status === 'success') {
             ElMessage.info(t('paste.openClipboardContent'));
+            if (!res.data.content && !res.data.title) {
+                ElMessage.warning(t('paste.getContentFailed'));
+                return;
+            }
             form.value = {
                 content: res.data.content,
                 title: res.data.title,
@@ -238,7 +310,7 @@ const fetchWeb = async (url) => {
             resetContent();
         }
     } catch (err) {
-        parseBackendError(null, err);
+        parseBackendError(err);
         markdownContent.value = t('fetchFailed');
     }
 }
@@ -252,7 +324,6 @@ const resetContent = async () => {
         markdownContent.value = content;
         await nextTick();
         viewNote.value?.loadNote();
-        loadHighlight();
         setTimeout(() => {
             if (form.value.meta?.bookmark?.position) {
                 const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper');
@@ -261,12 +332,12 @@ const resetContent = async () => {
                     mdPreviewContent.scrollTop = form.value.meta.bookmark.position * scrollHeight / 100;
                 }
             }
+            loadHighlight();
         }, 100);
     } else {
         markdownContent.value = t('notSupport');
     }
     viewMode.value = 'content';
-    console.log("viewMode", viewMode.value, form.value.etype);
     await nextTick()
     if (form.value.meta?.fontSize) {
         fontSize.value = form.value.meta.fontSize
@@ -315,23 +386,19 @@ const copyContent = () => {
     }
 }
 
-const isHighlightMode = computed(() => highlightManager.value?.isHighlightMode || false)
-
-const highlightText = () => {
-    if (!highlightManager.value) return
-
-    const newMode = highlightManager.value.toggleHighlightMode()
-    ElMessage.success(newMode ? t('viewMarkdown.highlightModeOn') : t('viewMarkdown.highlightModeOff'))
-    loadHighlight();
-}
-
-const highlightSelection = () => {
-    highlightManager.value?.handleSelection()
-    metaChanged.value = true
-    scheduleSave()
+const highlightSelection = (index) => {
+    if (highlightManager.value?.addHighlight(index)) {
+        metaChanged.value = true
+        scheduleSave(5)
+    }
+    contextMenuVisible.value = false
 }
 
 const handleMouseUp = (event) => {
+    if (event.target.classList.contains('context-menu-button')) {
+        return
+    }
+
     const isPlaying = txtPlayer.value?.getStatus().isPlaying || false
     if (isPlaying) {
         const selection = window.getSelection()
@@ -345,7 +412,45 @@ const handleMouseUp = (event) => {
         }
         return
     }
-    highlightSelection()
+    handleSelectArea(event)
+    event.preventDefault()
+    event.stopPropagation()
+}
+
+const handleSelectArea = (event) => {
+    const selection = window.getSelection()
+    if (!selection || selection.toString().trim() === '') {
+        contextMenuVisible.value = false
+        return
+    }
+
+    const range = selection.getRangeAt(0)
+    const commonAncestor = range.commonAncestorContainer
+    const highlightElement = commonAncestor.nodeType === 3
+        ? commonAncestor.parentElement?.closest('.custom-highlight')
+        : commonAncestor.querySelector('.custom-highlight')
+    hasHighlight.value = !!highlightElement
+
+    const menuWidth = 160
+    const menuHeight = 88
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+
+    let x = event.clientX
+    let y = event.clientY
+    if (x + menuWidth > viewportWidth) {
+        x = viewportWidth - menuWidth - 10
+    }
+    if (y + menuHeight > viewportHeight) {
+        y = y - menuHeight
+    }
+    x = Math.max(10, x)
+    y = Math.max(10, y)
+
+    contextMenuPosition.value = { x, y }
+    nextTick(() => {
+        contextMenuVisible.value = true
+    })
 }
 
 const getContent = () => {
@@ -389,6 +494,22 @@ onMounted(() => {
     nextTick(() => {
         previewScrollElement.value = document.querySelector('.md-editor-preview')
     })
+    document.addEventListener('click', (e) => {
+        const menu = document.querySelector('.context-menu')
+        if (menu && !menu.contains(e.target) &&
+            (Math.abs(e.clientX - contextMenuPosition.value.x) > 10 ||
+                Math.abs(e.clientY - contextMenuPosition.value.y) > 10)) {
+            contextMenuVisible.value = false
+        }
+        const popupTime = translatePopup.value ? translatePopup.value.getPopupTime() : 0
+        if (showTranslatePopup.value && new Date().getTime() - popupTime > 1000) {
+            showTranslatePopup.value = false
+        }
+    })
+})
+
+config({
+    markdownItConfig: getMarkdownItConfig
 })
 
 const handleBeforeUnload = async (e) => {
@@ -442,14 +563,9 @@ const saveMeta = async (force) => {
     form.value.meta.note = viewNote.value.editContent
     form.value.meta.fontSize = fontSize.value
 
-    console.log('@@@@@', form.value.meta)
     try {
         const result = await saveEntry({
-            parentObj: null,
             form: form.value,
-            path: null,
-            file: null,
-            onProgress: null,
             showMessage: false
         })
 
@@ -463,23 +579,16 @@ const saveMeta = async (force) => {
     }
 }
 
-const scheduleSave = () => {
-    console.log('scheduleSave, wait 30')
+const scheduleSave = (timeout) => {
+    console.log('scheduleSave, wait', timeout)
     if (saveTimer.value) {
         clearTimeout(saveTimer.value)
     }
     saveTimer.value = setTimeout(async () => {
         await saveMeta(false)
         saveTimer.value = null
-    }, 30000) // 30s
+    }, timeout * 1000)
 }
-
-const highlightToNote = () => {
-    if (!highlightManager.value) return
-    let text = highlightManager.value.getHighlightedText().join('\n')
-    text = text + "\n\n"
-    viewNote.value.editContent = viewNote.value.editContent + text
-};
 
 const selectedToNote = () => {
     const selection = window.getSelection()
@@ -505,6 +614,7 @@ const saveAsNote = () => {
 };
 
 const aiDialogVisible = ref(false)
+const paperLoading = ref(false)
 
 const showAIDialog = () => {
     aiDialogVisible.value = true
@@ -518,10 +628,8 @@ const getSelectedContent = () => {
 const getScreenContent = () => {
     const preview = document.querySelector('.md-editor-preview')
     if (!preview) return ''
-
     const previewWrapper = preview.closest('.md-editor-preview-wrapper')
     if (!previewWrapper) return ''
-
     const walker = document.createTreeWalker(
         preview,
         NodeFilter.SHOW_TEXT,
@@ -534,7 +642,6 @@ const getScreenContent = () => {
             }
         }
     )
-
     let visibleText = ''
     let node
     while (node = walker.nextNode()) {
@@ -544,7 +651,6 @@ const getScreenContent = () => {
         const elementTop = rect.top
         const elementBottom = rect.bottom
         const wrapperRect = previewWrapper.getBoundingClientRect()
-        
         if (elementBottom > wrapperRect.top && elementTop < wrapperRect.bottom) {
             visibleText += node.textContent.trim() + '\n'
         }
@@ -570,13 +676,12 @@ const readingProgress = ref(0)
 const updateReadingProgress = () => {
     const mdPreviewContent = document.querySelector('.md-editor-preview-wrapper')
     if (!mdPreviewContent) return
-
     const scrollPosition = mdPreviewContent.scrollTop
     const scrollHeight = mdPreviewContent.scrollHeight - mdPreviewContent.clientHeight
     const progress = Math.round((scrollPosition / scrollHeight) * 1000) / 10
     readingProgress.value = Math.min(100, Math.max(0, progress))
     metaChanged.value = true
-    scheduleSave() // save bookmark
+    scheduleSave(10) // save bookmark
 }
 
 onMounted(() => {
@@ -602,21 +707,17 @@ const currentFileName = computed(() => {
 
 const handleNoteChange = async () => {
     metaChanged.value = true
-    scheduleSave()
+    scheduleSave(30)
 }
 
 const increaseFontSize = () => {
     fontSize.value = Math.min(fontSize.value + 2, 32)
     updatePreviewFontSize()
-    metaChanged.value = true
-    scheduleSave()
 }
 
 const decreaseFontSize = () => {
     fontSize.value = Math.max(fontSize.value - 2, 12)
     updatePreviewFontSize()
-    metaChanged.value = true
-    scheduleSave()
 }
 
 const updatePreviewFontSize = () => {
@@ -625,7 +726,183 @@ const updatePreviewFontSize = () => {
         preview.style.fontSize = `${fontSize.value}px`
     }
     metaChanged.value = true
-    scheduleSave()
+    scheduleSave(10)
+}
+
+const contextMenuVisible = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+
+const handleAddToNote = () => {
+    selectedToNote()
+    contextMenuVisible.value = false
+    showNote.value = true
+}
+
+const hasHighlight = ref(false)
+
+const handleHighlightAction = () => {
+    if (hasHighlight.value) {
+        if (highlightManager.value?.removeHighlight()) {
+            metaChanged.value = true
+            scheduleSave(5)
+        }
+    }
+    contextMenuVisible.value = false
+}
+
+const handleAskAI = () => {
+    contextMenuVisible.value = false
+    aiDialogVisible.value = true
+}
+
+const handleTranslate = () => {
+    contextMenuVisible.value = false
+    const selection = window.getSelection()
+    const selectedText = selection.toString().trim()
+    
+    if (!selectedText) return
+    
+    const rect = selection.getRangeAt(0).getBoundingClientRect()
+    translatePosition.value = {
+        x: rect.left,
+        y: rect.bottom + window.scrollY
+    }
+    
+    showTranslatePopup.value = true
+    
+    if (selectedText.indexOf(' ') === -1 && selectedText.length < 20 && /^[a-zA-Z]+$/.test(selectedText)) {
+        const node = selection.anchorNode
+        const word = selectedText
+        const sentence = getSentence(node)
+        translatePopup.value.translateWord(word, null, sentence)
+    } else {
+        translatePopup.value.translateSelection(selectedText)
+    }
+}
+
+const getSentence = (element) => {
+    let paragraph = getParagraph(element)
+    if (paragraph.length > 0) {
+        let sentences = paragraph.match(/[^\.!\?]+[\.!\?]+/g)
+        const text = element.textContent
+        let ret = paragraph
+        if (sentences && sentences.length > 0) {
+            for (let i = 0; i < sentences.length; i++) {
+                if (text && text.indexOf(sentences[i]) !== -1) {
+                    ret = sentences[i]
+                    break
+                }
+            }
+        }
+        return ret
+    } else {
+        return ''
+    }
+}
+
+const getParagraph = (element) => {
+    while (element && element.nodeType === 3) {
+        element = element.parentNode
+    }
+    const container = element.closest('p, div, li')
+    if (!container) {
+        return element?.textContent?.trim() || ''
+    }
+    return container.textContent?.trim() || ''
+}
+
+const showAlert = (message) => {
+    ElMessage.warning(message)
+}
+
+const handleCopySelection = () => {
+    contextMenuVisible.value = false
+    const selection = window.getSelection()
+    const text = selection.toString().trim()
+    if (!text) return
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(() => ElMessage.success(t('copySuccess')))
+            .catch(() => fallbackCopyTextToClipboard(text))
+    } else {
+        fallbackCopyTextToClipboard(text)
+    }
+}
+
+const handleSave = async () => {
+    if (!form.value.content) {
+        ElMessage.warning(t('noContent'))
+        return
+    }
+    try {
+        const result = await saveEntry({
+            form: form.value,
+        })
+        if (result && result.status === 'success') {
+            getNewIdx()
+        }
+    } catch (error) {
+        console.error(t('saveFail'), error)
+        ElMessage.error(t('saveFail'))
+    }
+}
+
+const getNewIdx = () => {
+    const addr = form.value.addr;
+    let func = 'api/entry/data/';
+    let params = {
+        keyword: addr,
+        etype: 'web',
+        max_count: 1,
+    }
+    axios.get(getURL() + func, { params: params })
+        .then(response => {
+            const results = response.data;
+            if (results && results.length > 0) {
+                form.value.idx = results[0].idx
+            }
+        })
+        .catch(error => {
+            console.error('Failed to get idx:', error)
+        })
+}
+
+const showTranslatePopup = ref(false)
+const translatePosition = ref({ x: 0, y: 0 })
+const translatePopup = ref(null)
+
+const isPaper = computed(() => {
+    if (!form.value || !form.value.addr) return false
+    return form.value.etype === 'web' && (
+        form.value.addr.includes('arxiv.org')
+    )
+})
+
+const parsePaper = async () => {
+    paperLoading.value = true
+    const formData = new FormData();
+    formData.append('content', form.value.addr);
+    formData.append('rtype', 'search')
+    
+    try {
+        const res = await axios.post(getURL() + 'api/paper/', formData)
+        if (res.data.status == 'success') {
+            let note = viewNote.value.editContent;
+            if (note.length > 0) {
+                note = note + "\n\n";
+            }
+            note = note + res.data.info;
+            viewNote.value.editContent = note;
+            ElMessage({
+                message: t('searchSuccess'),
+                type: 'success'
+            });
+        }
+    } catch (err) {
+        parseBackendError(err);
+    } finally {
+        paperLoading.value = false;
+    }
 }
 </script>
 
@@ -639,11 +916,9 @@ const updatePreviewFontSize = () => {
     margin: 0 auto;
     font-size: v-bind('fontSize + "px"');
 }
-
 :deep(.md-editor-preview-wrapper) {
     padding: 0px;
 }
-
 :deep(.md-editor-catalog) {
     border: none !important;
     height: 100% !important;
@@ -656,8 +931,8 @@ const updatePreviewFontSize = () => {
 
 :deep(.md-editor-catalog-list) {
     padding: 10px !important;
+    border-bottom: 1px solid #e6e6e6;
 }
-
 :deep(.el-dropdown-menu__item.is-active) {
     color: #409EFF;
     font-weight: bold;

@@ -9,7 +9,7 @@ MAINTAINER XieYan
 COPY sources.list /etc/apt/
 RUN apt-get update -y --force-yes
 RUN apt-get install vim openssh-server -y --force-yes
-RUN apt-get install gettext -y --force-yes
+RUN apt-get install gettext unrar -y --force-yes
 
 RUN echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://mirrors.aliyun.com/pypi/simple/' >> /etc/pip.conf && \
@@ -28,4 +28,4 @@ COPY . /opt/exmemo/backend
 
 WORKDIR /opt/exmemo/backend
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8005"]
+CMD ["shell/run.sh"]

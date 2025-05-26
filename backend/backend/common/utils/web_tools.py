@@ -13,6 +13,7 @@ import requests
 from django.utils.translation import gettext as _
 import backend.common.files.filecache as filecache
 import backend.common.files.utils_file as utils_file
+from backend.common.utils.text_tools import normalize_markdown_text
 from backend.common.llm.llm_hub import llm_query
 from backend.common.user.user import UserManager
 from backend.common.user.user import *
@@ -326,6 +327,7 @@ def get_html_content(path, format):
         
         if format == 'markdown':
             text = h.handle(str(soup))
+            text = normalize_markdown_text(text)
         else:
             text = soup.get_text()
             text = re.sub(r"\n+", "\n", text)

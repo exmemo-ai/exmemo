@@ -143,9 +143,7 @@ export default {
                 this.$emit('success')
                 this.handleClose()
             } catch (error) {
-                if (error.response) {
-                    ElMessage.error(parseBackendError(error) || this.$t('operationFailed'))
-                }
+                parseBackendError(error);
                 return false
             }
         },

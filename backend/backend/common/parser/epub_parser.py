@@ -48,7 +48,8 @@ class EPUBParser(BaseParser):
             print(toc_items)
 
         text = ""
-        for item in book.items:
+        sorted_items = sorted(book.items, key=lambda x: x.file_name if hasattr(x, 'file_name') else '')
+        for item in sorted_items:
             if isinstance(item, epub.EpubHtml):
                 item_string = convert_to_markdown(remove_xml_declaration(item.get_content()))
                 #item_string = md(remove_xml_declaration(item.get_content()))

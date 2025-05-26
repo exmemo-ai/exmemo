@@ -21,6 +21,7 @@ from backend.common.utils.file_tools import (
 )
 from backend.common.utils.text_tools import replace_fullwidth_numbers_with_halfwidth
 from app_dataforge.entry import get_entry
+from app_dataforge.entry_storage import EntryStorage
 from .command import *
 from .function import *
 from .session import *
@@ -50,8 +51,15 @@ def msg_search_detail(dic):
                 return {"type": "text", "info": f"[{obj.title}]({WEB_URL}/view_markdown?idx={obj.idx})"}
             else:
                 return obj.addr
-        else:
-            detail = f"\n{_('title')}:\n{obj.title}\n\n_('content'):\n{obj.raw}"
+        elif obj.etype == "record":
+            detail = EntryStorage.get_content(uid, obj.addr)
+            detail = f"\n{_('title')}:\n{obj.title}\n\n{_('content')}:\n{detail}"
+            return detail
+        elif obj.etype == "chat":
+            if sdata.source == "web":
+                return {"type": "text", "info": f"[{obj.title}]({WEB_URL}/view_markdown?idx={obj.idx})"}
+            else:
+                detail = f"\n{_('title')}:\n{obj.title}\n\n{_('content')}:\n{obj.raw}"
             return detail
     return _("failed_to_fetch_files")
 

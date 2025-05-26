@@ -126,32 +126,25 @@ class QAAPIView(APIView):
         logger.debug(f"rtype *{rtype}*")
 
         if rtype == "gpt":
-            return self.handle_gpt_request(content, args)
+            return self.handle_gpt_request(content, request, args)
         return do_result(False, _("method_not_supported_colon_") + rtype)
 
 
-    def handle_gpt_request(self, content, args):
+    def handle_gpt_request(self, content, reqeust, args):
         if content is not None:
             logger.debug(f"content {content[:20]}")
-        ret, info = self.gpt(args["user_id"], content)
-        if ret:
-            return do_result(True, str(info))
-        else:
-            return do_result(False, str(info))
-
-    def gpt(self, uid, content, debug=False):
-        """
-        Direct question GPT
-        """
         debug = True
         if content is None or len(content.strip()) == 0:
             return False, _("empty_contents")
         try:
             if debug:
                 print("req", content)
+            llm_type = reqeust.GET.get("llm_type", reqeust.POST.get("llm_type", "llm_chat_model")) 
             ret, answer, detail = llm_query(
-                uid, AI_ROLE, content[:4096], "ptools", debug=debug
+                args["user_id"], AI_ROLE, content[:4096], "ai", llm_type=llm_type, debug=debug
             )
-            return True, answer
+            return do_result(True, answer)
         except Exception as e:
-            return False, e
+            logger.warning(e)
+            return do_result(False, str(e))
+        

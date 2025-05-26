@@ -3,6 +3,7 @@ import json
 import datetime
 from loguru import logger
 from babel import Locale
+import mistune
 
 def replace_chinese_punctuation_with_english(s):
     punctuation_dict = {
@@ -93,3 +94,12 @@ def get_language_name(language_code):
     except Exception as e:
         logger.warning(f"Error: {e}")
         return None
+    
+def normalize_markdown_text(text):
+    """
+    Normalize markdown text by removing unnecessary line breaks while preserving markdown formatting
+    """
+    markdown = mistune.create_markdown()
+    normalized_text = markdown(text)
+    normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
+    return normalized_text

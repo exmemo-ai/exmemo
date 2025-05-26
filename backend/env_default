@@ -1,7 +1,7 @@
 # This is an example environment variables file.
 # Please adjust the settings according to your situation and write them into the .env file.
 
-LANGUAGE_CODE='zh' # zh, en
+LANGUAGE_CODE='en' # zh, en
 
 # URL and PORT
 HOST_EXPORTS_DIR="/exports"
@@ -63,3 +63,8 @@ OPENAI_API_KEY="sk-"
 
 # Time zone setting
 TIMEZONE='Asia/Shanghai'
+
+# CELERY
+USE_CELERY='True'
+REDIS_HOST='192.168.10.168' 
+REDIS_PORT='6379'

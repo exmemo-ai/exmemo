@@ -25,8 +25,22 @@ const debounce = (fn, delay) => {
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
   constructor(callback) {
-    callback = debounce(callback, 16);
-    super(callback);
+    const safeCallback = (entries, observer) => {
+      try {
+        const validEntries = entries.filter(entry => {
+          const target = entry.target;
+          return target && typeof target.getBoundingClientRect === 'function';
+        });
+        
+        if (validEntries.length > 0) {
+          callback(validEntries, observer);
+        }
+      } catch (error) {
+        console.warn('ResizeObserver callback error:', error);
+      }
+    };
+    
+    super(debounce(safeCallback, 16));
   }
 };
 </script>

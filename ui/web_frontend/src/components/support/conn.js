@@ -19,7 +19,7 @@ export function setDefaultAuthHeader() {
   }
 }
 
-export function parseBackendError(obj, err) { // later remove obj
+export function parseBackendError(err) {
   console.log(err);
   if (err.response === undefined) {
     ElMessage({
@@ -61,7 +61,7 @@ export function realExportRecord(obj) {
       }
     })
     .catch(error => {
-      parseBackendError(obj, error);
+      parseBackendError(error);
     });
 }
 

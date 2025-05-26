@@ -9,13 +9,13 @@
             <div class="dialog-header">
                 <span class="dialog-title">{{ t('ai.title') }}</span>
                 <div class="prompt-actions">
-                    <el-button size="small" @click="handleAddPrompt">
+                    <el-button size="small" @click="handleAddPrompt" :title="t('ai.addPrompt')">
                         <el-icon><Plus /></el-icon>
                     </el-button>
-                    <el-button size="small" @click="handleSavePrompt" :disabled="!prompt">
+                    <el-button size="small" @click="handleSavePrompt" :disabled="!prompt" :title="t('ai.savePrompt')">
                         <el-icon><SaveIcon /></el-icon>
                     </el-button>
-                    <el-button size="small" @click="handleManagePrompts">
+                    <el-button size="small" @click="handleManagePrompts" :title="t('ai.managePrompts')">
                         <el-icon><ListIcon /></el-icon>
                     </el-button>
                 </div>

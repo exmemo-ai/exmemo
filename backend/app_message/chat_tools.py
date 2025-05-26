@@ -24,12 +24,21 @@ class ChatEngine:
             self.llm = OpenAI(api_key=self.llm_info.api_key, base_url=self.llm_info.url)
             logger.info(f"ChatEngine init: url {self.llm_info.url}")
 
-    def predict(self, input):
+    def predict(self, input, prompt = None, debug=False):
+        debug = True
         ret = True
         try:
-            messages = [{"role": "user", "content": input}]
+            messages = []
+            if prompt:
+                messages.append({"role": "system", "content": prompt})
+            
             formatted_msgs = [{"role": m.sender, "content": m.content} for m in self.sdata.get_context_messages()]
-            messages = formatted_msgs + messages
+            messages.extend(formatted_msgs)
+            
+            messages.append({"role": "user", "content": input})
+            
+            if debug:
+                logger.debug(f'messages {messages}')
             answer, count = self.get_llm_response(messages) 
             return ret, answer, count
         except Exception as e:
@@ -65,8 +74,6 @@ def do_chat(sdata, debug=False):
     user = UserManager.get_instance().get_user(sdata.user_id)
     # 241115
     prompt = user.get("llm_chat_prompt", "")
-    if prompt != "" and content != "":
-        content = prompt + "\n" + content
     if debug:
         logger.debug(f"chat {content}")
 
@@ -82,7 +89,7 @@ def do_chat(sdata, debug=False):
         else:
             pre = ""
         ret, answer, token_count = (
-            ChatEngine(llm_info, sdata).predict(content)
+            ChatEngine(llm_info, sdata).predict(content, prompt)
         )
         if debug:
             logger.info(

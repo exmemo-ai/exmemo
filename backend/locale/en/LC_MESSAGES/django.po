@@ -66,6 +66,10 @@ msgstr "Run failed"
 msgid "unclassified"
 msgstr "Unclassified"
 
+#: app_dataforge/feature.py:22
+msgid "image"
+msgstr "Image"
+
 #: app_dataforge/feature.py:153
 msgid "to_be_organized"
 msgstr "To be organized"
@@ -101,6 +105,22 @@ msgstr "Update failed"
 #: app_dataforge/views.py:353
 msgid "unknown_action"
 msgstr "Unknown action"
+
+#: app_dataforge/view_tools.py:321
+msgid "no_support_file"
+msgstr "No importable file types found"
+
+#: app_dataforge/view_tools.py:321
+msgid "no_file_to_import"
+msgstr "No file to import"
+
+#: app_dataforge/view_tools.py:462
+msgid "refreshSuccess"
+msgstr "Refresh success"
+
+#: app_dataforge/view_tools.py:464
+msgid "refreshFailed"
+msgstr "Refresh failed"
 
 #: app_diet/diet.py:17
 msgid "you_are_a_clinical_nutritionist"

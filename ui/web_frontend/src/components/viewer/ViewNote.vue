@@ -15,8 +15,8 @@ import { ref, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MdEditor } from 'md-editor-v3'
 import { ElMessage } from 'element-plus'
-import AddDialog from '@/components/manager/AddDialog.vue'
-import { getDefaultPath, getDefaultVault } from './dataUtils';
+import AddDialog from '@/components/datatable/AddDialog.vue'
+import { getDefaultPath, getDefaultVault } from '@/components/datatable/dataUtils';
 
 const emit = defineEmits(['noteChange'])
 

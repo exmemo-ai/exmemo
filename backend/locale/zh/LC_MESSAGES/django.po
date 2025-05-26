@@ -65,6 +65,10 @@ msgstr "运行失败"
 msgid "unclassified"
 msgstr "未知类别"
 
+#: app_dataforge/feature.py:22
+msgid "image"
+msgstr "图片"
+
 #: app_dataforge/feature.py:153
 msgid "to_be_organized"
 msgstr "待整理"
@@ -100,6 +104,22 @@ msgstr "更新失败"
 #: app_dataforge/views.py:353
 msgid "unknown_action"
 msgstr "未知操作"
+
+#: app_dataforge/view_tools.py:321
+msgid "no_support_file"
+msgstr "未找到可导入的文件类型"
+
+#: app_dataforge/view_tools.py:321
+msgid "no_file_to_import"
+msgstr "无文件导入"
+
+#: app_dataforge/view_tools.py:462
+msgid "refreshSuccess"
+msgstr "更新成功"
+
+#: app_dataforge/view_tools.py:464
+msgid "refreshFailed"
+msgstr "更新失败"
 
 #: app_diet/diet.py:17
 msgid "you_are_a_clinical_nutritionist"

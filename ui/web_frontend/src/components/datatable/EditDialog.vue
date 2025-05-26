@@ -13,31 +13,22 @@
                     </strong>
                 </div>
                 <div class="action-buttons">
-                    <el-tooltip :content="$t('save')" placement="top">
-                        <el-button size="small" @click="doSave">
-                            <el-icon><SaveIcon /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip :content="$t('delete')" placement="top">
-                        <el-button size="small" @click="showDeleteConfirmation">
-                            <el-icon><Delete /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip v-if="form.etype !== 'record'" :content="$t('view')" placement="top">
-                        <el-button size="small" @click="viewContent">
-                            <el-icon><View /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip v-if="form.etype === 'note'" :content="$t('edit')" placement="top">
-                        <el-button size="small" @click="editNote">
-                            <el-icon><Edit /></el-icon>
-                        </el-button>
-                    </el-tooltip>
-                    <el-tooltip v-if="form.etype === 'file'" :content="$t('download')" placement="top">
-                        <el-button size="small" @click="download">
-                            <el-icon><Download /></el-icon>
-                        </el-button>
-                    </el-tooltip>
+                    <el-button size="small" @click="doSave" :title="$t('save')">
+                        <el-icon><SaveIcon /></el-icon>
+                    </el-button>
+                    <el-button size="small" @click="showDeleteConfirmation" :title="$t('delete')">
+                        <el-icon><Delete /></el-icon>
+                    </el-button>
+                    <el-button v-if="form.etype !== 'record'" size="small" @click="viewContent" :title="$t('view')">
+                        <el-icon><View /></el-icon>
+                    </el-button>
+                    <el-button v-if="(form.etype === 'note' && file_path && file_path.toLowerCase().endsWith('.md'))" 
+                              size="small" @click="editNote" :title="$t('edit')">
+                        <el-icon><Edit /></el-icon>
+                    </el-button>
+                    <el-button v-if="form.etype === 'file' || form.etype === 'note'" size="small" @click="download" :title="$t('download')">
+                        <el-icon><Download /></el-icon>
+                    </el-button>
                 </div>
             </div>
         </template>
@@ -57,7 +48,7 @@
                             $t('path') }}: {{file_path}}</span>
                 </div>
                 <div v-if="form.etype === 'record'" width="100%">
-                    <el-input type="textarea" :rows="6" v-model="form.raw" :placeholder="$t('recordContent')"></el-input>
+                    <el-input type="textarea" :rows="6" v-model="form.content" :placeholder="$t('recordContent')"></el-input>
                 </div>
                 <div v-if="form.etype === 'chat'" width="100%">
                     <div 
@@ -95,7 +86,7 @@
 import axios from 'axios';
 import { getURL, parseBackendError } from '@/components/support/conn'
 import DataEditor from './DataEditor.vue'
-import { downloadFile } from './dataUtils'
+import { downloadFile, fetchItem } from './dataUtils'
 import { Delete, Edit, View, Download } from '@element-plus/icons-vue'
 import SaveIcon from '@/components/icons/SaveIcon.vue'
 
@@ -117,10 +108,12 @@ export default {
             file_path: null,
             file: null,
             dialogVisible: false,
+            record_content: '',
             form: {
                 idx: null,
                 title: '',
                 raw: '',
+                content: '',
                 ctype: '',
                 etype: 'record',
                 atype: '',
@@ -132,7 +125,7 @@ export default {
         };
     },
     methods: {
-        openDialog(onSuccess, row) {
+        async openDialog(onSuccess, row) {
             this.onSuccess = onSuccess;
             this.form.idx = row.idx;
             this.form.ctype = row.ctype;
@@ -144,6 +137,14 @@ export default {
             this.form.addr = row.addr;
             this.file_path = this.form.addr;
             this.base_title = row.title;
+
+            if (this.form.etype === 'record') {
+                const result = await fetchItem(this.form.idx);
+                if (result.success && result.data.content) {
+                    this.form.content = result.data.content;
+                }
+            }
+
             console.log(this.form);
             this.dialogVisible = true;
         },
@@ -186,12 +187,12 @@ export default {
                 return false;
             }
             } catch (error) {
-                parseBackendError(this, error);
+                parseBackendError(error);
                 return false;
             }
         },
         async doSave() {
-            if (this.form.etype === 'file' && this.base_title !== this.form.title) {
+            if ((this.form.etype === 'file' || this.form.etype === 'note') && this.base_title !== this.form.title) {
                 const baseExt = this.file_path.split('.').pop();
                 const newExt = this.form.title.split('.').pop();
                 if (baseExt !== newExt) {
@@ -258,7 +259,7 @@ export default {
                     }
                 })
                 .catch(error => {
-                    parseBackendError(this, error);
+                    parseBackendError(error);
                 });
         },
     },

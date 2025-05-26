@@ -71,7 +71,7 @@ services:
     volumes:
       - ${HOST_DATA_DIR}:/data
     profiles:
-      - production      
+      - production
   ebackend_dev:
     image: exmemo:latest
     build:
@@ -131,4 +131,15 @@ services:
       - ${HOST_DATA_DIR}/minio:/bitnami/minio/data # host dir need write permissions for the minio user.
     profiles:
       - eminio
+  eredis:
+    image: redis:7.2
+    container_name: eredis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ${HOST_DATA_DIR}/redis:/data
+    command: redis-server --appendonly yes
+    #profiles: # if you don't want to start this service, you can open these
+    #  - eredis
 

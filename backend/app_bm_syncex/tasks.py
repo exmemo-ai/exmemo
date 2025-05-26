@@ -1,3 +1,4 @@
+'''
 from celery import shared_task
 from django.utils import timezone
 from .weight_utils import BookmarkWeightCalculator
@@ -60,3 +61,5 @@ def update_bookmark_weights(bookmark_ids):
             bookmark.save(update_fields=['weight'])
         except Exception as e:
             continue
+            
+'''

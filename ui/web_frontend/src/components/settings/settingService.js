@@ -43,6 +43,8 @@ class SettingService {
             const response = await axios.post(getURL() + 'api/setting/', formData);
             this._settingCache = response.data;
             this._pendingSettings = JSON.parse(JSON.stringify(response.data));
+        } catch (error) {
+            console.error('Error loading settings:', error);
         } finally {
             this._releaseLock();
         }

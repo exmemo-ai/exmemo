@@ -2,9 +2,10 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue'
 import ElementPlus from 'element-plus';
-import DataManager from './components/manager/DataManager.vue'; 
-import ViewMarkdown from './components/manager/ViewMarkdown.vue';
-import EditMarkdown from './components/manager/EditMarkdown.vue';
+import DataManager from './components/datatable/DataManager.vue'; 
+import DataList from './components/datatree/DataList.vue'; 
+import ViewMarkdown from './components/viewer/ViewMarkdown.vue';
+import EditMarkdown from './components/viewer/EditMarkdown.vue';
 import ChatManager from './components/chat/ChatManager.vue';
 import SupportTools from './components/assistive/AssistiveMain.vue';
 import SettingMain from './components/settings/SettingMain.vue';
@@ -15,6 +16,7 @@ import TranslateMain from './components/translate/TranslateMain.vue';
 import WordManager from './components/translate/WordManager.vue';
 import ArticleManager from './components/translate/ArticleManager.vue';
 import BMManagerMain from './components/bmkeeper/BMManagerMain.vue';
+import UserTasks from './components/tasks/UserTasks.vue';
 import 'element-plus/theme-chalk/index.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { createI18n } from 'vue-i18n'; 
@@ -48,6 +50,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: ChatManager },
     { path: '/data', component: DataManager },
+    { path: '/list', component: DataList },
     { path: '/view_markdown', component: ViewMarkdown },
     { path: '/edit_markdown', component: EditMarkdown },
     { path: '/chat', component: ChatManager },
@@ -59,7 +62,8 @@ const router = createRouter({
     { path: '/translate', component: TranslateMain},
     { path: '/word_manager', component: WordManager},
     { path: '/article_manager', component: ArticleManager},
-    { path: '/bm_manager', component: BMManagerMain}
+    { path: '/bm_manager', component: BMManagerMain},
+    { path: '/user_tasks', component: UserTasks},
   ]
 });
 
@@ -81,6 +85,7 @@ router.beforeEach((to, from, next) => {
 const app = createApp(App);
 app.use(i18n);
 app.component('DataManager', DataManager);
+app.component('DataList', DataList);
 app.component('ViewMarkdown', ViewMarkdown);
 app.component('EditMarkdown', EditMarkdown);
 app.component('ChatManager', ChatManager);
@@ -93,6 +98,7 @@ app.component('TranslateMain', TranslateMain);
 app.component('WordManager', WordManager);
 app.component('ArticleManager', ArticleManager);
 app.component('BMManager', BMManagerMain);
+app.component('UserTasks', UserTasks);
 app.use(ElementPlus);
 app.use(router);
 app.mount('#app');

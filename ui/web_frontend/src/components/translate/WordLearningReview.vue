@@ -2,7 +2,7 @@
     <div>
         <div class="translate-header">
             <div class="translate-counter">
-                {{ $t('trans.remainToReview', { count: getShowListLength() }) }}
+                {{ $t('trans.remainToReview', { count: getShowListLength(), idx:currentIndex+1 }) }}
             </div>
         </div>
         <div class="translate-common-style">
@@ -65,7 +65,10 @@ export default {
             if (showList[this.currentIndex].info.opt['review_date_list'] == undefined) {
                 showList[this.currentIndex].info.opt['review_date_list'] = []
             }
-            showList[this.currentIndex].info.opt['review_date_list'].push(new Date().toISOString().split('T')[0]);
+            const currentDate = new Date().toISOString().split('T')[0];
+            if (!showList[this.currentIndex].info.opt['review_date_list'].includes(currentDate)) {
+                showList[this.currentIndex].info.opt['review_date_list'].push(currentDate);
+            }
         },
         markAsReview() {
             const showList = this.getShowList();
@@ -96,6 +99,7 @@ export default {
                 return;
             }
             this.addReviewTimes();
+            this.needSave = true;
             this.nextWord()
         },
         getShowListLength() {

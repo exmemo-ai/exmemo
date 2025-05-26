@@ -242,7 +242,7 @@ export default {
         }
       } catch (error) {
         console.error('Error fetching bookmarks:', error)
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
@@ -447,7 +447,7 @@ export default {
           }))
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
@@ -467,7 +467,7 @@ export default {
           await this.fetchBookmarks()
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
@@ -506,7 +506,7 @@ export default {
           console.log(`Found ${this.filteredBookmarks.length} matching bookmarks`)
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
@@ -532,7 +532,7 @@ export default {
         
         await this.fetchBookmarks()
       } catch (error) {
-        parseBackendError(this, error);
+        parseBackendError(error);
 
         const index = this.selectedBookmarks.findIndex(b => b.id === bookmark.id);
         if (index > -1) {
@@ -561,7 +561,7 @@ export default {
             await this.fetchBookmarks()
           }
         } catch (error) {
-          parseBackendError(this, error)
+          parseBackendError(error)
           await this.loadSelectedBookmarks()
         }
       }
@@ -595,7 +595,7 @@ export default {
           localStorage.setItem('customBookmarks', JSON.stringify(validIds))
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
         this.selectedBookmarks = []
         localStorage.removeItem('customBookmarks')
       }
@@ -705,7 +705,7 @@ export default {
           await this.fetchBookmarks()
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 

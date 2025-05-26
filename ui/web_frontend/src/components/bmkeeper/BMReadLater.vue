@@ -206,7 +206,7 @@ export default {
           this.readLaterTotal = response.data.total
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
@@ -287,7 +287,7 @@ export default {
           this.filteredFolders = this.allFolders;
         }
       } catch (error) {
-        parseBackendError(this, error);
+        parseBackendError(error);
       }
     },
 
@@ -320,7 +320,7 @@ export default {
         this.showFolderDialog = false;
         await this.fetchBookmarks('readlater');
       } catch (error) {
-        parseBackendError(this, error);
+        parseBackendError(error);
       }
     },
 
@@ -354,7 +354,7 @@ export default {
         }
       } catch (error) {
         if (error !== 'cancel') {
-          parseBackendError(this, error)
+          parseBackendError(error)
         }
       }
     },
@@ -394,7 +394,7 @@ export default {
           })
         }
       } catch (error) {
-        parseBackendError(this, error)
+        parseBackendError(error)
       }
     },
 
