@@ -250,7 +250,7 @@ class SyncAPIView(APIView):
                     if file_last_sync_time is not None and mtime_cloud > file_last_sync_time and mtime_client > file_last_sync_time:
                         logger.info(f"conflict detected for {key}: server_mtime={mtime_cloud}, client_mtime={mtime_client}, last_sync_time={file_last_sync_time}")
                         conflict_list.append(
-                            {"addr": key, "idx": str(cloud_dic[key]["idx"]), "cloud_mtime": mtime_cloud, "client_mtime": mtime_client}
+                            {"addr": key, "idx": str(cloud_dic[key]["idx"])}
                         )
                     elif mtime_client > mtime_cloud:
                         # logger.warning(f"{value['md5']} == {cloud_dic[key]['md5']}")
