@@ -25,18 +25,31 @@ class EntryStorage:
         
         try:
             entry.updated_time = timezone.now().astimezone(pytz.UTC)
+            db_entry = None
+            operation = _("add_success")
             
-            ret_emb = True
-            if entry.idx and StoreEntry.objects.filter(idx=entry.idx, block_id=0).exists():
+            if entry.idx:
+                try:
+                    db_entry = StoreEntry.objects.get(idx=entry.idx, block_id=0)
+                    operation = _("update_success")
+                except StoreEntry.DoesNotExist:
+                    pass
+            
+            if db_entry is None and entry.addr:
+                try:
+                    db_entry = StoreEntry.objects.filter(user_id=entry.user_id, addr=entry.addr, block_id=0).first()
+                    if db_entry:
+                        entry.idx = db_entry.idx
+                        operation = _("update_success")
+                except Exception:
+                    pass
+            
+            if db_entry:
                 ret_emb = EntryStorage._update_entry(entry, has_new_content, content)
             else:
                 ret_emb = EntryStorage._create_entry(entry, content)
-
-            return (
-                True, 
-                ret_emb,
-                _("update_success") if entry.idx else _("add_success")
-            )
+            
+            return True, ret_emb, operation
             
         except Exception as e:
             logger.error(f"save_entry failed: {str(e)}")
@@ -88,11 +101,6 @@ class EntryStorage:
     @staticmethod 
     def _create_entry(entry: EntryItem, content: Optional[str] = None):
         ret_emb = True
-        if entry.addr:
-            StoreEntry.objects.filter(
-                user_id=entry.user_id,
-                addr=entry.addr
-            ).delete()
             
         entry_dict = entry.to_model_dict()
         entry_dict['block_id'] = 0
