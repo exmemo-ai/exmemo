@@ -201,10 +201,19 @@ class SyncAPIView(APIView):
                 mtime = int(item["mtime"]) / 1000
             else:
                 mtime = 0
-            client_dic[item["path"]] = {
+                
+            entry = {
                 "mtime": timezone.datetime.fromtimestamp(mtime, pytz.UTC),
                 "md5": item["md5"],
             }
+            
+            if "lastSyncTime" in item and item["lastSyncTime"] is not None and int(item["lastSyncTime"]) > 0:
+                last_sync_time_value = int(item["lastSyncTime"]) / 1000
+                entry["last_sync_time"] = timezone.datetime.fromtimestamp(
+                    last_sync_time_value, pytz.UTC
+                )
+                
+            client_dic[item["path"]] = entry
         client_dic = self.adjust_files(
             client_dic, include, exclude
         )  # Currently filtered once on the client side as well
@@ -215,6 +224,7 @@ class SyncAPIView(APIView):
         client_remove_list = []
         client_download_list = []
         client_upload_list = []
+        conflict_list = []
         # Compare local file updates
         """
         * Case 1: Local has, cloud has, same md5, do nothing
@@ -225,6 +235,7 @@ class SyncAPIView(APIView):
         * Case 6: Local does not have, cloud has, cloud mtime is larger than local update time, download
         * Case 7: Local has, cloud has, cloud is_deleted, local mtime is smaller, delete from local
         * Case 8: Local has, cloud has, cloud is_deleted, local mtime is larger, upload
+        * Case 9: Local has, cloud has, different md5, both sides modified after last sync time, conflict
         """
         # Benchmark against local files
         for key, value in client_dic.items():
@@ -234,17 +245,24 @@ class SyncAPIView(APIView):
                 if value["md5"] == cloud_dic[key]["md5"]:
                     # logger.info(f"item {key} is same")
                     pass
-                elif mtime_client > mtime_cloud:
-                    # logger.warning(f"{value['md5']} == {cloud_dic[key]['md5']}")
-                    # logger.info(f"item {key} need upload, client {mtime_client}, cloud {mtime_cloud}")
-                    client_upload_list.append(
-                        {"addr": key}
-                    )  # , 'md5':cloud_dic[key]['md5']})
                 else:
-                    # logger.info(f"item {key} need download, client {mtime_client}, cloud {mtime_cloud}")
-                    client_download_list.append(
-                        {"addr": key, "idx": str(cloud_dic[key]["idx"])}
-                    )  # , 'md5':cloud_dic[key]['md5']})
+                    file_last_sync_time = value.get("last_sync_time", None)
+                    if file_last_sync_time is not None and mtime_cloud > file_last_sync_time and mtime_client > file_last_sync_time:
+                        logger.info(f"conflict detected for {key}: server_mtime={mtime_cloud}, client_mtime={mtime_client}, last_sync_time={file_last_sync_time}")
+                        conflict_list.append(
+                            {"addr": key, "idx": str(cloud_dic[key]["idx"]), "cloud_mtime": mtime_cloud, "client_mtime": mtime_client}
+                        )
+                    elif mtime_client > mtime_cloud:
+                        # logger.warning(f"{value['md5']} == {cloud_dic[key]['md5']}")
+                        # logger.info(f"item {key} need upload, client {mtime_client}, cloud {mtime_cloud}")
+                        client_upload_list.append(
+                            {"addr": key}
+                        )  # , 'md5':cloud_dic[key]['md5']})
+                    else:
+                        # logger.info(f"item {key} need download, client {mtime_client}, cloud {mtime_cloud}")
+                        client_download_list.append(
+                            {"addr": key, "idx": str(cloud_dic[key]["idx"])}
+                        )  # , 'md5':cloud_dic[key]['md5']})
             else:
                 if (
                     key in cloud_dic
@@ -304,11 +322,15 @@ class SyncAPIView(APIView):
             logger.debug(
                 f"cloud_remove_list {len(cloud_remove_list)}, {cloud_remove_list[:3]} ..."
             )
+            logger.debug(
+                f"conflict_list {len(conflict_list)}, {conflict_list[:3]} ..."
+            )
         else:
             logger.debug(f"client_remove_list {len(client_remove_list)}")
             logger.debug(f"client_download_list {len(client_download_list)}")
             logger.debug(f"client_upload_list {len(client_upload_list)}")
             logger.debug(f"cloud_remove_list {len(cloud_remove_list)}")
+            logger.debug(f"conflict_list {len(conflict_list)}")
 
         delete_entry(uid, cloud_remove_list)
 
@@ -318,5 +340,6 @@ class SyncAPIView(APIView):
                     "download_list": client_download_list,
                     "upload_list": client_upload_list,
                     "cloud_remove_list": cloud_remove_list,
+                    "conflict_list": conflict_list,
                 }
             )
