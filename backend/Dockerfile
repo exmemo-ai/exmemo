@@ -2,13 +2,13 @@
 # docker run --rm -it --net=host exmemo # 运行
 # docker run --rm -it --net=host exmemo bash # 开发
 
-FROM python:3.11
+FROM python:3.11-slim
 
 MAINTAINER XieYan
 
 COPY sources.list /etc/apt/
 RUN apt-get update -y --force-yes
-RUN apt-get install vim openssh-server -y --force-yes
+RUN apt-get install git vim openssh-server -y --force-yes
 RUN apt-get install gettext unrar -y --force-yes
 
 RUN echo '[global]' > /etc/pip.conf && \

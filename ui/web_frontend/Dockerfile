@@ -6,8 +6,11 @@ WORKDIR /opt/exmemo/ui/web_frontend
 COPY . /opt/exmemo/ui/web_frontend
 
 # 安装依赖
-RUN echo "registry = http://registry.npm.taobao.org/" >> $HOME/.npmrc \
-    && npm install -g @vue/cli \
+#RUN echo "registry = http://registry.npm.taobao.org/" >> $HOME/.npmrc \
+#    && npm install -g @vue/cli \
+#    && npm install vue-i18n \
+#    && npm install
+RUN npm install -g @vue/cli \
     && npm install vue-i18n \
     && npm install
 

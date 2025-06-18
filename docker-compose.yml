@@ -28,8 +28,8 @@ services:
     build:
       context: ./ui/web_frontend
       args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTP_PROXY}
   efrontend_dev:
     image: node_efrontend:latest
     container_name: efrontend_dev
@@ -43,8 +43,8 @@ services:
     build:
       context: ./ui/web_frontend
       args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}      
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTP_PROXY}
     volumes:
       - ${HOST_SRC_DIR}:/opt/
     entrypoint: ["sh", "-c"]
@@ -61,8 +61,8 @@ services:
     build:
       context: ./backend
       args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend
     env_file:
       - backend/.env
@@ -77,8 +77,8 @@ services:
     build:
       context: ./backend
       args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend_dev
     env_file:
       - backend/.env
@@ -114,7 +114,7 @@ services:
       - |
         cd /opt/chatgpt-on-wechat/
         python app.py
-    #profiles: if you don't want to start this service, you can open these
+    profiles: #if you don't want to start this service, you can open these
       - ewechat   
   eminio:
     image: bitnami/minio:2024.3.3
