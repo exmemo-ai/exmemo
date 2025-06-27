@@ -339,7 +339,7 @@ class EntrySearchBuilder:
             return None
         
         query_args_emb = query_args.copy()
-        query_args_emb["block_id"] = 0
+        #query_args_emb["block_id"] = 0
         query_args_emb['embeddings__isnull'] = False
         query_args_emb['emb_model'] = current_model_name
         
