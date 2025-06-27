@@ -218,9 +218,11 @@ class EmbeddingTools:
         except Exception as e:
             logger.warning(f"Failed to load user embedding scope setting: {e}")
         
+        """
         val = os.getenv("USE_EMBEDDING", "False")
         if val.lower() != "true":
             return False
+        """
         
         embedding_type, embedding_url, embedding_model, embedding_apikey = self._load_embedding_setting()
         
