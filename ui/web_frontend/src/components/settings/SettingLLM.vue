@@ -76,6 +76,40 @@
                 </template>
             </div>
         </div>
+
+        <div class="settings-section">
+            <div class="settings-section-header">
+                {{ $t('settings.embeddingSettings') }}
+            </div>
+            <div class="settings-section-content">
+                <el-form-item :label="$t('settings.serviceType')">
+                    <el-radio-group v-model="embedding_type">
+                        <el-radio value="ollama">Ollama</el-radio>
+                        <el-radio value="openai">OpenAI</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                
+                <el-form-item :label="$t('apiUrl')">
+                    <el-input v-model="embedding_url" placeholder="http://localhost:11434" style="width: 300px;"></el-input>
+                </el-form-item>
+                
+                <el-form-item :label="$t('model')">
+                    <el-input v-model="embedding_model" placeholder="nomic-embed-text" style="width: 300px;"></el-input>
+                </el-form-item>
+                
+                <el-form-item :label="$t('apiKey')" v-if="embedding_type === 'openai'">
+                    <el-input v-model="embedding_apikey" style="width: 300px;"></el-input>
+                </el-form-item>
+                
+                <el-form-item :label="$t('settings.embeddingScope')">
+                    <el-radio-group v-model="embedding_scope">
+                        <el-radio value="none">{{ $t('settings.noEmbedding') }}</el-radio>
+                        <el-radio value="all">{{ $t('settings.allContent') }}</el-radio>
+                        <el-radio value="meta">{{ $t('settings.titleAndDescription') }}</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+            </div>
+        </div>
     </el-form>
 </template>
 
@@ -83,6 +117,11 @@
 import { useI18n } from 'vue-i18n';
 import { watch } from 'vue';
 import SettingService from '@/components/settings/settingService';
+
+const DEFAULT_EMBEDDING_TYPE = 'openai';
+const DEFAULT_EMBEDDING_URL = 'https://api.openai.com/v1'; //'http://localhost:11434';
+const DEFAULT_EMBEDDING_MODEL = 'text-embedding-ada-002';
+const DEFAULT_EMBEDDING_SCOPE = 'none';
 
 export default {
     setup() {
@@ -104,6 +143,11 @@ export default {
             llm_tool_apikey: '',
             llm_tool_url: '',
             llm_tool_model: '',
+            embedding_type: DEFAULT_EMBEDDING_TYPE,
+            embedding_url: DEFAULT_EMBEDDING_URL,
+            embedding_model: DEFAULT_EMBEDDING_MODEL,
+            embedding_apikey: '',
+            embedding_scope: DEFAULT_EMBEDDING_SCOPE
         }
     },
     async created() {
@@ -125,6 +169,13 @@ export default {
             this.llm_tool_apikey = tool_info.apikey || '';
             this.llm_tool_url = tool_info.url || '';
             this.llm_tool_model = tool_info.model || '';
+
+            const embedding_info = settings.setting.embedding_model || {};
+            this.embedding_type = embedding_info.type || DEFAULT_EMBEDDING_TYPE;
+            this.embedding_url = embedding_info.url || DEFAULT_EMBEDDING_URL;
+            this.embedding_model = embedding_info.model || DEFAULT_EMBEDDING_MODEL;
+            this.embedding_apikey = embedding_info.apikey || '';
+            this.embedding_scope = settings.setting.embedding_scope || DEFAULT_EMBEDDING_SCOPE;
         }
 
         const basicSettings = ['llm_chat_prompt', 'llm_chat_show_count', 
@@ -159,6 +210,23 @@ export default {
                 });
                 SettingService.getInstance().setSetting('llm_tool_model', modelInfo);
             });
+        });
+
+        const embeddingModelKeys = ['embedding_type', 'embedding_url', 'embedding_model', 'embedding_apikey'];
+        embeddingModelKeys.forEach(key => {
+            watch(() => this[key], () => {
+                const modelInfo = JSON.stringify({
+                    type: this.embedding_type,
+                    url: this.embedding_url,
+                    model: this.embedding_model,
+                    apikey: this.embedding_apikey
+                });
+                SettingService.getInstance().setSetting('embedding_model', modelInfo);
+            });
+        });
+
+        watch(() => this.embedding_scope, (newVal) => {
+            SettingService.getInstance().setSetting('embedding_scope', newVal);
         });
     }
 }

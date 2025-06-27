@@ -16,7 +16,7 @@ from django.utils.translation import gettext as _
 from django.db.models import Max
 from knox.auth import TokenAuthentication
 
-from backend.common.llm.llm_hub import EmbeddingTools
+from backend.common.llm.embedding import embedding_manager
 from backend.common.user.utils import parse_common_args
 from backend.common.utils.net_tools import do_result
 
@@ -84,13 +84,12 @@ class SyncAPIView(APIView):
     def do_regerate_embedding(self, args, request):
         uid = args["user_id"]
         addrs = request.GET.get("addr_list", request.POST.get("addr_list", "[]"))
-        use_embedding = EmbeddingTools.use_embedding()
         addrs = json.loads(addrs)
         logger.info(f"regerate embedding addrs {len(addrs)} {addrs[0]}...")
 
         # Update embedding of addrs in the database
         emb_status = "success"
-        emb_model = EmbeddingTools.get_model_name(use_embedding)
+        emb_model = embedding_manager.get_model_name(uid)
         if emb_model is None:
             return do_result(False, {"emb_status": "no embedding model"})
         for addr in addrs:
@@ -105,7 +104,6 @@ class SyncAPIView(APIView):
         Check which files need to regenerate embeddings
         """
         uid = args["user_id"]
-        use_embedding = EmbeddingTools.use_embedding()
         entries = (
             StoreEntry.objects.filter(user_id=uid, is_deleted=False, raw__isnull=False)
             .exclude(raw__exact="")
@@ -113,7 +111,7 @@ class SyncAPIView(APIView):
         )
         entries = entries.distinct()
         addr_list = []
-        model_name = EmbeddingTools.get_model_name(use_embedding)
+        model_name = embedding_manager.get_model_name(uid)
         if model_name is not None:
             for entry in entries:
                 if entry["emb_model"] == model_name:

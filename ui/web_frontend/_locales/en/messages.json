@@ -389,7 +389,13 @@
         "imageStorageLocation": "Image storage location",
         "baiduOCRAppId": "Baidu OCR App ID",
         "baiduOCRApiKey": "Baidu OCR API Key",
-        "baiduOCRSecretKey": "Baidu OCR Secret Key"
+        "baiduOCRSecretKey": "Baidu OCR Secret Key",
+        "embeddingSettings": "Embedding Settings",
+        "serviceType": "Service Type",
+        "embeddingScope": "Embedding Scope",
+        "noEmbedding": "No Embedding",
+        "allContent": "All Content",
+        "titleAndDescription": "Title and Description Only"
     },
     "player": {
         "prevPara": "Prev Para",

@@ -5,16 +5,19 @@ To handle file-related operations
 import os
 import json
 import pytz
+import re
 from typing import Any
 from loguru import logger
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Case, When
 from django.contrib.postgres.search import TrigramSimilarity
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
+from pgvector.django import CosineDistance
+from django.db.models.query import QuerySet
 
+from backend.common.llm.embedding import embedding_manager
 from backend.common.files import utils_filemanager, filecache
-from backend.common.llm.llm_hub import EmbeddingTools
 from backend.common.parser import converter, utils_md
 from backend.common.parser.md_parser import MarkdownParser
 from backend.common.utils.file_tools import is_plain_text, convert_to_md
@@ -30,7 +33,12 @@ from .entry_storage import EntryStorage
 REL_DIR_FILES = "files"
 REL_DIR_NOTES = "notes"
 DESC_LENGTH = 50
-# get PARSE_CONTENT from backend env settings
+# Get PARSE_CONTENT from backend env settings
+
+
+class EmbeddingNotAvailableError(Exception):
+    """Exception raised when embedding search is requested but not available"""
+    pass
 
 
 class EntryService:
@@ -237,12 +245,11 @@ def regerate_embedding(uid, addr, emb_model):
     Regenerate the embedding for the specified user and address
     call from app_sync
     """
-    use_embedding = EmbeddingTools.use_embedding()
     entries = StoreEntry.objects.filter(user_id=uid, addr=addr)
-    if len(entries) == 0 or not use_embedding:
+    if len(entries) == 0 or not embedding_manager.use_embedding(uid):
         return False
     all_splits = [entry.raw for entry in entries]
-    ret_emb, embeddings = EmbeddingTools.do_embedding(all_splits, True)
+    ret_emb, embeddings = embedding_manager.do_embedding(uid, all_splits)
     if ret_emb:
         for entry, embedding in zip(entries, embeddings):
             entry.embeddings = embedding
@@ -276,75 +283,339 @@ def get_entry(idx):
 
 
 def escape_regex(s):
+    # 保证关键字中的特殊字符被正确转义，不被识别为正则表达式的特殊字符
     special_chars = r"[]()*+?.^$|{}\/"
     return "".join("\\" + c if c in special_chars else c for c in s)
 
 
-def get_entry_list(keywords, query_args, max_count=-1, fields=None):
-    query_args["block_id"] = 0
-    query_args["is_deleted"] = False
-    if fields is None:
-        fields = [
-            "idx",
-            "block_id",
-            "raw",
-            "title",
-            "etype",
-            "atype",
-            "ctype",
-            "status",
-            "addr",
-            "path",
-            "created_time",
-            "updated_time",
-        ]
-    if keywords is not None and len(keywords) > 0:
-        keywords = regular_keyword(keywords)
-        keyword_arr = keywords.split(" ")
-        escaped_keywords = escape_regex(keywords)
-        escaped_keyword_arr = [escape_regex(k) for k in keyword_arr]
+class EntrySearchBuilder:
+    
+    @staticmethod
+    def build_title_query(keyword_array, query_args, fields):
+        escaped_keyword_arr = [escape_regex(k) for k in keyword_array]
+        query_args_title = query_args.copy()
+        query_args_title["block_id"] = 0
+        
+        q_obj = Q()
+        for keyword in escaped_keyword_arr:
+            q_obj &= Q(title__iregex=keyword)
+        
+        return StoreEntry.objects.filter(q_obj, **query_args_title).values(*fields)
 
-        queryset = StoreEntry.objects.filter(
-            addr__iregex=escaped_keywords, **query_args
-        ).values(*fields)
+    @staticmethod
+    def build_raw_content_query(keyword_array, query_args, fields):
+        escaped_keyword_arr = [escape_regex(k) for k in keyword_array]
+        q_obj = Q()
+        for keyword in escaped_keyword_arr:
+            q_obj &= Q(raw__iregex=keyword)
+        
+        return StoreEntry.objects.filter(q_obj, **query_args).values(*fields)
 
-        if not queryset.exists():
-            # find by title
-            q_obj = Q()
-            for keyword in escaped_keyword_arr:
-                q_obj &= Q(title__iregex=keyword)
-            queryset = StoreEntry.objects.filter(q_obj, **query_args).values(*fields)
+    @staticmethod
+    def build_tag_query(keyword_array, query_args, fields):
+        q_obj = Q()
+        for tag in keyword_array:
+            escaped_tag = escape_regex(tag)
+            logger.warning('Processing tag: {}'.format(escaped_tag))
+            raw_query = Q(raw__iregex=escaped_tag)
+            if tag.startswith('#'):
+                tag = tag[1:]
+            meta_query = Q(meta__icontains=f'"{tag}"')
+            q_obj &= (raw_query | meta_query)
+        
+        return (StoreEntry.objects.filter(q_obj, **query_args)
+                .order_by('addr', 'block_id')
+                .distinct('addr')
+                .values(*fields))
 
-        if not queryset.exists():
-            # find by raw
-            q_obj = Q()
-            for keyword in escaped_keyword_arr:
-                q_obj &= Q(raw__iregex=keyword)
-            query_args_2 = query_args.copy()
-            query_args_2.pop("block_id")
-            queryset = StoreEntry.objects.filter(q_obj, **query_args_2).values(*fields)
-            if queryset.exists():
-                queryset = queryset.order_by("addr", "block_id").distinct("addr")
+    @staticmethod
+    def build_embedding_query(keywords, query_args, fields):
+        ret, query_vector = embedding_manager.do_embedding(query_args['user_id'], [keywords])
+        if not ret or query_vector is None:
+            return None
+        
+        query_args_emb = query_args.copy()
+        query_args_emb["block_id"] = 0
+        query_args_emb['embeddings__isnull'] = False
+        
+        return StoreEntry.objects.filter(**query_args_emb).annotate(
+            similarity=1 - CosineDistance('embeddings', query_vector[0])
+        ).filter(
+            similarity__gt=0.6
+        ).order_by('-similarity').values(*fields)
 
-        if not queryset.exists():
-            # find by title trigram
-            queryset = (
-                StoreEntry.objects.filter(**query_args)
-                .annotate(
-                    similarity=TrigramSimilarity("title", keywords),
-                )
-                .filter(similarity__gt=0.05)
-                .order_by("-similarity")
-                .values(*fields)
+    @staticmethod
+    def build_trigram_query(keywords, query_args, fields):
+        return (
+            StoreEntry.objects.filter(**query_args)
+            .annotate(
+                similarity=TrigramSimilarity("title", keywords),
             )
-    else:
-        queryset = StoreEntry.objects.filter(**query_args).values(*fields)
+            .filter(similarity__gt=0.05)
+            .order_by("-similarity")
+            .values(*fields)
+        )
 
-    # Apply slicing only if max_count > 0
-    if max_count > 0:
-        queryset = queryset[:max_count]
-    return queryset
 
+class EntrySearchEngine:
+    
+    def __init__(self):
+        self.builder = EntrySearchBuilder()
+    
+    @staticmethod
+    def merge_querysets(all_querysets):
+        all_entries = []
+        seen_ids = set()
+        
+        for qs in all_querysets:
+            if hasattr(qs, '__iter__'):
+                for entry in qs:
+                    if entry['idx'] not in seen_ids:
+                        all_entries.append(entry)
+                        seen_ids.add(entry['idx'])
+        
+        return all_entries
+
+    @staticmethod
+    def sort_and_deduplicate_by_addr(queryset):
+        if len(queryset) == 0:
+            return queryset
+        
+        queryset.sort(key=lambda x: (x.get('addr', ''), x.get('block_id', 0)))
+        
+        seen_addrs = set()
+        unique_entries = []
+        for entry in queryset:
+            addr = entry.get('addr')
+            if addr not in seen_addrs:
+                unique_entries.append(entry)
+                seen_addrs.add(addr)
+        
+        return unique_entries
+
+    @staticmethod
+    def apply_exclusion_filter(queryset, exclude):
+        if not exclude or exclude.strip() == '':
+            return queryset
+        
+        filtered_entries = []
+        for entry in queryset:
+            should_exclude = False
+            
+            if not should_exclude and 'path' in entry and entry['path']:
+                if EntrySearchEngine.should_exclude_entry(entry['path'], exclude):
+                    should_exclude = True
+            
+            if not should_exclude:
+                filtered_entries.append(entry)
+        
+        return filtered_entries
+
+    @staticmethod
+    def should_exclude_entry(file_path, exclude_rules):
+        """
+        Check if an entry should be excluded based on exclude rules
+        Similar to shouldExcludeFile function in search_local_data.ts
+        """
+        if not exclude_rules or exclude_rules.strip() == '':
+            return False
+        
+        rules = [rule.strip() for rule in exclude_rules.split(',') if rule.strip() != '']
+        
+        for rule in rules:
+            # Convert glob pattern to regex
+            # Escape regex special characters except *
+            regex_pattern = re.escape(rule).replace(r'\*', '.*')
+            
+            try:
+                regex = re.compile(f'^{regex_pattern}$')
+                
+                # Check if complete path matches
+                if regex.match(file_path):
+                    return True
+                
+                # Check if any part of the path matches
+                path_parts = file_path.split('/')
+                for part in path_parts:
+                    if regex.match(part):
+                        return True
+                
+                # Check if any directory level relative path matches
+                for i in range(len(path_parts)):
+                    partial_path = '/'.join(path_parts[i:])
+                    if regex.match(partial_path):
+                        return True
+                        
+            except re.error:
+                # If regex compilation fails, skip this rule
+                continue
+        
+        return False
+    
+    @staticmethod
+    def parse_search_input(keyword):
+        """
+        Parse search input to determine search type and extract keywords
+        Similar to parseSearchInput function in TypeScript
+        """
+        search_type = 'keyword'
+        search_value = keyword
+        keyword_array = []
+        
+        if keyword.startswith('tag:'):
+            search_type = 'tag'
+            search_value = keyword[4:].strip()
+            
+            # Split tag terms and format them
+            tag_terms = search_value.split()
+            for term in tag_terms:
+                if term:
+                    formatted_tag = term if term.startswith('#') else '#' + term
+                    keyword_array.append(formatted_tag)
+            
+            if not keyword_array and search_value.strip():
+                tag_value = search_value.strip()
+                formatted_tag = tag_value if tag_value.startswith('#') else '#' + tag_value
+                keyword_array.append(formatted_tag)
+                
+        elif keyword.startswith('file:'):
+            search_type = 'file'
+            search_value = keyword[5:].strip()
+            keyword_array = [search_value] if search_value else []
+            
+        else:
+            search_type = 'keyword'
+            search_value = keyword
+            # Parse keywords similar to parseKeywords function
+            keyword_array = EntrySearchEngine.parse_keywords(search_value)
+        
+        # Filter out empty keywords
+        keyword_array = [kw.strip() for kw in keyword_array if kw.strip()]
+        
+        return {
+            'search_type': search_type,
+            'search_value': search_value,
+            'keyword_array': keyword_array
+        }
+
+    @staticmethod
+    def parse_keywords(search_value):
+        """
+        Parse keywords from search value, handling quoted phrases
+        Similar to parseKeywords function in TypeScript
+        """
+        keyword_array = []
+        # Match phrases in quotes and words outside quotes
+        regex = r'"([^"]+)"|(\S+)'
+        matches = re.findall(regex, search_value)
+        
+        for match in matches:
+            term = match[0] or match[1]  # quoted phrase or single word
+            if term and term.strip():
+                keyword_array.append(term.strip())
+        
+        # logger.error(f"Parsed keywords: {keyword_array}")
+        return keyword_array
+    
+
+    def execute_keyword_search(self, keyword_array, keywords, query_args, fields, max_count, method):
+        all_querysets = []
+        
+        # 1. Title search
+        title_queryset = self.builder.build_title_query(keyword_array, query_args, fields)
+        all_querysets.append(title_queryset)
+        # logger.error(f"title search count {title_queryset.count()}")
+        
+        # 2. Raw content search (if results are insufficient)
+        if max_count == -1 or title_queryset.count() < max_count:
+            raw_queryset = self.builder.build_raw_content_query(keyword_array, query_args, fields)
+            all_querysets.append(raw_queryset)
+            # logger.error(f"raw search count after title search")
+        
+        # 3. Vector search (if enabled and results are insufficient)
+        current_count = sum(qs.count() for qs in all_querysets)
+        if (max_count == -1 or current_count < max_count and 
+            method == "embeddingSearch" and embedding_manager.use_embedding(query_args['user_id'])):
+            embedding_queryset = self.builder.build_embedding_query(keywords, query_args, fields)
+            if embedding_queryset is not None:
+                all_querysets.append(embedding_queryset)
+                # logger.error(f"added embedding search")
+        
+        # 4. Fuzzy search (if enabled and results are insufficient)
+        current_count = sum(qs.count() for qs in all_querysets)
+        if (max_count == -1 or current_count < max_count and 
+            (method == "fuzzySearch" or method == "auto")):
+            trigram_queryset = self.builder.build_trigram_query(keywords, query_args, fields)
+            all_querysets.append(trigram_queryset)
+        
+        queryset = self.merge_querysets(all_querysets)
+        # logger.error(f"4 final count {len(queryset)}")
+        
+        queryset = self.sort_and_deduplicate_by_addr(queryset)
+        
+        return queryset
+    
+    def search(self, keywords, query_args, max_count=-1, fields=None, method="auto", exclude=None):
+        query_args["is_deleted"] = False
+        if fields is None:
+            fields = [
+                "idx", "block_id", "raw", "title", "etype", "atype", "ctype",
+                "status", "addr", "path", "created_time", "updated_time",
+            ]
+        
+        if keywords is not None and len(keywords) > 0:
+            keywords = regular_keyword(keywords)
+            # Parse search input to determine search type
+            parsed_input = EntrySearchEngine.parse_search_input(keywords)
+            search_type = parsed_input['search_type']
+            keyword_array = parsed_input['keyword_array']
+            
+            if not keyword_array:
+                return []
+
+            if method == "embeddingSearch" and not embedding_manager.use_embedding(query_args['user_id']):
+                raise EmbeddingNotAvailableError(_("Embedding search is not available. Please enable embedding in system settings."))
+
+            # logger.error(f"method {method} keywords {keywords} search_type {search_type}")
+            
+            # Handle different search types
+            if search_type == 'tag':
+                queryset = self.builder.build_tag_query(keyword_array, query_args, fields)
+                # logger.error(f"tag search count {queryset.count()}")
+            elif search_type == 'file':
+                query_args['block_id'] = 0
+                queryset = self.builder.build_title_query(keyword_array, query_args, fields)
+                # logger.error(f"file search count {queryset.count()}")
+            else:  # keyword search
+                queryset = self.execute_keyword_search(
+                    keyword_array, keywords, query_args, fields, max_count, method
+                )
+
+            # Apply exclude logic if provided
+            queryset = self.apply_exclusion_filter(queryset, exclude)
+        else:
+            query_args['block_id'] = 0
+            queryset = StoreEntry.objects.filter(**query_args).values(*fields)
+        
+        # Apply slicing only if max_count > 0
+        if max_count > 0:
+            queryset = queryset[:max_count]
+            
+        return queryset
+
+
+def get_entry_list(keywords, query_args, max_count=-1, fields=None, method="auto", exclude=None):
+    search_engine = EntrySearchEngine()
+    result_list = search_engine.search(keywords, query_args, max_count, fields, method, exclude)
+
+    if isinstance(result_list, QuerySet):
+        return result_list
+    elif isinstance(result_list, list) and len(result_list) > 0:
+        idx_list = [item['idx'] for item in result_list if 'idx' in item]
+        if idx_list:
+            preserved_order = Case(*[When(idx=pk, then=pos) for pos, pk in enumerate(idx_list)])
+            return StoreEntry.objects.filter(idx__in=idx_list).order_by(preserved_order)
+    return StoreEntry.objects.none()
 
 def get_type_options(ctype):
     try:

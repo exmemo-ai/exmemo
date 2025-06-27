@@ -24,6 +24,7 @@ from backend.common.parser.converter import convert, is_support
 from backend.settings import USE_CELERY
 
 from .entry import delete_entry, add_data, get_entry_list
+from .entry import EmbeddingNotAvailableError
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
 from .zipfile import is_compressed_file
@@ -148,14 +149,14 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         """
         get entry list by page
         """
-        debug = True  # for test
-        count_limit = -1
+        debug = False
         query_args = {}
         user_id = get_user_id(request)
         if user_id is None:
             return Response([])
         else:
             query_args["user_id"] = user_id
+            
         max_count = request.GET.get("max_count", -1)
         max_count = int(max_count)
         etype = request.GET.get("etype", None)
@@ -164,10 +165,12 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         ctype = request.GET.get("ctype", None)
         if ctype is not None and len(ctype) > 0:
             query_args["ctype"] = ctype
-        status = request.GET.get("status", None)
-        if status is not None and len(status) > 0:
-            query_args["status"] = status
+        rstatus = request.GET.get("status", None)
+        if rstatus is not None and len(rstatus) > 0:
+            query_args["status"] = rstatus
+        method = request.GET.get("method", 'auto')
         keywords = request.GET.get("keyword", None)
+        exclude = request.GET.get("exclude", None)
         start_date = request.GET.get("start_date", None)
         end_date = request.GET.get("end_date", None)
         if start_date is not None and len(start_date) > 0:
@@ -182,20 +185,27 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         if debug:
             logger.debug(f"args {query_args}, keyword {keywords}")
 
-        if max_count != -1:
-            count_limit = max_count
-        queryset = get_entry_list(keywords, query_args, count_limit)
-
-        if max_count == -1:
-            # Use DRF pagination for unlimited results
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
-        else:
-            # Limit results if max_count is specified
-            serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data)
+        try:
+            queryset = get_entry_list(keywords, query_args, max_count if max_count != -1 else -1, method=method, exclude=exclude)
+            
+            if max_count == -1:
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+                else:
+                    serializer = self.get_serializer(queryset, many=True)
+                    return Response(serializer.data)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+                return Response(serializer.data)
+                
+        except EmbeddingNotAvailableError as e:
+            logger.warning(f"Embedding not available: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except Exception as e:
+            logger.error(f"Error in list: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, *args, **kwargs):
         try:

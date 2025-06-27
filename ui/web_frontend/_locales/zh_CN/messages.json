@@ -388,7 +388,13 @@
         "imageStorageLocation": "图片存储位置",
         "baiduOCRAppId": "百度OCR APPID",
         "baiduOCRApiKey": "百度OCR API Key",
-        "baiduOCRSecretKey": "百度OCR Secret Key"
+        "baiduOCRSecretKey": "百度OCR Secret Key",
+        "embeddingSettings": "向量化设置",
+        "serviceType": "服务类型",
+        "embeddingScope": "向量化范围",
+        "noEmbedding": "不进行向量化",
+        "allContent": "全部内容",
+        "titleAndDescription": "仅标题和描述"
     },
     "player": {
         "prevPara": "上一段",

@@ -6,7 +6,7 @@ import numpy as np
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from backend.common.llm.llm_hub import EmbeddingTools
+from backend.common.llm.embedding import embedding_manager
 from backend.common.files import utils_filemanager
 from .models import StoreEntry
 from .entry_item import EntryItem
@@ -70,15 +70,15 @@ class EntryStorage:
                     db_entry.raw != abstract or
                     db_entry.embeddings is None or
                     len(db_entry.embeddings) == 0 or
-                    db_entry.emb_model != EmbeddingTools.get_model_name()
+                    db_entry.emb_model != embedding_manager.get_model_name(entry.user_id)
                 )
                 
                 db_entry.raw = abstract
-                if EmbeddingTools.use_embedding() and need_new_embedding:
-                    ret, embeddings = EmbeddingTools.do_embedding([abstract], True)
+                if embedding_manager.use_embedding(entry.user_id) and need_new_embedding:
+                    ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                     if ret:
                         db_entry.embeddings = embeddings[0]
-                        db_entry.emb_model = EmbeddingTools.get_model_name()
+                        db_entry.emb_model = embedding_manager.get_model_name(entry.user_id)
             db_entry.save()
             if content:
                 ret_emb = EntryStorage._save_content_blocks(entry, content)
@@ -104,13 +104,13 @@ class EntryStorage:
             
         entry_dict = entry.to_model_dict()
         entry_dict['block_id'] = 0
-        entry_dict['emb_model'] = EmbeddingTools.get_model_name()
+        entry_dict['emb_model'] = embedding_manager.get_model_name(entry.user_id)
         
         abstract = entry.meta.get("description") if entry.meta else None
         if abstract:
             entry_dict['raw'] = abstract
-            if EmbeddingTools.use_embedding():
-                ret, embeddings = EmbeddingTools.do_embedding([abstract], True)
+            if embedding_manager.use_embedding(entry.user_id):
+                ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                 if ret:
                     entry_dict['embeddings'] = embeddings[0]
         StoreEntry.objects.create(**entry_dict)
@@ -132,13 +132,13 @@ class EntryStorage:
             existing_blocks.delete()
             return True
             
-        blocks = EmbeddingTools.split(content) or [content]
+        blocks = embedding_manager.split(content) or [content]
         
         if len(blocks) != (existing_blocks.count() if has_existing else 0):
             existing_blocks.delete()
             has_existing = False
         
-        if not EmbeddingTools.use_embedding():
+        if not embedding_manager.use_embedding(entry.user_id):
             embeddings = []
             for i, block_text in enumerate(blocks):
                 if has_existing:
@@ -157,15 +157,15 @@ class EntryStorage:
                     old_block = existing_blocks[i]
                     if (safe_equals(old_block.raw, block_text) and 
                         old_block.embeddings is not None and 
-                        old_block.emb_model == EmbeddingTools.get_model_name()):
+                        old_block.emb_model == embedding_manager.get_model_name(entry.user_id)):
                         embeddings[i] = old_block.embeddings
                         continue
                 
                 blocks_need_embedding.append(block_text)
-                embedding_indices.append(i)
+                embedding_indices.append(i) # 只更新不一样的块
             
             if len(blocks_need_embedding) > 0:
-                ret, new_embeddings = EmbeddingTools.do_embedding(blocks_need_embedding, True)
+                ret, new_embeddings = embedding_manager.do_embedding(entry.user_id, blocks_need_embedding)
                 if debug:
                     logger.debug(f"embeddings {ret} {len(new_embeddings)}")
                 if not ret:
@@ -179,7 +179,7 @@ class EntryStorage:
                 block_id=i+1,
                 raw=block_text,
                 embeddings=embedding,
-                emb_model=EmbeddingTools.get_model_name() if embedding is not None else None,
+                emb_model=embedding_manager.get_model_name(entry.user_id) if embedding is not None else None,
                 idx=None,
                 meta=None
             )

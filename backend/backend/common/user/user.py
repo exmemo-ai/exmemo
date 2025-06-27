@@ -43,6 +43,8 @@ class UserSettings:
     tts_voice: str = "caicai"
     llm_chat_model: dict = field(default_factory=dict)
     llm_tool_model: dict = field(default_factory=dict)
+    embedding_model: dict = field(default_factory=dict)
+    embedding_scope: str = "all"
     llm_chat_prompt: str = DEFAULT_CHAT_LLM_PROMPT
     llm_chat_show_count: int = DEFAULT_CHAT_LLM_SHOW_COUNT
     llm_chat_memory_count: int = DEFAULT_CHAT_LLM_MEMORY_COUNT
@@ -92,7 +94,7 @@ class UserSettings:
         return default_value
 
     def __repr__(self):
-        return f"<UserSettings {self.tts_engine} {self.tts_langugage} {self.tts_speed} {self.llm_chat_model} {self.llm_tool_model}>"
+        return f"<UserSettings {self.tts_engine} {self.tts_langugage} {self.tts_speed} {self.llm_chat_model} {self.llm_tool_model} {self.embedding_model} {self.llm_chat_prompt} {self.llm_chat_show_count} {self.llm_chat_memory_count} {self.llm_chat_max_context_count} {self.learn_word_voc} {self.default_vault} {self.batch_use_llm} {self.bookmark_download_web} {self.web_save_content} {self.web_get_category} {self.web_get_abstract} {self.file_save_content} {self.file_get_category} {self.file_get_abstract} {self.note_save_content} {self.note_get_category} {self.note_get_abstract} {self.truncate_content} {self.truncate_max_length} {self.truncate_mode}>"
 
 
 class UserPrivilege:

@@ -149,6 +149,7 @@ class SettingAPIView(APIView):
             'truncate_max_length', 'truncate_mode',
             'learn_word_voc', 'default_vault', 'image_storage_location',
             'baidu_ocr_app_id', 'baidu_ocr_api_key', 'baidu_ocr_secret_key',
+            'embedding_scope'
         ]
         
         boolean_settings = [
@@ -174,7 +175,7 @@ class SettingAPIView(APIView):
                     settings[key] = bool(value)
                 
         # json format
-        for model_key in ['llm_chat_model', 'llm_tool_model']:
+        for model_key in ['llm_chat_model', 'llm_tool_model', 'embedding_model']:
             if model_key in req_params:
                 value = req_params[model_key]
                 if value.startswith('{') and value.endswith('}'):
