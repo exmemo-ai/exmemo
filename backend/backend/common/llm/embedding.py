@@ -69,6 +69,9 @@ class EmbeddingManager:
     def use_embedding(self, uid: str) -> bool:
         return self.get_embedding_tools(uid).use_embedding()
     
+    def get_embedding_scope(self, uid: str) -> str:
+        return self.get_embedding_tools(uid).get_embedding_scope()
+    
     def do_embedding(self, uid: str, all_splits: list, debug: bool = False) -> tuple:
         return self.get_embedding_tools(uid).do_embedding(all_splits, debug)
     
@@ -187,6 +190,17 @@ class EmbeddingTools:
         if embedding_type == "none" or embedding_model == "none" or embedding_model is None:
             return None
         return embedding_model
+    
+    def get_embedding_scope(self):
+        try:
+            user = UserManager.get_instance().get_user(self.uid)
+            embedding_scope = user.get('embedding_scope', None)
+            if embedding_scope is not None:
+                return embedding_scope
+        except Exception as e:
+            logger.warning(f"Failed to load user embedding scope setting: {e}")
+        
+        return 'none'
     
     @staticmethod
     def split(raw, chunk_size=EMBEDDING_CHUNK_SIZE, chunk_overlap=50):

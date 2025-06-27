@@ -74,7 +74,8 @@ class EntryStorage:
                 )
                 
                 db_entry.raw = abstract
-                if embedding_manager.use_embedding(entry.user_id) and need_new_embedding:
+                embedding_scope = embedding_manager.get_embedding_scope(entry.user_id)
+                if embedding_scope != 'none' and need_new_embedding:
                     ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                     if ret:
                         db_entry.embeddings = embeddings[0]
@@ -109,7 +110,8 @@ class EntryStorage:
         abstract = entry.meta.get("description") if entry.meta else None
         if abstract:
             entry_dict['raw'] = abstract
-            if embedding_manager.use_embedding(entry.user_id):
+            embedding_scope = embedding_manager.get_embedding_scope(entry.user_id)
+            if embedding_scope != 'none':
                 ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                 if ret:
                     entry_dict['embeddings'] = embeddings[0]
@@ -138,7 +140,8 @@ class EntryStorage:
             existing_blocks.delete()
             has_existing = False
         
-        if not embedding_manager.use_embedding(entry.user_id):
+        embedding_scope = embedding_manager.get_embedding_scope(entry.user_id)
+        if embedding_scope != 'all':
             embeddings = []
             for i, block_text in enumerate(blocks):
                 if has_existing:

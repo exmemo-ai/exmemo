@@ -334,10 +334,26 @@ class EntrySearchBuilder:
         if not ret or query_vector is None:
             return None
         
+        current_model_name = embedding_manager.get_model_name(query_args['user_id'])
+        if current_model_name is None:
+            return None
+        
         query_args_emb = query_args.copy()
         query_args_emb["block_id"] = 0
         query_args_emb['embeddings__isnull'] = False
+        query_args_emb['emb_model'] = current_model_name
         
+        """
+        queryset_with_similarity = StoreEntry.objects.filter(**query_args_emb).annotate(
+            similarity=1 - CosineDistance('embeddings', query_vector[0])
+        ).filter(
+            similarity__gt=0.6
+        ).order_by('-similarity').values(*fields, 'similarity')
+        
+        logger.info(f"Embedding search results for keywords '{keywords}':")
+        for entry in queryset_with_similarity:
+            logger.info(f"  Entry {entry.get('idx', 'N/A')}: {entry.get('title', 'N/A')} - Similarity: {entry['similarity']:.4f}")
+        """
         return StoreEntry.objects.filter(**query_args_emb).annotate(
             similarity=1 - CosineDistance('embeddings', query_vector[0])
         ).filter(
@@ -539,7 +555,7 @@ class EntrySearchEngine:
             embedding_queryset = self.builder.build_embedding_query(keywords, query_args, fields)
             if embedding_queryset is not None:
                 all_querysets.append(embedding_queryset)
-                # logger.error(f"added embedding search")
+                logger.debug(f"added embedding search {embedding_queryset.count()}")
         
         # 4. Fuzzy search (if enabled and results are insufficient)
         current_count = sum(qs.count() for qs in all_querysets)
