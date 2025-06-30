@@ -45,7 +45,6 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         return DetailSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info("now create instance")
         """
         update files
         """
@@ -63,6 +62,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             dic["user_id"] = get_user_id(request)
             dic["source"] = request.POST.get("source", "web")
             is_async = request.POST.get("is_async", "false").lower() == "true"
+            logger.info(f"now create instance: {dic['etype']}, user_id {dic['user_id']}, is_async {is_async}")
             if dic["etype"] == "web":
                 addr = request.POST.get("addr", None)
                 if not addr.startswith("http"):

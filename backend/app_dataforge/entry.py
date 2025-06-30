@@ -107,7 +107,7 @@ class EntryService:
     
 
     @staticmethod
-    def _process_file_entry(entry: EntryItem, data: Any, use_llm: bool = True):
+    def _process_file_entry(entry: EntryItem, data: Any, use_llm: bool = True, debug: bool = False):
         user = UserManager.get_instance().get_user(entry.user_id)
         filename = os.path.basename(entry.addr)
 
@@ -136,6 +136,9 @@ class EntryService:
         if has_new_content and entry.md5 is None:
             entry.md5 = utils_md.get_file_md5(path)
 
+        need_feature_extraction = _should_extract_features(entry, user)
+        if debug:
+            logger.info(f"need_feature_extraction {need_feature_extraction}")
         meta_dic = {}
         content = None
         if has_new_content:
@@ -149,9 +152,12 @@ class EntryService:
 
         if meta_dic is not None and isinstance(meta_dic, dict):
             entry.meta.update(meta_dic)
-        ret = EntryFeatureTool.get_instance().parse(
-            entry, filename, use_llm=use_llm
-        )
+        
+        if need_feature_extraction:
+            ret = EntryFeatureTool.get_instance().parse(
+                entry, filename, use_llm=use_llm
+            )
+        
         return EntryStorage.save_entry(entry, content, has_new_content)
 
 
@@ -661,7 +667,7 @@ def get_type_options(ctype):
         return HttpResponse(json.dumps([]))
 
 
-def get_file_content_by_path(path, user):
+def get_file_content_by_path(path, user, debug=False):
     meta_data = {}
     content = None
     ret_convert = False
@@ -674,7 +680,8 @@ def get_file_content_by_path(path, user):
         ret_convert, md_path = convert_to_md(
             path, md_path, force=True, use_ocr=user.privilege.b_ocr
         )
-    logger.info("after convert")
+    if debug:
+        logger.info("after convert")
     if ret_convert:
         parser = MarkdownParser(md_path)
         meta_data = parser.fm
@@ -690,3 +697,64 @@ def add_data(obj, data=None, use_llm=True):
 
 def delete_entry(uid, filelist):
     return EntryStorage.delete_entry(uid, filelist)
+
+
+def _should_extract_features(entry: EntryItem, user) -> bool:
+    existing_entry = None
+    
+    if entry.idx:
+        try:
+            existing_entry = StoreEntry.objects.get(idx=entry.idx, block_id=0)
+        except StoreEntry.DoesNotExist:
+            pass
+    
+    if not existing_entry and entry.addr:
+        try:
+            existing_entry = StoreEntry.objects.filter(
+                user_id=entry.user_id, 
+                addr=entry.addr, 
+                block_id=0,
+                is_deleted=False
+            ).first()
+        except Exception:
+            pass
+    
+    if entry.idx is None and not existing_entry:
+        return True
+    
+    if existing_entry:
+        if _check_features_complete(existing_entry, user):
+            _copy_features_from_existing(entry, existing_entry)
+            return False
+        else:
+            return True
+    
+    return True
+
+def _check_features_complete(entry, user) -> bool:
+    if not entry.ctype or not entry.title:
+        return False
+    
+    needs_description = (
+        (entry.etype == "note" and user.get("note_get_abstract")) or
+        (entry.etype == "file" and user.get("file_get_abstract"))
+    )
+    
+    if needs_description:
+        meta = getattr(entry, 'meta', None) or {}
+        if not meta.get("description"):
+            return False
+    
+    return True
+
+
+def _copy_features_from_existing(entry: EntryItem, existing_entry) -> None:
+    entry.ctype = entry.ctype or existing_entry.ctype
+    entry.status = entry.status or existing_entry.status
+    entry.atype = entry.atype or existing_entry.atype
+    entry.title = entry.title or existing_entry.title
+    
+    if existing_entry.meta:
+        existing_meta = existing_entry.meta
+        if existing_meta.get("description") and not entry.meta.get("description"):
+            entry.meta["description"] = existing_meta["description"]

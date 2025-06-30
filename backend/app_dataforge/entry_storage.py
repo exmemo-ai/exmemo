@@ -20,7 +20,8 @@ class EntryStorage:
         has_new_content: bool = True,
         debug: bool = False
     ) -> tuple:
-        logger.info(f"save {str(entry.to_dict())[:200]}")
+        if debug:
+            logger.info(f"save {str(entry.to_dict())[:200]}")
         #logger.info(f"save {str(entry.to_dict())}")
         
         try:

@@ -29,7 +29,7 @@ def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, pro
 
         
 def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, 
-                 progress_callback=None, task_id=None):
+                 progress_callback=None, task_id=None, debug=False):
     debug = False
     success_list = []
     if len(file_paths) > 0 and len(filemd5s) == 0:
@@ -38,7 +38,8 @@ def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_creat
     total = len(file_paths)
     emb_status = "success" 
     for idx, (file_path, addr, md5) in enumerate(zip(file_paths, filepaths, filemd5s)):
-        logger.info(f"update_files idx:{idx}, path:{file_path}, addr:{addr}, md5:{md5}")
+        if debug:
+            logger.info(f"update_files idx:{idx}, path:{file_path}, addr:{addr}, md5:{md5}")
         if len(file_paths) == 1:
             ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, 
                                            progress_callback, task_id) # for single file, such as: zip
