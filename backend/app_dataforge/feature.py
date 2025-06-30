@@ -307,7 +307,7 @@ def get_features_by_llm(user_id, content, etype, title=None, use_llm=True, debug
             status_list=",".join(status_list)
         )
         
-        logger.error(f"now llm_query {query[:1000]}")
+        # logger.error(f"now llm_query {query[:1000]}") # for debugging
         ret, result, detail = llm_query_json(
             user_id, RECORD_ROLE, query, "data_manager", debug=debug
         )

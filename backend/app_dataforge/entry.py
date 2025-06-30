@@ -540,23 +540,28 @@ class EntrySearchEngine:
         return keyword_array
     
 
-    def execute_keyword_search(self, keyword_array, keywords, query_args, fields, max_count, method):
+    def execute_keyword_search(self, keyword_array, keywords, query_args, fields, max_count, method, debug=False):
         all_querysets = []
         
+        if debug:
+            logger.debug(f"Executing keyword search with keywords: {keywords}, method: {method}, max_count: {max_count}")
+
         # 1. Title search
         title_queryset = self.builder.build_title_query(keyword_array, query_args, fields)
         all_querysets.append(title_queryset)
-        # logger.error(f"title search count {title_queryset.count()}")
+        if debug:
+            logger.debug(f"title search count {title_queryset.count()}")
         
         # 2. Raw content search (if results are insufficient)
         if max_count == -1 or title_queryset.count() < max_count:
             raw_queryset = self.builder.build_raw_content_query(keyword_array, query_args, fields)
             all_querysets.append(raw_queryset)
-            # logger.error(f"raw search count after title search")
+            if debug:
+                logger.debug(f"raw search count after title search {raw_queryset.count()}")
         
         # 3. Vector search (if enabled and results are insufficient)
         current_count = sum(qs.count() for qs in all_querysets)
-        if (max_count == -1 or current_count < max_count and 
+        if ((max_count == -1 or current_count < max_count) and 
             method == "embeddingSearch" and embedding_manager.use_embedding(query_args['user_id'])):
             embedding_queryset = self.builder.build_embedding_query(keywords, query_args, fields)
             if embedding_queryset is not None:
@@ -565,13 +570,16 @@ class EntrySearchEngine:
         
         # 4. Fuzzy search (if enabled and results are insufficient)
         current_count = sum(qs.count() for qs in all_querysets)
-        if (max_count == -1 or current_count < max_count and 
+        if ((max_count == -1 or current_count < max_count) and 
             (method == "fuzzySearch" or method == "auto")):
             trigram_queryset = self.builder.build_trigram_query(keywords, query_args, fields)
             all_querysets.append(trigram_queryset)
+            if debug:
+                logger.debug(f"trigram search count {trigram_queryset.count()}")
         
         queryset = self.merge_querysets(all_querysets)
-        # logger.error(f"4 final count {len(queryset)}")
+        if debug:
+            logger.debug(f"final count {len(queryset)}")
         
         queryset = self.sort_and_deduplicate_by_addr(queryset)
         

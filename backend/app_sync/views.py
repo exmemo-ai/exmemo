@@ -10,7 +10,6 @@ from backend.common.user.user import *
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.db.models import Max
@@ -281,12 +280,17 @@ class SyncAPIView(APIView):
                     client_upload_list.append({"addr": key})
         # Benchmarked against cloud files
         count = 0
+        # Add protection: if lastSyncTime is 0 or epoch time, don't delete cloud files
+        # This prevents accidental deletion when sync settings are reset
+        sync_timestamp_ms = int(last_sync_time.timestamp() * 1000)
+        safe_to_delete_cloud_files = sync_timestamp_ms > 0
+        
         for key, value in cloud_dic.items():
             if key in client_dic:  # has been processed above
                 continue
             if not value["is_deleted"]:  # Is there a local in the cloud?
                 if (
-                    last_sync_time > value["mtime"]
+                    last_sync_time > value["mtime"] and safe_to_delete_cloud_files
                 ):  # Local files deleted after last sync
                     cloud_remove_list.append(
                         {"addr": value["addr"], "idx": str(value["idx"]), 
@@ -297,6 +301,16 @@ class SyncAPIView(APIView):
                         logger.info(
                             f"item {key} need db delete, last sync:{last_sync_time}, db file:{value['mtime']}"
                         )
+                    count += 1
+                elif last_sync_time > value["mtime"] and not safe_to_delete_cloud_files:
+                    # Log when deletion is prevented by safety check
+                    if count < 5:  # Only log first few instances
+                        logger.warning(
+                            f"Prevented deletion of cloud file {key} due to lastSyncTime safety check (lastSyncTime={last_sync_time})"
+                        )
+                    client_download_list.append(
+                        {"addr": key, "idx": str(cloud_dic[key]["idx"])}
+                    )
                     count += 1
                 else:
                     logger.info(
