@@ -731,6 +731,11 @@ def _should_extract_features(entry: EntryItem, user) -> bool:
         return True
     
     if existing_entry:
+        if isinstance(existing_entry.meta, str):
+            try:
+                existing_entry.meta = json.loads(existing_entry.meta)
+            except json.JSONDecodeError:
+                existing_entry.meta = {}
         if _check_features_complete(existing_entry, user):
             _copy_features_from_existing(entry, existing_entry)
             return False
