@@ -125,6 +125,7 @@ class EntryFeatureTool:
             if not user.get("web_get_category", True) and not needs_description:
                 return False
         
+        # logger.debug(f"need_llm: {entry.etype} {has_complete_basic_features} {needs_description} {has_description}")
         if has_complete_basic_features and (not needs_description or has_description):
             return False
             
@@ -170,9 +171,6 @@ class EntryFeatureTool:
             if handler:
                 handler(entry, content, use_llm, force, debug)
 
-            entry.status = entry.status or DEFAULT_STATUS
-            entry.atype = entry.atype or "subjective"
-            entry.ctype = entry.ctype or DEFAULT_CATEGORY
             entry.title = entry.title or content
 
             self._process_title_length(entry)
@@ -198,8 +196,6 @@ class EntryFeatureTool:
             if ret:
                 self._process_llm_result(entry, features, force)
 
-        entry.atype = "subjective"
-
     def _parse_note(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
         user = UserManager.get_instance().get_user(entry.user_id)
@@ -210,13 +206,10 @@ class EntryFeatureTool:
         logger.error(f'Note parse: {entry}');
         if self._need_llm(entry, user, force) and use_llm:
             ret, features = get_features_by_llm(
-                entry.user_id, entry.title, entry.etype, use_llm=use_llm, debug=debug
+                entry.user_id, content, entry.etype, use_llm=use_llm, debug=debug 
             )
             if ret:
                 self._process_llm_result(entry, features, force)
-                
-        entry.status = entry.status or "collect"
-        entry.atype = entry.atype or "subjective"
 
     def _parse_file(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
@@ -231,9 +224,6 @@ class EntryFeatureTool:
             )
             if ret:
                 self._process_llm_result(entry, features, force)
-                
-        entry.status = entry.status or "collect"
-        entry.atype = entry.atype or "third_party"
 
     def _parse_web(self, entry: EntryItem, content: str,
                    use_llm: bool, force: bool, debug: bool) -> None:

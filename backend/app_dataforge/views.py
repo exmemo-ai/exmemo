@@ -82,6 +82,14 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 files = request.FILES.getlist("files")
                 filepaths = request.POST.getlist("filepaths")
                 filemd5s = request.POST.getlist("filemd5s")
+                
+                if getattr(settings, 'IS_TRIAL_MODE', True):
+                    max_size = getattr(settings, 'TRIAL_MAX_FILE_SIZE', 20 * 1024 * 1024)
+                    for file in files:
+                        if not is_compressed_file(file.name) and file.size > max_size:
+                            size_mb = file.size / (1024 * 1024)
+                            return do_result(False, _("File '{}' ({:.1f}MB) exceeds the trial mode limit of 20MB for non-compressed files").format(file.name, size_mb))
+                
                 if debug:
                     logger.info(
                         f"do_upload files {files}, filepaths {filepaths},  filemd5s {filemd5s}"
@@ -317,6 +325,12 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(True, _("update_successfully"))
             # check update file
             elif request.FILES:
+                if getattr(settings, 'IS_TRIAL_MODE', True):
+                    max_size = getattr(settings, 'TRIAL_MAX_FILE_SIZE', 20 * 1024 * 1024)
+                    file = request.FILES['files']
+                    if not is_compressed_file(file.name) and file.size > max_size:
+                        size_mb = file.size / (1024 * 1024)
+                        return do_result(False, _("File '{}' ({:.1f}MB) exceeds the trial mode limit of 20MB for non-compressed files").format(file.name, size_mb))
                 ext = get_ext(instance.addr)
                 tmp_path = filecache.get_tmpfile(ext)
                 with open(tmp_path, "wb") as f:

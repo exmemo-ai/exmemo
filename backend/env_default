@@ -68,3 +68,6 @@ TIMEZONE='Asia/Shanghai'
 USE_CELERY='True'
 REDIS_HOST='192.168.10.168' 
 REDIS_PORT='6379'
+
+# TRIAL MODE
+IS_TRIAL_MODE='True'  # Set to False for production mode

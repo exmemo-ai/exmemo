@@ -1349,3 +1349,6 @@ msgstr "成功"
 msgid "registration_colon__xieyan_comma__1234567"
 msgstr "注册：xieyan, 1234567"
 
+#: app_dataforge/views.py
+msgid "File '{}' ({:.1f}MB) exceeds the trial mode limit of 20MB for non-compressed files"
+msgstr "文件 '{}' ({:.1f}MB) 超过了试用模式下非压缩文件 20MB 的限制"

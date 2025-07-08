@@ -43,6 +43,30 @@ class EmbeddingNotAvailableError(Exception):
 
 class EntryService:
     @staticmethod
+    def _apply_meta_to_entry(entry: EntryItem, meta_dic: dict = None):
+        if meta_dic is not None and isinstance(meta_dic, dict):
+            entry.meta.update(meta_dic)
+        
+        # Apply metadata to entry fields (only if entry fields are None)
+        if entry.meta.get("category") is not None and entry.ctype is None:
+            entry.ctype = entry.meta["category"]
+        if entry.meta.get("title") is not None and entry.title is None:
+            entry.title = entry.meta["title"]
+        if entry.meta.get("status") is not None and entry.status is None:
+            entry.status = entry.meta["status"]
+        if entry.meta.get("atype") is not None and entry.atype is None:
+            entry.atype = entry.meta["atype"]
+        
+        if entry.atype is None:
+            if entry.etype in ["note", "record", "chat"]:
+                entry.atype = "subjective"
+            elif entry.etype in ["file", "web"]:
+                entry.atype = "third_party"
+        
+        if entry.status is None:
+            entry.status = "collect"
+
+    @staticmethod
     def process_entry(obj: dict | EntryItem, data=None, use_llm=True):
         if isinstance(obj, dict):
             entry_item = EntryItem.from_dict(obj)
@@ -65,6 +89,8 @@ class EntryService:
 
     @staticmethod
     def _process_chat_entry(entry: EntryItem, data: Any, use_llm: bool = True):
+        EntryService._apply_meta_to_entry(entry)
+        
         # Default title and ctype exist at the same time
         if ((entry.ctype == DEFAULT_CATEGORY or entry.ctype is None) 
             and data is not None and 'reduce_msg' in data 
@@ -84,6 +110,8 @@ class EntryService:
 
     @staticmethod
     def _process_record_entry(entry: EntryItem, data: Any, use_llm: bool = True):
+        EntryService._apply_meta_to_entry(entry)
+        
         current_time = timezone.now().astimezone(pytz.UTC)
         if entry.addr is None:
             entry.addr = f'record_{current_time.strftime("%Y%m%d_%H%M%S")}'
@@ -150,13 +178,18 @@ class EntryService:
                 parser = MarkdownParser(path)
                 meta_dic = parser.fm
 
-        if meta_dic is not None and isinstance(meta_dic, dict):
-            entry.meta.update(meta_dic)
-        
+        EntryService._apply_meta_to_entry(entry, meta_dic)
+
         if need_feature_extraction:
-            ret = EntryFeatureTool.get_instance().parse(
-                entry, filename, use_llm=use_llm
-            )
+            if content is None:
+                ret = EntryFeatureTool.get_instance().parse(
+                    entry, filename, use_llm=use_llm
+                )
+            else:
+                entry.title = entry.title or filename
+                ret = EntryFeatureTool.get_instance().parse(
+                    entry, content, use_llm=use_llm
+                )
         
         return EntryStorage.save_entry(entry, content, has_new_content)
 
@@ -167,6 +200,8 @@ class EntryService:
         Download the file from the URL, parse the file, and store the data from the file into the database;
         This only handles plain web pages, does not consider files
         """
+        EntryService._apply_meta_to_entry(entry)
+        
         user = UserManager.get_instance().get_user(entry.user_id)
         has_error = (
             "error" in entry.meta 
@@ -176,7 +211,7 @@ class EntryService:
             entry.source != "bookmark" or user.get("bookmark_download_web") == True
         )
         if has_error or not need_download:
-            entry.ctype = DEFAULT_CATEGORY
+            entry.ctype = entry.ctype or DEFAULT_CATEGORY
             ret = EntryFeatureTool.get_instance().parse(
                 entry, entry.addr, use_llm=False, debug=debug
             )
