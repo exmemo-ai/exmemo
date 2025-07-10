@@ -257,6 +257,10 @@ class EmbeddingTools:
             else:
                 model = self.get_model()
                 if model is not None:
+                    if debug:
+                        logger.info(f"embedding block model {model} {len(all_splits)} splits")
+                        for idx, split in enumerate(all_splits):
+                            logger.info(f"split: {idx}, len: {len(split)}, {split[:50]}...")
                     embeddings = model.embed_documents(all_splits)
                     ret = True
                 else:

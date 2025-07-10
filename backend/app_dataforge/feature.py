@@ -203,7 +203,7 @@ class EntryFeatureTool:
         if entry.title is None:
             entry.title = os.path.basename(content)
         
-        logger.error(f'Note parse: {entry}');
+        #logger.info(f'Note parse: {entry}');
         if self._need_llm(entry, user, force) and use_llm:
             ret, features = get_features_by_llm(
                 entry.user_id, content, entry.etype, use_llm=use_llm, debug=debug 

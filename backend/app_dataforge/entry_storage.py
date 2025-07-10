@@ -169,14 +169,24 @@ class EntryStorage:
                 embedding_indices.append(i) # 只更新不一样的块
             
             if len(blocks_need_embedding) > 0:
-                ret, new_embeddings = embedding_manager.do_embedding(entry.user_id, blocks_need_embedding)
-                if debug:
-                    logger.debug(f"embeddings {ret} {len(new_embeddings)}")
-                if not ret:
-                    return False
+                batch_size = 100
+                for batch_start in range(0, len(blocks_need_embedding), batch_size):
+                    batch_end = min(batch_start + batch_size, len(blocks_need_embedding))
+                    batch_blocks = blocks_need_embedding[batch_start:batch_end]
+                    batch_indices = embedding_indices[batch_start:batch_end]
                     
-                for idx, embedding in zip(embedding_indices, new_embeddings):
-                    embeddings[idx] = embedding
+                    ret, batch_embeddings = embedding_manager.do_embedding(entry.user_id, batch_blocks)
+                    if debug:
+                        logger.debug(f"batch {batch_start//batch_size + 1} embeddings {ret} {len(batch_embeddings)}")
+                    
+                    if ret:
+                        for idx, embedding in zip(batch_indices, batch_embeddings):
+                            embeddings[idx] = embedding
+                    else:
+                        logger.warning(f"embedding failed for user {entry.user_id}, batch {batch_start//batch_size + 1}, will continue with empty embeddings for this batch")
+                
+                successful_embeddings = sum(1 for emb in embeddings if emb is not None)
+                logger.info(f"Successfully embedded {successful_embeddings} out of {len(blocks)} blocks for user {entry.user_id}")
                 
         for i, (block_text, embedding) in enumerate(zip(blocks, embeddings)):
             block_entry = entry.clone(
