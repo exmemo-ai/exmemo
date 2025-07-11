@@ -19,13 +19,13 @@ class EntryStorage:
         content: Optional[str] = None,
         has_new_content: bool = True,
         debug: bool = False
-    ) -> tuple:
-        if debug:
-            logger.info(f"save {str(entry.to_dict())[:200]}")
-        #logger.info(f"save {str(entry.to_dict())}")
-        
+    ) -> tuple:        
         try:
             entry.updated_time = timezone.now().astimezone(pytz.UTC)
+            if debug:
+                logger.info(f"save {str(entry.to_dict())[:200]} ... {entry.updated_time}")
+            #logger.info(f"save {str(entry.to_dict())}")
+
             db_entry = None
             operation = _("add_success")
             
@@ -46,9 +46,9 @@ class EntryStorage:
                     pass
             
             if db_entry:
-                ret_emb = EntryStorage._update_entry(entry, has_new_content, content)
+                ret_emb = EntryStorage._update_entry(entry, has_new_content, content, debug=debug)
             else:
-                ret_emb = EntryStorage._create_entry(entry, content)
+                ret_emb = EntryStorage._create_entry(entry, content, debug=debug)
             
             return True, ret_emb, operation
             
@@ -58,12 +58,12 @@ class EntryStorage:
             return False, False, _("add_failed")
 
     @staticmethod
-    def _update_entry(entry: EntryItem, has_new_content: bool, content: Optional[str] = None):
+    def _update_entry(entry: EntryItem, has_new_content: bool, content: Optional[str] = None, debug: bool = False):
         ret_emb = True
         if has_new_content:
             db_entry = StoreEntry.objects.get(idx=entry.idx) # block_id=0
-            for key, value in entry.to_model_dict().items():
-                setattr(db_entry, key, value)
+            exclude_fields = ['created_time']
+            EntryStorage._update_db_entry_fields(db_entry, entry.to_model_dict(), exclude_fields, debug=debug)
             
             abstract = entry.meta.get("description") if entry.meta else None
             if abstract:
@@ -81,27 +81,33 @@ class EntryStorage:
                     if ret:
                         db_entry.embeddings = embeddings[0]
                         db_entry.emb_model = embedding_manager.get_model_name(entry.user_id)
+            if debug:
+                logger.info(f"update entry {entry.idx} {entry.addr} {entry.etype} {entry.user_id} {db_entry.raw[:100]}")
             db_entry.save()
             if content:
-                ret_emb = EntryStorage._save_content_blocks(entry, content)
+                ret_emb = EntryStorage._save_content_blocks(entry, content, debug=debug)
         else: # 没有新文件上传/更新文件，只改属性值
             entries = StoreEntry.objects.filter(
                 user_id=entry.user_id,
                 addr=entry.addr
             )
             entry_dict = entry.to_model_dict()
-            exclude_fields = ['idx', 'embeddings', 'emb_model', 'block_id', 'raw']
+            exclude_fields = ['idx', 'embeddings', 'emb_model', 'block_id', 'raw', 'created_time']
             for field in exclude_fields:
                 entry_dict.pop(field, None)
             for db_entry in entries:
-                for key, value in entry_dict.items():
-                    if key != 'meta' or db_entry.block_id == 0:
-                        setattr(db_entry, key, value)
+                EntryStorage._update_db_entry_fields(
+                    db_entry, 
+                    entry_dict, 
+                    exclude_fields=[], 
+                    update_meta_condition=(db_entry.block_id == 0),
+                    debug=debug
+                )
                 db_entry.save()
         return ret_emb
 
     @staticmethod 
-    def _create_entry(entry: EntryItem, content: Optional[str] = None):
+    def _create_entry(entry: EntryItem, content: Optional[str] = None, debug: bool = False):
         ret_emb = True
             
         entry_dict = entry.to_model_dict()
@@ -118,7 +124,7 @@ class EntryStorage:
                     entry_dict['embeddings'] = embeddings[0]
         StoreEntry.objects.create(**entry_dict)
         if content:
-            ret_emb = EntryStorage._save_content_blocks(entry, content)
+            ret_emb = EntryStorage._save_content_blocks(entry, content, debug=debug)
         return ret_emb
 
     @staticmethod
@@ -243,6 +249,24 @@ class EntryStorage:
                     entry.save()
                 else:
                     entry.delete()
+
+    @staticmethod
+    def _update_db_entry_fields(db_entry, entry_dict, exclude_fields=None, update_meta_condition=True, debug=False):
+        if exclude_fields is None:
+            exclude_fields = []
+            
+        for key, value in entry_dict.items():
+            if key not in exclude_fields:
+                if key == 'meta':
+                    if update_meta_condition:
+                        if db_entry.meta and value:
+                            db_entry.meta.update(value)
+                        elif value:
+                            db_entry.meta = value
+                        if debug:
+                            logger.debug(f"Updated meta for {db_entry.idx}: {db_entry.meta}")
+                else:
+                    setattr(db_entry, key, value)
 
 def safe_equals(a, b) -> bool:
     try:

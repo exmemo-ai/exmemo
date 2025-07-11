@@ -67,7 +67,7 @@ class EntryService:
             entry.status = "collect"
 
     @staticmethod
-    def process_entry(obj: dict | EntryItem, data=None, use_llm=True):
+    def process_entry(obj: dict | EntryItem, data=None, use_llm=True, debug=False):
         if isinstance(obj, dict):
             entry_item = EntryItem.from_dict(obj)
         else:
@@ -85,10 +85,10 @@ class EntryService:
         if not handler:
             return False, False, _("unknown_type_colon_") + entry_item.etype
 
-        return handler(entry_item, data, use_llm)
+        return handler(entry_item, data, use_llm, debug=debug)
 
     @staticmethod
-    def _process_chat_entry(entry: EntryItem, data: Any, use_llm: bool = True):
+    def _process_chat_entry(entry: EntryItem, data: Any, use_llm: bool = True, debug: bool = False):
         EntryService._apply_meta_to_entry(entry)
         
         # Default title and ctype exist at the same time
@@ -109,7 +109,7 @@ class EntryService:
 
 
     @staticmethod
-    def _process_record_entry(entry: EntryItem, data: Any, use_llm: bool = True):
+    def _process_record_entry(entry: EntryItem, data: Any, use_llm: bool = True, debug: bool = False):
         EntryService._apply_meta_to_entry(entry)
         
         current_time = timezone.now().astimezone(pytz.UTC)
@@ -191,7 +191,7 @@ class EntryService:
                     entry, content, use_llm=use_llm
                 )
         
-        return EntryStorage.save_entry(entry, content, has_new_content)
+        return EntryStorage.save_entry(entry, content, has_new_content, debug=debug)
 
 
     @staticmethod
@@ -332,33 +332,42 @@ def escape_regex(s):
 class EntrySearchBuilder:
     
     @staticmethod
-    def build_title_query(keyword_array, query_args, fields):
+    def build_title_query(keyword_array, query_args, fields, case_sensitive=False):
         escaped_keyword_arr = [escape_regex(k) for k in keyword_array]
         query_args_title = query_args.copy()
         query_args_title["block_id"] = 0
         
         q_obj = Q()
         for keyword in escaped_keyword_arr:
-            q_obj &= Q(title__iregex=keyword)
+            if case_sensitive:
+                q_obj &= Q(title__regex=keyword)
+            else:
+                q_obj &= Q(title__iregex=keyword)
         
         return StoreEntry.objects.filter(q_obj, **query_args_title).values(*fields)
 
     @staticmethod
-    def build_raw_content_query(keyword_array, query_args, fields):
+    def build_raw_content_query(keyword_array, query_args, fields, case_sensitive=False):
         escaped_keyword_arr = [escape_regex(k) for k in keyword_array]
         q_obj = Q()
         for keyword in escaped_keyword_arr:
-            q_obj &= Q(raw__iregex=keyword)
+            if case_sensitive:
+                q_obj &= Q(raw__regex=keyword)
+            else:
+                q_obj &= Q(raw__iregex=keyword)
         
         return StoreEntry.objects.filter(q_obj, **query_args).values(*fields)
 
     @staticmethod
-    def build_tag_query(keyword_array, query_args, fields):
+    def build_tag_query(keyword_array, query_args, fields, case_sensitive=False):
         q_obj = Q()
         for tag in keyword_array:
             escaped_tag = escape_regex(tag)
             logger.warning('Processing tag: {}'.format(escaped_tag))
-            raw_query = Q(raw__iregex=escaped_tag)
+            if case_sensitive:
+                raw_query = Q(raw__regex=escaped_tag)
+            else:
+                raw_query = Q(raw__iregex=escaped_tag)
             if tag.startswith('#'):
                 tag = tag[1:]
             meta_query = Q(meta__icontains=f'"{tag}"')
@@ -388,7 +397,7 @@ class EntrySearchBuilder:
         queryset_with_similarity = StoreEntry.objects.filter(**query_args_emb).annotate(
             similarity=1 - CosineDistance('embeddings', query_vector[0])
         ).filter(
-            similarity__gt=0.6
+            similarity__gt=0.7
         ).order_by('-similarity').values(*fields, 'similarity')
         
         logger.info(f"Embedding search results for keywords '{keywords}':")
@@ -398,7 +407,7 @@ class EntrySearchBuilder:
         return StoreEntry.objects.filter(**query_args_emb).annotate(
             similarity=1 - CosineDistance('embeddings', query_vector[0])
         ).filter(
-            similarity__gt=0.6
+            similarity__gt=0.7
         ).order_by('-similarity').values(*fields)
 
     @staticmethod
@@ -575,21 +584,23 @@ class EntrySearchEngine:
         return keyword_array
     
 
-    def execute_keyword_search(self, keyword_array, keywords, query_args, fields, max_count, method, debug=False):
+    def execute_keyword_search(self, keyword_array, keywords, query_args, fields, max_count, method, 
+                               case_sensitive=False, debug=False):
+        #debug = True
         all_querysets = []
         
         if debug:
-            logger.debug(f"Executing keyword search with keywords: {keywords}, method: {method}, max_count: {max_count}")
+            logger.debug(f"Executing keyword search with keywords: {keywords}, method: {method}, max_count: {max_count}, query_args: {query_args}")
 
         # 1. Title search
-        title_queryset = self.builder.build_title_query(keyword_array, query_args, fields)
+        title_queryset = self.builder.build_title_query(keyword_array, query_args, fields, case_sensitive)
         all_querysets.append(title_queryset)
         if debug:
             logger.debug(f"title search count {title_queryset.count()}")
         
         # 2. Raw content search (if results are insufficient)
         if max_count == -1 or title_queryset.count() < max_count:
-            raw_queryset = self.builder.build_raw_content_query(keyword_array, query_args, fields)
+            raw_queryset = self.builder.build_raw_content_query(keyword_array, query_args, fields, case_sensitive)
             all_querysets.append(raw_queryset)
             if debug:
                 logger.debug(f"raw search count after title search {raw_queryset.count()}")
@@ -612,15 +623,14 @@ class EntrySearchEngine:
             if debug:
                 logger.debug(f"trigram search count {trigram_queryset.count()}")
         
-        queryset = self.merge_querysets(all_querysets)
+        queryset = self.merge_querysets(all_querysets)        
+        queryset = self.sort_and_deduplicate_by_addr(queryset)
         if debug:
             logger.debug(f"final count {len(queryset)}")
         
-        queryset = self.sort_and_deduplicate_by_addr(queryset)
-        
         return queryset
     
-    def search(self, keywords, query_args, max_count=-1, fields=None, method="auto", exclude=None):
+    def search(self, keywords, query_args, max_count=-1, fields=None, method="auto", exclude=None, case_sensitive=False, debug=False):
         query_args["is_deleted"] = False
         if fields is None:
             fields = [
@@ -645,15 +655,15 @@ class EntrySearchEngine:
             
             # Handle different search types
             if search_type == 'tag':
-                queryset = self.builder.build_tag_query(keyword_array, query_args, fields)
+                queryset = self.builder.build_tag_query(keyword_array, query_args, fields, case_sensitive)
                 # logger.error(f"tag search count {queryset.count()}")
             elif search_type == 'file':
                 query_args['block_id'] = 0
-                queryset = self.builder.build_title_query(keyword_array, query_args, fields)
+                queryset = self.builder.build_title_query(keyword_array, query_args, fields, case_sensitive)
                 # logger.error(f"file search count {queryset.count()}")
             else:  # keyword search
                 queryset = self.execute_keyword_search(
-                    keyword_array, keywords, query_args, fields, max_count, method
+                    keyword_array, keywords, query_args, fields, max_count, method, case_sensitive, debug
                 )
 
             # Apply exclude logic if provided
@@ -669,9 +679,9 @@ class EntrySearchEngine:
         return queryset
 
 
-def get_entry_list(keywords, query_args, max_count=-1, fields=None, method="auto", exclude=None):
+def get_entry_list(keywords, query_args, max_count=-1, fields=None, method="auto", exclude=None, case_sensitive = False, debug=False):
     search_engine = EntrySearchEngine()
-    result_list = search_engine.search(keywords, query_args, max_count, fields, method, exclude)
+    result_list = search_engine.search(keywords, query_args, max_count, fields, method, exclude, case_sensitive, debug)
 
     if isinstance(result_list, QuerySet):
         return result_list
@@ -734,8 +744,8 @@ def get_file_content_by_path(path, user, debug=False):
     return meta_data, content
 
 
-def add_data(obj, data=None, use_llm=True):
-    return EntryService.process_entry(obj, data, use_llm)
+def add_data(obj, data=None, use_llm=True, debug=False):
+    return EntryService.process_entry(obj, data, use_llm, debug=debug)
 
 
 def delete_entry(uid, filelist):

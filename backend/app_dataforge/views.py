@@ -124,7 +124,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     )
                     return do_result(True, {"task_id": str(task_id)})
                 else:
-                    success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir)
+                    success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, debug=debug)
                     if debug:
                         logger.info(f"upload_files success {str(success_list)[:200]}...")
                     else:
@@ -179,6 +179,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         method = request.GET.get("method", 'auto')
         keywords = request.GET.get("keyword", None)
         exclude = request.GET.get("exclude", None)
+        case_sensitive = request.GET.get("case_sensitive", "false").lower() == "true"
         start_date = request.GET.get("start_date", None)
         end_date = request.GET.get("end_date", None)
         if start_date is not None and len(start_date) > 0:
@@ -194,7 +195,8 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             logger.debug(f"args {query_args}, keyword {keywords}")
 
         try:
-            queryset = get_entry_list(keywords, query_args, max_count if max_count != -1 else -1, method=method, exclude=exclude)
+            queryset = get_entry_list(keywords, query_args, max_count if max_count != -1 else -1, method=method, 
+                                      exclude=exclude, case_sensitive=case_sensitive, debug=debug)
             
             if max_count == -1:
                 page = self.paginate_queryset(queryset)
@@ -301,6 +303,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
+        debug = False
         instance = self.get_object() # base instance         
         dic = {}
         for key in instance.__dict__.keys():
@@ -323,6 +326,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(False, _("update_failed"))
                 else:
                     return do_result(True, _("update_successfully"))
+    
             # check update file
             elif request.FILES:
                 if getattr(settings, 'IS_TRIAL_MODE', True):
@@ -339,17 +343,17 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                         f.write(chunk)
                     f.close()
                 ret, ret_emb, detail = update_file(dic, instance.addr, tmp_path, None,
-                                                   vault=None, is_unzip=False, is_createSubDir=False)
+                                                   vault=None, is_unzip=False, is_createSubDir=False, debug=debug)
                 if not ret:
                     return do_result(False, _("update_failed"))
                 return do_result(True, _("update_successfully"))
             else:
-                ret, ret_emb, info = add_data(dic)
+                ret, ret_emb, info = add_data(dic, debug=debug)
         elif instance.etype == "record":
             content = request.data.get("content", None)
-            ret, ret_emb, info = add_data(dic, data = {'content': content})
+            ret, ret_emb, info = add_data(dic, data = {'content': content}, debug=debug)
         else:
-            ret, ret_emb, info = add_data(dic)
+            ret, ret_emb, info = add_data(dic, debug=debug)
         if not ret:
             return do_result(False, _("update_failed"))
         return do_result(True, _("update_successfully"))
