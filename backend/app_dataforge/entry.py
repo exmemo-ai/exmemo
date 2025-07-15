@@ -447,15 +447,21 @@ class EntrySearchEngine:
         if len(queryset) == 0:
             return queryset
         
-        queryset.sort(key=lambda x: (x.get('addr', ''), x.get('block_id', 0)))
-        
-        seen_addrs = set()
+        seen_addrs = {}  # addr -> (entry, block_id)
         unique_entries = []
+        
         for entry in queryset:
-            addr = entry.get('addr')
+            addr = entry.get('addr', '')
+            block_id = entry.get('block_id', 0)
+            
             if addr not in seen_addrs:
+                seen_addrs[addr] = (len(unique_entries), block_id)
                 unique_entries.append(entry)
-                seen_addrs.add(addr)
+            else:
+                existing_index, existing_block_id = seen_addrs[addr]
+                if block_id < existing_block_id:
+                    unique_entries[existing_index] = entry
+                    seen_addrs[addr] = (existing_index, block_id)
         
         return unique_entries
 
