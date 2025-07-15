@@ -1,12 +1,12 @@
 <template>
     <div class="app-container">
       <el-container style="flex: 0; width: 100%;">
-        <app-navbar ref="navbar" :title="t('dataManagement')" :info="'DataManager'" />
+        <app-navbar ref="navbarRef" :title="t('dataManagement')" :info="'DataManager'" />
       </el-container>
       <el-container style="flex: 1; width: 100%; overflow: hidden;">
         <el-main class="main-container list-options">
             <div class="header-buttons">
-                <div class="mobile-row">
+                <div class="filter-row">
                     <div class="filter-section">
                         <div class="filter-item">
                             <div class="label-container">
@@ -15,7 +15,8 @@
                             <div class="select-container">
                                 <el-select v-if="mounted && etype_options.length" 
                                     v-model="etype_value"
-                                    :placeholder="t('selectPlaceholder')">
+                                    :placeholder="t('selectPlaceholder')"
+                                    size="small">
                                     <el-option v-for="item in etype_options" :key="item.value" 
                                         :label="item.label" :value="item.value">
                                     </el-option>
@@ -32,7 +33,8 @@
                                 <el-select v-if="mounted && ctype_options && ctype_options.length > 0" 
                                     v-model="ctype_value"
                                     :placeholder="t('selectPlaceholder')" 
-                                    popper-class="select-dropdown">
+                                    popper-class="select-dropdown"
+                                    size="small">
                                     <el-option v-for="item in ctype_options" :key="item.value" 
                                         :label="item.label" :value="item.value">
                                     </el-option>
@@ -40,9 +42,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="mobile-row">
-                    <div class="filter-section" v-if="!isMobile">
+                    <div class="filter-section">
                         <div class="filter-item">
                             <div class="label-container">
                                 <el-text>{{ t('status') }}</el-text>
@@ -50,7 +50,8 @@
                             <div class="select-container">
                                 <el-select v-if="mounted && status_options.length" 
                                     v-model="status_value"
-                                    :placeholder="t('selectPlaceholder')">
+                                    :placeholder="t('selectPlaceholder')"
+                                    size="small">
                                     <el-option v-for="item in status_options" :key="item.value" 
                                         :label="item.label" :value="item.value">
                                     </el-option>
@@ -58,24 +59,75 @@
                             </div>
                         </div>
                     </div>
-                    <div class="search-section">
+                </div>
+                <div class="search-row">
+                    <div class="date-range-section">
                         <div class="label-container">
-                            <el-text>{{ t('search') }}</el-text>
+                            <el-text>{{ t('datalist.range') }}</el-text>
                         </div>
-                        <div :class="{'mobile-input': isMobile}">
-                            <el-input v-model="search_text" :placeholder="t('searchPlaceholder')"></el-input>
+                        <div class="date-inputs-wrapper">
+                            <el-date-picker
+                                v-model="dateStart"
+                                type="date"
+                                :placeholder="t('datalist.startDate')"
+                                format="YYYY-MM-DD"
+                                value-format="YYYY-MM-DD"
+                                size="small"
+                            />
+                            <el-text>-</el-text>
+                            <el-date-picker
+                                v-model="dateEnd"
+                                type="date"
+                                :placeholder="t('datalist.endDate')"
+                                format="YYYY-MM-DD"
+                                value-format="YYYY-MM-DD"
+                                size="small"
+                            />
                         </div>
                     </div>
-                    <div class="action-section">
-                        <el-button class="icon-button" @click="searchKeyword">
-                            <el-icon><Search /></el-icon>
-                        </el-button>
-                        <el-button class="icon-button" @click="openAddDialog">
-                            <el-icon><Plus /></el-icon>
-                        </el-button>
+                    
+                    <div class="search-controls-row">
+                        <div class="search-method-section">
+                            <div class="label-container">
+                                <el-text>{{ t('datalist.searchMethod') }}</el-text>
+                            </div>
+                            <div class="select-container">
+                                <el-select v-model="searchMethod" :placeholder="t('selectPlaceholder')" size="small">
+                                    <el-option
+                                        v-for="item in searchMethodOptions"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value"
+                                    />
+                                </el-select>
+                            </div>
+                        </div>
+
+                        <div class="search-section">
+                            <div class="label-container">
+                                <el-text>{{ t('search') }}</el-text>
+                            </div>
+                            <div class="search-input-container">
+                                <el-input v-model="search_text" :placeholder="t('searchPlaceholder')" 
+                                    @keyup.enter="searchKeyword" size="small"></el-input>
+                            </div>
+                        </div>                       
+
+                        <div class="action-section">
+                            <el-button class="icon-button" @click="searchKeyword" :title="t('datalist.searchButton')">
+                                <el-icon><Search /></el-icon>
+                            </el-button>
+                            <el-button class="icon-button" @click="resetSearchState" :title="t('datalist.resetSearchButton')">
+                                <el-icon><RefreshLeft /></el-icon>
+                            </el-button>
+                            <el-button class="icon-button" @click="openAddDialog" :title="t('datalist.addDataButton')">
+                                <el-icon><Plus /></el-icon>
+                            </el-button>
+                        </div>
                     </div>
                 </div>
             </div>
+            
             <el-container class="list-width" style="flex: 1; flex-direction: column; width: 100%;">
                 <el-table :data="fileList" stripe @row-click="handleRowClick">
                     <el-table-column prop="title" :label="t('title')">
@@ -109,6 +161,7 @@
                                 class="delete-icon"
                                 @click.stop="handleDelete(scope.row)"
                                 size="small"
+                                :title="t('datalist.deleteButton')"
                             >
                                 <el-icon><Delete /></el-icon>
                             </el-icon>
@@ -128,213 +181,350 @@
     </div>
 </template>
 
-<script>
-import { Search, Plus, Delete } from '@element-plus/icons-vue'
-import axios from 'axios';
-import EditDialog from './EditDialog.vue';
-import AddDialog from './AddDialog.vue';
+<script setup>
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { Search, Plus, Delete, RefreshLeft } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
+import EditDialog from './EditDialog.vue'
+import AddDialog from './AddDialog.vue'
 import { getURL, parseBackendError } from '@/components/support/conn'
 import AppNavbar from '@/components/support/AppNavbar.vue'
 import { useI18n } from 'vue-i18n'
 
-export default {
-    name: 'NoteManager',
-    components: {
-        EditDialog,
-        AddDialog,
-        AppNavbar,
-        Search,
-        Plus,
-        Delete
-    },
-    setup() {
-        const { t, te } = useI18n();
-        return { t, te };
-    },
-    data() {
-        const { t } = useI18n();
-        return {
-            mounted: false,
-            isMobile: false,
-            total: 0,
-            currentPage: 1,
-            pageSize: 10,
-            status_value: t('all'),
-            status_options: [],
-            ctype_value: t('all'),
-            ctype_options: [],
-            etype_value: t('all'),
-            etype_options: [],
-            search_text: '',
-            fileList: [],
-            navbar: null,
-        };
-    },
-    methods: {
-        handleSizeChange(val) {
-            this.pageSize = val;
-            this.fetchData();
-        },
-        handleCurrentChange(val) {
-            this.currentPage = val;
-            this.fetchData();
-        },
-        fetchData(data = {}) {
-            console.log('##### fetchData', this);
-            let func = 'api/entry/data/'
-            let etype_value = this.etype_value === this.t('all') ? '' : this.etype_value;
-            let ctype_value = this.ctype_value === this.t('all') ? '' : this.ctype_value;
-            let status_value = this.status_value === this.t('all') ? '' : this.status_value;
-            let params = {
-                keyword: this.search_text, etype: etype_value,
-                ctype: ctype_value, status: status_value,
-                page: this.currentPage, page_size: this.pageSize
-            }
-            axios.get(getURL() + func, { params: params })
-                .then(response => {
-                    console.log('getList success');
-                    console.log(response.data);
-                    this.total = response.data['count'];
-                    this.fileList = response.data['results'];
-                })
-                .catch(error => {
-                    parseBackendError(error);
-                });
-        },
-        searchKeyword() {
-            this.currentPage = 1;
-            this.fetchData();
-        },
-        parseOptions(data) {
-            const options = [{ value: this.t('all'), label: this.t('all') }];
-            data.forEach(item => {
-                const hasTranslation = this.te(item);
-                options.push({
-                    value: item,
-                    label: hasTranslation ? this.t(item) : item
-                });
-            });
-            return options;
-        },
-        async getOptions(obj, ctype) {
-            let func = 'api/entry/tool/'
-            try {
-                const response = await axios.get(getURL() + func, {
-                    params: { ctype: ctype, rtype: 'feature' }
-                });
-                console.log('getOptions success');
+const { t, te } = useI18n()
 
-                if (ctype == 'all') {
-                    if ('ctype' in response.data) {
-                        this.ctype_options = this.parseOptions(response.data['ctype']);
-                    }
-                    if ('status' in response.data) {
-                        this.status_options = this.parseOptions(response.data['status']);
-                    }
-                    if ('etype' in response.data) {
-                        this.etype_options = this.parseOptions(response.data['etype']);
-                    }
-                } else {
-                    const options = this.parseOptions(response.data);
-                    await this.$nextTick();
-                    if (ctype === 'ctype') {
-                        this.ctype_options = options;
-                    } else if (ctype === 'status') {
-                        this.status_options = options;
-                    } else if (ctype === 'etype') {
-                        this.etype_options = options;
-                    }
-                }
-            } catch (error) {
-                console.log('getOptions error', error);
-            }
-        },
-        openAddDialog() {
-            this.$refs.addDialog.openDialog((response_data) => {
-                if (response_data.task_id) {
-                    if (this.$refs.navbar) {
-                        this.$refs.navbar.startTaskCheck(response_data.task_id);
-                    }
-                    this.$message({
-                        type: 'success',
-                        message: this.t('task.taskStarted')
-                    });
-                } else {
-                    this.fetchData();
-                }
-            });
-        },
-        handleRowClick(row) {
-            this.$refs.editDialog.openDialog(() => this.fetchData(), row);
-        },
-        handleDelete(row) {
-            this.$confirm(this.t('deleteConfirmation'), this.t('promptTitle'), {
-                confirmButtonText: this.t('confirm'),
-                cancelButtonText: this.t('cancel'),
-                type: 'warning'
-            }).then(() => {
-                this.deleteData(row.idx);
-            }).catch(() => {
-                this.$message({
-                    type: 'info',
-                    message: this.t('cancelDelete')
-                });
-            });
-        },
-        
-        deleteData(idx) {
-            let table_name = 'data'
-            axios.delete(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
-                .then(response => {
-                    if (response.data.status == 'success') {
-                        this.$message({
-                            type: 'success',
-                            message: this.t('deleteSuccess')
-                        });
-                        this.fetchData();
-                    } else {
-                        this.$message({
-                            type: 'error',
-                            message: this.t('deleteFail')
-                        });
-                    }
-                })
-                .catch(error => {
-                    parseBackendError(error);
-                });
-        },
-        handleResize() {
-            this.isMobile = window.innerWidth < 768;
-            const visualHeight = window.innerHeight;
-            console.log('visualHeight', visualHeight);
-            document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`);
-        },
-    },
-    async mounted() {
-        this.mounted = true;
-        this.isMobile = window.innerWidth < 768;
-        window.addEventListener('resize', this.handleResize);
-        this.handleResize();
-        /*
-        await this.getOptions(this, "ctype");
-        await this.getOptions(this, "status");
-        await this.getOptions(this, "etype");
-        */
-        await this.getOptions(this, "all");
-        await this.$nextTick();
-        this.fetchData();
-        this.navbar = this.$refs.navbar;
-    },
-    onBeforeUnmount() {
-        window.removeEventListener('resize', this.handleResize);    
+// 响应式数据
+const mounted = ref(false)
+const isMobile = ref(false)
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const status_value = ref(t('all'))
+const status_options = ref([])
+const ctype_value = ref(t('all'))
+const ctype_options = ref([])
+const etype_value = ref(t('all'))
+const etype_options = ref([])
+const search_text = ref('')
+const fileList = ref([])
+const navbar = ref(null)
+const dateStart = ref('')
+const dateEnd = ref('')
+const searchMethod = ref('keywordOnly')
+const STORAGE_KEY = 'dataManager_searchState'
+
+// refs
+const editDialog = ref(null)
+const addDialog = ref(null)
+const navbarRef = ref(null)
+
+// 计算属性
+const searchMethodOptions = computed(() => [
+    { value: 'keywordOnly', label: t('datalist.keywordOnly') || 'Keyword Only' },
+    { value: 'fileSearch', label: t('datalist.fileSearch') || 'File Search' },
+    { value: 'tagSearch', label: t('datalist.tagSearch') || 'Tag Search' },
+    { value: 'fuzzySearch', label: t('datalist.fuzzySearch') || 'Fuzzy Search' },
+    { value: 'embeddingSearch', label: t('datalist.embeddingSearch') || 'Embedding Search' }
+])
+
+// 方法
+const saveSearchState = () => {
+    const searchState = {
+        currentPage: currentPage.value,
+        search_text: search_text.value,
+        etype_value: etype_value.value,
+        ctype_value: ctype_value.value,
+        status_value: status_value.value,
+        dateStart: dateStart.value,
+        dateEnd: dateEnd.value,
+        searchMethod: searchMethod.value
+    }
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(searchState))
+    } catch (error) {
+        console.warn('Failed to save search state to localStorage:', error)
     }
 }
 
+const loadSearchState = () => {
+    try {
+        const savedState = localStorage.getItem(STORAGE_KEY)
+        if (savedState) {
+            const searchState = JSON.parse(savedState)
+            currentPage.value = searchState.currentPage || 1
+            search_text.value = searchState.search_text || ''
+            etype_value.value = searchState.etype_value || t('all')
+            ctype_value.value = searchState.ctype_value || t('all')
+            status_value.value = searchState.status_value || t('all')
+            dateStart.value = searchState.dateStart || ''
+            dateEnd.value = searchState.dateEnd || ''
+            searchMethod.value = searchState.searchMethod || 'keywordOnly'
+        }
+    } catch (error) {
+        console.warn('Failed to load search state from localStorage:', error)
+    }
+}
 
+const clearSearchState = () => {
+    try {
+        localStorage.removeItem(STORAGE_KEY)
+    } catch (error) {
+        console.warn('Failed to clear search state from localStorage:', error)
+    }
+}
+
+const resetSearchState = () => {
+    currentPage.value = 1
+    search_text.value = ''
+    etype_value.value = t('all')
+    ctype_value.value = t('all')
+    status_value.value = t('all')
+    dateStart.value = ''
+    dateEnd.value = ''
+    searchMethod.value = 'keywordOnly'
+    clearSearchState()
+    fetchData()
+}
+
+const handleSizeChange = (val) => {
+    pageSize.value = val
+    fetchData()
+}
+
+const handleCurrentChange = (val) => {
+    currentPage.value = val
+    fetchData()
+}
+
+const fetchData = (data = {}) => {
+    console.log('##### fetchData')
+    let func = 'api/entry/data/'
+    let etype_val = etype_value.value === t('all') ? '' : etype_value.value
+    let ctype_val = ctype_value.value === t('all') ? '' : ctype_value.value
+    let status_val = status_value.value === t('all') ? '' : status_value.value
+    let params = {
+        keyword: search_text.value,
+        etype: etype_val,
+        ctype: ctype_val,
+        status: status_val,
+        page: currentPage.value,
+        page_size: pageSize.value,
+        start_date: dateStart.value,
+        end_date: dateEnd.value,
+        method: searchMethod.value
+    }
+    axios.get(getURL() + func, { params: params })
+        .then(response => {
+            console.log('getList success')
+            console.log(response.data)
+            total.value = response.data['count']
+            fileList.value = response.data['results']
+        })
+        .catch(error => {
+            parseBackendError(error)
+        })
+}
+
+const searchKeyword = () => {
+    currentPage.value = 1
+    saveSearchState()
+    fetchData()
+}
+
+const parseOptions = (data) => {
+    const options = [{ value: t('all'), label: t('all') }]
+    data.forEach(item => {
+        const hasTranslation = te(item)
+        options.push({
+            value: item,
+            label: hasTranslation ? t(item) : item
+        })
+    })
+    return options
+}
+
+const getOptions = async (obj, ctype) => {
+    let func = 'api/entry/tool/'
+    try {
+        const response = await axios.get(getURL() + func, {
+            params: { ctype: ctype, rtype: 'feature' }
+        })
+        console.log('getOptions success')
+
+        if (ctype == 'all') {
+            if ('ctype' in response.data) {
+                ctype_options.value = parseOptions(response.data['ctype'])
+            }
+            if ('status' in response.data) {
+                status_options.value = parseOptions(response.data['status'])
+            }
+            if ('etype' in response.data) {
+                etype_options.value = parseOptions(response.data['etype'])
+            }
+        } else {
+            const options = parseOptions(response.data)
+            await nextTick()
+            if (ctype === 'ctype') {
+                ctype_options.value = options
+            } else if (ctype === 'status') {
+                status_options.value = options
+            } else if (ctype === 'etype') {
+                etype_options.value = options
+            }
+        }
+    } catch (error) {
+        console.log('getOptions error', error)
+    }
+}
+
+const openAddDialog = () => {
+    addDialog.value.openDialog((response_data) => {
+        if (response_data.task_id) {
+            if (navbarRef.value) {
+                navbarRef.value.startTaskCheck(response_data.task_id)
+            }
+            ElMessage({
+                type: 'success',
+                message: t('task.taskStarted')
+            })
+        } else {
+            fetchData()
+        }
+    })
+}
+
+const handleRowClick = (row) => {
+    editDialog.value.openDialog(() => fetchData(), row)
+}
+
+const handleDelete = (row) => {
+    ElMessageBox.confirm(t('deleteConfirmation'), t('promptTitle'), {
+        confirmButtonText: t('confirm'),
+        cancelButtonText: t('cancel'),
+        type: 'warning'
+    }).then(() => {
+        deleteData(row.idx)
+    }).catch(() => {
+        ElMessage({
+            type: 'info',
+            message: t('cancelDelete')
+        })
+    })
+}
+
+const deleteData = (idx) => {
+    let table_name = 'data'
+    axios.delete(getURL() + 'api/entry/' + table_name + '/' + idx + '/')
+        .then(response => {
+            if (response.data.status == 'success') {
+                ElMessage({
+                    type: 'success',
+                    message: t('deleteSuccess')
+                })
+                fetchData()
+            } else {
+                ElMessage({
+                    type: 'error',
+                    message: t('deleteFail')
+                })
+            }
+        })
+        .catch(error => {
+            parseBackendError(error)
+        })
+}
+
+const handleResize = () => {
+    isMobile.value = window.innerWidth < 768
+    const visualHeight = window.innerHeight
+    console.log('visualHeight', visualHeight)
+    document.documentElement.style.setProperty('--mainHeight', `${visualHeight}px`)
+}
+
+watch(status_value, () => {
+    if (mounted.value) {
+        currentPage.value = 1
+        saveSearchState()
+        fetchData()
+    }
+})
+
+watch(ctype_value, () => {
+    if (mounted.value) {
+        currentPage.value = 1
+        saveSearchState()
+        fetchData()
+    }
+})
+
+watch(etype_value, () => {
+    if (mounted.value) {
+        currentPage.value = 1
+        saveSearchState()
+        fetchData()
+    }
+})
+
+watch(search_text, () => {
+    if (mounted.value) {
+        //currentPage.value = 1
+        saveSearchState()
+        //fetchData()
+    }
+})
+
+watch(dateStart, () => {
+    if (mounted.value) {
+        saveSearchState()
+        currentPage.value = 1
+        fetchData()
+    }
+})
+
+watch(dateEnd, () => {
+    if (mounted.value) {
+        saveSearchState()
+        currentPage.value = 1
+        fetchData()
+    }
+})
+
+watch(searchMethod, () => {
+    if (mounted.value) {
+        saveSearchState()
+        currentPage.value = 1
+        fetchData()
+    }
+})
+
+watch(currentPage, () => {
+    if (mounted.value) {
+        saveSearchState()
+    }
+})
+
+onMounted(async () => {
+    mounted.value = true
+    isMobile.value = window.innerWidth < 768
+    window.addEventListener('resize', handleResize)
+    handleResize()
+    
+    await getOptions(null, "all")
+    await nextTick()
+    
+    loadSearchState()
+    
+    fetchData()
+    navbar.value = navbarRef.value
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>
-
 
 .ellipsis-container {
     max-height: 40px;
@@ -349,7 +539,9 @@ export default {
 .label-container {
     display: flex;
     align-items: center;
-    flex-shrink: 1;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 40px;
 }
 
 .main-container {
@@ -358,32 +550,36 @@ export default {
 }
 
 .header-buttons {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.filter-row, .search-row {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 5px;
-    margin-left: 5px;
-    margin-right: 5px;
+    gap: 4px;
+    width: 100%;
+    margin-bottom: 4px;
     align-items: center;
 }
 
-.search-section {
-    margin-right: auto;
+.search-controls-row {
     display: flex;
+    gap: 8px;
+    width: 100%;
     align-items: center;
-    gap: 5px;
 }
 
 .filter-section {
     display: flex;
     flex-grow: 1;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 .filter-item {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     flex-grow: 1;
 }
 
@@ -391,16 +587,82 @@ export default {
     flex-grow: 1;
 }
 
-.action-section {
+.search-section {
     display: flex;
-    gap: 0px;
+    flex-grow: 3;
     align-items: center;
+    gap: 4px;
+}
+
+.search-input-container {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.date-range-section {
+    display: flex;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 4px;
+    min-width: 280px;
+    max-width: 320px;
+}
+
+.search-method-section {
+    display: flex;
+    flex-grow: 2;
+    flex-shrink: 1;
+    align-items: center;
+    gap: 4px;
+    min-width: 180px;
+}
+
+.date-range-section .label-container {
+    min-width: 40px;
     flex-shrink: 0;
 }
 
-.mobile-input {
-    width: 100%;
+.search-method-section .label-container {
+    min-width: 40px;
+    flex-shrink: 0;
+}
+
+.search-section .label-container {
+    min-width: 40px;
+    flex-shrink: 0;
+}
+
+.date-inputs-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     flex-grow: 1;
+    max-width: 250px;
+}
+
+.date-inputs-wrapper .el-date-editor {
+    max-width: 110px;
+}
+
+.action-section {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    flex-shrink: 0;
+    min-width: fit-content;
+}
+
+.icon-button {
+    padding: 6px !important;
+    min-height: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 0 0 5px !important;
+}
+
+:deep(.date-range-section .el-date-editor) {
+    max-width: 110px;
 }
 
 .list-width {
@@ -412,12 +674,6 @@ export default {
     white-space: nowrap;
 }
 
-.mobile-row {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-}
-
 @media (max-width: 767px) {
     .list-width {
         max-width: 100%;
@@ -427,39 +683,58 @@ export default {
         max-width: 100%;
     }
 
-    .header-buttons {
+    .filter-row {
+        flex-direction: row;
+        gap: 4px;
+        margin-bottom: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .search-row {
         flex-direction: column;
-        gap: 5px;
-        margin-bottom: 0px;
-    }
-
-    .mobile-row {
-        display: flex;
         gap: 8px;
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .search-section {
-        width: 100%;
+        margin-bottom: 10px;
+        align-items: flex-start;
     }
 
     .filter-section {
-        width: 60%;
+        width: 33.33%;
+        justify-content: flex-start;
+        flex-shrink: 1;
+        min-width: 0;
     }
 
-    .mobile-input {
+    .date-range-section {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .search-controls-row {
+        flex-direction: row;
+        gap: 4px;
         width: 100%;
     }
 
-    .action-section {
-        width: auto;
-        margin-left: auto;
-        display: flex;
-        gap: 5px;
+    .search-method-section {
+        width: 30%;
+        justify-content: flex-start;
+        min-width: 0;
     }
 
-    .select-container {
+    .search-section {
+        width: 45%;
+        justify-content: flex-start;
+        min-width: 0;
+    }
+
+    .action-section {
+        width: 25%;
+        justify-content: center;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .select-container, .search-input-container {
         width: 100%;
     }
 
@@ -472,7 +747,44 @@ export default {
     }
 
     .label-container {
-        min-width: 40px;
+        min-width: 30px;
+        max-width: 40px;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .filter-item {
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .search-method-section .label-container,
+    .search-section .label-container {
+        min-width: 25px;
+        max-width: 35px;
+        font-size: 11px;
+    }
+
+    .date-range-section .label-container {
+        min-width: 30px;
+        max-width: 40px;
+        font-size: 12px;
+        justify-content: flex-start;
+    }
+
+    .search-input-container {
+        min-width: 0;
+    }
+
+    .date-inputs-wrapper {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .date-inputs-wrapper .el-date-editor {
+        flex: 1;
+        max-width: 45%;
     }
 
     :deep(.el-text) {

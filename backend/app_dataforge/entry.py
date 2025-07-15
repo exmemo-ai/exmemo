@@ -525,7 +525,7 @@ class EntrySearchEngine:
         return False
     
     @staticmethod
-    def parse_search_input(keyword):
+    def parse_search_input(keyword, method="auto"):
         """
         Parse search input to determine search type and extract keywords
         Similar to parseSearchInput function in TypeScript
@@ -534,9 +534,10 @@ class EntrySearchEngine:
         search_value = keyword
         keyword_array = []
         
-        if keyword.startswith('tag:'):
+        # Check method first, then fallback to keyword prefix
+        if method == 'tagSearch' or keyword.startswith('tag:'):
             search_type = 'tag'
-            search_value = keyword[4:].strip()
+            search_value = keyword[4:].strip() if keyword.startswith('tag:') else keyword
             
             # Split tag terms and format them
             tag_terms = search_value.split()
@@ -550,9 +551,9 @@ class EntrySearchEngine:
                 formatted_tag = tag_value if tag_value.startswith('#') else '#' + tag_value
                 keyword_array.append(formatted_tag)
                 
-        elif keyword.startswith('file:'):
+        elif method == 'fileSearch' or keyword.startswith('file:'):
             search_type = 'file'
-            search_value = keyword[5:].strip()
+            search_value = keyword[5:].strip() if keyword.startswith('file:') else keyword
             keyword_array = [search_value] if search_value else []
             
         else:
@@ -647,7 +648,7 @@ class EntrySearchEngine:
         if keywords is not None and len(keywords) > 0:
             keywords = regular_keyword(keywords)
             # Parse search input to determine search type
-            parsed_input = EntrySearchEngine.parse_search_input(keywords)
+            parsed_input = EntrySearchEngine.parse_search_input(keywords, method)
             search_type = parsed_input['search_type']
             keyword_array = parsed_input['keyword_array']
             

@@ -564,5 +564,21 @@
         "applyCrop": "Apply crop",
         "cropSuccess": "Crop successful",
         "cropFailed": "Crop failed"
-    }    
+    },
+    "datalist": {
+        "range": "Range",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "searchMethod": "Method",
+        "keywordOnly": "Keyword Only",
+        "fileSearch": "File Search",
+        "tagSearch": "Tag Search",
+        "fuzzySearch": "Fuzzy Search",
+        "embeddingSearch": "Embedding Search",
+        "searchButton": "Search",
+        "advancedSearchButton": "Advanced Search",
+        "resetSearchButton": "Reset Search",
+        "addDataButton": "Add Data",
+        "deleteButton": "Delete"
+    }
 }

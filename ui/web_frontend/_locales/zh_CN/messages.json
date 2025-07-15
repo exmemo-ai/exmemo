@@ -568,5 +568,21 @@
         "applyCrop": "应用裁剪",
         "cropSuccess": "裁剪成功",
         "cropFailed": "裁剪失败"
+    },
+    "datalist": {
+        "range": "时间",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "searchMethod": "方式",
+        "keywordOnly": "仅关键词",
+        "fileSearch": "文件搜索",
+        "tagSearch": "标签搜索",
+        "fuzzySearch": "模糊搜索",
+        "embeddingSearch": "向量搜索",
+        "searchButton": "搜索",
+        "advancedSearchButton": "高级搜索",
+        "resetSearchButton": "重置搜索条件",
+        "addDataButton": "添加数据",
+        "deleteButton": "删除"
     }
 }
