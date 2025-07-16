@@ -81,6 +81,11 @@ class EntryStorage:
                     if ret:
                         db_entry.embeddings = embeddings[0]
                         db_entry.emb_model = embedding_manager.get_model_name(entry.user_id)
+                    else:
+                        db_entry.embeddings = None
+                        db_entry.emb_model = None
+                        ret_emb = False
+                        logger.warning(f"embedding failed for user {entry.user_id}, will continue with empty embeddings")
             if debug:
                 logger.info(f"update entry {entry.idx} {entry.addr} {entry.etype} {entry.user_id} {db_entry.raw[:100]}")
             db_entry.save()
@@ -122,6 +127,11 @@ class EntryStorage:
                 ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                 if ret:
                     entry_dict['embeddings'] = embeddings[0]
+                else:
+                    entry_dict['embeddings'] = None
+                    entry_dict['emb_model'] = None
+                    ret_emb = False
+                    logger.warning(f"embedding failed for user {entry.user_id}, will continue with empty embeddings")
         StoreEntry.objects.create(**entry_dict)
         if content:
             ret_emb = EntryStorage._save_content_blocks(entry, content, debug=debug)
@@ -129,6 +139,7 @@ class EntryStorage:
 
     @staticmethod
     def _save_content_blocks(entry: EntryItem, content: str, debug: bool=False) -> bool:
+        ret = True
         existing_blocks = StoreEntry.objects.filter(
             user_id=entry.user_id,
             addr=entry.addr,
@@ -139,7 +150,7 @@ class EntryStorage:
         
         if not content:
             existing_blocks.delete()
-            return True
+            return ret
             
         blocks = embedding_manager.split(content) or [content]
         
@@ -189,10 +200,16 @@ class EntryStorage:
                         for idx, embedding in zip(batch_indices, batch_embeddings):
                             embeddings[idx] = embedding
                     else:
+                        for idx in batch_indices:
+                            embeddings[idx] = None
                         logger.warning(f"embedding failed for user {entry.user_id}, batch {batch_start//batch_size + 1}, will continue with empty embeddings for this batch")
                 
                 successful_embeddings = sum(1 for emb in embeddings if emb is not None)
-                logger.info(f"Successfully embedded {successful_embeddings} out of {len(blocks)} blocks for user {entry.user_id}")
+                if debug:
+                    logger.info(f"Successfully embedded {successful_embeddings} out of {len(blocks)} blocks for user {entry.user_id}")
+                if successful_embeddings == 0:
+                    ret = False
+                    logger.warning(f"No embeddings were created for user {entry.user_id}, check embedding service or model configuration")
                 
         for i, (block_text, embedding) in enumerate(zip(blocks, embeddings)):
             block_entry = entry.clone(
@@ -209,11 +226,14 @@ class EntryStorage:
                 for key, value in block_entry.to_model_dict().items():
                     if key not in ['idx', 'created_time']:
                         setattr(old_block, key, value)
+                if embedding is None: # if embedding is None, not in key/value
+                    setattr(old_block, 'embeddings', None)
+                    setattr(old_block, 'emb_model', None)
                 old_block.save()
             else:
                 StoreEntry.objects.create(**block_entry.to_model_dict())
             
-        return True
+        return ret
 
     @staticmethod
     def get_content(user_id: str, addr: str) -> str:
