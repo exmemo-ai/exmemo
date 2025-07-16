@@ -11,9 +11,9 @@ RUN apt-get update -y --force-yes
 RUN apt-get install git vim openssh-server -y --force-yes
 RUN apt-get install gettext unrar -y --force-yes
 
-RUN echo '[global]' > /etc/pip.conf && \
-    echo 'index-url = https://mirrors.aliyun.com/pypi/simple/' >> /etc/pip.conf && \
-    echo 'trusted-host = mirrors.aliyun.com' >> /etc/pip.conf
+#RUN echo '[global]' > /etc/pip.conf && \
+#    echo 'index-url = https://mirrors.aliyun.com/pypi/simple/' >> /etc/pip.conf && \
+#    echo 'trusted-host = mirrors.aliyun.com' >> /etc/pip.conf
 
 COPY requirements.txt .
 COPY data/sshd_config /etc/ssh/sshd_config
