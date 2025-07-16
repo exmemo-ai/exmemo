@@ -4,6 +4,79 @@ import { getURL, parseBackendError, parseBlobData, setDefaultAuthHeader } from '
 import SettingService from '@/components/settings/settingService'
 import { t } from '@/utils/i18n'
 
+let fileSizeLimitCache = null;
+let fileSizeLimitCacheTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000;
+
+async function checkFileSizeLimit(file) {
+    const fileSize = file.size;
+    const fileSizeMB = fileSize / (1024 * 1024);
+    
+    if (fileSizeMB < 5) {
+        return { allowed: true };
+    }
+    
+    const now = Date.now();
+    if (fileSizeLimitCache && (now - fileSizeLimitCacheTime) < CACHE_DURATION) {
+        const limit = fileSizeLimitCache;
+        if (limit.is_trial_mode && fileSize > limit.max_size_bytes) {
+            return {
+                allowed: false,
+                message: t('datalist.fileSizeExceedsLimit', { 
+                    fileName: file.name,
+                    fileSize: fileSizeMB.toFixed(1),
+                    maxSize: limit.max_size_mb.toFixed(0)
+                })
+            };
+        }
+        return { allowed: true };
+    }
+    
+    try {
+        const response = await axios.get(getURL() + 'api/entry/data/file-size-limit/');
+        const limit = response.data;
+        
+        fileSizeLimitCache = limit;
+        fileSizeLimitCacheTime = now;
+        
+        if (limit.is_trial_mode && fileSize > limit.max_size_bytes) {
+            return {
+                allowed: false,
+                message: t('datalist.fileSizeExceedsLimit', { 
+                    fileName: file.name,
+                    fileSize: fileSizeMB.toFixed(1),
+                    maxSize: limit.max_size_mb.toFixed(0)
+                })
+            };
+        }
+        
+        return { allowed: true };
+    } catch (error) {
+        console.warn('Failed to check file size limit:', error);
+        return { allowed: true };
+    }
+}
+
+function checkEmbeddingStatus(responseData) {
+    if (responseData.emb_status === false) {
+        ElMessage({ 
+            type: 'warning', 
+            message: t('datalist.embeddingProcessFailed'),
+            duration: 5000
+        });
+        return;
+    }
+    
+    if (responseData.data && responseData.data.emb_status === false) {
+        ElMessage({ 
+            type: 'warning', 
+            message: t('datalist.embeddingProcessFailed'),
+            duration: 5000
+        });
+        return;
+    }
+}
+
 export async function saveEntry({
     form,
     onSuccess = null,
@@ -33,6 +106,11 @@ export async function saveEntry({
             }
         }
         if (file) {
+            const fileSizeCheck = await checkFileSizeLimit(file);
+            if (!fileSizeCheck.allowed) {
+                ElMessage.error(fileSizeCheck.message);
+                return false;
+            }
             formData.append('files', file);
             let fileName = file.name;
             if (form.title && form.title !== '') {
@@ -96,6 +174,7 @@ export async function saveEntry({
             const response = await axios.put(getURL() + func, formData);
             if (response.data.status === 'success') {
                 if (showMessage) ElMessage({ type: 'success', message: t('updateSuccess') });
+                checkEmbeddingStatus(response.data);
                 onSuccess?.(response.data);
                 return response.data;
             } else {
@@ -112,6 +191,7 @@ export async function saveEntry({
                 if (!response.data.task_id) {
                     if (showMessage) ElMessage({ type: 'success', message: t('saveSuccess') });
                 }
+                checkEmbeddingStatus(response.data);
                 onSuccess?.(response.data);
                 return response.data;
             } else {

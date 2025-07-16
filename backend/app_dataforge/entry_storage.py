@@ -202,7 +202,6 @@ class EntryStorage:
                     else:
                         for idx in batch_indices:
                             embeddings[idx] = None
-                        logger.warning(f"embedding failed for user {entry.user_id}, batch {batch_start//batch_size + 1}, will continue with empty embeddings for this batch")
                 
                 successful_embeddings = sum(1 for emb in embeddings if emb is not None)
                 if debug:

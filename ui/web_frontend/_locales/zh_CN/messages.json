@@ -583,6 +583,8 @@
         "advancedSearchButton": "高级搜索",
         "resetSearchButton": "重置搜索条件",
         "addDataButton": "添加数据",
-        "deleteButton": "删除"
+        "deleteButton": "删除",
+        "embeddingProcessFailed": "向量化处理失败",
+        "fileSizeExceedsLimit": "文件 '{fileName}' ({fileSize}MB) 超过了试用模式限制 {maxSize}MB"
     }
 }

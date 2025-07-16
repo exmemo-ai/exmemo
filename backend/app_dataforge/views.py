@@ -346,7 +346,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                                                    vault=None, is_unzip=False, is_createSubDir=False, debug=debug)
                 if not ret:
                     return do_result(False, _("update_failed"))
-                return do_result(True, _("update_successfully"))
+                return do_result(True, {"emb_status": ret_emb, "info":_("update_successfully")})
             else:
                 ret, ret_emb, info = add_data(dic, debug=debug)
         elif instance.etype == "record":
@@ -356,7 +356,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             ret, ret_emb, info = add_data(dic, debug=debug)
         if not ret:
             return do_result(False, _("update_failed"))
-        return do_result(True, _("update_successfully"))
+        return do_result(True, {"emb_status": ret_emb, "info":_("update_successfully")})
 
     def perform_custom_logic(self, validated_data):
         # demo
@@ -364,6 +364,26 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         #    raise ValidationError("price err！")
         # print(f": {validated_data}")
         pass
+
+    @action(detail=False, methods=["get"], url_path="file-size-limit")
+    def get_file_size_limit(self, request):
+        """
+        Get file size limit configuration
+        """
+        is_trial_mode = getattr(settings, 'IS_TRIAL_MODE', True)
+        if is_trial_mode:
+            max_size = getattr(settings, 'TRIAL_MAX_FILE_SIZE', 20 * 1024 * 1024)
+            return Response({
+                'is_trial_mode': True,
+                'max_size_bytes': max_size,
+                'max_size_mb': max_size / (1024 * 1024)
+            })
+        else:
+            return Response({
+                'is_trial_mode': False,
+                'max_size_bytes': None,
+                'max_size_mb': None
+            })
 
     @action(detail=True, methods=["get"], url_path="download")
     def download(self, request, pk=None):
