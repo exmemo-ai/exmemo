@@ -570,7 +570,7 @@
         "startDate": "Start Date",
         "endDate": "End Date",
         "searchMethod": "Method",
-        "keywordOnly": "Keyword Only",
+        "keywordOnly": "Keyword",
         "fileSearch": "File Search",
         "tagSearch": "Tag Search",
         "fuzzySearch": "Fuzzy Search",

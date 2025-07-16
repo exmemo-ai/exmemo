@@ -126,9 +126,9 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 else:
                     success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, debug=debug)
                     if debug:
-                        logger.info(f"upload_files success {str(success_list)[:200]}...")
+                        logger.info(f"upload_files success {str(success_list)[:200]}..., emb_status {emb_status}")
                     else:
-                        logger.info(f"upload_files success {len(success_list)}")
+                        logger.info(f"upload_files success {len(success_list)}, emb_status {emb_status}")
                     if len(success_list) > 0:
                         return do_result(True, {"list": success_list, "emb_status": emb_status})
                     else:

@@ -171,11 +171,11 @@ export default {
             this.llm_tool_model = tool_info.model || '';
 
             const embedding_info = settings.setting.embedding_model || {};
-            this.embedding_type = embedding_info.type || DEFAULT_EMBEDDING_TYPE;
-            this.embedding_url = embedding_info.url || DEFAULT_EMBEDDING_URL;
-            this.embedding_model = embedding_info.model || DEFAULT_EMBEDDING_MODEL;
-            this.embedding_apikey = embedding_info.apikey || '';
-            this.embedding_scope = settings.setting.embedding_scope || DEFAULT_EMBEDDING_SCOPE;
+            this.embedding_type = 'type' in embedding_info ? embedding_info.type : DEFAULT_EMBEDDING_TYPE;
+            this.embedding_url = 'url' in embedding_info ? embedding_info.url : DEFAULT_EMBEDDING_URL;
+            this.embedding_model = 'model' in embedding_info ? embedding_info.model : DEFAULT_EMBEDDING_MODEL;
+            this.embedding_apikey = 'apikey' in embedding_info ? embedding_info.apikey : '';
+            this.embedding_scope = 'embedding_scope' in settings.setting ? settings.setting.embedding_scope : DEFAULT_EMBEDDING_SCOPE;
         }
 
         const basicSettings = ['llm_chat_prompt', 'llm_chat_show_count', 

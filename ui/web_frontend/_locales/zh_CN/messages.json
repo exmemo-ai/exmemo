@@ -574,7 +574,7 @@
         "startDate": "开始日期",
         "endDate": "结束日期",
         "searchMethod": "方式",
-        "keywordOnly": "仅关键词",
+        "keywordOnly": "关键词搜索",
         "fileSearch": "文件搜索",
         "tagSearch": "标签搜索",
         "fuzzySearch": "模糊搜索",
