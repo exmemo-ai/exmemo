@@ -22,6 +22,8 @@ ExMemo also integrates practical tools like calorie calculators, translators, re
 
 ![](./images/data_manager.png)
 
+![](./images/data_list.png)
+
 *Chat Interface*
 
 ![](./images/chat.png)

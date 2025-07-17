@@ -20,6 +20,8 @@ ExMemo 是一款个人知识管理工具，专注于集中记录和管理多种�
 
 ![](./images/data_manager.png)
 
+![](./images/data_list.png)
+
 *聊天界面*
 
 ![](./images/chat.png)
