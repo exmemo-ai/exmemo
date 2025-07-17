@@ -16,10 +16,10 @@ done
 cd /exports/exmemo/code/exmemo/
 git pull
 cd backend
-DOCKER_BUILDKIT=1 docker build -t exmemo:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
+docker build --network=host -t exmemo:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
 docker tag exmemo:$DATE_STR exmemo:latest
 cd ../ui/web_frontend/
-DOCKER_BUILDKIT=1 docker build -t node_efrontend:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
+docker build --network=host -t node_efrontend:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
 docker tag node_efrontend:$DATE_STR node_efrontend:latest
 cd ../wechat/
 . install.sh
@@ -28,4 +28,4 @@ cd ../../
 echo "Starting new containers..."
 docker compose --env-file backend/.env --profile production up -d
 
-# Add DOCKER_BUILDKIT to optimize build speed, you need to install buildx: sudo apt-get install docker-buildx
+# UPDATE docker compose, remove DOCKER_BUILDKIT=1
