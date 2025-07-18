@@ -16,11 +16,11 @@ done
 cd /exports/exmemo/code/exmemo/
 git pull
 cd backend
-docker build --network=host -t exmemo:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
-docker tag exmemo:$DATE_STR exmemo:latest
+docker build --network=host -t xieyan800811/ebackend:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
+docker tag xieyan800811/ebackend:$DATE_STR xieyan800811/ebackend:latest
 cd ../ui/web_frontend/
-docker build --network=host -t node_efrontend:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
-docker tag node_efrontend:$DATE_STR node_efrontend:latest
+docker build --network=host -t xieyan800811/efrontend:$DATE_STR . --build-arg HTTP_PROXY=$PROXY_ADDR --build-arg HTTPS_PROXY=$PROXY_ADDR --build-arg NO_PROXY=$NO_PROXY
+docker tag xieyan800811/efrontend:$DATE_STR xieyan800811/efrontend:latest
 cd ../wechat/
 . install.sh
 cd ../../

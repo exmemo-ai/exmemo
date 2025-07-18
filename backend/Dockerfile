@@ -1,6 +1,6 @@
-# docker build -t exmemo:date .
-# docker run --rm -it --net=host exmemo # 运行
-# docker run --rm -it --net=host exmemo bash # 开发
+# Build: docker build -t xieyan800811/ebackend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+# Run: docker run --rm -it --net=host xieyan800811/ebackend # 运行
+# Dev: docker run --rm -it --net=host xieyan800811/ebackend bash # 开发
 
 FROM python:3.11-slim
 

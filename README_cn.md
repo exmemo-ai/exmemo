@@ -81,6 +81,20 @@ docker compose --profile production up -d
 
 按照上述步骤完成后，即可使用 ExMemo 的基本功能。打开 http://ip:8084/ 可以访问前端界面，使用前请先注册用户账号。
 
+#### 2.2.2 本地构建镜像（可选）
+
+如果需要本地构建镜像而不是使用 Docker Hub 的预构建镜像：
+
+```shell
+# 构建后端镜像
+cd backend
+docker build -t xieyan800811/ebackend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+
+# 构建前端镜像
+cd ../ui/web_frontend
+docker build -t xieyan800811/efrontend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+```
+
 ### 2.3 升级
 
 在项目升级时，为避免出现意外问题，需要重新打包 Docker 镜像，重新运行 Docker Compose，并删除旧容器。具体操作请参考 shell/update.sh。

@@ -82,6 +82,20 @@ Refer to shell/prod.sh for detailed commands.
 
 Once completed, you can use ExMemo's core features. Access the frontend at http://ip:8084/ and register an account to get started.
 
+#### 2.2.2 Build Local Images (Optional)
+
+If you need to build images locally instead of using pre-built images from Docker Hub:
+
+```shell
+# Build backend image
+cd backend
+docker build -t xieyan800811/ebackend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+
+# Build frontend image  
+cd ../ui/web_frontend
+docker build -t xieyan800811/efrontend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+```
+
 ### 2.3 Upgrades
 
 During upgrades, rebuild Docker images, restart Docker Compose, and remove old containers to avoid issues. Follow the steps in shell/update.sh.

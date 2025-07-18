@@ -19,7 +19,7 @@ services:
     #profiles: if you don't want to start this service, you can open these
     #  - edb
   efrontend:
-    image: node_efrontend:latest
+    image: xieyan800811/efrontend:latest
     restart: always
     container_name: efrontend
     ports:
@@ -29,11 +29,11 @@ services:
       - VUE_APP_K_LANGUAGE_CODE=${LANGUAGE_CODE}
     profiles:
       - production
-    build:
-      context: ./ui/web_frontend
-      args:
-        HTTP_PROXY: ${HTTP_PROXY}
-        HTTPS_PROXY: ${HTTP_PROXY}
+    # build:  # Commented out for production, use pre-built image from Docker Hub
+    #   context: ./ui/web_frontend
+    #   args:
+    #     HTTP_PROXY: ${HTTP_PROXY}
+    #     HTTPS_PROXY: ${HTTP_PROXY}
   efrontend_dev:
     image: node_efrontend:latest
     container_name: efrontend_dev
@@ -60,13 +60,13 @@ services:
         npm install
         npm run serve
   ebackend:
-    image: exmemo:latest
+    image: xieyan800811/ebackend:latest
     restart: always
-    build:
-      context: ./backend
-      args:
-        HTTP_PROXY: ${HTTP_PROXY}
-        HTTPS_PROXY: ${HTTP_PROXY}
+    # build:  # Commented out for production, use pre-built image from Docker Hub
+    #   context: ./backend
+    #   args:
+    #     HTTP_PROXY: ${HTTP_PROXY}
+    #     HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend
     env_file:
       - .env
