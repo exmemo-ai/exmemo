@@ -74,7 +74,7 @@ vi backend/.env
 #### 2.2.1 以生产模式启动
 
 ```shell
-docker compose --env-file backend/.env --profile production up -d
+docker compose --profile production up -d
 ```
 
 请查看 shell/prod.sh 获取具体命令。
@@ -127,7 +127,7 @@ cd $EXMEMO_DIR/code/exmemo/ui/wechat
 
 ``` shell
 cd $EXMEMO_DIR/code/exmemo/
-docker compose --env-file backend/.env --profile production up -d ewechat
+docker compose --profile production up -d ewechat
 ```
 
 查看 log 信息：
@@ -143,7 +143,7 @@ $ docker logs ewechat
 如果需要修改和调试前后端代码，请以开发模式启动，并手动运行后端 Python 程序。
 
 ```shell
-docker compose --env-file backend/.env --profile development up -d
+docker compose --profile development up -d
 docker exec -it ebackend_dev bash
 > cd backend
 > ./shell/run.sh
@@ -156,7 +156,7 @@ docker exec -it ebackend_dev bash
 数据默认存储于宿主机目录。若需使用 Minio S3 存储，请在.env 文件中配置 MINIO 相关选项。Minio Docker 不会自动启动，如需在宿主机上启用 Minio 服务，请手动操作。
 
 ```shell
-docker compose --env-file backend/.env -f docker-compose.yml up -d eminio
+docker compose -f docker-compose.yml up -d eminio
 ```
 
 ## 4 更新日志

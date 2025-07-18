@@ -126,3 +126,4 @@
 - Optimized file list search functionality
 - Optimized file synchronization and feature extraction backend logic
 - Optimized Docker image creation and startup scripts, upgraded Docker version
+- Moved `.env` environment file from `backend/.env` to project root directory for enhanced security

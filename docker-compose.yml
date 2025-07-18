@@ -1,4 +1,8 @@
-# 数据库，前端，后端，微信端
+# Database, Frontend, Backend, WeChat services
+# Usage:
+# Production environment (default): docker-compose --profile production up
+# Development environment: docker-compose --profile development up
+# Base services only (database, etc.): docker-compose up
 version: '3'
 services:
   edb:
@@ -65,7 +69,7 @@ services:
         HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend
     env_file:
-      - backend/.env
+      - .env
     ports:
       - "${BACKEND_PORT_INNER}:8005"
     volumes:
@@ -81,7 +85,7 @@ services:
         HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend_dev
     env_file:
-      - backend/.env
+      - .env
     ports:
       - "${BACKEND_PORT_INNER}:8005"
       - "${SSH_PORT:-22022}:22"

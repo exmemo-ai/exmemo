@@ -5,8 +5,8 @@ PROXY_ADDR="http://192.168.10.166:12346"
 NO_PROXY="192.168.10.166,192.168.10.169,192.168.10.168,192.168.10.165"
 
 echo "Stopping and removing existing containers..."
-docker compose --env-file backend/.env --profile production down
-docker compose --env-file backend/.env down --volumes --remove-orphans
+docker compose --profile production down
+docker compose down --volumes --remove-orphans
 
 echo "Removing any leftover containers..."
 for container in efrontend efrontend_dev ebackend ebackend_dev edb ewechat eminio eredis; do
@@ -26,6 +26,6 @@ cd ../wechat/
 cd ../../
 
 echo "Starting new containers..."
-docker compose --env-file backend/.env --profile production up -d
+docker compose --profile production up -d
 
 # UPDATE docker compose, remove DOCKER_BUILDKIT=1
