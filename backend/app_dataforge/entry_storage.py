@@ -1,5 +1,6 @@
 import pytz
 import traceback
+import json
 from typing import Optional
 from loguru import logger
 import numpy as np
@@ -278,8 +279,24 @@ class EntryStorage:
             if key not in exclude_fields:
                 if key == 'meta':
                     if update_meta_condition:
-                        if db_entry.meta and value:
-                            db_entry.meta.update(value)
+                        current_meta = db_entry.meta
+                        if isinstance(current_meta, str):
+                            try:
+                                current_meta = json.loads(current_meta)
+                            except (json.JSONDecodeError, TypeError) as e:
+                                logger.error(f"Failed to parse db_entry.meta string to dict: {e}")
+                                current_meta = {}
+                        
+                        if isinstance(value, str):
+                            try:
+                                value = json.loads(value)
+                            except (json.JSONDecodeError, TypeError) as e:
+                                logger.error(f"Failed to parse value string to dict: {e}")
+                                value = {}
+                        
+                        if current_meta and value:
+                            current_meta.update(value)
+                            db_entry.meta = current_meta
                         elif value:
                             db_entry.meta = value
                         if debug:
