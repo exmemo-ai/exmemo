@@ -42,11 +42,11 @@ DEFAULT_TOOL_URL='https://api.openai.com/v1'
 DEFAULT_TOOL_API_KEY='sk-'
 
 
-# EMBEDDING
+# EMBEDDING DEFAULT SETTING
 USE_EMBEDDING='False'
 EMBEDDING_TYPE='none' # openai/ollama/none
-EMBEDDING_OLLAMA_URL='http://xxx:11434'
-EMBEDDING_OLLAMA_MODEL='znbang/bge:small-zh-v1.5-f16'
+EMBEDDING_URL='http://xxx:11434' # or https://api.openai.com/v1
+EMBEDDING_MODEL='znbang/bge:small-zh-v1.5-f16' # or text-embedding-ada-002
 
 # Parse PDF with OCR
 BAIDU_OCR_APPID=''
@@ -68,3 +68,6 @@ TIMEZONE='Asia/Shanghai'
 USE_CELERY='True'
 REDIS_HOST='192.168.10.168' 
 REDIS_PORT='6379'
+
+# TRIAL MODE
+IS_TRIAL_MODE='True'  # Set to False for production mode

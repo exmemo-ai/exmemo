@@ -12,7 +12,7 @@ from .entry import delete_entry, add_data, REL_DIR_FILES, REL_DIR_NOTES
 from .zipfile import is_compressed_file, uncompress_file
 from .entry_item import EntryItem
 
-def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, progress_callback=None, task_id=None):
+def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, progress_callback=None, task_id=None, debug=False):
     if addr.startswith("/"):
         addr = addr[1:]
     dic_item = dic.copy()
@@ -25,12 +25,11 @@ def update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, pro
     if is_unzip and is_compressed_file(file_path):
         return uncompress_file(dic_item, file_path, is_createSubDir, progress_callback, task_id)
     else:
-        return add_data(dic_item, {"path":file_path})
+        return add_data(dic_item, {"path":file_path}, debug=debug)
 
         
 def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, 
-                 progress_callback=None, task_id=None):
-    debug = False
+                 progress_callback=None, task_id=None, debug=False):
     success_list = []
     if len(file_paths) > 0 and len(filemd5s) == 0:
         filemd5s = [None] * len(file_paths)
@@ -38,12 +37,13 @@ def update_files(file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_creat
     total = len(file_paths)
     emb_status = "success" 
     for idx, (file_path, addr, md5) in enumerate(zip(file_paths, filepaths, filemd5s)):
-        logger.info(f"update_files idx:{idx}, path:{file_path}, addr:{addr}, md5:{md5}")
+        if debug:
+            logger.info(f"update_files idx:{idx}, path:{file_path}, addr:{addr}, md5:{md5}")
         if len(file_paths) == 1:
             ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, 
-                                           progress_callback, task_id) # for single file, such as: zip
+                                           progress_callback, task_id, debug=debug) # for single file, such as: zip
         else:
-            ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir)
+            ret, ret_emb, detail = update_file(dic, addr, file_path, md5, vault, is_unzip, is_createSubDir, debug=debug)
         if not ret_emb:
             emb_status = "failed"
         if ret:

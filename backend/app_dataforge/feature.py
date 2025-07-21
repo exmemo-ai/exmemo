@@ -40,7 +40,7 @@ class CategoryConfigLoader:
             path = os.path.join(BASE_DATA_DIR, "record_keyword_en.xlsx")
         self.df_record = pd.read_excel(path, sheet_name="record")
         self.df_web = pd.read_excel(path, sheet_name="web")
-        self.calist = self._get_all_categories(debug=True)
+        self.calist = self._get_all_categories(debug=False)
 
     def _get_all_categories(self, debug=False):
         """Return all sub-categories"""
@@ -99,23 +99,41 @@ class EntryFeatureTool:
 
     def _need_llm(self, entry: EntryItem, user: Dict[str, Any], force: bool = False) -> bool:
         """check if LLM is needed for feature extraction"""
-        if entry.ctype is not None and entry.meta.get("description"):
+        if force:
+            return True
+            
+        has_complete_basic_features = (
+            entry.ctype is not None and 
+            entry.title is not None and 
+            entry.status is not None and 
+            entry.atype is not None
+        )
+        
+        needs_description = False
+        has_description = entry.meta.get("description") is not None
+        
+        if entry.etype == "note":
+            needs_description = user.get("note_get_abstract", False)
+            if not user.get("note_get_category", True) and not needs_description:
+                return False
+        elif entry.etype == "file":
+            needs_description = user.get("file_get_abstract", False)
+            if not user.get("file_get_category", True) and not needs_description:
+                return False
+        elif entry.etype == "web":
+            needs_description = user.get("web_get_abstract", False)
+            if not user.get("web_get_category", True) and not needs_description:
+                return False
+        
+        # logger.debug(f"need_llm: {entry.etype} {has_complete_basic_features} {needs_description} {has_description}")
+        if has_complete_basic_features and (not needs_description or has_description):
             return False
             
         if is_image_file(entry.title or ""):
-            entry.ctype = IMAGE_CATEGORY
+            if entry.ctype is None:
+                entry.ctype = IMAGE_CATEGORY
             return False
             
-        if entry.etype == "note":
-            if not force and not user.get("note_get_category") and not user.get("note_get_abstract"):
-                return False
-        elif entry.etype == "file":
-            if not force and not user.get("file_get_category") and not user.get("file_get_abstract"):
-                return False
-        elif entry.etype == "web":
-            if not force and not user.get("web_get_category") and not user.get("web_get_abstract"):
-                return False
-                
         return True
 
     def _process_llm_result(self, entry: EntryItem, features: Dict[str, Any], force: bool) -> None:
@@ -153,9 +171,6 @@ class EntryFeatureTool:
             if handler:
                 handler(entry, content, use_llm, force, debug)
 
-            entry.status = entry.status or DEFAULT_STATUS
-            entry.atype = entry.atype or "subjective"
-            entry.ctype = entry.ctype or DEFAULT_CATEGORY
             entry.title = entry.title or content
 
             self._process_title_length(entry)
@@ -181,24 +196,20 @@ class EntryFeatureTool:
             if ret:
                 self._process_llm_result(entry, features, force)
 
-        entry.atype = "subjective"
-
     def _parse_note(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
         user = UserManager.get_instance().get_user(entry.user_id)
         
         if entry.title is None:
             entry.title = os.path.basename(content)
-            
+        
+        #logger.info(f'Note parse: {entry}');
         if self._need_llm(entry, user, force) and use_llm:
             ret, features = get_features_by_llm(
-                entry.user_id, entry.title, entry.etype, use_llm=use_llm, debug=debug
+                entry.user_id, content, entry.etype, use_llm=use_llm, debug=debug 
             )
             if ret:
                 self._process_llm_result(entry, features, force)
-                
-        entry.status = entry.status or "collect"
-        entry.atype = entry.atype or "subjective"
 
     def _parse_file(self, entry: EntryItem, content: str,
                     use_llm: bool, force: bool, debug: bool) -> None:
@@ -213,9 +224,6 @@ class EntryFeatureTool:
             )
             if ret:
                 self._process_llm_result(entry, features, force)
-                
-        entry.status = entry.status or "collect"
-        entry.atype = entry.atype or "third_party"
 
     def _parse_web(self, entry: EntryItem, content: str,
                    use_llm: bool, force: bool, debug: bool) -> None:
@@ -289,6 +297,7 @@ def get_features_by_llm(user_id, content, etype, title=None, use_llm=True, debug
             status_list=",".join(status_list)
         )
         
+        # logger.error(f"now llm_query {query[:1000]}") # for debugging
         ret, result, detail = llm_query_json(
             user_id, RECORD_ROLE, query, "data_manager", debug=debug
         )

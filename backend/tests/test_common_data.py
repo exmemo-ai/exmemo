@@ -172,10 +172,10 @@ class EmbeddingTestCase(BaseTestCase):
     def test_embedding(self):
         os.environ["USE_EMBEDDING"] = "True"
         os.environ["EMBEDDING_TYPE"] = "ollama"
-        os.environ["EMBEDDING_OLLAMA_URL"] = "http://192.168.10.168:11434"
-        os.environ["EMBEDDING_OLLAMA_MODEL"] = "znbang/bge:small-zh-v1.5-f16"
+        os.environ["EMBEDDING_URL"] = "http://192.168.10.168:11434"
+        os.environ["EMBEDDING_MODEL"] = "znbang/bge:small-zh-v1.5-f16"
         self.inner_add_data()
-        os.environ["EMBEDDING_OLLAMA_MODEL"] = "mofanke/dmeta-embedding-zh"
+        os.environ["EMBEDDING_MODEL"] = "mofanke/dmeta-embedding-zh"
         addrlist = self.inner_check_embedding()
         self.inner_regen_embedding(addrlist)
 

@@ -8,6 +8,7 @@ from celery.result import AsyncResult
 from celery.app.control import Control
 
 from backend.common.user.utils import get_user_id
+from backend.settings import USE_CELERY
 from .models import UserTask
 from .serializers import UserTaskSerializer
 
@@ -116,3 +117,9 @@ class UserTaskViewSet(viewsets.ModelViewSet):
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=False, methods=['get'])
+    def async_support(self, request):
+        return Response({
+            'async_supported': USE_CELERY
+        })

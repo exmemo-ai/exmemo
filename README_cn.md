@@ -20,6 +20,8 @@ ExMemo 是一款个人知识管理工具，专注于集中记录和管理多种�
 
 ![](./images/data_manager.png)
 
+![](./images/data_list.png)
+
 *聊天界面*
 
 ![](./images/chat.png)
@@ -72,12 +74,26 @@ vi backend/.env
 #### 2.2.1 以生产模式启动
 
 ```shell
-docker compose --env-file backend/.env --profile production up -d
+docker compose --profile production up -d
 ```
 
 请查看 shell/prod.sh 获取具体命令。
 
 按照上述步骤完成后，即可使用 ExMemo 的基本功能。打开 http://ip:8084/ 可以访问前端界面，使用前请先注册用户账号。
+
+#### 2.2.2 本地构建镜像（可选）
+
+如果需要本地构建镜像而不是使用 Docker Hub 的预构建镜像：
+
+```shell
+# 构建后端镜像
+cd backend
+docker build -t xieyan800811/ebackend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+
+# 构建前端镜像
+cd ../ui/web_frontend
+docker build -t xieyan800811/efrontend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+```
 
 ### 2.3 升级
 
@@ -125,7 +141,7 @@ cd $EXMEMO_DIR/code/exmemo/ui/wechat
 
 ``` shell
 cd $EXMEMO_DIR/code/exmemo/
-docker compose --env-file backend/.env --profile production up -d ewechat
+docker compose --profile production up -d ewechat
 ```
 
 查看 log 信息：
@@ -141,7 +157,7 @@ $ docker logs ewechat
 如果需要修改和调试前后端代码，请以开发模式启动，并手动运行后端 Python 程序。
 
 ```shell
-docker compose --env-file backend/.env --profile development up -d
+docker compose --profile development up -d
 docker exec -it ebackend_dev bash
 > cd backend
 > ./shell/run.sh
@@ -154,7 +170,7 @@ docker exec -it ebackend_dev bash
 数据默认存储于宿主机目录。若需使用 Minio S3 存储，请在.env 文件中配置 MINIO 相关选项。Minio Docker 不会自动启动，如需在宿主机上启用 Minio 服务，请手动操作。
 
 ```shell
-docker compose --env-file backend/.env -f docker-compose.yml up -d eminio
+docker compose -f docker-compose.yml up -d eminio
 ```
 
 ## 4 更新日志

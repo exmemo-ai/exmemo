@@ -1,12 +1,13 @@
 import pytz
 import traceback
+import json
 from typing import Optional
 from loguru import logger
 import numpy as np
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from backend.common.llm.llm_hub import EmbeddingTools
+from backend.common.llm.embedding import embedding_manager
 from backend.common.files import utils_filemanager
 from .models import StoreEntry
 from .entry_item import EntryItem
@@ -19,24 +20,38 @@ class EntryStorage:
         content: Optional[str] = None,
         has_new_content: bool = True,
         debug: bool = False
-    ) -> tuple:
-        logger.info(f"save {str(entry.to_dict())[:200]}")
-        #logger.info(f"save {str(entry.to_dict())}")
-        
+    ) -> tuple:        
         try:
             entry.updated_time = timezone.now().astimezone(pytz.UTC)
-            
-            ret_emb = True
-            if entry.idx and StoreEntry.objects.filter(idx=entry.idx, block_id=0).exists():
-                ret_emb = EntryStorage._update_entry(entry, has_new_content, content)
-            else:
-                ret_emb = EntryStorage._create_entry(entry, content)
+            if debug:
+                logger.info(f"save {str(entry.to_dict())[:200]} ... {entry.updated_time}")
+            #logger.info(f"save {str(entry.to_dict())}")
 
-            return (
-                True, 
-                ret_emb,
-                _("update_success") if entry.idx else _("add_success")
-            )
+            db_entry = None
+            operation = _("add_success")
+            
+            if entry.idx:
+                try:
+                    db_entry = StoreEntry.objects.get(idx=entry.idx, block_id=0)
+                    operation = _("update_success")
+                except StoreEntry.DoesNotExist:
+                    pass
+            
+            if db_entry is None and entry.addr:
+                try:
+                    db_entry = StoreEntry.objects.filter(user_id=entry.user_id, addr=entry.addr, block_id=0).first()
+                    if db_entry:
+                        entry.idx = db_entry.idx
+                        operation = _("update_success")
+                except Exception:
+                    pass
+            
+            if db_entry:
+                ret_emb = EntryStorage._update_entry(entry, has_new_content, content, debug=debug)
+            else:
+                ret_emb = EntryStorage._create_entry(entry, content, debug=debug)
+            
+            return True, ret_emb, operation
             
         except Exception as e:
             logger.error(f"save_entry failed: {str(e)}")
@@ -44,12 +59,12 @@ class EntryStorage:
             return False, False, _("add_failed")
 
     @staticmethod
-    def _update_entry(entry: EntryItem, has_new_content: bool, content: Optional[str] = None):
+    def _update_entry(entry: EntryItem, has_new_content: bool, content: Optional[str] = None, debug: bool = False):
         ret_emb = True
         if has_new_content:
             db_entry = StoreEntry.objects.get(idx=entry.idx) # block_id=0
-            for key, value in entry.to_model_dict().items():
-                setattr(db_entry, key, value)
+            exclude_fields = ['created_time']
+            EntryStorage._update_db_entry_fields(db_entry, entry.to_model_dict(), exclude_fields, debug=debug)
             
             abstract = entry.meta.get("description") if entry.meta else None
             if abstract:
@@ -57,61 +72,75 @@ class EntryStorage:
                     db_entry.raw != abstract or
                     db_entry.embeddings is None or
                     len(db_entry.embeddings) == 0 or
-                    db_entry.emb_model != EmbeddingTools.get_model_name()
+                    db_entry.emb_model != embedding_manager.get_model_name(entry.user_id)
                 )
                 
                 db_entry.raw = abstract
-                if EmbeddingTools.use_embedding() and need_new_embedding:
-                    ret, embeddings = EmbeddingTools.do_embedding([abstract], True)
+                embedding_scope = embedding_manager.get_embedding_scope(entry.user_id)
+                if embedding_scope != 'none' and need_new_embedding:
+                    ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                     if ret:
                         db_entry.embeddings = embeddings[0]
-                        db_entry.emb_model = EmbeddingTools.get_model_name()
+                        db_entry.emb_model = embedding_manager.get_model_name(entry.user_id)
+                    else:
+                        db_entry.embeddings = None
+                        db_entry.emb_model = None
+                        ret_emb = False
+                        logger.warning(f"embedding failed for user {entry.user_id}, will continue with empty embeddings")
+            if debug:
+                logger.info(f"update entry {entry.idx} {entry.addr} {entry.etype} {entry.user_id} {db_entry.raw[:100]}")
             db_entry.save()
             if content:
-                ret_emb = EntryStorage._save_content_blocks(entry, content)
+                ret_emb = EntryStorage._save_content_blocks(entry, content, debug=debug)
         else: # 没有新文件上传/更新文件，只改属性值
             entries = StoreEntry.objects.filter(
                 user_id=entry.user_id,
                 addr=entry.addr
             )
             entry_dict = entry.to_model_dict()
-            exclude_fields = ['idx', 'embeddings', 'emb_model', 'block_id', 'raw']
+            exclude_fields = ['idx', 'embeddings', 'emb_model', 'block_id', 'raw', 'created_time']
             for field in exclude_fields:
                 entry_dict.pop(field, None)
             for db_entry in entries:
-                for key, value in entry_dict.items():
-                    if key != 'meta' or db_entry.block_id == 0:
-                        setattr(db_entry, key, value)
+                EntryStorage._update_db_entry_fields(
+                    db_entry, 
+                    entry_dict, 
+                    exclude_fields=[], 
+                    update_meta_condition=(db_entry.block_id == 0),
+                    debug=debug
+                )
                 db_entry.save()
         return ret_emb
 
     @staticmethod 
-    def _create_entry(entry: EntryItem, content: Optional[str] = None):
+    def _create_entry(entry: EntryItem, content: Optional[str] = None, debug: bool = False):
         ret_emb = True
-        if entry.addr:
-            StoreEntry.objects.filter(
-                user_id=entry.user_id,
-                addr=entry.addr
-            ).delete()
             
         entry_dict = entry.to_model_dict()
         entry_dict['block_id'] = 0
-        entry_dict['emb_model'] = EmbeddingTools.get_model_name()
+        entry_dict['emb_model'] = embedding_manager.get_model_name(entry.user_id)
         
         abstract = entry.meta.get("description") if entry.meta else None
         if abstract:
             entry_dict['raw'] = abstract
-            if EmbeddingTools.use_embedding():
-                ret, embeddings = EmbeddingTools.do_embedding([abstract], True)
+            embedding_scope = embedding_manager.get_embedding_scope(entry.user_id)
+            if embedding_scope != 'none':
+                ret, embeddings = embedding_manager.do_embedding(entry.user_id, [abstract])
                 if ret:
                     entry_dict['embeddings'] = embeddings[0]
+                else:
+                    entry_dict['embeddings'] = None
+                    entry_dict['emb_model'] = None
+                    ret_emb = False
+                    logger.warning(f"embedding failed for user {entry.user_id}, will continue with empty embeddings")
         StoreEntry.objects.create(**entry_dict)
         if content:
-            ret_emb = EntryStorage._save_content_blocks(entry, content)
+            ret_emb = EntryStorage._save_content_blocks(entry, content, debug=debug)
         return ret_emb
 
     @staticmethod
     def _save_content_blocks(entry: EntryItem, content: str, debug: bool=False) -> bool:
+        ret = True
         existing_blocks = StoreEntry.objects.filter(
             user_id=entry.user_id,
             addr=entry.addr,
@@ -122,15 +151,16 @@ class EntryStorage:
         
         if not content:
             existing_blocks.delete()
-            return True
+            return ret
             
-        blocks = EmbeddingTools.split(content) or [content]
+        blocks = embedding_manager.split(content) or [content]
         
         if len(blocks) != (existing_blocks.count() if has_existing else 0):
             existing_blocks.delete()
             has_existing = False
         
-        if not EmbeddingTools.use_embedding():
+        embedding_scope = embedding_manager.get_embedding_scope(entry.user_id)
+        if embedding_scope != 'all':
             embeddings = []
             for i, block_text in enumerate(blocks):
                 if has_existing:
@@ -149,29 +179,44 @@ class EntryStorage:
                     old_block = existing_blocks[i]
                     if (safe_equals(old_block.raw, block_text) and 
                         old_block.embeddings is not None and 
-                        old_block.emb_model == EmbeddingTools.get_model_name()):
+                        old_block.emb_model == embedding_manager.get_model_name(entry.user_id)):
                         embeddings[i] = old_block.embeddings
                         continue
                 
                 blocks_need_embedding.append(block_text)
-                embedding_indices.append(i)
+                embedding_indices.append(i) # 只更新不一样的块
             
             if len(blocks_need_embedding) > 0:
-                ret, new_embeddings = EmbeddingTools.do_embedding(blocks_need_embedding, True)
-                if debug:
-                    logger.debug(f"embeddings {ret} {len(new_embeddings)}")
-                if not ret:
-                    return False
+                batch_size = 100
+                for batch_start in range(0, len(blocks_need_embedding), batch_size):
+                    batch_end = min(batch_start + batch_size, len(blocks_need_embedding))
+                    batch_blocks = blocks_need_embedding[batch_start:batch_end]
+                    batch_indices = embedding_indices[batch_start:batch_end]
                     
-                for idx, embedding in zip(embedding_indices, new_embeddings):
-                    embeddings[idx] = embedding
+                    ret, batch_embeddings = embedding_manager.do_embedding(entry.user_id, batch_blocks)
+                    if debug:
+                        logger.debug(f"batch {batch_start//batch_size + 1} embeddings {ret} {len(batch_embeddings)}")
+                    
+                    if ret:
+                        for idx, embedding in zip(batch_indices, batch_embeddings):
+                            embeddings[idx] = embedding
+                    else:
+                        for idx in batch_indices:
+                            embeddings[idx] = None
+                
+                successful_embeddings = sum(1 for emb in embeddings if emb is not None)
+                if debug:
+                    logger.info(f"Successfully embedded {successful_embeddings} out of {len(blocks)} blocks for user {entry.user_id}")
+                if successful_embeddings == 0:
+                    ret = False
+                    logger.warning(f"No embeddings were created for user {entry.user_id}, check embedding service or model configuration")
                 
         for i, (block_text, embedding) in enumerate(zip(blocks, embeddings)):
             block_entry = entry.clone(
                 block_id=i+1,
                 raw=block_text,
                 embeddings=embedding,
-                emb_model=EmbeddingTools.get_model_name() if embedding is not None else None,
+                emb_model=embedding_manager.get_model_name(entry.user_id) if embedding is not None else None,
                 idx=None,
                 meta=None
             )
@@ -181,11 +226,14 @@ class EntryStorage:
                 for key, value in block_entry.to_model_dict().items():
                     if key not in ['idx', 'created_time']:
                         setattr(old_block, key, value)
+                if embedding is None: # if embedding is None, not in key/value
+                    setattr(old_block, 'embeddings', None)
+                    setattr(old_block, 'emb_model', None)
                 old_block.save()
             else:
                 StoreEntry.objects.create(**block_entry.to_model_dict())
             
-        return True
+        return ret
 
     @staticmethod
     def get_content(user_id: str, addr: str) -> str:
@@ -221,6 +269,40 @@ class EntryStorage:
                     entry.save()
                 else:
                     entry.delete()
+
+    @staticmethod
+    def _update_db_entry_fields(db_entry, entry_dict, exclude_fields=None, update_meta_condition=True, debug=False):
+        if exclude_fields is None:
+            exclude_fields = []
+            
+        for key, value in entry_dict.items():
+            if key not in exclude_fields:
+                if key == 'meta':
+                    if update_meta_condition:
+                        current_meta = db_entry.meta
+                        if isinstance(current_meta, str):
+                            try:
+                                current_meta = json.loads(current_meta)
+                            except (json.JSONDecodeError, TypeError) as e:
+                                logger.error(f"Failed to parse db_entry.meta string to dict: {e}")
+                                current_meta = {}
+                        
+                        if isinstance(value, str):
+                            try:
+                                value = json.loads(value)
+                            except (json.JSONDecodeError, TypeError) as e:
+                                logger.error(f"Failed to parse value string to dict: {e}")
+                                value = {}
+                        
+                        if current_meta and value:
+                            current_meta.update(value)
+                            db_entry.meta = current_meta
+                        elif value:
+                            db_entry.meta = value
+                        if debug:
+                            logger.debug(f"Updated meta for {db_entry.idx}: {db_entry.meta}")
+                else:
+                    setattr(db_entry, key, value)
 
 def safe_equals(a, b) -> bool:
     try:

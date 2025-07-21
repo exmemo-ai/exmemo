@@ -159,6 +159,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 USE_CELERY = os.getenv("USE_CELERY", "True").lower() == "true"
 
+IS_TRIAL_MODE = os.getenv("IS_TRIAL_MODE", "True").lower() == "true"
+TRIAL_MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB in bytes
+
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "en-US")
 
 TIME_ZONE = "UTC"

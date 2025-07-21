@@ -114,3 +114,16 @@
 - Fixed chapter order and table of contents formatting issues in epub files
 - No longer adding prompts every time when chatting with the model
 - Reduced translation time
+
+## 7 [1.2.1] - 2025-07-17
+
+### 7.1 Added
+
+- Added user vector embedding settings functionality
+
+### 7.2 Changed
+
+- Optimized file list search functionality
+- Optimized file synchronization and feature extraction backend logic
+- Optimized Docker image creation and startup scripts, upgraded Docker version
+- Moved `.env` environment file from `backend/.env` to project root directory for enhanced security

@@ -24,6 +24,7 @@ from backend.common.parser.converter import convert, is_support
 from backend.settings import USE_CELERY
 
 from .entry import delete_entry, add_data, get_entry_list
+from .entry import EmbeddingNotAvailableError
 from .models import StoreEntry
 from .serializers import ListSerializer, DetailSerializer
 from .zipfile import is_compressed_file
@@ -44,7 +45,6 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         return DetailSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info("now create instance")
         """
         update files
         """
@@ -62,6 +62,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             dic["user_id"] = get_user_id(request)
             dic["source"] = request.POST.get("source", "web")
             is_async = request.POST.get("is_async", "false").lower() == "true"
+            logger.info(f"now create instance: {dic['etype']}, user_id {dic['user_id']}, is_async {is_async}")
             if dic["etype"] == "web":
                 addr = request.POST.get("addr", None)
                 if not addr.startswith("http"):
@@ -81,6 +82,14 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 files = request.FILES.getlist("files")
                 filepaths = request.POST.getlist("filepaths")
                 filemd5s = request.POST.getlist("filemd5s")
+                
+                if getattr(settings, 'IS_TRIAL_MODE', True):
+                    max_size = getattr(settings, 'TRIAL_MAX_FILE_SIZE', 20 * 1024 * 1024)
+                    for file in files:
+                        if not is_compressed_file(file.name) and file.size > max_size:
+                            size_mb = file.size / (1024 * 1024)
+                            return do_result(False, _("File '{}' ({:.1f}MB) exceeds the trial mode limit of 20MB for non-compressed files").format(file.name, size_mb))
+                
                 if debug:
                     logger.info(
                         f"do_upload files {files}, filepaths {filepaths},  filemd5s {filemd5s}"
@@ -115,11 +124,11 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     )
                     return do_result(True, {"task_id": str(task_id)})
                 else:
-                    success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir)
+                    success_list, emb_status = update_files(tmp_file_paths, filepaths, filemd5s, dic, vault, is_unzip, is_createSubDir, debug=debug)
                     if debug:
-                        logger.info(f"upload_files success {str(success_list)[:200]}...")
+                        logger.info(f"upload_files success {str(success_list)[:200]}..., emb_status {emb_status}")
                     else:
-                        logger.info(f"upload_files success {len(success_list)}")
+                        logger.info(f"upload_files success {len(success_list)}, emb_status {emb_status}")
                     if len(success_list) > 0:
                         return do_result(True, {"list": success_list, "emb_status": emb_status})
                     else:
@@ -148,14 +157,14 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         """
         get entry list by page
         """
-        debug = True  # for test
-        count_limit = -1
+        debug = False
         query_args = {}
         user_id = get_user_id(request)
         if user_id is None:
             return Response([])
         else:
             query_args["user_id"] = user_id
+            
         max_count = request.GET.get("max_count", -1)
         max_count = int(max_count)
         etype = request.GET.get("etype", None)
@@ -164,10 +173,13 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         ctype = request.GET.get("ctype", None)
         if ctype is not None and len(ctype) > 0:
             query_args["ctype"] = ctype
-        status = request.GET.get("status", None)
-        if status is not None and len(status) > 0:
-            query_args["status"] = status
+        rstatus = request.GET.get("status", None)
+        if rstatus is not None and len(rstatus) > 0:
+            query_args["status"] = rstatus
+        method = request.GET.get("method", 'auto')
         keywords = request.GET.get("keyword", None)
+        exclude = request.GET.get("exclude", None)
+        case_sensitive = request.GET.get("case_sensitive", "false").lower() == "true"
         start_date = request.GET.get("start_date", None)
         end_date = request.GET.get("end_date", None)
         if start_date is not None and len(start_date) > 0:
@@ -182,20 +194,28 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         if debug:
             logger.debug(f"args {query_args}, keyword {keywords}")
 
-        if max_count != -1:
-            count_limit = max_count
-        queryset = get_entry_list(keywords, query_args, count_limit)
-
-        if max_count == -1:
-            # Use DRF pagination for unlimited results
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
-        else:
-            # Limit results if max_count is specified
-            serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data)
+        try:
+            queryset = get_entry_list(keywords, query_args, max_count if max_count != -1 else -1, method=method, 
+                                      exclude=exclude, case_sensitive=case_sensitive, debug=debug)
+            
+            if max_count == -1:
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+                else:
+                    serializer = self.get_serializer(queryset, many=True)
+                    return Response(serializer.data)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+                return Response(serializer.data)
+                
+        except EmbeddingNotAvailableError as e:
+            logger.warning(f"Embedding not available: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except Exception as e:
+            logger.error(f"Error in list: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -283,6 +303,7 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
+        debug = False
         instance = self.get_object() # base instance         
         dic = {}
         for key in instance.__dict__.keys():
@@ -305,8 +326,15 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                     return do_result(False, _("update_failed"))
                 else:
                     return do_result(True, _("update_successfully"))
+    
             # check update file
             elif request.FILES:
+                if getattr(settings, 'IS_TRIAL_MODE', True):
+                    max_size = getattr(settings, 'TRIAL_MAX_FILE_SIZE', 20 * 1024 * 1024)
+                    file = request.FILES['files']
+                    if not is_compressed_file(file.name) and file.size > max_size:
+                        size_mb = file.size / (1024 * 1024)
+                        return do_result(False, _("File '{}' ({:.1f}MB) exceeds the trial mode limit of 20MB for non-compressed files").format(file.name, size_mb))
                 ext = get_ext(instance.addr)
                 tmp_path = filecache.get_tmpfile(ext)
                 with open(tmp_path, "wb") as f:
@@ -315,20 +343,20 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                         f.write(chunk)
                     f.close()
                 ret, ret_emb, detail = update_file(dic, instance.addr, tmp_path, None,
-                                                   vault=None, is_unzip=False, is_createSubDir=False)
+                                                   vault=None, is_unzip=False, is_createSubDir=False, debug=debug)
                 if not ret:
                     return do_result(False, _("update_failed"))
-                return do_result(True, _("update_successfully"))
+                return do_result(True, {"emb_status": ret_emb, "info":_("update_successfully")})
             else:
-                ret, ret_emb, info = add_data(dic)
+                ret, ret_emb, info = add_data(dic, debug=debug)
         elif instance.etype == "record":
             content = request.data.get("content", None)
-            ret, ret_emb, info = add_data(dic, data = {'content': content})
+            ret, ret_emb, info = add_data(dic, data = {'content': content}, debug=debug)
         else:
-            ret, ret_emb, info = add_data(dic)
+            ret, ret_emb, info = add_data(dic, debug=debug)
         if not ret:
             return do_result(False, _("update_failed"))
-        return do_result(True, _("update_successfully"))
+        return do_result(True, {"emb_status": ret_emb, "info":_("update_successfully")})
 
     def perform_custom_logic(self, validated_data):
         # demo
@@ -336,6 +364,26 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         #    raise ValidationError("price err！")
         # print(f": {validated_data}")
         pass
+
+    @action(detail=False, methods=["get"], url_path="file-size-limit")
+    def get_file_size_limit(self, request):
+        """
+        Get file size limit configuration
+        """
+        is_trial_mode = getattr(settings, 'IS_TRIAL_MODE', True)
+        if is_trial_mode:
+            max_size = getattr(settings, 'TRIAL_MAX_FILE_SIZE', 20 * 1024 * 1024)
+            return Response({
+                'is_trial_mode': True,
+                'max_size_bytes': max_size,
+                'max_size_mb': max_size / (1024 * 1024)
+            })
+        else:
+            return Response({
+                'is_trial_mode': False,
+                'max_size_bytes': None,
+                'max_size_mb': None
+            })
 
     @action(detail=True, methods=["get"], url_path="download")
     def download(self, request, pk=None):

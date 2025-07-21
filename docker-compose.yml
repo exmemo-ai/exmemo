@@ -1,4 +1,8 @@
-# 数据库，前端，后端，微信端
+# Database, Frontend, Backend, WeChat services
+# Usage:
+# Production environment (default): docker-compose --profile production up
+# Development environment: docker-compose --profile development up
+# Base services only (database, etc.): docker-compose up
 version: '3'
 services:
   edb:
@@ -15,7 +19,7 @@ services:
     #profiles: if you don't want to start this service, you can open these
     #  - edb
   efrontend:
-    image: node_efrontend:latest
+    image: xieyan800811/efrontend:latest
     restart: always
     container_name: efrontend
     ports:
@@ -25,11 +29,11 @@ services:
       - VUE_APP_K_LANGUAGE_CODE=${LANGUAGE_CODE}
     profiles:
       - production
-    build:
-      context: ./ui/web_frontend
-      args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
+    # build:  # Commented out for production, use pre-built image from Docker Hub
+    #   context: ./ui/web_frontend
+    #   args:
+    #     HTTP_PROXY: ${HTTP_PROXY}
+    #     HTTPS_PROXY: ${HTTP_PROXY}
   efrontend_dev:
     image: node_efrontend:latest
     container_name: efrontend_dev
@@ -43,8 +47,8 @@ services:
     build:
       context: ./ui/web_frontend
       args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}      
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTP_PROXY}
     volumes:
       - ${HOST_SRC_DIR}:/opt/
     entrypoint: ["sh", "-c"]
@@ -56,16 +60,16 @@ services:
         npm install
         npm run serve
   ebackend:
-    image: exmemo:latest
+    image: xieyan800811/ebackend:latest
     restart: always
-    build:
-      context: ./backend
-      args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
+    # build:  # Commented out for production, use pre-built image from Docker Hub
+    #   context: ./backend
+    #   args:
+    #     HTTP_PROXY: ${HTTP_PROXY}
+    #     HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend
     env_file:
-      - backend/.env
+      - .env
     ports:
       - "${BACKEND_PORT_INNER}:8005"
     volumes:
@@ -77,11 +81,11 @@ services:
     build:
       context: ./backend
       args:
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTP_PROXY}
     container_name: ebackend_dev
     env_file:
-      - backend/.env
+      - .env
     ports:
       - "${BACKEND_PORT_INNER}:8005"
       - "${SSH_PORT:-22022}:22"
@@ -114,7 +118,7 @@ services:
       - |
         cd /opt/chatgpt-on-wechat/
         python app.py
-    #profiles: if you don't want to start this service, you can open these
+    profiles: #if you don't want to start this service, you can open these
       - ewechat   
   eminio:
     image: bitnami/minio:2024.3.3

@@ -1,2 +1,4 @@
-docker compose --env-file backend/.env --profile production down
-docker compose --env-file backend/.env --profile production up -d
+docker compose --profile production down
+docker compose --profile development down
+sleep 5
+docker compose --profile production up -d

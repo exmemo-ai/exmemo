@@ -22,6 +22,8 @@ ExMemo also integrates practical tools like calorie calculators, translators, re
 
 ![](./images/data_manager.png)
 
+![](./images/data_list.png)
+
 *Chat Interface*
 
 ![](./images/chat.png)
@@ -57,8 +59,8 @@ cd exmemo
 Set personal environment variables based on the format of env_default.
 
 ``` shell
-cp backend/env_default backend/.env
-vi backend/.env
+cp backend/env_default .env
+vi .env
 ```
 
 At minimum, configure the following: IP addresses, LANGUAGE_CODE, and PGSQL_PASSWORD.
@@ -73,12 +75,26 @@ At minimum, configure the following: IP addresses, LANGUAGE_CODE, and PGSQL_PASS
 #### 2.2.1 Start in Production Mode
 
 ```shell
-docker compose --env-file backend/.env --profile production up -d
+docker compose --profile production up -d
 ```
 
 Refer to shell/prod.sh for detailed commands.
 
 Once completed, you can use ExMemo's core features. Access the frontend at http://ip:8084/ and register an account to get started.
+
+#### 2.2.2 Build Local Images (Optional)
+
+If you need to build images locally instead of using pre-built images from Docker Hub:
+
+```shell
+# Build backend image
+cd backend
+docker build -t xieyan800811/ebackend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+
+# Build frontend image  
+cd ../ui/web_frontend
+docker build -t xieyan800811/efrontend:latest . --build-arg HTTP_PROXY=$HTTP_PROXY --build-arg HTTPS_PROXY=$HTTP_PROXY
+```
 
 ### 2.3 Upgrades
 
@@ -126,7 +142,7 @@ Start the WeChat image:
 
 ```shell
 cd $EXMEMO_DIR/code/exmemo/
-docker compose --env-file backend/.env --profile production up -d ewechat
+docker compose --profile production up -d ewechat
 ```
 
 Check logs:
@@ -142,7 +158,7 @@ For debugging, ensure the ExMemo plugin initializes correctly. If it fails, veri
 For backend/frontend code modification and debugging, start in development mode and run the backend Python program manually.
 
 ```shell
-docker compose --env-file backend/.env --profile development up -d
+docker compose --profile development up -d
 docker exec -it ebackend_dev bash
 > cd backend
 > ./shell/run.sh
@@ -155,7 +171,7 @@ Refer to shell/dev.sh and backend/shell/run.sh for more details.
 By default, data is stored in the host directory. To use Minio S3 storage, configure Minio options in .env. Minio does not start automatically. To enable Minio on the host, start the service manually:
 
 ```shell
-docker compose --env-file backend/.env -f docker-compose.yml up -d eminio
+docker compose -f docker-compose.yml up -d eminio
 ```
 
 ## 4 Changelog

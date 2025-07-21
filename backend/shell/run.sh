@@ -20,7 +20,7 @@ if [ "$USE_CELERY" = "False" ]; then
     python manage.py runserver 0.0.0.0:8005
 else
     echo "Starting Celery worker..."
-    celery -A backend worker -l info &
+    celery -A backend worker -l info --concurrency=1 &
     CELERY_PID=$!
     
     echo "Waiting for Celery to start (PID: $CELERY_PID)..."
