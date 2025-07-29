@@ -8,6 +8,7 @@ from django.conf import settings
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext as _
 from django.http import HttpResponse, Http404
+from django.core.exceptions import TooManyFilesSent
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -50,6 +51,23 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
         """
         debug = False
         try:
+            # Check file count before accessing request.POST to avoid TooManyFilesSent error
+            max_files = getattr(settings, 'DATA_UPLOAD_MAX_NUMBER_FILES', 50)
+            
+            # Try to get file count from request.FILES safely
+            try:
+                files = request.FILES.getlist("files")
+                if len(files) > max_files:
+                    logger.warning(f"Too many files uploaded: {len(files)} exceeds {max_files}")
+                    return do_result(False, _("Too many files. Maximum allowed: {}").format(max_files))
+            except Exception as files_check_error:
+                # If we can't check files due to TooManyFilesSent, handle it here
+                if "TooManyFilesSent" in str(type(files_check_error)) or "DATA_UPLOAD_MAX_NUMBER_FILES" in str(files_check_error):
+                    logger.warning(f"Too many files detected during file check: {files_check_error}")
+                    return do_result(False, _("Too many files. Maximum allowed: {}").format(max_files))
+                # If it's another error, we'll let it propagate
+                raise
+            
             dic = {}
             dic["etype"] = request.POST.get("etype", "note")
             dic["ctype"] = request.POST.get("ctype", None)
@@ -133,7 +151,17 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                         return do_result(True, {"list": success_list, "emb_status": emb_status})
                     else:
                         return do_result(False, _("no_update_needed"))
+        except TooManyFilesSent as e:
+            max_files = getattr(settings, 'DATA_UPLOAD_MAX_NUMBER_FILES', 1000)
+            logger.warning(f"Too many files uploaded: {e}")
+            return do_result(False, _("Too many files. Maximum allowed: {}").format(max_files))
         except Exception as e:
+            # Handle other TooManyFilesSent-related errors
+            if "TooManyFilesSent" in str(type(e)) or "DATA_UPLOAD_MAX_NUMBER_FILES" in str(e):
+                max_files = getattr(settings, 'DATA_UPLOAD_MAX_NUMBER_FILES', 1000)
+                logger.warning(f"Too many files uploaded: {e}")
+                return do_result(False, _("Too many files. Maximum allowed: {}").format(max_files))
+            
             traceback.print_exc()
             logger.warning(f"upload_files failed {e}")
             return do_result(False, _("uploading_failed"))
@@ -384,6 +412,16 @@ class StoreEntryViewSet(viewsets.ModelViewSet):
                 'max_size_bytes': None,
                 'max_size_mb': None
             })
+
+    @action(detail=False, methods=["get"], url_path="file-count-limit")
+    def get_file_count_limit(self, request):
+        """
+        Get file count limit configuration
+        """
+        max_files = getattr(settings, 'DATA_UPLOAD_MAX_NUMBER_FILES', 1000)
+        return Response({
+            'max_files': max_files
+        })
 
     @action(detail=True, methods=["get"], url_path="download")
     def download(self, request, pk=None):
