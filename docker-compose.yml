@@ -35,7 +35,7 @@ services:
     #     HTTP_PROXY: ${HTTP_PROXY}
     #     HTTPS_PROXY: ${HTTP_PROXY}
   efrontend_dev:
-    image: node_efrontend:latest
+    image: xieyan800811/efrontend:latest
     container_name: efrontend_dev
     ports:
       - "${FRONTEND_PORT_INNER}:8080"
@@ -77,7 +77,7 @@ services:
     profiles:
       - production
   ebackend_dev:
-    image: exmemo:latest
+    image: xieyan800811/ebackend:latest
     build:
       context: ./backend
       args:
